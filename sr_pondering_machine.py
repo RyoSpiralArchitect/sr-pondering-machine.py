@@ -1175,6 +1175,109 @@ def parse_ponder_pipeline(pipeline: str, *, fallback_mode: str) -> List[str]:
     return out or []
 
 
+_AUTO_PROFILE_CHOICES = ("balanced", "creative", "skeptic", "interrogator")
+
+
+def _argv_has_flag(argv: Sequence[str], flag: str) -> bool:
+    f = (flag or "").strip()
+    if not f:
+        return False
+    for a in argv:
+        if a == f or a.startswith(f + "="):
+            return True
+    return False
+
+
+def auto_select_ponder_pipeline(query: str, *, lang: str, profile: str) -> List[str]:
+    p = (profile or "balanced").strip().lower()
+    if p not in _AUTO_PROFILE_CHOICES:
+        p = "balanced"
+
+    q = (query or "").strip()
+    if not q:
+        return []
+
+    if p == "creative":
+        return ["metaphor", "assoc", "questions_only"]
+    if p == "skeptic":
+        return ["counterexample", "assumption", "questions_only"]
+    if p == "interrogator":
+        return ["questions_only", "assumption", "counterexample"]
+
+    ql = q.lower()
+    q_is_short = len(q) < 28 or (lang == "en" and len(ql.split()) <= 4)
+
+    creative_hints = (
+        "metaphor",
+        "analogy",
+        "image",
+        "poem",
+        "story",
+        "比喩",
+        "たとえ",
+        "例え",
+        "メタファー",
+        "アナロジ",
+        "寓話",
+        "詩",
+        "物語",
+        "イメージ",
+        "象徴",
+    )
+    skeptic_hints = (
+        "counterexample",
+        "edge case",
+        "pitfall",
+        "failure mode",
+        "risk",
+        "critique",
+        "反例",
+        "例外",
+        "境界",
+        "落とし穴",
+        "失敗",
+        "リスク",
+        "批判",
+        "懐疑",
+        "デメリット",
+    )
+    interrogator_hints = (
+        "questions",
+        "question list",
+        "ask",
+        "問い",
+        "質問",
+        "深掘",
+        "ソクラテス",
+    )
+
+    is_creative = any(h in ql for h in creative_hints) or any(h in q for h in creative_hints)
+    is_skeptic = any(h in ql for h in skeptic_hints) or any(h in q for h in skeptic_hints)
+    is_interrogator = any(h in ql for h in interrogator_hints) or any(h in q for h in interrogator_hints)
+
+    if q_is_short or is_interrogator:
+        return ["questions_only", "assumption", "counterexample"]
+    if is_creative:
+        return ["metaphor", "assoc", "questions_only"]
+    if is_skeptic:
+        return ["counterexample", "assumption", "questions_only"]
+    return ["assumption", "counterexample", "questions_only"]
+
+
+def auto_recommend_memory_defaults(*, profile: str) -> Dict[str, Any]:
+    p = (profile or "balanced").strip().lower()
+    if p not in _AUTO_PROFILE_CHOICES:
+        p = "balanced"
+
+    if p == "creative":
+        return {"memory_retrieve": "mix", "memory_mix_ratio": 0.65, "memory_backend": "fuzzy", "memory_pool": 320}
+    if p == "skeptic":
+        return {"memory_retrieve": "mix", "memory_mix_ratio": 0.45, "memory_backend": "fuzzy", "memory_pool": 480}
+    if p == "interrogator":
+        return {"memory_retrieve": "similar", "memory_mix_ratio": 0.65, "memory_backend": "fuzzy", "memory_pool": 320}
+    return {"memory_retrieve": "mix", "memory_mix_ratio": 0.6, "memory_backend": "fuzzy", "memory_pool": 400}
+
+
 def _cosine_sim(a: torch.Tensor, b: torch.Tensor, eps: float = 1e-8) -> float:
     aa = a.detach().float().cpu()
     bb = b.detach().float().cpu()
@@ -1606,24 +1709,49 @@ def select_memory_records(
     query: str,
     memory_policy: str,
     memory_retrieve: str,
+    memory_backend: str,
     n_memory: int,
     pool_size: int,
     mix_ratio: float,
     exclude_run_id: Optional[str],
-) -> List[Dict[str, Any]]:
+) -> Tuple[List[Dict[str, Any]], str]:
     if memory_policy == "off":
-        return []
+        return [], "off"
     if memory_policy == "current_only":
-        return list(current_records)
+        return list(current_records), "current_only"
     if memory_policy != "tail":
         raise ValueError(f"Unknown memory_policy: {memory_policy!r}")
 
     pool = tail_jsonl(memory_path, max(0, int(pool_size)))
+    if exclude_run_id:
+        pool = [r for r in pool if str(r.get("run_id", "")) != str(exclude_run_id)]
     if not pool:
-        return []
+        return [], "empty"
+
+    take = max(0, int(n_memory))
+    if take <= 0:
+        return [], "none"
 
     if memory_retrieve == "tail":
-        return pool[-int(n_memory) :] if n_memory > 0 else []
+        return pool[-take:], "tail"
+
+    backend = (memory_backend or "auto").strip()
+    if backend not in ("auto", "embed", "fuzzy"):
+        raise ValueError(f"Unknown memory_backend: {backend!r}")
+
+    if backend == "fuzzy":
+        recs = select_memory_records_fuzzy(
+            memory_path=memory_path,
+            current_records=current_records,
+            query=query,
+            memory_policy="tail",
+            memory_retrieve=memory_retrieve,
+            n_memory=take,
+            pool_size=pool_size,
+            mix_ratio=mix_ratio,
+            exclude_run_id=exclude_run_id,
+        )
+        return recs, "fuzzy"
 
     cur_token_ids: List[int] = []
     for r in current_records:
@@ -1636,23 +1764,21 @@ def select_memory_records(
                     pass
     cur_vec = mean_embedding_for_token_ids(hf, cur_token_ids)
     if cur_vec is None:
-        # Fallback: approximate similarity on text when embedding retrieval isn't available.
-        return select_memory_records_fuzzy(
+        recs = select_memory_records_fuzzy(
             memory_path=memory_path,
             current_records=current_records,
             query=query,
             memory_policy="tail",
             memory_retrieve=memory_retrieve,
-            n_memory=n_memory,
+            n_memory=take,
             pool_size=pool_size,
             mix_ratio=mix_ratio,
             exclude_run_id=exclude_run_id,
         )
+        return recs, "fuzzy"
 
     scored: List[Tuple[float, Dict[str, Any]]] = []
     for r in pool:
-        if exclude_run_id and str(r.get("run_id", "")) == str(exclude_run_id):
-            continue
         tids = r.get("token_ids")
         if not isinstance(tids, list) or not tids:
             continue
@@ -1663,23 +1789,19 @@ def select_memory_records(
         scored.append((sim, r))
 
     if not scored:
-        return pool[-int(n_memory) :] if n_memory > 0 else []
+        return pool[-take:], "tail"
 
     scored.sort(key=lambda x: x[0])
-    take = max(0, int(n_memory))
-    if take == 0:
-        return []
-
     if memory_retrieve == "anti":
-        return [r for _, r in scored[:take]]
+        return [r for _, r in scored[:take]], "embed"
     if memory_retrieve == "similar":
-        return [r for _, r in scored[-take:]][::-1]
+        return [r for _, r in scored[-take:]][::-1], "embed"
     if memory_retrieve == "mix":
         k_sim = max(0, min(take, int(round(take * float(mix_ratio)))))
         k_anti = take - k_sim
         anti = [r for _, r in scored[:k_anti]]
         sim = [r for _, r in scored[-k_sim:]][::-1]
-        return sim + anti
+        return sim + anti, "embed"
 
     raise ValueError(f"Unknown memory_retrieve: {memory_retrieve!r}")
 
@@ -2268,6 +2390,7 @@ class RunConfig:
     n_memory: int = 12
     memory_policy: str = "tail"  # tail|current_only|off
     memory_retrieve: str = "tail"  # tail|similar|anti|mix (only when memory_policy=tail)
+    memory_backend: str = "auto"  # auto|embed|fuzzy
     memory_pool: int = 200
     memory_mix_ratio: float = 0.5
     memory_exclude_current_run: bool = True
@@ -2290,6 +2413,8 @@ class RunConfig:
     seed: int = 1234
 
     prompt_lang: str = "en"  # resolved: en|ja
+    ponder_policy: str = "manual"  # manual|auto
+    auto_profile: str = "balanced"  # balanced|creative|skeptic|interrogator
     ponder_mode: str = "assoc"  # assoc|assumption|counterexample|questions_only|metaphor (fallback)
     ponder_pipeline: List[str] = dataclasses.field(default_factory=list)  # if empty, uses ponder_mode
     pipeline_context: str = "prev"  # none|prev|all
@@ -2658,6 +2783,9 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
                     "run_id": run_id,
                     "query_sha": query_sha,
                     "prompt_lang": lang,
+                    "ponder_policy": cfg.ponder_policy,
+                    "auto_profile": cfg.auto_profile,
+                    "memory_backend": cfg.memory_backend,
                     "control": control,
                     "band_profile": cfg.band_profile,
                     "band_ix": band_ix,
@@ -2690,13 +2818,14 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
 
     # Select memory records for final answer injection
     exclude_run_id = run_id if cfg.memory_exclude_current_run and cfg.memory_policy == "tail" else None
-    mem_records = select_memory_records(
+    mem_records, memory_backend_used = select_memory_records(
         hf,
         memory_path=cfg.memory_path,
         current_records=records,
         query=query,
         memory_policy=cfg.memory_policy,
         memory_retrieve=cfg.memory_retrieve,
+        memory_backend=cfg.memory_backend,
         n_memory=cfg.n_memory,
         pool_size=cfg.memory_pool,
         mix_ratio=cfg.memory_mix_ratio,
@@ -2819,8 +2948,12 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
         "run_id": run_id,
         "control": control,
         "pipeline": pipeline,
+        "ponder_policy": cfg.ponder_policy,
+        "auto_profile": cfg.auto_profile,
         "memory_policy": cfg.memory_policy,
         "memory_retrieve": cfg.memory_retrieve,
+        "memory_backend": cfg.memory_backend,
+        "memory_backend_used": memory_backend_used,
         "memory_remix": cfg.memory_remix,
         "memory_selected": [
             {
@@ -3091,6 +3224,9 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
                     "run_id": run_id,
                     "query_sha": query_sha,
                     "prompt_lang": lang,
+                    "ponder_policy": cfg.ponder_policy,
+                    "auto_profile": cfg.auto_profile,
+                    "memory_backend": cfg.memory_backend,
                     "backend": "openai_compat",
                     "control": control,
                     "band_profile": cfg.band_profile,
@@ -3135,6 +3271,14 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
         mix_ratio=cfg.memory_mix_ratio,
         exclude_run_id=exclude_run_id,
     )
+    if cfg.memory_policy == "off":
+        memory_backend_used = "off"
+    elif cfg.memory_policy == "current_only":
+        memory_backend_used = "current_only"
+    elif cfg.memory_retrieve == "tail":
+        memory_backend_used = "tail"
+    else:
+        memory_backend_used = "fuzzy"
     if control == "no_inject":
         mem_records = []
 
@@ -3253,8 +3397,12 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
         "run_id": run_id,
         "control": control,
         "pipeline": pipeline,
+        "ponder_policy": cfg.ponder_policy,
+        "auto_profile": cfg.auto_profile,
         "memory_policy": cfg.memory_policy,
         "memory_retrieve": cfg.memory_retrieve,
+        "memory_backend": cfg.memory_backend,
+        "memory_backend_used": memory_backend_used,
         "memory_remix": cfg.memory_remix,
         "memory_selected": [
             {
@@ -3301,6 +3449,7 @@ def main() -> None:
     g_core = ap.add_argument_group("Core")
     g_ponder = ap.add_argument_group("Ponder")
     g_pipeline = ap.add_argument_group("Pipeline")
+    g_policy = ap.add_argument_group("Auto Policy")
     g_bands = ap.add_argument_group("Bands")
     g_keywords = ap.add_argument_group("Keywords")
     g_jitter = ap.add_argument_group("Prompt Jitter")
@@ -3341,6 +3490,19 @@ def main() -> None:
     )
     g_pipeline.add_argument("--pipeline_context", choices=["none", "prev", "all"], default="prev")
     g_pipeline.add_argument("--pipeline_context_max_chars", type=int, default=1200)
+
+    g_policy.add_argument(
+        "--ponder_policy",
+        choices=["manual", "auto"],
+        default="manual",
+        help="manual: respect CLI settings; auto: recommend pipeline + memory defaults (unless explicitly set)",
+    )
+    g_policy.add_argument(
+        "--auto_profile",
+        choices=list(_AUTO_PROFILE_CHOICES),
+        default="balanced",
+        help="Auto policy profile",
+    )
 
     g_bands.add_argument("--band_profile", choices=["single", "spectrum3"], default="single", help="Rank-band profile")
     g_bands.add_argument(
@@ -3386,6 +3548,12 @@ def main() -> None:
         choices=["tail", "similar", "anti", "mix"],
         default="tail",
         help="How to pick memory records when --memory_policy=tail",
+    )
+    g_memory.add_argument(
+        "--memory_backend",
+        choices=["auto", "embed", "fuzzy"],
+        default="auto",
+        help="Similarity backend for --memory_retrieve similar|anti|mix (hf only; API uses fuzzy)",
     )
     g_memory.add_argument("--memory_pool", type=int, default=200, help="Pool size for retrieval (tail records)")
     g_memory.add_argument("--memory_mix_ratio", type=float, default=0.5, help="similar/(similar+anti) when mix")
@@ -3486,6 +3654,7 @@ def main() -> None:
         n_memory=args.n_memory,
         memory_policy=args.memory_policy,
         memory_retrieve=args.memory_retrieve,
+        memory_backend=args.memory_backend,
         memory_pool=args.memory_pool,
         memory_mix_ratio=args.memory_mix_ratio,
         memory_exclude_current_run=not bool(args.memory_include_current_run),
@@ -3511,6 +3680,8 @@ def main() -> None:
         no_repeat_ngram_size=args.no_repeat_ngram_size,
         seed=args.seed,
         prompt_lang=prompt_lang,
+        ponder_policy=args.ponder_policy,
+        auto_profile=args.auto_profile,
         ponder_mode=args.ponder_mode,
         ponder_pipeline=pipeline,
         pipeline_context=args.pipeline_context,
@@ -3546,6 +3717,54 @@ def main() -> None:
         force_gemma_format=not args.no_gemma_format,
     )
 
+    if (cfg.ponder_policy or "manual").strip() == "auto":
+        argv = sys.argv[1:]
+        auto_changed: List[str] = []
+
+        if (
+            not cfg.ponder_pipeline
+            and not _argv_has_flag(argv, "--ponder_pipeline")
+            and not _argv_has_flag(argv, "--ponder_mode")
+        ):
+            auto_pipeline = auto_select_ponder_pipeline(args.query, lang=cfg.prompt_lang, profile=cfg.auto_profile)
+            if auto_pipeline:
+                cfg = dataclasses.replace(cfg, ponder_pipeline=auto_pipeline)
+                auto_changed.append(f"pipeline={','.join(auto_pipeline)}")
+
+        if cfg.memory_policy == "tail":
+            mem_defaults = auto_recommend_memory_defaults(profile=cfg.auto_profile)
+            if not _argv_has_flag(argv, "--memory_retrieve"):
+                cfg = dataclasses.replace(
+                    cfg,
+                    memory_retrieve=str(mem_defaults.get("memory_retrieve", cfg.memory_retrieve)),
+                )
+                auto_changed.append(f"memory_retrieve={cfg.memory_retrieve}")
+
+            if cfg.memory_retrieve != "tail":
+                if not _argv_has_flag(argv, "--memory_backend"):
+                    cfg = dataclasses.replace(
+                        cfg,
+                        memory_backend=str(mem_defaults.get("memory_backend", cfg.memory_backend)),
+                    )
+                    auto_changed.append(f"memory_backend={cfg.memory_backend}")
+
+                if cfg.memory_retrieve == "mix" and not _argv_has_flag(argv, "--memory_mix_ratio"):
+                    cfg = dataclasses.replace(
+                        cfg,
+                        memory_mix_ratio=float(mem_defaults.get("memory_mix_ratio", cfg.memory_mix_ratio)),
+                    )
+                    auto_changed.append(f"memory_mix_ratio={cfg.memory_mix_ratio:.2f}")
+
+                if not _argv_has_flag(argv, "--memory_pool"):
+                    cfg = dataclasses.replace(
+                        cfg,
+                        memory_pool=int(mem_defaults.get("memory_pool", cfg.memory_pool)),
+                    )
+                    auto_changed.append(f"memory_pool={cfg.memory_pool}")
+
+        if auto_changed:
+            print(f"[sr_ponder] auto_policy profile={cfg.auto_profile} " + " ".join(auto_changed))
+
     hf: Any
     if cfg.backend == "hf":
         hf = LocalHFModel(
@@ -3562,9 +3781,9 @@ def main() -> None:
             f"alloc_warmup={cfg.allocator_warmup} "
             f"gemma_turn_tokens={hf._has_gemma_turn_tokens()} lang={cfg.prompt_lang} "
             f"band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
-            f"objective={cfg.keyword_objective} control={cfg.control} "
+            f"objective={cfg.keyword_objective} control={cfg.control} policy={cfg.ponder_policy}/{cfg.auto_profile} "
             f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
-            f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} write_memory={cfg.write_memory}"
+            f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_backend}/{cfg.memory_remix} write_memory={cfg.write_memory}"
         )
     elif cfg.backend == "openai_compat":
         api_key = (cfg.api_key or os.environ.get(cfg.api_key_env, "") or "").strip()
@@ -3585,9 +3804,9 @@ def main() -> None:
             f"[sr_ponder] backend=openai_compat model={cfg.model_path!r} base_url={cfg.api_base_url} "
             f"seed_method={cfg.api_seed_method} logprobs_top_n={cfg.api_logprobs_top_n} "
             f"lang={cfg.prompt_lang} band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
-            f"objective={cfg.keyword_objective} control={cfg.control} "
+            f"objective={cfg.keyword_objective} control={cfg.control} policy={cfg.ponder_policy}/{cfg.auto_profile} "
             f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
-            f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} write_memory={cfg.write_memory}"
+            f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_backend}/{cfg.memory_remix} write_memory={cfg.write_memory}"
         )
     else:
         raise SystemExit(f"[sr_ponder] ERROR: unknown backend: {cfg.backend!r}")

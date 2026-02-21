@@ -24,6 +24,7 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Baseline mode** — run without pondering for easy A/B comparison.
 - **Ponder lenses** — switch between association / assumptions / counterexamples / questions-only / metaphor via `--ponder_mode`.
 - **Lens pipeline** — chain multiple lenses via `--ponder_pipeline` (with `--pipeline_context prev|all|none`).
+- **Auto policy** — `--ponder_policy auto` recommends a lens pipeline + memory defaults (profile via `--auto_profile`).
 - **Multi-ponder** — generate multiple ponder logs per band with `--n_ponder`.
 - **Keyword refinement** — optionally rewrite token fragments into cleaner keywords via `--keyword_refine`.
 - **Keyword objectives** — pick seeds by dissonance/instability via `--keyword_objective dissonance|unstable`.
@@ -163,6 +164,23 @@ python3 sr_pondering_machine.py \
   --memory_policy current_only
 ```
 
+### Auto policy: balanced / creative
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "Why do we overfit narratives to randomness?" \
+  --mode ponder \
+  --ponder_policy auto
+
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "Design a new kind of musical scale." \
+  --mode ponder \
+  --ponder_policy auto \
+  --auto_profile creative
+```
+
 ### Answer ensemble: per-band answers + merged final answer
 
 ```bash
@@ -211,6 +229,7 @@ python3 sr_pondering_machine.py \
   --mode ponder \
   --memory_policy tail \
   --memory_retrieve mix \
+  --memory_backend fuzzy \
   --memory_pool 300 \
   --memory_mix_ratio 0.5 \
   --memory_remix dream
@@ -262,6 +281,13 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | `--control` | `none` | `none` · `no_inject` · `random_log` · `random_keywords` · `lens_only` |
 | `--no_write_memory` | `False` | Don’t append JSONL records |
 
+### Auto policy
+
+| Argument | Default | Description |
+|---|---|---|
+| `--ponder_policy` | `manual` | `manual` · `auto` |
+| `--auto_profile` | `balanced` | `balanced` · `creative` · `skeptic` · `interrogator` |
+
 ### Bands
 
 | Argument | Default | Description |
@@ -299,6 +325,7 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | `--n_memory` | `6` | Memory records to inject |
 | `--memory_policy` | `tail` | `tail` · `current_only` · `off` |
 | `--memory_retrieve` | `tail` | `tail` · `similar` · `anti` · `mix` |
+| `--memory_backend` | `auto` | `auto` · `embed` · `fuzzy` |
 | `--memory_pool` | `200` | Tail pool size for retrieval |
 | `--memory_mix_ratio` | `0.5` | similar/(similar+anti) in mix |
 | `--memory_include_current_run` | `False` | Allow selecting current run from tail |
@@ -339,6 +366,9 @@ Each ponder run appends a JSON record to the JSONL file:
   "band_label": "outside_topk:80:336",
   "ponder_ix": 0,
   "prompt_lang": "en",
+  "ponder_policy": "manual",
+  "auto_profile": "balanced",
+  "memory_backend": "auto",
   "pipeline": ["assoc", "metaphor"],
   "pipeline_stage_ix": 0,
   "pipeline_context": "prev",
@@ -364,8 +394,8 @@ With `--memory_policy tail`, you can choose retrieval:
 
 - `--memory_retrieve tail`: literal tail
 - `--memory_retrieve similar|anti|mix`:
-  - `--backend hf`: cosine similarity over token-id embeddings
-  - `--backend openai_compat`: approximate TF‑IDF cosine over hashed character n-grams (plus MMR-style diversity)
+  - `--backend hf`: `--memory_backend auto|embed` (token-id embedding cosine) or `--memory_backend fuzzy` (hashed char n-grams + IDF + MMR)
+  - `--backend openai_compat`: hashed char n-grams + IDF + MMR (always)
 
 And optionally remix the injected text with `--memory_remix`.
 
@@ -383,7 +413,7 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.h
 - **Use the `-it` (instruction-tuned) variant** of Gemma for best results. The base model does not reliably follow instructions.
 - For `--backend hf`, the model must already be **downloaded locally**. Network access is disabled at inference time (`local_files_only=True`).
 - For `--backend openai_compat`, set an API key (default env: `OPENAI_API_KEY`) and point `--api_base_url` at an OpenAI-style provider.
-- For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams + IDF weighting). It’s not as strong as real embedding retrieval, but better than raw tail.
+- For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams + IDF weighting). It’s not as strong as real embedding retrieval, but better than raw tail. (`--memory_backend` is effectively always `fuzzy`.)
 - If you see an error like “Repo id must be in the form …” while passing an absolute `--model` path, it usually means the directory does not exist (Transformers falls back to treating it like a Hub ID). Double-check the path and try the closest matching folder name.
 - On Apple Silicon (MPS), Transformers 5.x “caching allocator warmup” can crash on large models with `RuntimeError: Invalid buffer size: ...`. The script defaults to `--allocator_warmup auto` (which disables warmup on MPS). You can also force it off with `--allocator_warmup off`.
 - `--keyword_refine` adds an extra generation call before the ponder step (slower, but often produces better keywords).
