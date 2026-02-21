@@ -1616,7 +1616,7 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
 
     sorted_ids = torch.argsort(logits, descending=True)
     ranks = torch.empty_like(sorted_ids)
-    ranks[sorted_ids] = torch.arange(sorted_ids.numel())
+    ranks[sorted_ids] = torch.arange(sorted_ids.numel(), device=sorted_ids.device, dtype=sorted_ids.dtype)
     log_z = torch.logsumexp(logits, dim=0)
 
     top_tokens: List[Dict[str, Any]] = []
