@@ -381,7 +381,7 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.h
 - **Use the `-it` (instruction-tuned) variant** of Gemma for best results. The base model does not reliably follow instructions.
 - For `--backend hf`, the model must already be **downloaded locally**. Network access is disabled at inference time (`local_files_only=True`).
 - For `--backend openai_compat`, set an API key (default env: `OPENAI_API_KEY`) and point `--api_base_url` at an OpenAI-style provider.
-- For API backends, `--memory_retrieve similar|anti|mix` is currently not supported (falls back to `tail`).
+- For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams) over stored logs (not as strong as embedding retrieval).
 - If you see an error like “Repo id must be in the form …” while passing an absolute `--model` path, it usually means the directory does not exist (Transformers falls back to treating it like a Hub ID). Double-check the path and try the closest matching folder name.
 - On Apple Silicon (MPS), Transformers 5.x “caching allocator warmup” can crash on large models with `RuntimeError: Invalid buffer size: ...`. The script defaults to `--allocator_warmup auto` (which disables warmup on MPS). You can also force it off with `--allocator_warmup off`.
 - `--keyword_refine` adds an extra generation call before the ponder step (slower, but often produces better keywords).

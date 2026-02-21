@@ -1184,6 +1184,186 @@ def _cosine_sim(a: torch.Tensor, b: torch.Tensor, eps: float = 1e-8) -> float:
     return float(torch.dot(aa, bb).item() / denom)
 
 
+_SIM_TEXT_CLEAN_RE = re.compile(r"[^\w\u3040-\u30ff\u3400-\u9fff]+", re.UNICODE)
+
+
+def _normalize_sim_text(text: str) -> str:
+    s = (text or "").lower()
+    s = _SIM_TEXT_CLEAN_RE.sub(" ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
+
+def _fnv1a_32(s: str) -> int:
+    h = 2166136261
+    for ch in s:
+        h ^= ord(ch)
+        h = (h * 16777619) & 0xFFFFFFFF
+    return h
+
+
+def _hashed_char_ngrams(text: str, *, n: int = 3, dim: int = 4096, max_chars: int = 4000) -> Dict[int, float]:
+    s = _normalize_sim_text(text)
+    if max_chars > 0 and len(s) > max_chars:
+        s = s[-int(max_chars) :]
+    if not s:
+        return {}
+    d: Dict[int, float] = {}
+    nn = max(1, int(n))
+    if len(s) <= nn:
+        ix = _fnv1a_32(s) % int(dim)
+        d[ix] = d.get(ix, 0.0) + 1.0
+        return d
+    for i in range(0, len(s) - nn + 1):
+        gram = s[i : i + nn]
+        ix = _fnv1a_32(gram) % int(dim)
+        d[ix] = d.get(ix, 0.0) + 1.0
+    return d
+
+
+def _cosine_sim_sparse(a: Dict[int, float], b: Dict[int, float], eps: float = 1e-12) -> float:
+    if not a or not b:
+        return 0.0
+    if len(a) > len(b):
+        a, b = b, a
+    dot = 0.0
+    for k, av in a.items():
+        bv = b.get(k)
+        if bv:
+            dot += float(av) * float(bv)
+    na = math.sqrt(sum(float(v) * float(v) for v in a.values()))
+    nb = math.sqrt(sum(float(v) * float(v) for v in b.values()))
+    denom = na * nb + float(eps)
+    return float(dot / denom) if denom > 0 else 0.0
+
+
+def _memory_record_text_for_sim(r: Dict[str, Any]) -> str:
+    kws = r.get("keywords")
+    if not kws:
+        kws = r.get("keywords_raw")
+    if isinstance(kws, list):
+        kw_s = " ".join(str(x) for x in kws if x is not None)
+    else:
+        kw_s = str(kws or "")
+    pq = str(r.get("ponder_question", "") or "")
+    plog = str(r.get("ponder_log", "") or "")
+    if len(plog) > 1600:
+        plog = plog[:1600]
+    return f"{kw_s}\n{pq}\n{plog}".strip()
+
+
+def _current_text_for_sim(query: str, current_records: Sequence[Dict[str, Any]]) -> str:
+    # Prefer the raw query; add a small keyword summary to stabilize similarity across languages.
+    bits: List[str] = []
+    q = (query or "").strip()
+    if q:
+        bits.append(q)
+
+    seen = set()
+    kws_out: List[str] = []
+    for r in current_records or []:
+        kws = r.get("keywords") or r.get("keywords_raw") or []
+        if not isinstance(kws, list):
+            continue
+        for k in kws:
+            k2 = str(k or "").strip()
+            if not k2:
+                continue
+            if k2 in seen:
+                continue
+            seen.add(k2)
+            kws_out.append(k2)
+            if len(kws_out) >= 32:
+                break
+        if len(kws_out) >= 32:
+            break
+    if kws_out:
+        bits.append("keywords: " + " ".join(kws_out))
+
+    if not bits and current_records:
+        # Final fallback: use some of the freshly generated logs.
+        for r in current_records[:2]:
+            bits.append(_memory_record_text_for_sim(dict(r)))
+
+    return "\n".join(bits).strip()
+
+
+def select_memory_records_fuzzy(
+    *,
+    memory_path: Path,
+    current_records: Sequence[Dict[str, Any]],
+    query: str,
+    memory_policy: str,
+    memory_retrieve: str,
+    n_memory: int,
+    pool_size: int,
+    mix_ratio: float,
+    exclude_run_id: Optional[str],
+    sim_ngram_n: int = 3,
+    sim_dim: int = 4096,
+    sim_max_chars: int = 4000,
+) -> List[Dict[str, Any]]:
+    """Approximate memory retrieval using hashed character n-gram cosine similarity.
+
+    This is a provider-agnostic fallback (works for API backends and when embedding retrieval isn't available).
+    """
+
+    if memory_policy == "off":
+        return []
+    if memory_policy == "current_only":
+        return list(current_records)
+    if memory_policy != "tail":
+        raise ValueError(f"Unknown memory_policy: {memory_policy!r}")
+
+    pool = tail_jsonl(memory_path, max(0, int(pool_size)))
+    if not pool:
+        return []
+    if exclude_run_id:
+        pool = [r for r in pool if str(r.get("run_id", "")) != str(exclude_run_id)]
+    if not pool:
+        return []
+
+    take = max(0, int(n_memory))
+    if take <= 0:
+        return []
+
+    if memory_retrieve == "tail":
+        return pool[-take:]
+
+    cur_text = _current_text_for_sim(query, current_records)
+    cur_vec = _hashed_char_ngrams(cur_text, n=sim_ngram_n, dim=sim_dim, max_chars=sim_max_chars)
+    if not cur_vec:
+        return pool[-take:]
+
+    scored: List[Tuple[float, Dict[str, Any]]] = []
+    for r in pool:
+        rt = _memory_record_text_for_sim(r)
+        if not rt:
+            continue
+        rv = _hashed_char_ngrams(rt, n=sim_ngram_n, dim=sim_dim, max_chars=sim_max_chars)
+        if not rv:
+            continue
+        sim = _cosine_sim_sparse(cur_vec, rv)
+        scored.append((float(sim), r))
+
+    if not scored:
+        return pool[-take:]
+
+    scored.sort(key=lambda x: x[0])
+    if memory_retrieve == "anti":
+        return [r for _, r in scored[:take]]
+    if memory_retrieve == "similar":
+        return [r for _, r in scored[-take:]][::-1]
+    if memory_retrieve == "mix":
+        k_sim = max(0, min(take, int(round(take * float(mix_ratio)))))
+        k_anti = take - k_sim
+        anti = [r for _, r in scored[:k_anti]]
+        sim = [r for _, r in scored[-k_sim:]][::-1]
+        return sim + anti
+
+    raise ValueError(f"Unknown memory_retrieve: {memory_retrieve!r}")
+
+
 def select_memory_records(
     hf: "LocalHFModel",
     *,
@@ -1221,7 +1401,18 @@ def select_memory_records(
                     pass
     cur_vec = mean_embedding_for_token_ids(hf, cur_token_ids)
     if cur_vec is None:
-        return pool[-int(n_memory) :] if n_memory > 0 else []
+        # Fallback: approximate similarity on text when embedding retrieval isn't available.
+        return select_memory_records_fuzzy(
+            memory_path=memory_path,
+            current_records=current_records,
+            query="",
+            memory_policy="tail",
+            memory_retrieve=memory_retrieve,
+            n_memory=n_memory,
+            pool_size=pool_size,
+            mix_ratio=mix_ratio,
+            exclude_run_id=exclude_run_id,
+        )
 
     scored: List[Tuple[float, Dict[str, Any]]] = []
     for r in pool:
@@ -2461,7 +2652,6 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
         _print_probe_table("PROBE TOP TOKENS (API)", items, limit=min(len(items), 50))
 
     warned_objective = False
-    warned_memory = False
 
     # Unstable objective (logprobs-only): compute per-token stddev across prompt jitters.
     jitter_queries: List[str] = []
@@ -2696,31 +2886,19 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
                 records.append(record)
                 log_ix += 1
 
-    # Select memory records for final answer injection (API: tail only; similarity retrieval unsupported)
-    def _select_memory_api() -> List[Dict[str, Any]]:
-        if cfg.memory_policy == "off":
-            return []
-        if cfg.memory_policy == "current_only":
-            return list(records)
-        if cfg.memory_policy != "tail":
-            raise ValueError(f"Unknown memory_policy: {cfg.memory_policy!r}")
-
-        pool = tail_jsonl(cfg.memory_path, max(0, int(cfg.memory_pool)))
-        if not pool:
-            return []
-        exclude_run_id = run_id if cfg.memory_exclude_current_run and cfg.memory_policy == "tail" else None
-        if exclude_run_id:
-            pool = [r for r in pool if str(r.get("run_id", "")) != str(exclude_run_id)]
-
-        if cfg.memory_retrieve != "tail":
-            nonlocal warned_memory
-            if not warned_memory:
-                print("[sr_ponder] WARN: memory_retrieve!=tail not supported for API; using tail.", file=sys.stderr)
-                warned_memory = True
-        take = max(0, int(cfg.n_memory))
-        return pool[-take:] if take > 0 else []
-
-    mem_records = _select_memory_api()
+    # Select memory records for final answer injection (API: fuzzy retrieval via hashed char n-grams)
+    exclude_run_id = run_id if cfg.memory_exclude_current_run and cfg.memory_policy == "tail" else None
+    mem_records = select_memory_records_fuzzy(
+        memory_path=cfg.memory_path,
+        current_records=records,
+        query=query,
+        memory_policy=cfg.memory_policy,
+        memory_retrieve=cfg.memory_retrieve,
+        n_memory=cfg.n_memory,
+        pool_size=cfg.memory_pool,
+        mix_ratio=cfg.memory_mix_ratio,
+        exclude_run_id=exclude_run_id,
+    )
     if control == "no_inject":
         mem_records = []
 
