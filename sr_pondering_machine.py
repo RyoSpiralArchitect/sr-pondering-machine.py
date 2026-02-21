@@ -38,15 +38,19 @@ import datetime as dt
 import difflib
 import hashlib
 import json
+import math
 import os
 import random
 import re
 import sys
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from urllib import error as urlerror
+from urllib import request as urlrequest
 
 
 # -----------------------------
@@ -660,6 +664,98 @@ def build_prompt_for_keyword_refine(query: str, seed_keywords: Sequence[str], *,
     )
 
 
+def build_prompt_for_api_seed_keywords(
+    query: str,
+    *,
+    n: int,
+    lang: str,
+    band_label: str,
+    objective: str,
+) -> str:
+    bl = (band_label or "single").strip().lower()
+    obj = (objective or "random_band").strip().lower()
+
+    if bl == "near":
+        style_en = "near = plausible/on-topic, but avoid the most obvious words"
+        style_ja = "near = もっともらしく本題寄り。ただし一番ベタな語は避ける"
+    elif bl == "mid":
+        style_en = "mid = slightly off-axis 'rejected-token' vibe (useful drift)"
+        style_ja = "mid = ほどよく逸脱（rejected-tokenっぽいドリフト）"
+    elif bl == "far":
+        style_en = "far = distant/metaphorical, surprising but still usable as seeds"
+        style_ja = "far = かなり遠い/比喩的。意外だが種として使える"
+    else:
+        style_en = f"band = {bl} (treat as a style label)"
+        style_ja = f"band = {bl}（スタイルラベルとして扱う）"
+
+    if obj == "random_vocab":
+        obj_en = "Objective: random words/phrases (not necessarily related)."
+        obj_ja = "目的: ランダムな語句（関連は不要）。"
+    elif obj == "unstable":
+        obj_en = "Objective: ambiguous keywords likely to change under paraphrasing."
+        obj_ja = "目的: 言い換えで揺れそうな曖昧キーワード。"
+    elif obj == "dissonance":
+        obj_en = "Objective: dissonant/off-axis keywords (conceptual distance)."
+        obj_ja = "目的: 不協和/逸脱キーワード（概念距離）。"
+    else:
+        obj_en = "Objective: slightly off-axis seed keywords (no answers)."
+        obj_ja = "目的: 少し逸脱した種キーワード（答えは出さない）。"
+
+    if lang == "ja":
+        return (
+            "あなたは pondering machine 用のキーワード抽出器です。\n"
+            f"{obj_ja}\n"
+            f"スタイル: {style_ja}\n"
+            "制約:\n"
+            f"- 出力は JSON の文字列配列のみ（要素数はちょうど {n}）\n"
+            "- 説明文は禁止\n"
+            "- 記号だけ/助詞だけ/role名は禁止\n"
+            "- 1〜3語程度の短い語句\n\n"
+            f"質問: {query}\n"
+        )
+    return (
+        "You are a keyword extractor for a pondering machine.\n"
+        f"{obj_en}\n"
+        f"Style: {style_en}\n"
+        "Constraints:\n"
+        f"- Output ONLY a JSON array of strings (exactly {n} items)\n"
+        "- No explanations\n"
+        "- Avoid pure punctuation, stopwords, and role labels\n"
+        "- Short words/phrases (1 to 3 words)\n\n"
+        f"Question: {query}\n"
+    )
+
+
+def generate_seed_keywords_self(
+    hf: Any,
+    *,
+    query: str,
+    n_keywords: int,
+    lang: str,
+    band_label: str,
+    objective: str,
+    max_new_tokens: int,
+    temperature: float,
+    seed: int,
+) -> List[str]:
+    prompt = hf._apply_chat(
+        build_prompt_for_api_seed_keywords(query, n=n_keywords, lang=lang, band_label=band_label, objective=objective),
+        system_text=None,
+    )
+    out = hf.generate_text(
+        prompt,
+        max_new_tokens=int(max_new_tokens),
+        temperature=float(temperature),
+        top_p=0.9,
+        top_k=0,
+        repetition_penalty=1.0,
+        no_repeat_ngram_size=0,
+        seed=int(seed),
+    )
+    kws = extract_json_array(out)
+    return kws[: max(0, int(n_keywords))]
+
+
 def refine_keywords_with_model(
     hf: "LocalHFModel",
     *,
@@ -1004,6 +1100,67 @@ def interactive_pick_token_ids(
     return picked[:n]
 
 
+def interactive_pick_keywords(
+    *,
+    prompt: str,
+    rng: random.Random,
+    candidates: Sequence[Dict[str, Any]],
+    n_keywords: int,
+) -> Optional[List[str]]:
+    if not sys.stdin.isatty():
+        return None
+    if not candidates:
+        return None
+
+    n = int(n_keywords)
+    print(f"\n=== INTERACTIVE PICK (keywords): {prompt} ===\n")
+    for i, c in enumerate(candidates, start=1):
+        tok = str(c.get("token", "") or "")
+        rk = c.get("rank", "?")
+        p = c.get("prob", None)
+        p_s = f"{p:.4f}" if isinstance(p, float) else "?"
+        print(f"{i:>2}. {tok!r} rank={rk} p={p_s}")
+
+    try:
+        raw = input(f"\nPick {n} indices (space/comma). Enter=auto: ").strip()
+    except EOFError:
+        return None
+
+    if not raw:
+        return None
+
+    parts = re.split(r"[\s,]+", raw)
+    picked: List[str] = []
+    for p in parts:
+        if not p:
+            continue
+        try:
+            ix = int(p)
+        except ValueError:
+            continue
+        if ix < 1 or ix > len(candidates):
+            continue
+        tok = candidates[ix - 1].get("token")
+        if not isinstance(tok, str):
+            continue
+        tok2 = tok.strip()
+        if not tok2:
+            continue
+        if tok2 in picked:
+            continue
+        picked.append(tok2)
+        if len(picked) >= n:
+            break
+
+    if not picked:
+        return None
+    if len(picked) < n:
+        rest = [str(c.get("token", "")).strip() for c in candidates if str(c.get("token", "")).strip() and str(c.get("token", "")).strip() not in picked]
+        rng.shuffle(rest)
+        picked.extend(rest[: (n - len(picked))])
+    return picked[:n]
+
+
 def parse_ponder_pipeline(pipeline: str, *, fallback_mode: str) -> List[str]:
     allowed = {"assoc", "assumption", "counterexample", "questions_only", "metaphor"}
     s = (pipeline or "").strip()
@@ -1235,6 +1392,233 @@ def extract_tag(text: str, tag: str) -> Optional[str]:
 
 
 # -----------------------------
+# API backend (OpenAI-compatible)
+# -----------------------------
+
+
+def _join_url(base_url: str, path: str) -> str:
+    base = (base_url or "").rstrip("/")
+    p = (path or "").lstrip("/")
+    return f"{base}/{p}" if p else base
+
+
+def _parse_header_kv(s: str) -> Tuple[str, str]:
+    if ":" not in (s or ""):
+        raise ValueError(f"Invalid header (expected Key: Value): {s!r}")
+    k, v = s.split(":", 1)
+    k = k.strip()
+    v = v.strip()
+    if not k:
+        raise ValueError(f"Invalid header key: {s!r}")
+    return k, v
+
+
+def _http_post_json(
+    url: str,
+    *,
+    headers: Dict[str, str],
+    payload: Dict[str, Any],
+    timeout: float,
+    max_retries: int,
+) -> Dict[str, Any]:
+    body = json.dumps(payload).encode("utf-8")
+    req_headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    req_headers.update(headers or {})
+
+    last_err: Optional[str] = None
+    tries = max(0, int(max_retries)) + 1
+
+    for attempt in range(tries):
+        req = urlrequest.Request(url, data=body, headers=req_headers, method="POST")
+        try:
+            with urlrequest.urlopen(req, timeout=float(timeout)) as resp:
+                raw = resp.read()
+                try:
+                    return json.loads(raw.decode("utf-8"))
+                except Exception:
+                    raise RuntimeError("Invalid JSON response")
+        except urlerror.HTTPError as e:
+            status = getattr(e, "code", None)
+            err_text = ""
+            try:
+                err_text = e.read().decode("utf-8", errors="replace")
+            except Exception:
+                err_text = ""
+            err_text = (err_text or "").strip().replace("\n", " ")
+            if len(err_text) > 600:
+                err_text = err_text[:600] + "…"
+            last_err = f"HTTP {status}: {err_text}" if status is not None else f"HTTPError: {err_text}"
+
+            retryable = status in (408, 409, 429, 500, 502, 503, 504)
+            if attempt < tries - 1 and retryable:
+                delay = min(8.0, 0.6 * (2**attempt) + random.random() * 0.2)
+                time.sleep(delay)
+                continue
+            break
+        except urlerror.URLError as e:
+            last_err = f"URLError: {e}"
+            if attempt < tries - 1:
+                delay = min(8.0, 0.6 * (2**attempt) + random.random() * 0.2)
+                time.sleep(delay)
+                continue
+            break
+
+    raise RuntimeError(last_err or "Unknown HTTP error")
+
+
+class OpenAICompatModel:
+    """OpenAI-compatible Chat Completions client (stdlib only).
+
+    Works with OpenAI-like providers that implement `POST /chat/completions`.
+    """
+
+    def __init__(
+        self,
+        *,
+        model: str,
+        api_base_url: str,
+        api_key: str,
+        api_chat_path: str = "/chat/completions",
+        api_headers: Optional[Sequence[str]] = None,
+        timeout: float = 60.0,
+        max_retries: int = 2,
+    ) -> None:
+        self.model = (model or "").strip()
+        self.api_base_url = (api_base_url or "").strip()
+        self.api_chat_path = api_chat_path or "/chat/completions"
+        self.timeout = float(timeout)
+        self.max_retries = int(max_retries)
+
+        headers: Dict[str, str] = {}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        for h in api_headers or []:
+            try:
+                k, v = _parse_header_kv(str(h))
+                headers[k] = v
+            except Exception:
+                continue
+        self.headers = headers
+
+        self.url = _join_url(self.api_base_url, self.api_chat_path)
+
+    def _apply_chat(self, prompt: str, *, system_text: Optional[str]) -> str:
+        # Keep interface parity with LocalHFModel; API backends usually support system roles,
+        # but we keep it as plain text to avoid provider differences.
+        if system_text:
+            return f"{system_text.strip()}\n\n{prompt}"
+        return prompt
+
+    def _chat(self, *, messages: List[Dict[str, str]], **kwargs: Any) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {"model": self.model, "messages": messages}
+        payload.update(kwargs)
+        return _http_post_json(
+            self.url,
+            headers=self.headers,
+            payload=payload,
+            timeout=self.timeout,
+            max_retries=self.max_retries,
+        )
+
+    def generate_text(
+        self,
+        prompt: str,
+        *,
+        max_new_tokens: int = 768,
+        temperature: float = 0.8,
+        top_p: float = 0.95,
+        top_k: int = 0,
+        repetition_penalty: float = 1.05,
+        no_repeat_ngram_size: int = 0,
+        seed: Optional[int] = None,
+    ) -> str:
+        # NOTE: We intentionally do not forward unsupported params (top_k, repetition_penalty, seed, etc.)
+        # to maximize compatibility across "OpenAI-compatible" providers.
+        _ = (top_k, repetition_penalty, no_repeat_ngram_size, seed)
+        resp = self._chat(
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=int(max_new_tokens),
+            temperature=max(0.0, float(temperature)),
+            top_p=float(top_p),
+        )
+        choices = resp.get("choices") or []
+        if not choices:
+            raise RuntimeError("No choices in API response")
+        c0 = choices[0] or {}
+        msg = c0.get("message") or {}
+        content = msg.get("content")
+        if isinstance(content, str):
+            return content.strip()
+        text = c0.get("text")
+        if isinstance(text, str):
+            return text.strip()
+        raise RuntimeError("Unrecognized API response shape (missing content/text)")
+
+    def probe_top_logprobs(self, prompt: str, *, top_n: int) -> List[Dict[str, Any]]:
+        """Return a list of {token, logprob, prob} for the next token distribution (top-N only)."""
+        n = max(0, int(top_n))
+        if n <= 0:
+            return []
+        resp = self._chat(
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=1,
+            temperature=0.0,
+            top_p=1.0,
+            logprobs=True,
+            top_logprobs=n,
+        )
+        choices = resp.get("choices") or []
+        if not choices:
+            return []
+        c0 = choices[0] or {}
+        lp = c0.get("logprobs") or {}
+
+        top_items: List[Dict[str, Any]] = []
+        try:
+            # Chat Completions style: logprobs.content[0].top_logprobs[]
+            content = lp.get("content") or []
+            if isinstance(content, list) and content:
+                first = content[0] or {}
+                tlogs = first.get("top_logprobs") or []
+                if isinstance(tlogs, list):
+                    for x in tlogs:
+                        tok = x.get("token")
+                        lpr = x.get("logprob")
+                        if not isinstance(tok, str):
+                            continue
+                        if not isinstance(lpr, (int, float)):
+                            continue
+                        tok2 = clean_token_text(tok)
+                        if not tok2:
+                            continue
+                        p = float(math.exp(float(lpr))) if float(lpr) > -1e9 else 0.0
+                        top_items.append({"token": tok2, "logprob": float(lpr), "prob": p})
+        except Exception:
+            top_items = []
+
+        # Some providers may return alternative shapes; best-effort fallback.
+        if not top_items and isinstance(lp, dict) and "top_logprobs" in lp:
+            tlogs = lp.get("top_logprobs") or []
+            if isinstance(tlogs, list) and tlogs:
+                first = tlogs[0]
+                if isinstance(first, dict):
+                    for tok, lpr in first.items():
+                        if not isinstance(tok, str) or not isinstance(lpr, (int, float)):
+                            continue
+                        tok2 = clean_token_text(tok)
+                        if not tok2:
+                            continue
+                        p = float(math.exp(float(lpr))) if float(lpr) > -1e9 else 0.0
+                        top_items.append({"token": tok2, "logprob": float(lpr), "prob": p})
+
+        top_items.sort(key=lambda d: float(d.get("logprob", -1e9)), reverse=True)
+        # Add rank
+        for i, d in enumerate(top_items):
+            d["rank"] = i
+        return top_items[:n]
+
+
+# -----------------------------
 # Model wrapper (MPS-safe + Gemma-aware)
 # -----------------------------
 
@@ -1442,6 +1826,19 @@ class LocalHFModel:
 class RunConfig:
     model_path: str
     memory_path: Path
+    backend: str = "hf"  # hf|openai_compat
+
+    # API backend (OpenAI-compatible)
+    api_base_url: str = "https://api.openai.com/v1"
+    api_chat_path: str = "/chat/completions"
+    api_key_env: str = "OPENAI_API_KEY"
+    api_key: str = ""
+    api_headers: List[str] = dataclasses.field(default_factory=list)  # repeatable "Key: Value"
+    api_timeout: float = 60.0
+    api_max_retries: int = 2
+    api_seed_method: str = "auto"  # auto|self|logprobs
+    api_logprobs_top_n: int = 0  # 0 disables logprobs probing
+
     n_memory: int = 12
     memory_policy: str = "tail"  # tail|current_only|off
     memory_retrieve: str = "tail"  # tail|similar|anti|mix (only when memory_policy=tail)
@@ -2024,12 +2421,466 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
     return answer, records, extras
 
 
+def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[str, List[Dict[str, Any]], Dict[str, Any]]:
+    lang = cfg.prompt_lang
+    n_ponder = max(1, int(cfg.n_ponder))  # per band
+
+    run_id = sha256_short(f"{now_iso()}|{cfg.seed}|{query}")
+    query_sha = sha256_short(query)
+
+    pipeline = list(cfg.ponder_pipeline) if cfg.ponder_pipeline else [cfg.ponder_mode]
+    pipeline_ctx = (cfg.pipeline_context or "prev").strip()
+
+    objective = (cfg.keyword_objective or "random_band").strip()
+    control = (cfg.control or "none").strip()
+    if control == "random_keywords":
+        objective = "random_vocab"
+
+    # Seed probe (optional): OpenAI-compatible top-logprobs for the *next* token.
+    base_prompt = hf._apply_chat(build_prompt_for_answer(query, memory_block=None, lang=lang), system_text=None)
+
+    seed_method = (cfg.api_seed_method or "auto").strip()
+    top_n = int(cfg.api_logprobs_top_n)
+    use_logprobs = seed_method == "logprobs" or (seed_method == "auto" and top_n > 0)
+    if seed_method == "logprobs" and top_n <= 0:
+        top_n = 128
+
+    probe_top: List[Dict[str, Any]] = []
+    if use_logprobs or cfg.print_probe or cfg.probe_top_n > 0:
+        probe_n = top_n if use_logprobs and top_n > 0 else max(20, int(cfg.probe_top_n) or 0, top_n)
+        try:
+            probe_top = hf.probe_top_logprobs(base_prompt, top_n=probe_n)
+        except Exception:
+            probe_top = []
+
+    if cfg.print_probe and probe_top:
+        items = [
+            {"token_id": None, "token": x.get("token", ""), "rank": int(x.get("rank", 0)), "prob": float(x.get("prob", 0.0))}
+            for x in probe_top
+        ]
+        _print_probe_table("PROBE TOP TOKENS (API)", items, limit=min(len(items), 50))
+
+    warned_objective = False
+    warned_memory = False
+
+    # Unstable objective (logprobs-only): compute per-token stddev across prompt jitters.
+    jitter_queries: List[str] = []
+    jitter_maps: List[Dict[str, float]] = []
+    if use_logprobs and objective == "unstable":
+        jitter_n = int(cfg.prompt_jitter)
+        if jitter_n <= 0:
+            jitter_n = 3
+        jitter_queries = generate_prompt_jitters(
+            hf,
+            query=query,
+            n=jitter_n,
+            lang=lang,
+            include_original=bool(cfg.prompt_jitter_include_original),
+            max_new_tokens=int(cfg.prompt_jitter_max_new_tokens),
+            temperature=float(cfg.prompt_jitter_temperature),
+            seed=int(cfg.seed) + 999,
+        )
+        probe_n = max(32, top_n)
+        for jq in jitter_queries:
+            jp = hf._apply_chat(build_prompt_for_answer(jq, memory_block=None, lang=lang), system_text=None)
+            try:
+                tops = hf.probe_top_logprobs(jp, top_n=probe_n)
+            except Exception:
+                tops = []
+            jitter_maps.append({str(x.get("token", "")): float(x.get("logprob", -1e9)) for x in tops if x.get("token")})
+
+    unstable_scores: Dict[str, float] = {}
+    if jitter_maps and probe_top:
+        toks = [str(x.get("token", "")) for x in probe_top if isinstance(x.get("token"), str)]
+        for t in toks:
+            vals = [m[t] for m in jitter_maps if t in m]
+            if len(vals) < 2:
+                continue
+            mu = sum(vals) / float(len(vals))
+            var = sum((x - mu) ** 2 for x in vals) / float(len(vals))
+            unstable_scores[t] = float(math.sqrt(var))
+
+    records: List[Dict[str, Any]] = []
+    log_ix = 0
+
+    bands = cfg.bands or _default_bands_from_profile(cfg.band_profile)
+    if not bands:
+        bands = [{"label": "single", "start_rank": 0, "end_rank": 0}]
+
+    for band_ix, band in enumerate(bands):
+        band_label = str(band.get("label", f"band{band_ix}"))
+        band_start = int(band.get("start_rank", 0))
+        band_end = int(band.get("end_rank", 0))
+
+        for band_ponder_ix in range(n_ponder):
+            n_kw = int(cfg.rejected.n_keywords)
+            rng = random.Random(int(cfg.seed) + 99991 + band_ix * 10007 + band_ponder_ix * 101 + log_ix * 37)
+
+            keywords_source = "api_self"
+            raw_keywords: List[str] = []
+            picked_items: List[Dict[str, Any]] = []
+
+            # Attempt logprobs-based seed selection when available.
+            if use_logprobs and probe_top:
+                pool = probe_top
+                if band_end > band_start:
+                    pool = pool[band_start:band_end]
+                pool = [x for x in pool if isinstance(x.get("token"), str) and str(x.get("token")).strip()]
+                # objective handling
+                if objective == "dissonance":
+                    if not warned_objective:
+                        print("[sr_ponder] WARN: keyword_objective=dissonance not supported for API; using random_band.", file=sys.stderr)
+                        warned_objective = True
+                    obj_mode = "random_band"
+                else:
+                    obj_mode = objective
+
+                tokens = [str(x.get("token", "")).strip() for x in pool]
+                # de-dupe preserve order
+                seen = set()
+                tokens2: List[str] = []
+                for t in tokens:
+                    if not t:
+                        continue
+                    if t in seen:
+                        continue
+                    seen.add(t)
+                    tokens2.append(t)
+
+                if obj_mode == "unstable" and unstable_scores:
+                    tokens2.sort(key=lambda t: float(unstable_scores.get(t, 0.0)), reverse=True)
+                    tokens2 = tokens2[: max(1, int(cfg.keyword_select_top))]
+
+                if len(tokens2) >= n_kw:
+                    picked = rng.sample(tokens2, k=n_kw)
+                else:
+                    picked = []
+
+                if picked:
+                    keywords_source = "api_logprobs"
+                    raw_keywords = picked
+                    lookup = {str(x.get("token", "")).strip(): x for x in probe_top}
+                    for t in picked:
+                        x = lookup.get(t) or {}
+                        picked_items.append(
+                            {
+                                "token_id": None,
+                                "token": t,
+                                "rank": x.get("rank"),
+                                "prob": x.get("prob"),
+                                "logprob": x.get("logprob"),
+                                "unstable": unstable_scores.get(t) if unstable_scores else None,
+                            }
+                        )
+
+            # Self-seeded keywords (fallback / default).
+            if not raw_keywords:
+                raw_keywords = generate_seed_keywords_self(
+                    hf,
+                    query=query,
+                    n_keywords=n_kw,
+                    lang=lang,
+                    band_label=band_label,
+                    objective=objective,
+                    max_new_tokens=160,
+                    temperature=max(0.2, float(cfg.temperature)),
+                    seed=int(cfg.seed) + 5000 + log_ix,
+                )
+                keywords_source = "api_self"
+                picked_items = [{"token_id": None, "token": t, "rank": None, "prob": None} for t in raw_keywords]
+
+            keywords = raw_keywords
+            refined_keywords: List[str] = []
+            if cfg.keyword_refine and keywords_source != "human_pick":
+                refined_keywords = refine_keywords_with_model(
+                    hf,
+                    query=query,
+                    seed_keywords=raw_keywords,
+                    n_keywords=n_kw,
+                    lang=lang,
+                    max_new_tokens=int(cfg.keyword_refine_max_new_tokens),
+                    temperature=float(cfg.keyword_refine_temperature),
+                    seed=int(cfg.seed) + 200 + log_ix,
+                )
+                if refined_keywords:
+                    keywords = refined_keywords
+                    keywords_source = "model_refine"
+
+            if cfg.interactive:
+                cand_items = picked_items or [{"token_id": None, "token": t, "rank": i, "prob": None} for i, t in enumerate(keywords)]
+                picked = interactive_pick_keywords(
+                    prompt=f"band={band_label} band_ix={band_ix} log={band_ponder_ix}",
+                    rng=rng,
+                    candidates=cand_items,
+                    n_keywords=n_kw,
+                )
+                if picked:
+                    keywords = picked
+                    keywords_source = "human_pick"
+
+            # One ponder question per (band, band_ponder_ix), reused across pipeline stages.
+            if control == "lens_only":
+                ponder_q = query
+            else:
+                q_rng = random.Random(int(cfg.seed) + 12345 + band_ix * 10007 + band_ponder_ix * 101)
+                ponder_q = make_unrelated_question(keywords, lang=lang, rng=q_rng)
+
+            stage_logs: List[str] = []
+            for stage_ix, stage_mode in enumerate(pipeline):
+                ctx_text: Optional[str] = None
+                if pipeline_ctx == "prev" and stage_logs:
+                    ctx_text = stage_logs[-1]
+                elif pipeline_ctx == "all" and stage_logs:
+                    ctx_text = "\n\n".join(stage_logs)
+
+                if ctx_text and len(ctx_text) > int(cfg.pipeline_context_max_chars):
+                    ctx_text = ctx_text[-int(cfg.pipeline_context_max_chars) :]
+
+                ponder_prompt = hf._apply_chat(
+                    build_prompt_for_pondering(ponder_q, mode=stage_mode, lang=lang, context=ctx_text),
+                    system_text=None,
+                )
+                ponder_log = hf.generate_text(
+                    ponder_prompt,
+                    max_new_tokens=cfg.ponder_max_new_tokens,
+                    temperature=max(0.4, cfg.temperature),
+                    top_p=cfg.top_p,
+                    top_k=0,
+                    repetition_penalty=1.0,
+                    no_repeat_ngram_size=0,
+                    seed=int(cfg.seed) + 1 + log_ix,
+                )
+                stage_logs.append(ponder_log)
+
+                if cfg.print_probe:
+                    _print_probe_table(
+                        f"SEED KEYWORDS (API band={band_label} ix={log_ix} stage={stage_mode})",
+                        [{"token_id": None, "token": t, "rank": None, "prob": None} for t in (keywords or [])],
+                        limit=len(keywords or []),
+                    )
+                    print(f"\nkeywords_source={keywords_source} keywords={keywords}\n")
+
+                record: Dict[str, Any] = {
+                    "ts": now_iso(),
+                    "run_id": run_id,
+                    "query_sha": query_sha,
+                    "prompt_lang": lang,
+                    "backend": "openai_compat",
+                    "control": control,
+                    "band_profile": cfg.band_profile,
+                    "band_ix": band_ix,
+                    "band_label": band_label,
+                    "band_ponder_ix": band_ponder_ix,
+                    "pipeline": pipeline,
+                    "pipeline_stage_ix": stage_ix,
+                    "pipeline_context": pipeline_ctx,
+                    "ponder_ix": log_ix,
+                    "ponder_mode": stage_mode,
+                    "keywords_source": keywords_source,
+                    "keywords_raw": raw_keywords,
+                    "keywords": keywords,
+                    "token_ids": [],
+                    "selected_tokens": picked_items,
+                    "rejected_cfg": dataclasses.asdict(cfg.rejected),
+                    "band": {"start_rank": band_start, "end_rank": band_end},
+                    "ponder_question": ponder_q,
+                    "ponder_log": ponder_log,
+                }
+                if cfg.probe_top_n > 0 and log_ix == 0 and probe_top:
+                    record["probe_top"] = probe_top[: int(cfg.probe_top_n)]
+                if jitter_queries and log_ix == 0:
+                    record["prompt_jitter_queries"] = jitter_queries
+
+                if cfg.write_memory:
+                    append_jsonl(cfg.memory_path, record)
+                records.append(record)
+                log_ix += 1
+
+    # Select memory records for final answer injection (API: tail only; similarity retrieval unsupported)
+    def _select_memory_api() -> List[Dict[str, Any]]:
+        if cfg.memory_policy == "off":
+            return []
+        if cfg.memory_policy == "current_only":
+            return list(records)
+        if cfg.memory_policy != "tail":
+            raise ValueError(f"Unknown memory_policy: {cfg.memory_policy!r}")
+
+        pool = tail_jsonl(cfg.memory_path, max(0, int(cfg.memory_pool)))
+        if not pool:
+            return []
+        exclude_run_id = run_id if cfg.memory_exclude_current_run and cfg.memory_policy == "tail" else None
+        if exclude_run_id:
+            pool = [r for r in pool if str(r.get("run_id", "")) != str(exclude_run_id)]
+
+        if cfg.memory_retrieve != "tail":
+            nonlocal warned_memory
+            if not warned_memory:
+                print("[sr_ponder] WARN: memory_retrieve!=tail not supported for API; using tail.", file=sys.stderr)
+                warned_memory = True
+        take = max(0, int(cfg.n_memory))
+        return pool[-take:] if take > 0 else []
+
+    mem_records = _select_memory_api()
+    if control == "no_inject":
+        mem_records = []
+
+    memory_block = build_memory_block(mem_records, max_chars_per_log=700) if mem_records else None
+    memory_block = remix_memory_block(
+        hf,
+        memory_block=memory_block,
+        remix=cfg.memory_remix,
+        lang=lang,
+        keep_original=cfg.memory_remix_keep_original,
+        max_new_tokens=cfg.memory_remix_max_new_tokens,
+        temperature=cfg.memory_remix_temperature,
+        seed=int(cfg.seed) + 777,
+    )
+
+    random_log_text: Optional[str] = None
+    if control == "random_log":
+        rng = random.Random(int(cfg.seed) + 424242)
+        rand_kw = generate_seed_keywords_self(
+            hf,
+            query=query,
+            n_keywords=int(cfg.rejected.n_keywords),
+            lang=lang,
+            band_label="random",
+            objective="random_vocab",
+            max_new_tokens=120,
+            temperature=0.8,
+            seed=int(cfg.seed) + 424242,
+        )
+        q_rng = random.Random(int(cfg.seed) + 424243)
+        rand_q = make_unrelated_question(rand_kw, lang=lang, rng=q_rng)
+        rp = hf._apply_chat(build_prompt_for_pondering(rand_q, mode="assoc", lang=lang), system_text=None)
+        random_log_text = hf.generate_text(
+            rp,
+            max_new_tokens=int(cfg.ponder_max_new_tokens),
+            temperature=max(0.6, float(cfg.temperature)),
+            top_p=float(cfg.top_p),
+            top_k=0,
+            repetition_penalty=1.0,
+            no_repeat_ngram_size=0,
+            seed=int(cfg.seed) + 424244,
+        )
+        memory_block = random_log_text
+
+    # Band answers (sensitivity analysis)
+    band_answers: Dict[str, str] = {}
+    if cfg.answer_per_band or cfg.answer_ensemble:
+        for band in bands:
+            bl = str(band.get("label", "band"))
+            band_recs = [r for r in records if str(r.get("band_label", "")) == bl]
+            if not band_recs:
+                continue
+            band_mem = None if control == "no_inject" else build_memory_block(band_recs, max_chars_per_log=700)
+            band_mem = remix_memory_block(
+                hf,
+                memory_block=band_mem,
+                remix=cfg.memory_remix,
+                lang=lang,
+                keep_original=False,
+                max_new_tokens=cfg.memory_remix_max_new_tokens,
+                temperature=cfg.memory_remix_temperature,
+                seed=int(cfg.seed) + 9000 + hash(bl) % 1000,
+            )
+            fp = hf._apply_chat(build_prompt_for_answer(query, memory_block=band_mem, lang=lang), system_text=None)
+            band_ans = hf.generate_text(
+                fp,
+                max_new_tokens=cfg.answer_max_new_tokens,
+                temperature=cfg.temperature,
+                top_p=cfg.top_p,
+                top_k=0,
+                repetition_penalty=1.0,
+                no_repeat_ngram_size=0,
+                seed=int(cfg.seed) + 10101,
+            )
+            band_answers[bl] = band_ans
+
+    ensemble_raw: Optional[str] = None
+    ensemble_final: Optional[str] = None
+    ensemble_consensus: Optional[str] = None
+    ensemble_divergence: Optional[str] = None
+    if cfg.answer_ensemble and len(band_answers) >= 2:
+        ep = hf._apply_chat(build_prompt_for_ensemble_summary(query, band_answers, lang=lang), system_text=None)
+        ensemble_raw = hf.generate_text(
+            ep,
+            max_new_tokens=int(cfg.answer_ensemble_max_new_tokens),
+            temperature=float(cfg.answer_ensemble_temperature),
+            top_p=0.95,
+            top_k=0,
+            repetition_penalty=1.0,
+            no_repeat_ngram_size=0,
+            seed=int(cfg.seed) + 20202,
+        )
+        ensemble_consensus = extract_tag(ensemble_raw, "consensus")
+        ensemble_divergence = extract_tag(ensemble_raw, "divergence")
+        ensemble_final = extract_tag(ensemble_raw, "final") or ensemble_raw.strip()
+
+    final_answer_block = memory_block
+    if control == "no_inject":
+        final_answer_block = None
+    if cfg.answer_ensemble and ensemble_final:
+        answer = ensemble_final.strip()
+    else:
+        final_prompt = hf._apply_chat(build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang), system_text=None)
+        answer = hf.generate_text(
+            final_prompt,
+            max_new_tokens=cfg.answer_max_new_tokens,
+            temperature=cfg.temperature,
+            top_p=cfg.top_p,
+            top_k=0,
+            repetition_penalty=1.0,
+            no_repeat_ngram_size=0,
+            seed=cfg.seed,
+        )
+
+    extras: Dict[str, Any] = {
+        "run_id": run_id,
+        "control": control,
+        "pipeline": pipeline,
+        "memory_policy": cfg.memory_policy,
+        "memory_retrieve": cfg.memory_retrieve,
+        "memory_remix": cfg.memory_remix,
+        "memory_selected": [
+            {
+                "ts": r.get("ts"),
+                "run_id": r.get("run_id"),
+                "band_label": r.get("band_label"),
+                "ponder_ix": r.get("ponder_ix"),
+                "ponder_mode": r.get("ponder_mode"),
+            }
+            for r in (mem_records or [])
+        ],
+        "band_answers": band_answers if band_answers else None,
+        "ensemble": {
+            "raw": ensemble_raw,
+            "consensus": ensemble_consensus,
+            "divergence": ensemble_divergence,
+            "final": ensemble_final,
+        }
+        if ensemble_raw
+        else None,
+        "random_log": random_log_text,
+        "prompt_jitter_queries": jitter_queries if jitter_queries else None,
+        "api_probe_top": probe_top[:50] if probe_top else None,
+    }
+
+    return answer, records, extras
+
+
+def run_ponder_dispatch(hf: Any, cfg: RunConfig, query: str) -> Tuple[str, List[Dict[str, Any]], Dict[str, Any]]:
+    if (cfg.backend or "hf").strip() == "openai_compat":
+        return run_ponder_api(hf, cfg, query)
+    return run_ponder(hf, cfg, query)
+
+
 def main() -> None:
     class _Fmt(argparse.ArgumentDefaultsHelpFormatter, argparse.RawTextHelpFormatter):
         pass
 
     ap = argparse.ArgumentParser(
-        description="Local pondering machine (HF causal LM) — rejected-token + lens + bands + memory.",
+        description="Pondering machine (local HF + API) — rejected-token + lens + bands + memory.",
         formatter_class=_Fmt,
     )
 
@@ -2044,9 +2895,11 @@ def main() -> None:
     g_interactive = ap.add_argument_group("Interactive")
     g_controls = ap.add_argument_group("Controls / Pack")
     g_runtime = ap.add_argument_group("Runtime")
+    g_api = ap.add_argument_group("API (OpenAI-compatible)")
     g_gen = ap.add_argument_group("Generation")
 
-    g_core.add_argument("--model", required=True, help="Local model directory (offline)")
+    g_core.add_argument("--backend", choices=["hf", "openai_compat"], default="hf", help="Model backend")
+    g_core.add_argument("--model", required=True, help="hf: local model dir; openai_compat: model name")
     g_core.add_argument("--query", required=True, help="User query (main question)")
     g_core.add_argument("--memory", default="ponder_logs.jsonl", help="Path to JSONL memory log")
     g_core.add_argument("--mode", choices=["baseline", "ponder", "both"], default="both")
@@ -2170,6 +3023,21 @@ def main() -> None:
     g_runtime.add_argument("--probe_top_n", type=int, default=0, help="Store probe top-N tokens in record (0=off)")
     g_runtime.add_argument("--print_probe", action="store_true", help="Print probe tables to stdout")
 
+    g_api.add_argument("--api_base_url", default="https://api.openai.com/v1", help="API base URL")
+    g_api.add_argument("--api_chat_path", default="/chat/completions", help="Chat Completions path")
+    g_api.add_argument("--api_key_env", default="OPENAI_API_KEY", help="Env var for API key")
+    g_api.add_argument("--api_key", default="", help="API key (discouraged; prefer env)")
+    g_api.add_argument("--api_header", action="append", default=[], help='Extra header "Key: Value" (repeatable)')
+    g_api.add_argument("--api_timeout", type=float, default=60.0, help="HTTP timeout (seconds)")
+    g_api.add_argument("--api_max_retries", type=int, default=2, help="Retry count for 429/5xx")
+    g_api.add_argument(
+        "--api_seed_method",
+        choices=["auto", "self", "logprobs"],
+        default="auto",
+        help="API keyword seeding: self (prompted) or logprobs (if supported)",
+    )
+    g_api.add_argument("--api_logprobs_top_n", type=int, default=0, help="Top-N logprobs to request (0=off)")
+
     g_gen.add_argument("--ponder_max_new_tokens", type=int, default=160)
     g_gen.add_argument("--temperature", type=float, default=0.7)
     g_gen.add_argument("--top_p", type=float, default=0.95)
@@ -2191,6 +3059,16 @@ def main() -> None:
     cfg = RunConfig(
         model_path=args.model,
         memory_path=Path(args.memory),
+        backend=args.backend,
+        api_base_url=args.api_base_url,
+        api_chat_path=args.api_chat_path,
+        api_key_env=args.api_key_env,
+        api_key=args.api_key,
+        api_headers=list(args.api_header or []),
+        api_timeout=float(args.api_timeout),
+        api_max_retries=int(args.api_max_retries),
+        api_seed_method=args.api_seed_method,
+        api_logprobs_top_n=int(args.api_logprobs_top_n),
         n_memory=args.n_memory,
         memory_policy=args.memory_policy,
         memory_retrieve=args.memory_retrieve,
@@ -2254,24 +3132,51 @@ def main() -> None:
         force_gemma_format=not args.no_gemma_format,
     )
 
-    hf = LocalHFModel(
-        cfg.model_path,
-        device=cfg.device,
-        dtype=cfg.dtype,
-        trust_remote_code=cfg.trust_remote_code,
-        use_chat_template=cfg.use_chat_template,
-        force_gemma_format=cfg.force_gemma_format,
-        allocator_warmup=cfg.allocator_warmup,
-    )
-    print(
-        f"[sr_ponder] device={hf.device_str} input_device={hf.input_device} dtype={hf.torch_dtype} "
-        f"alloc_warmup={cfg.allocator_warmup} "
-        f"gemma_turn_tokens={hf._has_gemma_turn_tokens()} lang={cfg.prompt_lang} "
-        f"band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
-        f"objective={cfg.keyword_objective} control={cfg.control} "
-        f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
-        f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} write_memory={cfg.write_memory}"
-    )
+    hf: Any
+    if cfg.backend == "hf":
+        hf = LocalHFModel(
+            cfg.model_path,
+            device=cfg.device,
+            dtype=cfg.dtype,
+            trust_remote_code=cfg.trust_remote_code,
+            use_chat_template=cfg.use_chat_template,
+            force_gemma_format=cfg.force_gemma_format,
+            allocator_warmup=cfg.allocator_warmup,
+        )
+        print(
+            f"[sr_ponder] backend=hf device={hf.device_str} input_device={hf.input_device} dtype={hf.torch_dtype} "
+            f"alloc_warmup={cfg.allocator_warmup} "
+            f"gemma_turn_tokens={hf._has_gemma_turn_tokens()} lang={cfg.prompt_lang} "
+            f"band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
+            f"objective={cfg.keyword_objective} control={cfg.control} "
+            f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
+            f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} write_memory={cfg.write_memory}"
+        )
+    elif cfg.backend == "openai_compat":
+        api_key = (cfg.api_key or os.environ.get(cfg.api_key_env, "") or "").strip()
+        if not api_key:
+            raise SystemExit(
+                f"[sr_ponder] ERROR: missing API key. Set env {cfg.api_key_env} or pass --api_key."
+            )
+        hf = OpenAICompatModel(
+            model=cfg.model_path,
+            api_base_url=cfg.api_base_url,
+            api_key=api_key,
+            api_chat_path=cfg.api_chat_path,
+            api_headers=cfg.api_headers,
+            timeout=cfg.api_timeout,
+            max_retries=cfg.api_max_retries,
+        )
+        print(
+            f"[sr_ponder] backend=openai_compat model={cfg.model_path!r} base_url={cfg.api_base_url} "
+            f"seed_method={cfg.api_seed_method} logprobs_top_n={cfg.api_logprobs_top_n} "
+            f"lang={cfg.prompt_lang} band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
+            f"objective={cfg.keyword_objective} control={cfg.control} "
+            f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
+            f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} write_memory={cfg.write_memory}"
+        )
+    else:
+        raise SystemExit(f"[sr_ponder] ERROR: unknown backend: {cfg.backend!r}")
 
     if args.pack != "none":
         pack_cfg = dataclasses.replace(cfg, interactive=False, answer_per_band=False, answer_ensemble=False)
@@ -2300,7 +3205,7 @@ def main() -> None:
                 results["items"].append({"name": name, "kind": "baseline", "answer": ans})
                 continue
             cfg2 = dataclasses.replace(pack_cfg, control=str(spec.get("control", "none")))
-            ans, _, extras = run_ponder(hf, cfg2, args.query)
+            ans, _, extras = run_ponder_dispatch(hf, cfg2, args.query)
             print(ans)
             results["items"].append({"name": name, "kind": "ponder", "control": cfg2.control, "answer": ans, "extras": extras})
 
@@ -2317,7 +3222,7 @@ def main() -> None:
         print(ans)
 
     if args.mode in ("ponder", "both"):
-        ans, recs, extras = run_ponder(hf, cfg, args.query)
+        ans, recs, extras = run_ponder_dispatch(hf, cfg, args.query)
 
         if args.print_records != "none":
             if args.print_records == "all" or (args.print_records == "auto" and len(recs) <= 3):

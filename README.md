@@ -1,6 +1,6 @@
 # sr_pondering_machine.py 🐈‍⬛
 
-A **pondering machine** for local Hugging Face causal language models — optimised for Apple Silicon (MPS) and Gemma instruction-tuned models.
+A **pondering machine** for local Hugging Face causal language models *and* OpenAI-compatible API models — optimised for Apple Silicon (MPS) and Gemma instruction-tuned models.
 
 ## What Is a "Pondering Machine"?
 
@@ -8,7 +8,7 @@ Instead of answering a question directly, the pondering machine first *wanders o
 
 The core idea:
 
-1. **Probe the model** — run the user query through the model and capture the next-token logits.
+1. **Probe the model** — capture the next-token distribution (local logits, or API top-logprobs when available).
 2. **Pick "rejected" tokens** — select tokens that scored well but were *not* at the top of the distribution. These act as seeds for an unrelated train of thought.
 3. **Generate a ponder log** — ask the model to freely associate around those keywords. The result is a short, stream-of-consciousness log with no conclusions.
 4. **Answer with context** — feed the ponder log back into the model as soft background context before producing the final answer.
@@ -17,6 +17,7 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 
 ## Features
 
+- **API backend** — `--backend openai_compat` supports OpenAI-style `POST /chat/completions` providers.
 - **MPS-first** — resolves Apple Silicon device-mismatch errors automatically.
 - **Gemma-aware** — natively applies the `<start_of_turn>` / `<end_of_turn>` prompt format expected by Gemma IT models and stops generation cleanly at `<end_of_turn>`.
 - **Persistent memory** — ponder logs are stored in a JSONL file and the most recent entries are reused in subsequent runs.
@@ -57,6 +58,7 @@ pip install torch transformers
 
 ```bash
 python3 sr_pondering_machine.py \
+  --backend hf \
   --model ./model/gemma-3-270m-it \
   --query "Explain quantum entanglement to a high school student" \
   --mode both \
@@ -64,6 +66,35 @@ python3 sr_pondering_machine.py \
 ```
 
 This runs both the **baseline** (direct answer) and the **ponder** (wander-then-answer) modes and prints both outputs for comparison.
+
+## API Quick Start (OpenAI-compatible)
+
+Use `--backend openai_compat` to call an OpenAI-style API endpoint.
+
+```bash
+export OPENAI_API_KEY="..."
+
+python3 sr_pondering_machine.py \
+  --backend openai_compat \
+  --api_base_url https://api.openai.com/v1 \
+  --model "your-model-name" \
+  --query "Should we optimize for accuracy or speed in LLM systems?" \
+  --mode ponder \
+  --api_seed_method self
+```
+
+If your provider supports Chat Completions logprobs, you can try the more “rejected-token-ish” seeding:
+
+```bash
+python3 sr_pondering_machine.py \
+  --backend openai_compat \
+  --api_base_url https://api.openai.com/v1 \
+  --model "your-model-name" \
+  --query "Why do we overfit narratives to randomness?" \
+  --mode ponder \
+  --api_seed_method logprobs \
+  --api_logprobs_top_n 128
+```
 
 ## Experimental Recipes
 
@@ -348,7 +379,9 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.h
 ## Notes
 
 - **Use the `-it` (instruction-tuned) variant** of Gemma for best results. The base model does not reliably follow instructions.
-- The model must already be **downloaded locally**. Network access is disabled at inference time (`local_files_only=True`).
+- For `--backend hf`, the model must already be **downloaded locally**. Network access is disabled at inference time (`local_files_only=True`).
+- For `--backend openai_compat`, set an API key (default env: `OPENAI_API_KEY`) and point `--api_base_url` at an OpenAI-style provider.
+- For API backends, `--memory_retrieve similar|anti|mix` is currently not supported (falls back to `tail`).
 - If you see an error like “Repo id must be in the form …” while passing an absolute `--model` path, it usually means the directory does not exist (Transformers falls back to treating it like a Hub ID). Double-check the path and try the closest matching folder name.
 - On Apple Silicon (MPS), Transformers 5.x “caching allocator warmup” can crash on large models with `RuntimeError: Invalid buffer size: ...`. The script defaults to `--allocator_warmup auto` (which disables warmup on MPS). You can also force it off with `--allocator_warmup off`.
 - `--keyword_refine` adds an extra generation call before the ponder step (slower, but often produces better keywords).
