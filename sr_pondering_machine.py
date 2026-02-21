@@ -1237,6 +1237,79 @@ def _cosine_sim_sparse(a: Dict[int, float], b: Dict[int, float], eps: float = 1e
     return float(dot / denom) if denom > 0 else 0.0
 
 
+def _add_hashed_char_ngrams_multi(
+    dst: Dict[int, float],
+    text: str,
+    *,
+    ns: Sequence[int],
+    dim: int,
+    max_chars: int,
+    scale: float,
+    n_weights: Dict[int, float],
+) -> None:
+    s = _normalize_sim_text(text)
+    if max_chars > 0 and len(s) > int(max_chars):
+        s = s[-int(max_chars) :]
+    if not s:
+        return
+
+    base_dim = max(1, int(dim))
+    for n_i, n in enumerate(ns):
+        nn = max(1, int(n))
+        w = float(scale) * float(n_weights.get(nn, 1.0))
+        off = n_i * base_dim
+        if len(s) <= nn:
+            ix = (_fnv1a_32(s) % base_dim) + off
+            dst[ix] = dst.get(ix, 0.0) + w
+            continue
+        for i in range(0, len(s) - nn + 1):
+            gram = s[i : i + nn]
+            ix = (_fnv1a_32(gram) % base_dim) + off
+            dst[ix] = dst.get(ix, 0.0) + w
+
+
+def _sparse_dot(a: Dict[int, float], b: Dict[int, float]) -> float:
+    if not a or not b:
+        return 0.0
+    if len(a) > len(b):
+        a, b = b, a
+    dot = 0.0
+    for k, av in a.items():
+        bv = b.get(k)
+        if bv:
+            dot += float(av) * float(bv)
+    return float(dot)
+
+
+def _sparse_norm(a: Dict[int, float]) -> float:
+    if not a:
+        return 0.0
+    return float(math.sqrt(sum(float(v) * float(v) for v in a.values())))
+
+
+def _cosine_with_norm(a: Dict[int, float], na: float, b: Dict[int, float], nb: float, eps: float = 1e-12) -> float:
+    denom = float(na) * float(nb) + float(eps)
+    if denom <= 0:
+        return 0.0
+    return float(_sparse_dot(a, b) / denom)
+
+
+def _tfidf_vec(tf: Dict[int, float], idf: Dict[int, float]) -> Tuple[Dict[int, float], float]:
+    """Return (tfidf_vec, norm)."""
+    vec: Dict[int, float] = {}
+    norm2 = 0.0
+    for k, f in tf.items():
+        idf_w = float(idf.get(k, 0.0))
+        if idf_w <= 0:
+            continue
+        w = math.log1p(float(f)) * idf_w
+        if w == 0.0:
+            continue
+        vec[k] = w
+        norm2 += w * w
+    return vec, float(math.sqrt(norm2))
+
+
 def _memory_record_text_for_sim(r: Dict[str, Any]) -> str:
     kws = r.get("keywords")
     if not kws:
@@ -1303,7 +1376,7 @@ def select_memory_records_fuzzy(
     sim_dim: int = 4096,
     sim_max_chars: int = 4000,
 ) -> List[Dict[str, Any]]:
-    """Approximate memory retrieval using hashed character n-gram cosine similarity.
+    """Approximate memory retrieval using hashed character n-gram retrieval (IDF-weighted).
 
     This is a provider-agnostic fallback (works for API backends and when embedding retrieval isn't available).
     """
@@ -1330,36 +1403,197 @@ def select_memory_records_fuzzy(
     if memory_retrieve == "tail":
         return pool[-take:]
 
+    # Multi-gram hashed TF -> IDF-weighted cosine similarity.
+    # We treat `sim_dim` as "dim per n-gram", and reserve a separate slice per n to reduce collisions.
+    center_n = max(2, int(sim_ngram_n))
+    ns = [n for n in (center_n - 1, center_n, center_n + 1) if n >= 2]
+    ns = list(dict.fromkeys(ns))  # stable unique
+    n_weights: Dict[int, float] = {}
+    for n in ns:
+        if n <= 2:
+            n_weights[n] = 0.55
+        elif n == 3:
+            n_weights[n] = 1.0
+        elif n == 4:
+            n_weights[n] = 1.25
+        else:
+            n_weights[n] = 1.35
+
+    # Field weighting: keywords matter most, then ponder_question, then ponder_log.
+    kw_w, pq_w, log_w = 2.2, 1.6, 1.0
+    kw_max, pq_max, log_max = 480, 900, int(sim_max_chars)
+
     cur_text = _current_text_for_sim(query, current_records)
-    cur_vec = _hashed_char_ngrams(cur_text, n=sim_ngram_n, dim=sim_dim, max_chars=sim_max_chars)
-    if not cur_vec:
+    cur_tf: Dict[int, float] = {}
+    _add_hashed_char_ngrams_multi(
+        cur_tf,
+        cur_text,
+        ns=ns,
+        dim=int(sim_dim),
+        max_chars=int(sim_max_chars),
+        scale=1.0,
+        n_weights=n_weights,
+    )
+    if not cur_tf:
         return pool[-take:]
 
-    scored: List[Tuple[float, Dict[str, Any]]] = []
+    # Build TF for each doc + DF for IDF
+    doc_records: List[Dict[str, Any]] = []
+    doc_tfs: List[Dict[int, float]] = []
+    dfs: Dict[int, int] = {}
+
     for r in pool:
-        rt = _memory_record_text_for_sim(r)
-        if not rt:
-            continue
-        rv = _hashed_char_ngrams(rt, n=sim_ngram_n, dim=sim_dim, max_chars=sim_max_chars)
-        if not rv:
-            continue
-        sim = _cosine_sim_sparse(cur_vec, rv)
-        scored.append((float(sim), r))
+        tf: Dict[int, float] = {}
+        # keywords
+        kws = r.get("keywords") or r.get("keywords_raw") or []
+        if isinstance(kws, list):
+            kw_s = " ".join(str(x) for x in kws if x is not None)
+        else:
+            kw_s = str(kws or "")
+        pq = str(r.get("ponder_question", "") or "")
+        plog = str(r.get("ponder_log", "") or "")
 
-    if not scored:
+        if kw_s:
+            _add_hashed_char_ngrams_multi(
+                tf,
+                kw_s,
+                ns=ns,
+                dim=int(sim_dim),
+                max_chars=kw_max,
+                scale=kw_w,
+                n_weights=n_weights,
+            )
+        if pq:
+            _add_hashed_char_ngrams_multi(
+                tf,
+                pq,
+                ns=ns,
+                dim=int(sim_dim),
+                max_chars=pq_max,
+                scale=pq_w,
+                n_weights=n_weights,
+            )
+        if plog:
+            _add_hashed_char_ngrams_multi(
+                tf,
+                plog,
+                ns=ns,
+                dim=int(sim_dim),
+                max_chars=log_max,
+                scale=log_w,
+                n_weights=n_weights,
+            )
+
+        if not tf:
+            continue
+        doc_records.append(r)
+        doc_tfs.append(tf)
+        for k in tf.keys():
+            dfs[k] = dfs.get(k, 0) + 1
+
+    if not doc_records:
         return pool[-take:]
 
-    scored.sort(key=lambda x: x[0])
+    n_docs = len(doc_records)
+    idf: Dict[int, float] = {}
+    for k, df in dfs.items():
+        idf[k] = float(math.log((n_docs + 1.0) / (float(df) + 1.0)) + 1.0)
+
+    q_vec, q_norm = _tfidf_vec(cur_tf, idf)
+    if not q_vec or q_norm <= 0:
+        return doc_records[-take:]
+
+    doc_vecs: List[Dict[int, float]] = []
+    doc_norms: List[float] = []
+    for tf in doc_tfs:
+        v, nrm = _tfidf_vec(tf, idf)
+        doc_vecs.append(v)
+        doc_norms.append(nrm)
+
+    # Similarity to query
+    scored: List[Tuple[float, int]] = []
+    for i, dv in enumerate(doc_vecs):
+        sim = _cosine_with_norm(q_vec, q_norm, dv, doc_norms[i])
+        scored.append((float(sim), int(i)))
+
+    scored.sort(key=lambda t: (t[0], t[1]))
+
+    def _mmr_select(cand_ids: List[int], k: int, *, lam: float = 0.9) -> List[int]:
+        k = max(0, int(k))
+        if k <= 0 or not cand_ids:
+            return []
+        selected: List[int] = []
+        remaining = list(cand_ids)
+        while remaining and len(selected) < k:
+            best_id: Optional[int] = None
+            best_score = -1e9
+            for cid in remaining:
+                rel = float(scored_map.get(cid, 0.0))
+                if not selected:
+                    div = 0.0
+                else:
+                    div = 0.0
+                    for sid in selected:
+                        div = max(div, _cosine_with_norm(doc_vecs[cid], doc_norms[cid], doc_vecs[sid], doc_norms[sid]))
+                mmr = float(lam) * rel - (1.0 - float(lam)) * div
+                if mmr > best_score + 1e-12:
+                    best_score = mmr
+                    best_id = cid
+                elif abs(mmr - best_score) <= 1e-12 and best_id is not None and cid > best_id:
+                    # tie-break: prefer more recent (higher index in tail pool)
+                    best_id = cid
+            if best_id is None:
+                break
+            selected.append(best_id)
+            remaining.remove(best_id)
+        return selected
+
+    # Map for quick access
+    scored_map = {i: s for s, i in scored}
+    top_sim = float(scored[-1][0]) if scored else 0.0
+    rel_floor = max(0.01, top_sim * 0.35)
+
     if memory_retrieve == "anti":
-        return [r for _, r in scored[:take]]
+        return [doc_records[i] for _, i in scored[:take]]
+
     if memory_retrieve == "similar":
-        return [r for _, r in scored[-take:]][::-1]
+        # Candidate pool for MMR
+        cand_pool = min(n_docs, max(50, take * 12))
+        top_ids = [i for _, i in scored[-cand_pool:]][::-1]
+        good_ids = [i for i in top_ids if float(scored_map.get(i, 0.0)) >= rel_floor]
+        if not good_ids:
+            good_ids = top_ids[:]
+        picked = _mmr_select(good_ids, min(take, len(good_ids)), lam=0.9)
+        if not picked:
+            picked = top_ids[:take]
+        return [doc_records[i] for i in picked]
+
     if memory_retrieve == "mix":
-        k_sim = max(0, min(take, int(round(take * float(mix_ratio)))))
-        k_anti = take - k_sim
-        anti = [r for _, r in scored[:k_anti]]
-        sim = [r for _, r in scored[-k_sim:]][::-1]
-        return sim + anti
+        k_sim_target = max(0, min(take, int(round(take * float(mix_ratio)))))
+        cand_pool = min(n_docs, max(50, k_sim_target * 12))
+        top_ids = [i for _, i in scored[-cand_pool:]][::-1]
+        good_ids = [i for i in top_ids if float(scored_map.get(i, 0.0)) >= rel_floor]
+        if not good_ids:
+            good_ids = top_ids[:]
+        sim_ids = _mmr_select(good_ids, min(k_sim_target, len(good_ids)), lam=0.9)
+        if not sim_ids:
+            sim_ids = top_ids[:k_sim_target]
+
+        used = set(sim_ids)
+        k_anti = max(0, take - len(sim_ids))
+        anti_ids = [i for _, i in scored[: max(k_anti * 3, k_anti)]]
+        anti_ids2 = [i for i in anti_ids if i not in used]
+        # fill if overlap (tiny pools)
+        if len(anti_ids2) < k_anti:
+            for _, i in scored:
+                if i in used or i in anti_ids2:
+                    continue
+                anti_ids2.append(i)
+                if len(anti_ids2) >= k_anti:
+                    break
+
+        out_ids = (sim_ids + anti_ids2[:k_anti])[:take]
+        return [doc_records[i] for i in out_ids]
 
     raise ValueError(f"Unknown memory_retrieve: {memory_retrieve!r}")
 
@@ -1369,6 +1603,7 @@ def select_memory_records(
     *,
     memory_path: Path,
     current_records: Sequence[Dict[str, Any]],
+    query: str,
     memory_policy: str,
     memory_retrieve: str,
     n_memory: int,
@@ -1405,7 +1640,7 @@ def select_memory_records(
         return select_memory_records_fuzzy(
             memory_path=memory_path,
             current_records=current_records,
-            query="",
+            query=query,
             memory_policy="tail",
             memory_retrieve=memory_retrieve,
             n_memory=n_memory,
@@ -2459,6 +2694,7 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
         hf,
         memory_path=cfg.memory_path,
         current_records=records,
+        query=query,
         memory_policy=cfg.memory_policy,
         memory_retrieve=cfg.memory_retrieve,
         n_memory=cfg.n_memory,
