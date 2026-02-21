@@ -199,6 +199,66 @@ def resolve_model_ref(model_ref: str) -> str:
     return model_ref
 
 
+def configure_transformers_allocator_warmup(mode: str) -> None:
+    """Configure/patch Transformers `caching_allocator_warmup`.
+
+    Transformers 5.x added `caching_allocator_warmup()` which pre-allocates a single fp16 buffer roughly the
+    size of the model on accelerator devices. On Apple Silicon (MPS) this can fail with:
+
+        RuntimeError: Invalid buffer size: XX GiB
+
+    because Metal has stricter single-buffer size limits.
+
+    Modes:
+      - on: keep Transformers default behavior
+      - off: disable warmup (safer, a bit slower to load)
+      - auto: run warmup only for cuda/xpu, skip for mps/others
+    """
+
+    mode = (mode or "auto").strip().lower()
+    if mode not in ("auto", "on", "off"):
+        raise ValueError(f"allocator_warmup must be auto|on|off, got: {mode!r}")
+
+    try:
+        import transformers.modeling_utils as mu  # type: ignore
+    except Exception:
+        return
+
+    if not hasattr(mu, "caching_allocator_warmup"):
+        return
+
+    # Store mode on the module so the patched function can read it.
+    setattr(mu, "_sr_ponder_allocator_warmup_mode", mode)
+
+    if getattr(mu, "_sr_ponder_allocator_warmup_patched", False):
+        return
+
+    orig = getattr(mu, "caching_allocator_warmup")
+    setattr(mu, "_sr_ponder_allocator_warmup_orig", orig)
+
+    def _patched_caching_allocator_warmup(model: Any, expanded_device_map: Dict[str, Any], hf_quantizer: Any) -> None:
+        m = getattr(mu, "_sr_ponder_allocator_warmup_mode", "auto")
+        if m == "off":
+            return
+
+        if m == "auto":
+            # Warmup is designed/optimized for cuda/xpu; skip for MPS (and any other non-cuda/xpu accelerator types).
+            for dev in (expanded_device_map or {}).values():
+                if dev in ("disk", "cpu", "meta"):
+                    continue
+                try:
+                    tdev = torch.device(dev)
+                except Exception:
+                    continue
+                if tdev.type not in ("cuda", "xpu"):
+                    return
+
+        return getattr(mu, "_sr_ponder_allocator_warmup_orig")(model, expanded_device_map, hf_quantizer)
+
+    setattr(mu, "caching_allocator_warmup", _patched_caching_allocator_warmup)
+    setattr(mu, "_sr_ponder_allocator_warmup_patched", True)
+
+
 def resolve_device(device: str) -> str:
     if device != "auto":
         return device
@@ -1189,6 +1249,7 @@ class LocalHFModel:
         trust_remote_code: bool = False,
         use_chat_template: bool = True,
         force_gemma_format: bool = True,
+        allocator_warmup: str = "auto",
     ) -> None:
         self.model_path = resolve_model_ref(model_path)
         self.use_chat_template = use_chat_template
@@ -1197,6 +1258,8 @@ class LocalHFModel:
         self.device_str = resolve_device(device)
         self.device = torch.device(self.device_str)
         self.torch_dtype = resolve_dtype(dtype, self.device_str)
+
+        configure_transformers_allocator_warmup(allocator_warmup)
 
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.model_path,
@@ -1439,6 +1502,7 @@ class RunConfig:
 
     device: str = "auto"
     dtype: str = "auto"
+    allocator_warmup: str = "auto"  # auto|on|off (auto disables on MPS)
     trust_remote_code: bool = False
     use_chat_template: bool = True
     force_gemma_format: bool = True
@@ -2094,6 +2158,12 @@ def main() -> None:
 
     g_runtime.add_argument("--device", default="auto", help="auto|mps|cpu|cuda|cuda:0 ...")
     g_runtime.add_argument("--dtype", default="auto", help="auto|float16|bfloat16|float32")
+    g_runtime.add_argument(
+        "--allocator_warmup",
+        choices=["auto", "on", "off"],
+        default="auto",
+        help="Transformers caching allocator warmup (auto disables on MPS)",
+    )
     g_runtime.add_argument("--trust_remote_code", action="store_true")
     g_runtime.add_argument("--no_chat_template", action="store_true")
     g_runtime.add_argument("--no_gemma_format", action="store_true", help="Disable Gemma-native turn formatting")
@@ -2178,6 +2248,7 @@ def main() -> None:
         write_memory=write_memory,
         device=args.device,
         dtype=args.dtype,
+        allocator_warmup=args.allocator_warmup,
         trust_remote_code=args.trust_remote_code,
         use_chat_template=not args.no_chat_template,
         force_gemma_format=not args.no_gemma_format,
@@ -2190,9 +2261,11 @@ def main() -> None:
         trust_remote_code=cfg.trust_remote_code,
         use_chat_template=cfg.use_chat_template,
         force_gemma_format=cfg.force_gemma_format,
+        allocator_warmup=cfg.allocator_warmup,
     )
     print(
         f"[sr_ponder] device={hf.device_str} input_device={hf.input_device} dtype={hf.torch_dtype} "
+        f"alloc_warmup={cfg.allocator_warmup} "
         f"gemma_turn_tokens={hf._has_gemma_turn_tokens()} lang={cfg.prompt_lang} "
         f"band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
         f"objective={cfg.keyword_objective} control={cfg.control} "
