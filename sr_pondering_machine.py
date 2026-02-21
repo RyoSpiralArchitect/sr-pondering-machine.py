@@ -863,7 +863,7 @@ def unstable_scores_from_jitters(
 ) -> Dict[int, float]:
     if not candidate_ids or len(jitter_logits) < 2:
         return {}
-    idx = torch.tensor([int(x) for x in candidate_ids], dtype=torch.long)
+    idx = torch.tensor([int(x) for x in candidate_ids], device=jitter_logits[0].device, dtype=torch.long)
     vals = torch.stack([lg.index_select(0, idx) for lg in jitter_logits], dim=0)
     std = torch.std(vals, dim=0, unbiased=False).tolist()
     return {int(tid): float(s) for tid, s in zip(candidate_ids, std)}
