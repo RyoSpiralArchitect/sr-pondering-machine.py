@@ -40,6 +40,7 @@ import json
 import os
 import random
 import re
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -325,7 +326,8 @@ def build_prompt_for_answer(query: str, memory_block: Optional[str], *, lang: st
     )
 
 
-def build_prompt_for_pondering(ponder_q: str, *, mode: str, lang: str) -> str:
+def build_prompt_for_pondering(ponder_q: str, *, mode: str, lang: str, context: Optional[str] = None) -> str:
+    context = (context or "").strip()
     if lang == "ja":
         if mode == "assoc":
             body = (
@@ -367,11 +369,19 @@ def build_prompt_for_pondering(ponder_q: str, *, mode: str, lang: str) -> str:
             )
         else:
             raise ValueError(f"Unknown ponder_mode: {mode!r}")
+        if context:
+            return (
+                "参考（直前のログ。結論ではない）：\n"
+                "<prev_ponder>\n"
+                f"{context}\n"
+                "</prev_ponder>\n\n"
+                + body
+            )
         return body
 
     # English
     if mode == "assoc":
-        return (
+        body = (
             "Create a brief ponder log for the following question without drawing any conclusions.\n"
             "Conditions:\n"
             "- Do not provide practical advice or reach a final conclusion.\n"
@@ -379,39 +389,50 @@ def build_prompt_for_pondering(ponder_q: str, *, mode: str, lang: str) -> str:
             "- 10 to 15 lines. Each line begins with - .\n\n"
             f"Question: {ponder_q}\n"
         )
-    if mode == "assumption":
-        return (
+    elif mode == "assumption":
+        body = (
             "List the hidden assumptions behind the following question, and suggest alternative assumptions.\n"
             "Conditions:\n"
             "- No conclusion.\n"
             "- 10 to 15 lines. Each line begins with - .\n\n"
             f"Question: {ponder_q}\n"
         )
-    if mode == "counterexample":
-        return (
+    elif mode == "counterexample":
+        body = (
             "Generate counterexamples, edge cases, and exceptions related to the following question.\n"
             "Conditions:\n"
             "- No conclusion.\n"
             "- 10 to 15 lines. Each line begins with - .\n\n"
             f"Question: {ponder_q}\n"
         )
-    if mode == "questions_only":
-        return (
+    elif mode == "questions_only":
+        body = (
             "Output only questions derived from the following question.\n"
             "Conditions:\n"
             "- No answers or assertions.\n"
             "- 10 to 15 lines. Each line begins with - .\n\n"
             f"Question: {ponder_q}\n"
         )
-    if mode == "metaphor":
-        return (
+    elif mode == "metaphor":
+        body = (
             "Write a ponder log using only metaphors, analogies, and image fragments inspired by the following question.\n"
             "Conditions:\n"
             "- No conclusion.\n"
             "- 10 to 15 lines. Each line begins with - .\n\n"
             f"Question: {ponder_q}\n"
         )
-    raise ValueError(f"Unknown ponder_mode: {mode!r}")
+    else:
+        raise ValueError(f"Unknown ponder_mode: {mode!r}")
+
+    if context:
+        return (
+            "Context from the previous stage (not a conclusion):\n"
+            "<prev_ponder>\n"
+            f"{context}\n"
+            "</prev_ponder>\n\n"
+            + body
+        )
+    return body
 
 
 _PUNCT_ONLY_RE = re.compile(r"^[\s\W_]+$", re.UNICODE)
@@ -523,6 +544,74 @@ def refine_keywords_with_model(
     return refined[:n_keywords]
 
 
+def build_prompt_for_prompt_jitter(query: str, *, n: int, lang: str) -> str:
+    if lang == "ja":
+        return (
+            "あなたは言い換え生成器です。\n"
+            "次の質問の意味を保ったまま、言い換えを生成してください。\n"
+            "制約:\n"
+            f"- 出力は JSON の文字列配列のみ（要素数はちょうど {n}）\n"
+            "- 回答は禁止（質問文だけ）\n"
+            "- できるだけ表現を変えるが、意図は変えない\n\n"
+            f"質問: {query}\n"
+        )
+    return (
+        "You are a paraphrase generator.\n"
+        "Generate paraphrases of the following question while preserving meaning.\n"
+        "Constraints:\n"
+        f"- Output ONLY a JSON array of strings (exactly {n} items)\n"
+        "- Do NOT answer the question (questions only)\n"
+        "- Change wording as much as possible without changing intent\n\n"
+        f"Question: {query}\n"
+    )
+
+
+def generate_prompt_jitters(
+    hf: "LocalHFModel",
+    *,
+    query: str,
+    n: int,
+    lang: str,
+    include_original: bool,
+    max_new_tokens: int,
+    temperature: float,
+    seed: int,
+) -> List[str]:
+    if n <= 0:
+        return [query]
+    prompt = hf._apply_chat(build_prompt_for_prompt_jitter(query, n=n, lang=lang), system_text=None)
+    out = hf.generate_text(
+        prompt,
+        max_new_tokens=int(max_new_tokens),
+        temperature=float(temperature),
+        top_p=0.9,
+        top_k=0,
+        repetition_penalty=1.0,
+        no_repeat_ngram_size=0,
+        seed=int(seed),
+    )
+    arr = extract_json_array(out)
+    out_list: List[str] = []
+    seen = set()
+    for s in arr:
+        s2 = (s or "").strip()
+        if not s2:
+            continue
+        if s2 in seen:
+            continue
+        seen.add(s2)
+        out_list.append(s2)
+
+    if include_original:
+        q = (query or "").strip()
+        if q and q not in seen:
+            out_list.insert(0, q)
+
+    if not out_list:
+        return [query]
+    return out_list
+
+
 def _token_prob(logits_1d: torch.Tensor, token_id: int, log_z: torch.Tensor) -> float:
     return float(torch.exp(logits_1d[int(token_id)] - log_z).item())
 
@@ -534,6 +623,468 @@ def _token_text(tokenizer, token_id: int) -> str:
         s = str(token_id)
     s = clean_token_text(s)
     return s
+
+
+def _l2_normalize(v: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
+    if v.dim() <= 1:
+        denom = torch.linalg.norm(v) + eps
+        return v / denom
+    denom = torch.linalg.norm(v, dim=-1, keepdim=True) + eps
+    return v / denom
+
+
+def mean_embedding_for_token_ids(hf: "LocalHFModel", token_ids: Sequence[int]) -> Optional[torch.Tensor]:
+    ids = [int(x) for x in token_ids if x is not None]
+    if not ids:
+        return None
+    try:
+        emb = hf.model.get_input_embeddings()
+        weight = emb.weight
+        idx = torch.tensor(ids, device=weight.device, dtype=torch.long)
+        rows = weight.index_select(0, idx).detach()
+        vec = rows.float().mean(dim=0)
+        return vec.cpu()
+    except Exception:
+        return None
+
+
+def prompt_embedding_tail(
+    hf: "LocalHFModel",
+    prompt: str,
+    *,
+    tail_k: int = 64,
+) -> Optional[torch.Tensor]:
+    try:
+        encoded = hf.tokenizer(prompt, return_tensors="pt")
+        input_ids = encoded.get("input_ids")
+        if input_ids is None:
+            return None
+        ids = input_ids[0].tolist()
+    except Exception:
+        return None
+
+    special = set(getattr(hf.tokenizer, "all_special_ids", []) or [])
+    for x in (getattr(hf, "start_of_turn_id", None), getattr(hf, "end_of_turn_id", None)):
+        if x is not None:
+            special.add(int(x))
+
+    tail: List[int] = []
+    for tid in reversed(ids):
+        tid_i = int(tid)
+        if tid_i in special:
+            continue
+        tail.append(tid_i)
+        if len(tail) >= int(tail_k):
+            break
+    tail.reverse()
+    if not tail:
+        return None
+    return mean_embedding_for_token_ids(hf, tail)
+
+
+def dissonance_scores(
+    hf: "LocalHFModel",
+    *,
+    query_vec: torch.Tensor,
+    candidate_ids: Sequence[int],
+) -> Dict[int, float]:
+    q = query_vec.detach().float().cpu()
+    q = _l2_normalize(q)
+    scores: Dict[int, float] = {}
+
+    # NOTE: mean_embedding_for_token_ids currently returns a mean vector; for candidates we need per-token vectors.
+    # We'll compute per-token vectors here efficiently.
+    try:
+        emb = hf.model.get_input_embeddings()
+        weight = emb.weight
+        idx = torch.tensor([int(x) for x in candidate_ids], device=weight.device, dtype=torch.long)
+        rows = weight.index_select(0, idx).detach().float().cpu()
+    except Exception:
+        return scores
+
+    rows = _l2_normalize(rows, eps=1e-8)
+    sims = (rows @ q).tolist()
+    for tid, sim in zip(candidate_ids, sims):
+        # dissonance: 1 - cosine similarity (range ~[0,2])
+        scores[int(tid)] = float(1.0 - float(sim))
+    return scores
+
+
+def unstable_scores_from_jitters(
+    candidate_ids: Sequence[int],
+    jitter_logits: Sequence[torch.Tensor],
+) -> Dict[int, float]:
+    if not candidate_ids or len(jitter_logits) < 2:
+        return {}
+    idx = torch.tensor([int(x) for x in candidate_ids], dtype=torch.long)
+    vals = torch.stack([lg.index_select(0, idx) for lg in jitter_logits], dim=0)
+    std = torch.std(vals, dim=0, unbiased=False).tolist()
+    return {int(tid): float(s) for tid, s in zip(candidate_ids, std)}
+
+
+def sample_token_ids(
+    *,
+    rng: random.Random,
+    pool: Sequence[int],
+    n: int,
+) -> List[int]:
+    if n <= 0:
+        return []
+    if len(pool) <= n:
+        return [int(x) for x in pool[:n]]
+    return [int(x) for x in rng.sample(list(pool), k=int(n))]
+
+
+def select_token_ids_by_objective(
+    *,
+    objective: str,
+    rng: random.Random,
+    vocab_size: int,
+    candidate_pool: Sequence[int],
+    n_keywords: int,
+    special_ids: Sequence[int],
+    dissonance: Optional[Dict[int, float]] = None,
+    dissonance_target: float = 0.9,
+    dissonance_width: float = 0.6,
+    unstable: Optional[Dict[int, float]] = None,
+    select_top: int = 128,
+) -> List[int]:
+    n = int(n_keywords)
+    if n <= 0:
+        return []
+
+    special = set(int(x) for x in (special_ids or []))
+
+    if objective == "random_vocab":
+        out: List[int] = []
+        tries = 0
+        while len(out) < n and tries < n * 50:
+            tries += 1
+            tid = int(rng.randrange(0, int(vocab_size)))
+            if tid in special:
+                continue
+            out.append(tid)
+        return out
+
+    if objective == "unstable" and unstable:
+        items = [(tid, unstable.get(int(tid), 0.0)) for tid in candidate_pool if int(tid) not in special]
+        items.sort(key=lambda x: x[1], reverse=True)
+        top = [tid for tid, _ in items[: max(1, int(select_top))]]
+        return sample_token_ids(rng=rng, pool=top or candidate_pool, n=n)
+
+    if objective == "dissonance" and dissonance:
+        lo = float(dissonance_target) - float(dissonance_width) / 2.0
+        hi = float(dissonance_target) + float(dissonance_width) / 2.0
+        filtered = [
+            int(tid)
+            for tid in candidate_pool
+            if int(tid) not in special and lo <= float(dissonance.get(int(tid), -1e9)) <= hi
+        ]
+        if filtered:
+            # Prefer closer-to-target candidates, then sample for variety.
+            filtered.sort(key=lambda tid: abs(float(dissonance.get(int(tid), 0.0)) - float(dissonance_target)))
+            top = filtered[: max(1, int(select_top))]
+            return sample_token_ids(rng=rng, pool=top, n=n)
+        return sample_token_ids(rng=rng, pool=[tid for tid in candidate_pool if int(tid) not in special], n=n)
+
+    # default: random within band
+    return sample_token_ids(rng=rng, pool=[tid for tid in candidate_pool if int(tid) not in special], n=n)
+
+
+def interactive_pick_token_ids(
+    *,
+    prompt: str,
+    rng: random.Random,
+    candidates: Sequence[Dict[str, Any]],
+    n_keywords: int,
+) -> Optional[List[int]]:
+    if not sys.stdin.isatty():
+        return None
+    if not candidates:
+        return None
+
+    n = int(n_keywords)
+    print(f"\n=== INTERACTIVE PICK: {prompt} ===\n")
+    for i, c in enumerate(candidates, start=1):
+        tok = c.get("token", "")
+        tid = c.get("token_id", "?")
+        rk = c.get("rank", "?")
+        p = c.get("prob", None)
+        extra_bits: List[str] = []
+        if "dissonance" in c:
+            extra_bits.append(f"d={float(c['dissonance']):.3f}")
+        if "unstable" in c:
+            extra_bits.append(f"u={float(c['unstable']):.3f}")
+        extra = (" " + " ".join(extra_bits)) if extra_bits else ""
+        p_s = f"{p:.4f}" if isinstance(p, float) else "?"
+        print(f"{i:>2}. {tok!r} id={tid} rank={rk} p={p_s}{extra}")
+
+    try:
+        raw = input(f"\nPick {n} indices (space/comma). Enter=auto: ").strip()
+    except EOFError:
+        return None
+
+    if not raw:
+        return None
+
+    parts = re.split(r"[\s,]+", raw)
+    picked: List[int] = []
+    for p in parts:
+        if not p:
+            continue
+        try:
+            ix = int(p)
+        except ValueError:
+            continue
+        if ix < 1 or ix > len(candidates):
+            continue
+        tid = candidates[ix - 1].get("token_id")
+        if tid is None:
+            continue
+        tid_i = int(tid)
+        if tid_i in picked:
+            continue
+        picked.append(tid_i)
+        if len(picked) >= n:
+            break
+
+    if not picked:
+        return None
+    if len(picked) < n:
+        rest = [int(c.get("token_id")) for c in candidates if c.get("token_id") is not None and int(c["token_id"]) not in picked]
+        rng.shuffle(rest)
+        picked.extend(rest[: (n - len(picked))])
+    return picked[:n]
+
+
+def parse_ponder_pipeline(pipeline: str, *, fallback_mode: str) -> List[str]:
+    allowed = {"assoc", "assumption", "counterexample", "questions_only", "metaphor"}
+    s = (pipeline or "").strip()
+    if not s:
+        return []
+    parts = [p.strip() for p in re.split(r"[,\s]+", s) if p.strip()]
+    out: List[str] = []
+    for p in parts:
+        if p not in allowed:
+            raise ValueError(f"Unknown ponder_mode in pipeline: {p!r}")
+        out.append(p)
+    return out or []
+
+
+def _cosine_sim(a: torch.Tensor, b: torch.Tensor, eps: float = 1e-8) -> float:
+    aa = a.detach().float().cpu()
+    bb = b.detach().float().cpu()
+    denom = (torch.linalg.norm(aa) * torch.linalg.norm(bb)).item() + eps
+    if denom <= 0:
+        return 0.0
+    return float(torch.dot(aa, bb).item() / denom)
+
+
+def select_memory_records(
+    hf: "LocalHFModel",
+    *,
+    memory_path: Path,
+    current_records: Sequence[Dict[str, Any]],
+    memory_policy: str,
+    memory_retrieve: str,
+    n_memory: int,
+    pool_size: int,
+    mix_ratio: float,
+    exclude_run_id: Optional[str],
+) -> List[Dict[str, Any]]:
+    if memory_policy == "off":
+        return []
+    if memory_policy == "current_only":
+        return list(current_records)
+    if memory_policy != "tail":
+        raise ValueError(f"Unknown memory_policy: {memory_policy!r}")
+
+    pool = tail_jsonl(memory_path, max(0, int(pool_size)))
+    if not pool:
+        return []
+
+    if memory_retrieve == "tail":
+        return pool[-int(n_memory) :] if n_memory > 0 else []
+
+    cur_token_ids: List[int] = []
+    for r in current_records:
+        tids = r.get("token_ids")
+        if isinstance(tids, list):
+            for t in tids:
+                try:
+                    cur_token_ids.append(int(t))
+                except Exception:
+                    pass
+    cur_vec = mean_embedding_for_token_ids(hf, cur_token_ids)
+    if cur_vec is None:
+        return pool[-int(n_memory) :] if n_memory > 0 else []
+
+    scored: List[Tuple[float, Dict[str, Any]]] = []
+    for r in pool:
+        if exclude_run_id and str(r.get("run_id", "")) == str(exclude_run_id):
+            continue
+        tids = r.get("token_ids")
+        if not isinstance(tids, list) or not tids:
+            continue
+        vec = mean_embedding_for_token_ids(hf, [int(x) for x in tids if x is not None])
+        if vec is None:
+            continue
+        sim = _cosine_sim(cur_vec, vec)
+        scored.append((sim, r))
+
+    if not scored:
+        return pool[-int(n_memory) :] if n_memory > 0 else []
+
+    scored.sort(key=lambda x: x[0])
+    take = max(0, int(n_memory))
+    if take == 0:
+        return []
+
+    if memory_retrieve == "anti":
+        return [r for _, r in scored[:take]]
+    if memory_retrieve == "similar":
+        return [r for _, r in scored[-take:]][::-1]
+    if memory_retrieve == "mix":
+        k_sim = max(0, min(take, int(round(take * float(mix_ratio)))))
+        k_anti = take - k_sim
+        anti = [r for _, r in scored[:k_anti]]
+        sim = [r for _, r in scored[-k_sim:]][::-1]
+        return sim + anti
+
+    raise ValueError(f"Unknown memory_retrieve: {memory_retrieve!r}")
+
+
+def build_prompt_for_memory_remix(memory_block: str, *, lang: str) -> str:
+    if lang == "ja":
+        return (
+            "あなたは編集者です。\n"
+            "以下の ponder log の断片を素材に、結論を出さない「夢のコラージュ」を作ってください。\n"
+            "制約:\n"
+            "- 10〜15行、各行は - で始める\n"
+            "- 断定/結論/実用的助言は禁止\n\n"
+            "<ponder_memory>\n"
+            f"{memory_block}\n"
+            "</ponder_memory>\n"
+        )
+    return (
+        "You are an editor.\n"
+        "Using the ponder log fragments below, produce a dreamlike collage without conclusions.\n"
+        "Constraints:\n"
+        "- 10 to 15 lines, each line begins with -\n"
+        "- No conclusions or practical advice\n\n"
+        "<ponder_memory>\n"
+        f"{memory_block}\n"
+        "</ponder_memory>\n"
+    )
+
+
+def remix_memory_block(
+    hf: "LocalHFModel",
+    *,
+    memory_block: Optional[str],
+    remix: str,
+    lang: str,
+    keep_original: bool,
+    max_new_tokens: int,
+    temperature: float,
+    seed: int,
+) -> Optional[str]:
+    if not memory_block:
+        return None
+    mode = (remix or "off").strip()
+    if mode == "off":
+        return memory_block
+
+    if mode == "shuffle":
+        lines = [ln for ln in memory_block.splitlines() if ln.strip()]
+        rng = random.Random(int(seed) + 31337)
+        rng.shuffle(lines)
+        remixed = "\n".join(lines)
+        return (memory_block + "\n\n---\n\n" + remixed) if keep_original else remixed
+
+    if mode == "compress":
+        out_lines: List[str] = []
+        in_log = False
+        kept_bullets = 0
+        for ln in memory_block.splitlines():
+            s = ln.strip()
+            if s.startswith("[") or s.startswith("keywords:") or s.startswith("ponder_q:"):
+                out_lines.append(ln)
+                in_log = False
+                kept_bullets = 0
+                continue
+            if s.startswith("ponder_log:"):
+                out_lines.append(ln)
+                in_log = True
+                kept_bullets = 0
+                continue
+            if in_log and s.startswith("-"):
+                if kept_bullets < 2:
+                    out_lines.append(ln)
+                    kept_bullets += 1
+                continue
+        remixed = "\n".join(out_lines).strip()
+        return (memory_block + "\n\n---\n\n" + remixed) if keep_original else remixed
+
+    if mode == "dream":
+        prompt = hf._apply_chat(build_prompt_for_memory_remix(memory_block, lang=lang), system_text=None)
+        dream = hf.generate_text(
+            prompt,
+            max_new_tokens=int(max_new_tokens),
+            temperature=float(temperature),
+            top_p=0.95,
+            top_k=0,
+            repetition_penalty=1.0,
+            no_repeat_ngram_size=0,
+            seed=int(seed),
+        )
+        return (memory_block + "\n\n---\n\n" + dream) if keep_original else dream
+
+    raise ValueError(f"Unknown memory_remix: {mode!r}")
+
+
+def build_prompt_for_ensemble_summary(
+    query: str,
+    band_answers: Dict[str, str],
+    *,
+    lang: str,
+) -> str:
+    blocks: List[str] = []
+    for k, v in band_answers.items():
+        blocks.append(f"[{k}]\n{v}\n")
+    joined = "\n".join(blocks).strip()
+    if lang == "ja":
+        return (
+            "あなたは複数回答の比較編集者です。\n"
+            "次の band ごとの回答を比較し、共通点・相違点・統合回答を出してください。\n"
+            "出力フォーマット（タグはそのまま使う）:\n"
+            "<consensus>\n- ...\n</consensus>\n"
+            "<divergence>\n- near: ...\n</divergence>\n"
+            "<final>\n(統合した最終回答本文)\n</final>\n\n"
+            f"本題: {query}\n\n"
+            "<answers>\n"
+            f"{joined}\n"
+            "</answers>\n"
+        )
+    return (
+        "You are an editor comparing multiple answers.\n"
+        "Compare the band-specific answers and output consensus, divergence, and a merged final answer.\n"
+        "Output format (keep tags):\n"
+        "<consensus>\n- ...\n</consensus>\n"
+        "<divergence>\n- near: ...\n</divergence>\n"
+        "<final>\n(merged final answer)\n</final>\n\n"
+        f"Main question: {query}\n\n"
+        "<answers>\n"
+        f"{joined}\n"
+        "</answers>\n"
+    )
+
+
+def extract_tag(text: str, tag: str) -> Optional[str]:
+    m = re.search(rf"<{re.escape(tag)}>\n?(.*?)\n?</{re.escape(tag)}>", text, flags=re.DOTALL)
+    if not m:
+        return None
+    return (m.group(1) or "").strip()
 
 
 # -----------------------------
@@ -743,6 +1294,14 @@ class RunConfig:
     memory_path: Path
     n_memory: int = 12
     memory_policy: str = "tail"  # tail|current_only|off
+    memory_retrieve: str = "tail"  # tail|similar|anti|mix (only when memory_policy=tail)
+    memory_pool: int = 200
+    memory_mix_ratio: float = 0.5
+    memory_exclude_current_run: bool = True
+    memory_remix: str = "off"  # off|shuffle|compress|dream
+    memory_remix_keep_original: bool = False
+    memory_remix_max_new_tokens: int = 240
+    memory_remix_temperature: float = 0.9
 
     rejected: RejectedTokenConfig = dataclasses.field(default_factory=RejectedTokenConfig)
     band_profile: str = "single"  # single|spectrum3
@@ -758,15 +1317,38 @@ class RunConfig:
     seed: int = 1234
 
     prompt_lang: str = "en"  # resolved: en|ja
-    ponder_mode: str = "assoc"  # assoc|assumption|counterexample|questions_only|metaphor
-    n_ponder: int = 1
+    ponder_mode: str = "assoc"  # assoc|assumption|counterexample|questions_only|metaphor (fallback)
+    ponder_pipeline: List[str] = dataclasses.field(default_factory=list)  # if empty, uses ponder_mode
+    pipeline_context: str = "prev"  # none|prev|all
+    pipeline_context_max_chars: int = 1200
+    n_ponder: int = 1  # per band
 
     keyword_refine: bool = False
     keyword_refine_max_new_tokens: int = 96
     keyword_refine_temperature: float = 0.3
+    keyword_objective: str = "random_band"  # random_band|dissonance|unstable|random_vocab
+    keyword_select_top: int = 128
+    dissonance_target: float = 0.9
+    dissonance_width: float = 0.6
+    dissonance_tail_k: int = 64
+
+    prompt_jitter: int = 0  # number of paraphrases (excluding original)
+    prompt_jitter_include_original: bool = True
+    prompt_jitter_max_new_tokens: int = 160
+    prompt_jitter_temperature: float = 0.6
 
     probe_top_n: int = 0
     print_probe: bool = False
+    interactive: bool = False
+    interactive_candidates: int = 48
+
+    answer_per_band: bool = False
+    answer_ensemble: bool = False
+    answer_ensemble_max_new_tokens: int = 512
+    answer_ensemble_temperature: float = 0.2
+
+    control: str = "none"  # none|no_inject|random_log|random_keywords|lens_only
+    write_memory: bool = True
 
     device: str = "auto"
     dtype: str = "auto"
@@ -863,12 +1445,20 @@ def _single_band_from_rejected_cfg(cfg: RunConfig, *, vocab_size: int) -> Dict[s
     return {"label": label, "start_rank": start, "end_rank": end}
 
 
-def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[Dict[str, Any]]]:
+def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[Dict[str, Any]], Dict[str, Any]]:
     lang = cfg.prompt_lang
     n_ponder = max(1, int(cfg.n_ponder))  # per band
 
     run_id = sha256_short(f"{now_iso()}|{cfg.seed}|{query}")
     query_sha = sha256_short(query)
+
+    pipeline = list(cfg.ponder_pipeline) if cfg.ponder_pipeline else [cfg.ponder_mode]
+    pipeline_ctx = (cfg.pipeline_context or "prev").strip()
+
+    objective = (cfg.keyword_objective or "random_band").strip()
+    control = (cfg.control or "none").strip()
+    if control == "random_keywords":
+        objective = "random_vocab"
 
     base_prompt = hf._apply_chat(build_prompt_for_answer(query, memory_block=None, lang=lang), system_text=None)
     logits = hf.next_token_logits(base_prompt)
@@ -899,48 +1489,126 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
     if not bands:
         bands = [_single_band_from_rejected_cfg(cfg, vocab_size=vocab_size)]
 
+    special_ids: List[int] = []
+    for x in (getattr(hf.tokenizer, "all_special_ids", []) or []):
+        try:
+            special_ids.append(int(x))
+        except Exception:
+            pass
+    for x in (
+        getattr(hf, "start_of_turn_id", None),
+        getattr(hf, "end_of_turn_id", None),
+        getattr(hf.tokenizer, "eos_token_id", None),
+        getattr(hf.tokenizer, "pad_token_id", None),
+    ):
+        if x is not None:
+            special_ids.append(int(x))
+
+    query_vec: Optional[torch.Tensor] = None
+    if objective == "dissonance":
+        query_vec = prompt_embedding_tail(hf, base_prompt, tail_k=int(cfg.dissonance_tail_k))
+
+    jitter_queries: List[str] = []
+    jitter_logits: List[torch.Tensor] = []
+    jitter_n = int(cfg.prompt_jitter)
+    if objective == "unstable" and jitter_n <= 0:
+        jitter_n = 3
+    if jitter_n > 0:
+        jitter_queries = generate_prompt_jitters(
+            hf,
+            query=query,
+            n=jitter_n,
+            lang=lang,
+            include_original=bool(cfg.prompt_jitter_include_original),
+            max_new_tokens=int(cfg.prompt_jitter_max_new_tokens),
+            temperature=float(cfg.prompt_jitter_temperature),
+            seed=int(cfg.seed) + 999,
+        )
+        for jq in jitter_queries:
+            jp = hf._apply_chat(build_prompt_for_answer(jq, memory_block=None, lang=lang), system_text=None)
+            jitter_logits.append(hf.next_token_logits(jp))
+
     records: List[Dict[str, Any]] = []
     log_ix = 0
+
     for band_ix, band in enumerate(bands):
         band_label = str(band.get("label", f"band{band_ix}"))
         band_start = int(band.get("start_rank", 0))
         band_end = int(band.get("end_rank", vocab_size))
 
         band_end = min(band_end, vocab_size)
-        if band_start < 0:
-            band_start = 0
+        band_start = max(0, band_start)
         if band_start >= band_end:
             band_start = max(0, band_end - 1)
             band_end = min(vocab_size, band_start + 1)
 
-        candidate_pool = sorted_ids[band_start:band_end].tolist()
-        if not candidate_pool:
-            # fallback: allow something, even if the band was degenerate
-            candidate_pool = sorted_ids[: min(vocab_size, 256)].tolist()
+        candidate_ranked = sorted_ids[band_start:band_end].tolist()
+        if not candidate_ranked:
+            candidate_ranked = sorted_ids[: min(vocab_size, 256)].tolist()
 
-        pool_rng = random.Random(cfg.seed + 99991 + band_ix * 10007)
-        pool_rng.shuffle(candidate_pool)
-        pool_pos = 0
+        band_dissonance: Optional[Dict[int, float]] = None
+        if objective == "dissonance" and query_vec is not None:
+            band_dissonance = dissonance_scores(hf, query_vec=query_vec, candidate_ids=candidate_ranked)
+
+        band_unstable: Optional[Dict[int, float]] = None
+        if objective == "unstable" and len(jitter_logits) >= 2:
+            band_unstable = unstable_scores_from_jitters(candidate_ranked, jitter_logits)
 
         for band_ponder_ix in range(n_ponder):
             n_kw = int(cfg.rejected.n_keywords)
+            rng = random.Random(int(cfg.seed) + 99991 + band_ix * 10007 + band_ponder_ix * 101 + log_ix * 37)
 
-            token_ids = candidate_pool[pool_pos : pool_pos + n_kw]
-            pool_pos += n_kw
-            if len(token_ids) < n_kw:
-                pool_rng.shuffle(candidate_pool)
-                pool_pos = 0
-                token_ids = candidate_pool[pool_pos : pool_pos + n_kw]
-                pool_pos += n_kw
-            if len(token_ids) < n_kw and candidate_pool:
-                while len(token_ids) < n_kw:
-                    token_ids.append(pool_rng.choice(candidate_pool))
+            token_ids = select_token_ids_by_objective(
+                objective=objective,
+                rng=rng,
+                vocab_size=vocab_size,
+                candidate_pool=candidate_ranked,
+                n_keywords=n_kw,
+                special_ids=special_ids,
+                dissonance=band_dissonance,
+                dissonance_target=float(cfg.dissonance_target),
+                dissonance_width=float(cfg.dissonance_width),
+                unstable=band_unstable,
+                select_top=int(cfg.keyword_select_top),
+            )
+
+            keywords_source = "rejected_tokens"
+            if objective == "random_vocab":
+                keywords_source = "random_vocab"
+            if objective == "dissonance":
+                keywords_source = "dissonance"
+            if objective == "unstable":
+                keywords_source = "unstable"
+
+            # Interactive override
+            if cfg.interactive:
+                cand_items: List[Dict[str, Any]] = []
+                for tid in candidate_ranked[: max(1, int(cfg.interactive_candidates))]:
+                    item: Dict[str, Any] = {
+                        "token_id": int(tid),
+                        "token": _token_text(hf.tokenizer, tid),
+                        "rank": int(ranks[int(tid)].item()),
+                        "prob": _token_prob(logits, tid, log_z),
+                    }
+                    if band_dissonance is not None and int(tid) in band_dissonance:
+                        item["dissonance"] = float(band_dissonance[int(tid)])
+                    if band_unstable is not None and int(tid) in band_unstable:
+                        item["unstable"] = float(band_unstable[int(tid)])
+                    cand_items.append(item)
+                picked = interactive_pick_token_ids(
+                    prompt=f"band={band_label} band_ix={band_ix} log={band_ponder_ix}",
+                    rng=rng,
+                    candidates=cand_items,
+                    n_keywords=n_kw,
+                )
+                if picked:
+                    token_ids = picked
+                    keywords_source = "human_pick"
 
             raw_keywords = decode_keyword_tokens(hf.tokenizer, token_ids)
             keywords = raw_keywords
-            keywords_source = "rejected_tokens"
             refined_keywords: List[str] = []
-            if cfg.keyword_refine:
+            if cfg.keyword_refine and keywords_source != "human_pick":
                 refined_keywords = refine_keywords_with_model(
                     hf,
                     query=query,
@@ -949,165 +1617,433 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
                     lang=lang,
                     max_new_tokens=int(cfg.keyword_refine_max_new_tokens),
                     temperature=float(cfg.keyword_refine_temperature),
-                    seed=cfg.seed + 200 + log_ix,
+                    seed=int(cfg.seed) + 200 + log_ix,
                 )
                 if refined_keywords:
                     keywords = refined_keywords
                     keywords_source = "model_refine"
 
-            q_rng = random.Random(cfg.seed + 12345 + log_ix)
-            ponder_q = make_unrelated_question(keywords, lang=lang, rng=q_rng)
-            ponder_prompt = hf._apply_chat(
-                build_prompt_for_pondering(ponder_q, mode=cfg.ponder_mode, lang=lang),
-                system_text=None,
+            # One ponder question per (band, band_ponder_ix), reused across pipeline stages.
+            if control == "lens_only":
+                ponder_q = query
+            else:
+                q_rng = random.Random(int(cfg.seed) + 12345 + band_ix * 10007 + band_ponder_ix * 101)
+                ponder_q = make_unrelated_question(keywords, lang=lang, rng=q_rng)
+
+            stage_logs: List[str] = []
+            for stage_ix, stage_mode in enumerate(pipeline):
+                ctx_text: Optional[str] = None
+                if pipeline_ctx == "prev" and stage_logs:
+                    ctx_text = stage_logs[-1]
+                elif pipeline_ctx == "all" and stage_logs:
+                    ctx_text = "\n\n".join(stage_logs)
+
+                if ctx_text and len(ctx_text) > int(cfg.pipeline_context_max_chars):
+                    ctx_text = ctx_text[-int(cfg.pipeline_context_max_chars) :]
+
+                ponder_prompt = hf._apply_chat(
+                    build_prompt_for_pondering(ponder_q, mode=stage_mode, lang=lang, context=ctx_text),
+                    system_text=None,
+                )
+                ponder_log = hf.generate_text(
+                    ponder_prompt,
+                    max_new_tokens=cfg.ponder_max_new_tokens,
+                    temperature=max(0.4, cfg.temperature),
+                    top_p=cfg.top_p,
+                    top_k=cfg.top_k,
+                    repetition_penalty=cfg.repetition_penalty,
+                    no_repeat_ngram_size=cfg.no_repeat_ngram_size,
+                    seed=int(cfg.seed) + 1 + log_ix,
+                )
+                stage_logs.append(ponder_log)
+
+                selected_tokens = []
+                for tid in token_ids:
+                    t: Dict[str, Any] = {
+                        "token_id": int(tid),
+                        "token": _token_text(hf.tokenizer, tid),
+                        "rank": int(ranks[int(tid)].item()),
+                        "prob": _token_prob(logits, tid, log_z),
+                    }
+                    if band_dissonance is not None and int(tid) in band_dissonance:
+                        t["dissonance"] = float(band_dissonance[int(tid)])
+                    if band_unstable is not None and int(tid) in band_unstable:
+                        t["unstable"] = float(band_unstable[int(tid)])
+                    selected_tokens.append(t)
+
+                if cfg.print_probe:
+                    _print_probe_table(
+                        f"REJECTED TOKENS (band={band_label} ix={log_ix} stage={stage_mode})",
+                        selected_tokens,
+                        limit=len(selected_tokens),
+                    )
+                    print(f"\nkeywords_source={keywords_source} keywords={keywords}\n")
+
+                record: Dict[str, Any] = {
+                    "ts": now_iso(),
+                    "run_id": run_id,
+                    "query_sha": query_sha,
+                    "prompt_lang": lang,
+                    "control": control,
+                    "band_profile": cfg.band_profile,
+                    "band_ix": band_ix,
+                    "band_label": band_label,
+                    "band_ponder_ix": band_ponder_ix,
+                    "pipeline": pipeline,
+                    "pipeline_stage_ix": stage_ix,
+                    "pipeline_context": pipeline_ctx,
+                    "ponder_ix": log_ix,
+                    "ponder_mode": stage_mode,
+                    "keywords_source": keywords_source,
+                    "keywords_raw": raw_keywords,
+                    "keywords": keywords,
+                    "token_ids": token_ids,
+                    "selected_tokens": selected_tokens,
+                    "rejected_cfg": dataclasses.asdict(cfg.rejected),
+                    "band": {"start_rank": band_start, "end_rank": band_end},
+                    "ponder_question": ponder_q,
+                    "ponder_log": ponder_log,
+                }
+                if cfg.probe_top_n > 0 and log_ix == 0:
+                    record["probe_top"] = top_tokens[: int(cfg.probe_top_n)]
+                if jitter_queries and log_ix == 0:
+                    record["prompt_jitter_queries"] = jitter_queries
+
+                if cfg.write_memory:
+                    append_jsonl(cfg.memory_path, record)
+                records.append(record)
+                log_ix += 1
+
+    # Select memory records for final answer injection
+    exclude_run_id = run_id if cfg.memory_exclude_current_run and cfg.memory_policy == "tail" else None
+    mem_records = select_memory_records(
+        hf,
+        memory_path=cfg.memory_path,
+        current_records=records,
+        memory_policy=cfg.memory_policy,
+        memory_retrieve=cfg.memory_retrieve,
+        n_memory=cfg.n_memory,
+        pool_size=cfg.memory_pool,
+        mix_ratio=cfg.memory_mix_ratio,
+        exclude_run_id=exclude_run_id,
+    )
+
+    if control == "no_inject":
+        mem_records = []
+
+    memory_block = build_memory_block(mem_records, max_chars_per_log=700) if mem_records else None
+    memory_block = remix_memory_block(
+        hf,
+        memory_block=memory_block,
+        remix=cfg.memory_remix,
+        lang=lang,
+        keep_original=cfg.memory_remix_keep_original,
+        max_new_tokens=cfg.memory_remix_max_new_tokens,
+        temperature=cfg.memory_remix_temperature,
+        seed=int(cfg.seed) + 777,
+    )
+
+    random_log_text: Optional[str] = None
+    if control == "random_log":
+        rng = random.Random(int(cfg.seed) + 424242)
+        rand_ids = select_token_ids_by_objective(
+            objective="random_vocab",
+            rng=rng,
+            vocab_size=vocab_size,
+            candidate_pool=[],
+            n_keywords=int(cfg.rejected.n_keywords),
+            special_ids=special_ids,
+        )
+        rand_kw = decode_keyword_tokens(hf.tokenizer, rand_ids)
+        q_rng = random.Random(int(cfg.seed) + 424243)
+        rand_q = make_unrelated_question(rand_kw, lang=lang, rng=q_rng)
+        rp = hf._apply_chat(build_prompt_for_pondering(rand_q, mode="assoc", lang=lang), system_text=None)
+        random_log_text = hf.generate_text(
+            rp,
+            max_new_tokens=int(cfg.ponder_max_new_tokens),
+            temperature=max(0.6, float(cfg.temperature)),
+            top_p=float(cfg.top_p),
+            top_k=int(cfg.top_k),
+            repetition_penalty=float(cfg.repetition_penalty),
+            no_repeat_ngram_size=int(cfg.no_repeat_ngram_size),
+            seed=int(cfg.seed) + 424244,
+        )
+        memory_block = random_log_text
+
+    # Band answers (sensitivity analysis)
+    band_answers: Dict[str, str] = {}
+    if cfg.answer_per_band or cfg.answer_ensemble:
+        for band in bands:
+            bl = str(band.get("label", "band"))
+            band_recs = [r for r in records if str(r.get("band_label", "")) == bl]
+            if not band_recs:
+                continue
+            band_mem = None if control == "no_inject" else build_memory_block(band_recs, max_chars_per_log=700)
+            band_mem = remix_memory_block(
+                hf,
+                memory_block=band_mem,
+                remix=cfg.memory_remix,
+                lang=lang,
+                keep_original=False,
+                max_new_tokens=cfg.memory_remix_max_new_tokens,
+                temperature=cfg.memory_remix_temperature,
+                seed=int(cfg.seed) + 9000 + hash(bl) % 1000,
             )
-            ponder_log = hf.generate_text(
-                ponder_prompt,
-                max_new_tokens=cfg.ponder_max_new_tokens,
-                temperature=max(0.4, cfg.temperature),
+            fp = hf._apply_chat(build_prompt_for_answer(query, memory_block=band_mem, lang=lang), system_text=None)
+            band_ans = hf.generate_text(
+                fp,
+                max_new_tokens=cfg.answer_max_new_tokens,
+                temperature=cfg.temperature,
                 top_p=cfg.top_p,
                 top_k=cfg.top_k,
                 repetition_penalty=cfg.repetition_penalty,
                 no_repeat_ngram_size=cfg.no_repeat_ngram_size,
-                seed=cfg.seed + 1 + log_ix,
+                seed=int(cfg.seed) + 10101,
             )
+            band_answers[bl] = band_ans
 
-            selected_tokens = [
-                {
-                    "token_id": int(tid),
-                    "token": _token_text(hf.tokenizer, tid),
-                    "rank": int(ranks[int(tid)].item()),
-                    "prob": _token_prob(logits, tid, log_z),
-                }
-                for tid in token_ids
-            ]
-            if cfg.print_probe:
-                _print_probe_table(
-                    f"REJECTED TOKENS (band={band_label} ix={log_ix})",
-                    selected_tokens,
-                    limit=len(selected_tokens),
-                )
-                print(f"\nkeywords_source={keywords_source} keywords={keywords}\n")
+    ensemble_raw: Optional[str] = None
+    ensemble_final: Optional[str] = None
+    ensemble_consensus: Optional[str] = None
+    ensemble_divergence: Optional[str] = None
+    if cfg.answer_ensemble and len(band_answers) >= 2:
+        ep = hf._apply_chat(build_prompt_for_ensemble_summary(query, band_answers, lang=lang), system_text=None)
+        ensemble_raw = hf.generate_text(
+            ep,
+            max_new_tokens=int(cfg.answer_ensemble_max_new_tokens),
+            temperature=float(cfg.answer_ensemble_temperature),
+            top_p=0.95,
+            top_k=0,
+            repetition_penalty=1.0,
+            no_repeat_ngram_size=0,
+            seed=int(cfg.seed) + 20202,
+        )
+        ensemble_consensus = extract_tag(ensemble_raw, "consensus")
+        ensemble_divergence = extract_tag(ensemble_raw, "divergence")
+        ensemble_final = extract_tag(ensemble_raw, "final") or ensemble_raw.strip()
 
-            record: Dict[str, Any] = {
-                "ts": now_iso(),
-                "run_id": run_id,
-                "query_sha": query_sha,
-                "prompt_lang": lang,
-                "band_profile": cfg.band_profile,
-                "band_ix": band_ix,
-                "band_label": band_label,
-                "band_ponder_ix": band_ponder_ix,
-                "ponder_ix": log_ix,
-                "ponder_mode": cfg.ponder_mode,
-                "keywords_source": keywords_source,
-                "keywords_raw": raw_keywords,
-                "keywords": keywords,
-                "token_ids": token_ids,
-                "selected_tokens": selected_tokens,
-                "rejected_cfg": dataclasses.asdict(cfg.rejected),
-                "band": {"start_rank": band_start, "end_rank": band_end},
-                "ponder_question": ponder_q,
-                "ponder_log": ponder_log,
-            }
-            if cfg.probe_top_n > 0 and log_ix == 0:
-                record["probe_top"] = top_tokens[: int(cfg.probe_top_n)]
-
-            append_jsonl(cfg.memory_path, record)
-            records.append(record)
-            log_ix += 1
-
-    if cfg.memory_policy == "tail":
-        mem_records = tail_jsonl(cfg.memory_path, cfg.n_memory)
-    elif cfg.memory_policy == "current_only":
-        mem_records = records
-    elif cfg.memory_policy == "off":
-        mem_records = []
+    final_answer_block = memory_block
+    if control == "no_inject":
+        final_answer_block = None
+    if cfg.answer_ensemble and ensemble_final:
+        answer = ensemble_final.strip()
     else:
-        raise ValueError(f"Unknown memory_policy: {cfg.memory_policy!r}")
+        final_prompt = hf._apply_chat(build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang), system_text=None)
+        answer = hf.generate_text(
+            final_prompt,
+            max_new_tokens=cfg.answer_max_new_tokens,
+            temperature=cfg.temperature,
+            top_p=cfg.top_p,
+            top_k=cfg.top_k,
+            repetition_penalty=cfg.repetition_penalty,
+            no_repeat_ngram_size=cfg.no_repeat_ngram_size,
+            seed=cfg.seed,
+        )
 
-    memory_block = build_memory_block(mem_records, max_chars_per_log=700) if mem_records else None
-    final_prompt = hf._apply_chat(build_prompt_for_answer(query, memory_block=memory_block, lang=lang), system_text=None)
-    answer = hf.generate_text(
-        final_prompt,
-        max_new_tokens=cfg.answer_max_new_tokens,
-        temperature=cfg.temperature,
-        top_p=cfg.top_p,
-        top_k=cfg.top_k,
-        repetition_penalty=cfg.repetition_penalty,
-        no_repeat_ngram_size=cfg.no_repeat_ngram_size,
-        seed=cfg.seed,
-    )
+    extras: Dict[str, Any] = {
+        "run_id": run_id,
+        "control": control,
+        "pipeline": pipeline,
+        "memory_policy": cfg.memory_policy,
+        "memory_retrieve": cfg.memory_retrieve,
+        "memory_remix": cfg.memory_remix,
+        "memory_selected": [
+            {
+                "ts": r.get("ts"),
+                "run_id": r.get("run_id"),
+                "band_label": r.get("band_label"),
+                "ponder_ix": r.get("ponder_ix"),
+                "ponder_mode": r.get("ponder_mode"),
+            }
+            for r in (mem_records or [])
+        ],
+        "band_answers": band_answers if band_answers else None,
+        "ensemble": {
+            "raw": ensemble_raw,
+            "consensus": ensemble_consensus,
+            "divergence": ensemble_divergence,
+            "final": ensemble_final,
+        }
+        if ensemble_raw
+        else None,
+        "random_log": random_log_text,
+        "prompt_jitter_queries": jitter_queries if jitter_queries else None,
+    }
 
-    return answer, records
+    return answer, records, extras
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--model", required=True, help="Local model directory (offline)")
-    ap.add_argument("--query", required=True, help="User query (main question)")
-    ap.add_argument("--memory", default="ponder_logs.jsonl", help="Path to JSONL memory log")
-    ap.add_argument("--mode", choices=["baseline", "ponder", "both"], default="both")
+    class _Fmt(argparse.ArgumentDefaultsHelpFormatter, argparse.RawTextHelpFormatter):
+        pass
 
-    ap.add_argument("--prompt_lang", choices=["auto", "en", "ja"], default="auto", help="Prompt language: auto|en|ja")
-    ap.add_argument(
+    ap = argparse.ArgumentParser(
+        description="Local pondering machine (HF causal LM) — rejected-token + lens + bands + memory.",
+        formatter_class=_Fmt,
+    )
+
+    g_core = ap.add_argument_group("Core")
+    g_ponder = ap.add_argument_group("Ponder")
+    g_pipeline = ap.add_argument_group("Pipeline")
+    g_bands = ap.add_argument_group("Bands")
+    g_keywords = ap.add_argument_group("Keywords")
+    g_jitter = ap.add_argument_group("Prompt Jitter")
+    g_memory = ap.add_argument_group("Memory")
+    g_answer = ap.add_argument_group("Answers")
+    g_interactive = ap.add_argument_group("Interactive")
+    g_controls = ap.add_argument_group("Controls / Pack")
+    g_runtime = ap.add_argument_group("Runtime")
+    g_gen = ap.add_argument_group("Generation")
+
+    g_core.add_argument("--model", required=True, help="Local model directory (offline)")
+    g_core.add_argument("--query", required=True, help="User query (main question)")
+    g_core.add_argument("--memory", default="ponder_logs.jsonl", help="Path to JSONL memory log")
+    g_core.add_argument("--mode", choices=["baseline", "ponder", "both"], default="both")
+    g_core.add_argument("--prompt_lang", choices=["auto", "en", "ja"], default="auto", help="Prompt language")
+
+    g_ponder.add_argument(
         "--ponder_mode",
         choices=["assoc", "assumption", "counterexample", "questions_only", "metaphor"],
         default="assoc",
-        help="Ponder log lens",
+        help="Ponder lens (used when --ponder_pipeline is empty)",
     )
-    ap.add_argument("--n_ponder", type=int, default=1, help="Number of ponder logs per band")
-    ap.add_argument(
-        "--memory_policy",
-        choices=["tail", "current_only", "off"],
-        default="tail",
-        help="Which ponder logs to inject into the final answer",
+    g_ponder.add_argument("--n_ponder", type=int, default=1, help="Number of ponder logs per band")
+    g_ponder.add_argument(
+        "--control",
+        choices=["none", "no_inject", "random_log", "random_keywords", "lens_only"],
+        default="none",
+        help="Control variant for A/B testing",
     )
-    ap.add_argument("--keyword_refine", action="store_true", help="Let the model rewrite token fragments into keywords")
-    ap.add_argument("--keyword_refine_max_new_tokens", type=int, default=96)
-    ap.add_argument("--keyword_refine_temperature", type=float, default=0.3)
-    ap.add_argument("--probe_top_n", type=int, default=0, help="Store probe top-N tokens in the JSONL record (0=off)")
-    ap.add_argument("--print_probe", action="store_true", help="Print probe tables to stdout")
+    g_ponder.add_argument("--no_write_memory", action="store_true", help="Do not append to --memory JSONL")
 
-    ap.add_argument("--band_profile", choices=["single", "spectrum3"], default="single", help="Rank-band profile")
-    ap.add_argument(
+    g_pipeline.add_argument(
+        "--ponder_pipeline",
+        default="",
+        help="Comma/space-separated lenses to chain (e.g. assumption,counterexample,questions_only,metaphor).",
+    )
+    g_pipeline.add_argument("--pipeline_context", choices=["none", "prev", "all"], default="prev")
+    g_pipeline.add_argument("--pipeline_context_max_chars", type=int, default=1200)
+
+    g_bands.add_argument("--band_profile", choices=["single", "spectrum3"], default="single", help="Rank-band profile")
+    g_bands.add_argument(
         "--band",
         action="append",
         default=[],
-        help='Custom rank band "START:END" or "LABEL=START:END" (repeatable; END is exclusive).',
+        help='Custom band "START:END" or "LABEL=START:END" (repeatable; END exclusive).',
     )
 
-    ap.add_argument("--device", default="auto", help="auto|mps|cpu|cuda|cuda:0 ...")
-    ap.add_argument("--dtype", default="auto", help="auto|float16|bfloat16|float32")
-    ap.add_argument("--trust_remote_code", action="store_true")
-    ap.add_argument("--no_chat_template", action="store_true")
-    ap.add_argument("--no_gemma_format", action="store_true", help="Disable Gemma-native turn formatting")
+    g_keywords.add_argument("--strategy", choices=["within_topk", "outside_topk"], default="outside_topk")
+    g_keywords.add_argument("--top_k_rejected", type=int, default=80)
+    g_keywords.add_argument("--exclude_top", type=int, default=8)
+    g_keywords.add_argument("--band_width", type=int, default=256)
+    g_keywords.add_argument("--n_keywords", type=int, default=6)
+    g_keywords.add_argument("--keyword_refine", action="store_true", help="Model rewrites token fragments into keywords")
+    g_keywords.add_argument("--keyword_refine_max_new_tokens", type=int, default=96)
+    g_keywords.add_argument("--keyword_refine_temperature", type=float, default=0.3)
+    g_keywords.add_argument(
+        "--keyword_objective",
+        choices=["random_band", "dissonance", "unstable", "random_vocab"],
+        default="random_band",
+        help="How to pick keyword token_ids inside each band",
+    )
+    g_keywords.add_argument("--keyword_select_top", type=int, default=128, help="Top candidates to sample from")
+    g_keywords.add_argument("--dissonance_target", type=float, default=0.9)
+    g_keywords.add_argument("--dissonance_width", type=float, default=0.6)
+    g_keywords.add_argument("--dissonance_tail_k", type=int, default=64)
 
-    ap.add_argument("--strategy", choices=["within_topk", "outside_topk"], default="outside_topk")
-    ap.add_argument("--top_k_rejected", type=int, default=80)
-    ap.add_argument("--exclude_top", type=int, default=8)
-    ap.add_argument("--band_width", type=int, default=256)
-    ap.add_argument("--n_keywords", type=int, default=6)
-    ap.add_argument("--n_memory", type=int, default=6)
+    g_jitter.add_argument("--prompt_jitter", type=int, default=0, help="Number of paraphrases (excluding original)")
+    g_jitter.add_argument("--no_prompt_jitter_include_original", action="store_true", help="Do not include original query")
+    g_jitter.add_argument("--prompt_jitter_max_new_tokens", type=int, default=160)
+    g_jitter.add_argument("--prompt_jitter_temperature", type=float, default=0.6)
 
-    ap.add_argument("--answer_max_new_tokens", type=int, default=256)
-    ap.add_argument("--ponder_max_new_tokens", type=int, default=160)
-    ap.add_argument("--temperature", type=float, default=0.7)
-    ap.add_argument("--top_p", type=float, default=0.95)
-    ap.add_argument("--top_k", type=int, default=0)
-    ap.add_argument("--repetition_penalty", type=float, default=1.05)
-    ap.add_argument("--no_repeat_ngram_size", type=int, default=0)
-    ap.add_argument("--seed", type=int, default=1234)
+    g_memory.add_argument("--n_memory", type=int, default=6)
+    g_memory.add_argument(
+        "--memory_policy",
+        choices=["tail", "current_only", "off"],
+        default="tail",
+        help="Which ponder logs are eligible to inject",
+    )
+    g_memory.add_argument(
+        "--memory_retrieve",
+        choices=["tail", "similar", "anti", "mix"],
+        default="tail",
+        help="How to pick memory records when --memory_policy=tail",
+    )
+    g_memory.add_argument("--memory_pool", type=int, default=200, help="Pool size for retrieval (tail records)")
+    g_memory.add_argument("--memory_mix_ratio", type=float, default=0.5, help="similar/(similar+anti) when mix")
+    g_memory.add_argument(
+        "--memory_include_current_run",
+        action="store_true",
+        help="Allow selecting current run records when retrieving from tail",
+    )
+    g_memory.add_argument("--memory_remix", choices=["off", "shuffle", "compress", "dream"], default="off")
+    g_memory.add_argument("--memory_remix_keep_original", action="store_true")
+    g_memory.add_argument("--memory_remix_max_new_tokens", type=int, default=240)
+    g_memory.add_argument("--memory_remix_temperature", type=float, default=0.9)
+
+    g_answer.add_argument("--answer_max_new_tokens", type=int, default=256)
+    g_answer.add_argument("--answer_per_band", action="store_true", help="Generate per-band answers (sensitivity)")
+    g_answer.add_argument("--answer_ensemble", action="store_true", help="Merge per-band answers into a final answer")
+    g_answer.add_argument("--answer_ensemble_max_new_tokens", type=int, default=512)
+    g_answer.add_argument("--answer_ensemble_temperature", type=float, default=0.2)
+
+    g_interactive.add_argument("--interactive", action="store_true", help="Pick keyword tokens interactively")
+    g_interactive.add_argument("--interactive_candidates", type=int, default=48)
+
+    g_controls.add_argument(
+        "--pack",
+        choices=["none", "controls"],
+        default="none",
+        help="Run a pack of control variants",
+    )
+    g_controls.add_argument("--pack_out", default="", help="Optional JSON output for pack results")
+    g_controls.add_argument("--pack_write_memory", action="store_true", help="Allow pack runs to write to memory JSONL")
+    g_controls.add_argument(
+        "--print_records",
+        choices=["auto", "none", "all"],
+        default="auto",
+        help="Print ponder records JSON",
+    )
+
+    g_runtime.add_argument("--device", default="auto", help="auto|mps|cpu|cuda|cuda:0 ...")
+    g_runtime.add_argument("--dtype", default="auto", help="auto|float16|bfloat16|float32")
+    g_runtime.add_argument("--trust_remote_code", action="store_true")
+    g_runtime.add_argument("--no_chat_template", action="store_true")
+    g_runtime.add_argument("--no_gemma_format", action="store_true", help="Disable Gemma-native turn formatting")
+    g_runtime.add_argument("--probe_top_n", type=int, default=0, help="Store probe top-N tokens in record (0=off)")
+    g_runtime.add_argument("--print_probe", action="store_true", help="Print probe tables to stdout")
+
+    g_gen.add_argument("--ponder_max_new_tokens", type=int, default=160)
+    g_gen.add_argument("--temperature", type=float, default=0.7)
+    g_gen.add_argument("--top_p", type=float, default=0.95)
+    g_gen.add_argument("--top_k", type=int, default=0)
+    g_gen.add_argument("--repetition_penalty", type=float, default=1.05)
+    g_gen.add_argument("--no_repeat_ngram_size", type=int, default=0)
+    g_gen.add_argument("--seed", type=int, default=1234)
 
     args = ap.parse_args()
 
     prompt_lang = resolve_prompt_lang(args.prompt_lang, args.query)
     bands = [_parse_band_spec(x) for x in (args.band or [])]
+    pipeline = parse_ponder_pipeline(args.ponder_pipeline, fallback_mode=args.ponder_mode)
+
+    write_memory = not bool(args.no_write_memory)
+    if args.pack != "none" and not bool(args.pack_write_memory):
+        write_memory = False
+
     cfg = RunConfig(
         model_path=args.model,
         memory_path=Path(args.memory),
         n_memory=args.n_memory,
         memory_policy=args.memory_policy,
+        memory_retrieve=args.memory_retrieve,
+        memory_pool=args.memory_pool,
+        memory_mix_ratio=args.memory_mix_ratio,
+        memory_exclude_current_run=not bool(args.memory_include_current_run),
+        memory_remix=args.memory_remix,
+        memory_remix_keep_original=bool(args.memory_remix_keep_original),
+        memory_remix_max_new_tokens=args.memory_remix_max_new_tokens,
+        memory_remix_temperature=args.memory_remix_temperature,
         rejected=RejectedTokenConfig(
             top_k=args.top_k_rejected,
             strategy=args.strategy,
@@ -1127,12 +2063,32 @@ def main() -> None:
         seed=args.seed,
         prompt_lang=prompt_lang,
         ponder_mode=args.ponder_mode,
+        ponder_pipeline=pipeline,
+        pipeline_context=args.pipeline_context,
+        pipeline_context_max_chars=args.pipeline_context_max_chars,
         n_ponder=args.n_ponder,
         keyword_refine=args.keyword_refine,
         keyword_refine_max_new_tokens=args.keyword_refine_max_new_tokens,
         keyword_refine_temperature=args.keyword_refine_temperature,
+        keyword_objective=args.keyword_objective,
+        keyword_select_top=args.keyword_select_top,
+        dissonance_target=args.dissonance_target,
+        dissonance_width=args.dissonance_width,
+        dissonance_tail_k=args.dissonance_tail_k,
+        prompt_jitter=args.prompt_jitter,
+        prompt_jitter_include_original=not bool(args.no_prompt_jitter_include_original),
+        prompt_jitter_max_new_tokens=args.prompt_jitter_max_new_tokens,
+        prompt_jitter_temperature=args.prompt_jitter_temperature,
         probe_top_n=args.probe_top_n,
         print_probe=args.print_probe,
+        interactive=bool(args.interactive),
+        interactive_candidates=args.interactive_candidates,
+        answer_per_band=bool(args.answer_per_band),
+        answer_ensemble=bool(args.answer_ensemble),
+        answer_ensemble_max_new_tokens=args.answer_ensemble_max_new_tokens,
+        answer_ensemble_temperature=args.answer_ensemble_temperature,
+        control=args.control,
+        write_memory=write_memory,
         device=args.device,
         dtype=args.dtype,
         trust_remote_code=args.trust_remote_code,
@@ -1150,9 +2106,50 @@ def main() -> None:
     )
     print(
         f"[sr_ponder] device={hf.device_str} input_device={hf.input_device} dtype={hf.torch_dtype} "
-        f"gemma_turn_tokens={hf._has_gemma_turn_tokens()} lang={cfg.prompt_lang} ponder_mode={cfg.ponder_mode} "
-        f"band_profile={cfg.band_profile} custom_bands={len(cfg.bands)}"
+        f"gemma_turn_tokens={hf._has_gemma_turn_tokens()} lang={cfg.prompt_lang} "
+        f"band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
+        f"objective={cfg.keyword_objective} control={cfg.control} "
+        f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
+        f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} write_memory={cfg.write_memory}"
     )
+
+    if args.pack != "none":
+        pack_cfg = dataclasses.replace(cfg, interactive=False, answer_per_band=False, answer_ensemble=False)
+        results: Dict[str, Any] = {
+            "ts": now_iso(),
+            "model": cfg.model_path,
+            "query": args.query,
+            "pack": args.pack,
+            "items": [],
+        }
+
+        items: List[Tuple[str, Dict[str, Any]]] = [
+            ("baseline", {"kind": "baseline"}),
+            ("ponder", {"kind": "ponder", "control": "none"}),
+            ("no_inject", {"kind": "ponder", "control": "no_inject"}),
+            ("random_keywords", {"kind": "ponder", "control": "random_keywords"}),
+            ("random_log", {"kind": "ponder", "control": "random_log"}),
+            ("lens_only", {"kind": "ponder", "control": "lens_only"}),
+        ]
+
+        for name, spec in items:
+            print(f"\n=== PACK: {name} ===\n")
+            if spec["kind"] == "baseline":
+                ans = run_baseline(hf, pack_cfg, args.query)
+                print(ans)
+                results["items"].append({"name": name, "kind": "baseline", "answer": ans})
+                continue
+            cfg2 = dataclasses.replace(pack_cfg, control=str(spec.get("control", "none")))
+            ans, _, extras = run_ponder(hf, cfg2, args.query)
+            print(ans)
+            results["items"].append({"name": name, "kind": "ponder", "control": cfg2.control, "answer": ans, "extras": extras})
+
+        if (args.pack_out or "").strip():
+            out_path = Path((args.pack_out or "").strip())
+            safe_mkdir(out_path)
+            out_path.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"\n[pack] wrote {out_path}")
+        return
 
     if args.mode in ("baseline", "both"):
         ans = run_baseline(hf, cfg, args.query)
@@ -1160,9 +2157,38 @@ def main() -> None:
         print(ans)
 
     if args.mode in ("ponder", "both"):
-        ans, recs = run_ponder(hf, cfg, args.query)
-        print("\n=== PONDER RECORD(S) (just written) ===\n")
-        print(json.dumps(recs if len(recs) > 1 else recs[0], ensure_ascii=False, indent=2))
+        ans, recs, extras = run_ponder(hf, cfg, args.query)
+
+        if args.print_records != "none":
+            if args.print_records == "all" or (args.print_records == "auto" and len(recs) <= 3):
+                payload: Any = recs if len(recs) > 1 else recs[0]
+            elif args.print_records == "auto":
+                payload = recs[0] if recs else []
+            else:
+                payload = []
+            if payload:
+                print("\n=== PONDER RECORD(S) (just written) ===\n")
+                print(json.dumps(payload, ensure_ascii=False, indent=2))
+                if args.print_records == "auto" and len(recs) > 3:
+                    print(f"\n[info] records={len(recs)} (use --print_records all to dump everything)")
+
+        # Extras (band answers + ensemble)
+        band_answers = extras.get("band_answers") if isinstance(extras, dict) else None
+        if isinstance(band_answers, dict) and band_answers:
+            print("\n=== BAND ANSWERS ===\n")
+            for bl, txt in band_answers.items():
+                print(f"\n--- {bl} ---\n")
+                print(txt)
+
+        ens = extras.get("ensemble") if isinstance(extras, dict) else None
+        if isinstance(ens, dict) and ens.get("raw"):
+            print("\n=== ENSEMBLE (raw) ===\n")
+            print(ens.get("raw"))
+
+        if extras.get("random_log"):
+            print("\n=== CONTROL: RANDOM LOG ===\n")
+            print(extras.get("random_log"))
+
         print("\n=== PONDERED ANSWER ===\n")
         print(ans)
 
