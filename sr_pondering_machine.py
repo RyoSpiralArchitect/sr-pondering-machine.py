@@ -35,6 +35,7 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import datetime as dt
+import difflib
 import hashlib
 import json
 import os
@@ -110,6 +111,92 @@ def tail_jsonl(path: Path, n: int) -> List[Dict[str, Any]]:
         except json.JSONDecodeError:
             continue
     return out
+
+
+_MODEL_PATHLIKE_EXTS = (".json", ".safetensors", ".bin", ".gguf", ".pt", ".pth")
+
+
+def _looks_like_local_path(s: str) -> bool:
+    if not s:
+        return False
+    if s.startswith(("~", "./", "../")):
+        return True
+    if os.path.isabs(s):
+        return True
+    if re.match(r"^[A-Za-z]:[\\/]", s or ""):
+        return True
+    if any(s.endswith(ext) for ext in _MODEL_PATHLIKE_EXTS):
+        return True
+    if "/" in s or "\\" in s:
+        first = re.split(r"[\\/]+", s, maxsplit=1)[0]
+        if first and Path(first).exists():
+            return True
+    return False
+
+
+def _normalize_model_name(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", (name or "").lower())
+
+
+def _suggest_model_dirs(missing_path: Path, *, limit: int = 4) -> List[Path]:
+    parent = missing_path.parent
+    if not parent.is_dir():
+        return []
+
+    target = _normalize_model_name(missing_path.name)
+    candidates: List[Tuple[float, Path]] = []
+    for child in parent.iterdir():
+        if not child.is_dir():
+            continue
+        child_norm = _normalize_model_name(child.name)
+        if not child_norm:
+            continue
+        if target and child_norm == target:
+            score = 1.0
+        else:
+            score = difflib.SequenceMatcher(a=target, b=child_norm).ratio() if target else 0.0
+        candidates.append((score, child))
+
+    candidates.sort(key=lambda t: t[0], reverse=True)
+    out: List[Path] = []
+    for score, child in candidates:
+        if len(out) >= limit:
+            break
+        if score < 0.45:
+            continue
+        out.append(child)
+    return out
+
+
+def resolve_model_ref(model_ref: str) -> str:
+    """Resolve a model ref intended as a *local directory*.
+
+    If the user passes something that looks like a local path but it doesn't exist,
+    fail fast with a clearer message than the HF Hub validation error.
+
+    If it doesn't look like a local path, return as-is (allows cached HF IDs).
+    """
+
+    expanded = os.path.expandvars(os.path.expanduser(model_ref or ""))
+    p = Path(expanded)
+
+    if p.exists():
+        if not p.is_dir():
+            raise SystemExit(f"[sr_ponder] ERROR: --model must be a directory, got: {p}")
+        if not (p / "config.json").exists():
+            raise SystemExit(f"[sr_ponder] ERROR: not a HF model dir (missing config.json): {p}")
+        return str(p.resolve())
+
+    if _looks_like_local_path(model_ref) or _looks_like_local_path(expanded):
+        suggestions = _suggest_model_dirs(p)
+        lines = [f"[sr_ponder] ERROR: model path not found: {p}"]
+        if suggestions:
+            lines.append("[sr_ponder] Did you mean:")
+            lines.extend([f"  - {s}" for s in suggestions])
+        lines.append("[sr_ponder] Tip: `--model` expects a local Hugging Face model directory (offline).")
+        raise SystemExit("\n".join(lines))
+
+    return model_ref
 
 
 def resolve_device(device: str) -> str:
@@ -1103,7 +1190,7 @@ class LocalHFModel:
         use_chat_template: bool = True,
         force_gemma_format: bool = True,
     ) -> None:
-        self.model_path = model_path
+        self.model_path = resolve_model_ref(model_path)
         self.use_chat_template = use_chat_template
         self.force_gemma_format = force_gemma_format
 
@@ -1112,7 +1199,7 @@ class LocalHFModel:
         self.torch_dtype = resolve_dtype(dtype, self.device_str)
 
         self.tokenizer = AutoTokenizer.from_pretrained(
-            model_path,
+            self.model_path,
             local_files_only=True,
             trust_remote_code=trust_remote_code,
             use_fast=True,
@@ -1126,13 +1213,13 @@ class LocalHFModel:
         )
         try:
             self.model = AutoModelForCausalLM.from_pretrained(
-                model_path,
+                self.model_path,
                 dtype=self.torch_dtype,
                 **model_kwargs,
             )
         except TypeError:
             self.model = AutoModelForCausalLM.from_pretrained(
-                model_path,
+                self.model_path,
                 torch_dtype=self.torch_dtype,
                 **model_kwargs,
             )

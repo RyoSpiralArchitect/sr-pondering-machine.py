@@ -349,4 +349,5 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.h
 
 - **Use the `-it` (instruction-tuned) variant** of Gemma for best results. The base model does not reliably follow instructions.
 - The model must already be **downloaded locally**. Network access is disabled at inference time (`local_files_only=True`).
+- If you see an error like “Repo id must be in the form …” while passing an absolute `--model` path, it usually means the directory does not exist (Transformers falls back to treating it like a Hub ID). Double-check the path and try the closest matching folder name.
 - `--keyword_refine` adds an extra generation call before the ponder step (slower, but often produces better keywords).
