@@ -22,11 +22,19 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Persistent memory** — ponder logs are stored in a JSONL file and the most recent entries are reused in subsequent runs.
 - **Baseline mode** — run without pondering for easy A/B comparison.
 - **Ponder lenses** — switch between association / assumptions / counterexamples / questions-only / metaphor via `--ponder_mode`.
+- **Lens pipeline** — chain multiple lenses via `--ponder_pipeline` (with `--pipeline_context prev|all|none`).
 - **Multi-ponder** — generate multiple ponder logs per band with `--n_ponder`.
 - **Keyword refinement** — optionally rewrite token fragments into cleaner keywords via `--keyword_refine`.
+- **Keyword objectives** — pick seeds by dissonance/instability via `--keyword_objective dissonance|unstable`.
+- **Prompt jitter** — paraphrase the query (`--prompt_jitter`) to find unstable seed tokens (sharper drift).
 - **Prompt language auto** — `--prompt_lang auto|en|ja` (auto-detects Japanese queries).
 - **Probe tracing** — print/store probe token info with `--print_probe` / `--probe_top_n`.
 - **Spectral bands** — run multiple rank-bands (near/mid/far) via `--band_profile spectrum3` or define custom bands with `--band`.
+- **Memory retrieval** — pick memory by similarity/anti-similarity via `--memory_retrieve similar|anti|mix`.
+- **Memory remix** — shuffle/compress/dream the injected memory via `--memory_remix`.
+- **Answer ensemble** — generate per-band answers + merged answer with `--answer_per_band` / `--answer_ensemble`.
+- **Interactive pick** — choose keyword tokens yourself with `--interactive`.
+- **Controls pack** — run A/B packs via `--pack controls` (plus `--control ...` variants).
 - **Highly configurable** — token selection strategy, generation hyperparameters, device, dtype, and more are all adjustable from the command line.
 
 ## Requirements
@@ -111,7 +119,98 @@ python3 sr_pondering_machine.py \
   --print_probe
 ```
 
+### Pipeline: assumption → counterexample → questions_only → metaphor
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "Why do people confuse confidence with truth?" \
+  --mode ponder \
+  --band_profile spectrum3 \
+  --ponder_pipeline "assumption,counterexample,questions_only,metaphor" \
+  --pipeline_context prev \
+  --memory_policy current_only
+```
+
+### Answer ensemble: per-band answers + merged final answer
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "Explain quantum entanglement to a high school student." \
+  --mode ponder \
+  --band_profile spectrum3 \
+  --n_ponder 2 \
+  --memory_policy current_only \
+  --answer_per_band \
+  --answer_ensemble
+```
+
+### Keyword objective: dissonance (moderate semantic drift)
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "Design a new kind of musical scale." \
+  --mode ponder \
+  --keyword_objective dissonance \
+  --dissonance_target 0.9 \
+  --dissonance_width 0.6 \
+  --memory_policy current_only
+```
+
+### Keyword objective: unstable (prompt jitter)
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "What is creativity, really?" \
+  --mode ponder \
+  --keyword_objective unstable \
+  --prompt_jitter 4 \
+  --memory_policy current_only
+```
+
+### Memory retrieval + remix (dream collage)
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "Why do we overfit narratives to randomness?" \
+  --mode ponder \
+  --memory_policy tail \
+  --memory_retrieve mix \
+  --memory_pool 300 \
+  --memory_mix_ratio 0.5 \
+  --memory_remix dream
+```
+
+### Interactive pick (human-in-the-loop keywords)
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "Invent a new sport." \
+  --mode ponder \
+  --band_profile spectrum3 \
+  --interactive
+```
+
+### Controls pack (A/B all at once)
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "Is free will an illusion?" \
+  --pack controls \
+  --pack_out ./pack_results.json
+```
+
 ## CLI Reference
+
+Run `python3 sr_pondering_machine.py --help` for the full grouped help.
+
+### Core
 
 | Argument | Default | Description |
 |---|---|---|
@@ -119,36 +218,75 @@ python3 sr_pondering_machine.py \
 | `--query` | *(required)* | The question to answer. |
 | `--memory` | `ponder_logs.jsonl` | Path to the JSONL memory log. |
 | `--mode` | `both` | `baseline` · `ponder` · `both` |
-| `--prompt_lang` | `auto` | Prompt language: `auto` · `en` · `ja` |
+| `--prompt_lang` | `auto` | `auto` · `en` · `ja` |
+
+### Ponder + Pipeline
+
+| Argument | Default | Description |
+|---|---|---|
 | `--ponder_mode` | `assoc` | `assoc` · `assumption` · `counterexample` · `questions_only` · `metaphor` |
-| `--n_ponder` | `1` | Number of ponder logs per band (total logs = `n_ponder * n_bands`). |
-| `--memory_policy` | `tail` | Inject: `tail` (last `n_memory`) · `current_only` · `off` |
-| `--keyword_refine` | `False` | Let the model rewrite token fragments into keywords. |
-| `--keyword_refine_max_new_tokens` | `96` | Keyword-refine max new tokens. |
-| `--keyword_refine_temperature` | `0.3` | Keyword-refine temperature. |
-| `--probe_top_n` | `0` | Store probe top-N tokens into the JSONL record (0 = off). |
-| `--print_probe` | `False` | Print probe tables to stdout. |
-| `--band_profile` | `single` | Rank-band profile: `single` · `spectrum3` |
-| `--band` | *(none)* | Custom band(s): `START:END` or `LABEL=START:END` (repeatable, END exclusive). |
-| `--device` | `auto` | `auto` · `mps` · `cpu` · `cuda` · `cuda:0` … |
-| `--dtype` | `auto` | `auto` · `float16` · `bfloat16` · `float32` |
-| `--trust_remote_code` | `False` | Pass `--trust_remote_code` to enable. |
-| `--no_chat_template` | `False` | Disable the tokenizer chat template. |
-| `--no_gemma_format` | `False` | Disable Gemma-native turn formatting. |
-| `--strategy` | `outside_topk` | Rejected-token selection strategy: `within_topk` or `outside_topk`. |
-| `--top_k_rejected` | `80` | Top-K cutoff for rejected token selection. |
-| `--exclude_top` | `8` | Number of top tokens to exclude (used with `within_topk`). |
-| `--band_width` | `256` | Width of the candidate band (used with `outside_topk`). |
-| `--n_keywords` | `6` | Number of keywords to extract. |
-| `--n_memory` | `6` | Number of recent ponder records to include as memory. |
-| `--answer_max_new_tokens` | `256` | Max new tokens for the answer step. |
-| `--ponder_max_new_tokens` | `160` | Max new tokens for the ponder log step. |
-| `--temperature` | `0.7` | Sampling temperature. |
-| `--top_p` | `0.95` | Nucleus sampling probability. |
-| `--top_k` | `0` | Top-K sampling (0 = disabled). |
-| `--repetition_penalty` | `1.05` | Repetition penalty. |
-| `--no_repeat_ngram_size` | `0` | No-repeat n-gram size (0 = disabled). |
-| `--seed` | `1234` | Random seed for reproducibility. |
+| `--ponder_pipeline` | *(empty)* | Lens chain like `assumption,counterexample,metaphor` |
+| `--pipeline_context` | `prev` | `none` · `prev` · `all` |
+| `--n_ponder` | `1` | Ponder logs per band |
+| `--control` | `none` | `none` · `no_inject` · `random_log` · `random_keywords` · `lens_only` |
+| `--no_write_memory` | `False` | Don’t append JSONL records |
+
+### Bands
+
+| Argument | Default | Description |
+|---|---|---|
+| `--band_profile` | `single` | `single` · `spectrum3` |
+| `--band` | *(none)* | `START:END` or `LABEL=START:END` (repeatable, END exclusive) |
+
+### Keywords
+
+| Argument | Default | Description |
+|---|---|---|
+| `--strategy` | `outside_topk` | `within_topk` · `outside_topk` |
+| `--top_k_rejected` | `80` | Top-K cutoff for rejected tokens |
+| `--exclude_top` | `8` | Exclude top tokens (within_topk) |
+| `--band_width` | `256` | Band width (outside_topk) |
+| `--n_keywords` | `6` | Keywords per ponder log |
+| `--keyword_refine` | `False` | Model rewrites token fragments |
+| `--keyword_objective` | `random_band` | `random_band` · `dissonance` · `unstable` · `random_vocab` |
+| `--keyword_select_top` | `128` | Sample from top-N candidates |
+| `--dissonance_target` | `0.9` | Target dissonance (1 - cosine sim) |
+| `--dissonance_width` | `0.6` | Acceptable window |
+| `--dissonance_tail_k` | `64` | Prompt tail tokens used for query embedding |
+
+### Prompt jitter
+
+| Argument | Default | Description |
+|---|---|---|
+| `--prompt_jitter` | `0` | Paraphrases (excluding original) |
+| `--no_prompt_jitter_include_original` | `False` | Don’t include the original query |
+
+### Memory
+
+| Argument | Default | Description |
+|---|---|---|
+| `--n_memory` | `6` | Memory records to inject |
+| `--memory_policy` | `tail` | `tail` · `current_only` · `off` |
+| `--memory_retrieve` | `tail` | `tail` · `similar` · `anti` · `mix` |
+| `--memory_pool` | `200` | Tail pool size for retrieval |
+| `--memory_mix_ratio` | `0.5` | similar/(similar+anti) in mix |
+| `--memory_include_current_run` | `False` | Allow selecting current run from tail |
+| `--memory_remix` | `off` | `off` · `shuffle` · `compress` · `dream` |
+
+### Answers
+
+| Argument | Default | Description |
+|---|---|---|
+| `--answer_per_band` | `False` | Print per-band answers |
+| `--answer_ensemble` | `False` | Merge per-band answers |
+
+### Interactive / Pack
+
+| Argument | Default | Description |
+|---|---|---|
+| `--interactive` | `False` | Pick keywords interactively |
+| `--pack` | `none` | `none` · `controls` |
+| `--pack_out` | *(empty)* | Optional JSON results |
 
 ## Rejected-Token Selection Strategies
 
@@ -165,10 +303,14 @@ Each ponder run appends a JSON record to the JSONL file:
 {
   "ts": "2025-01-01T00:00:00Z",
   "run_id": "a1b2c3d4e5f6",
+  "control": "none",
   "band_profile": "single",
   "band_label": "outside_topk:80:336",
   "ponder_ix": 0,
   "prompt_lang": "en",
+  "pipeline": ["assoc", "metaphor"],
+  "pipeline_stage_ix": 0,
+  "pipeline_context": "prev",
   "ponder_mode": "assoc",
   "keywords": ["gravity", "mirror", "sleep"],
   "keywords_raw": ["gravity", "mirror", "sleep"],
@@ -181,11 +323,18 @@ Each ponder run appends a JSON record to the JSONL file:
 }
 ```
 
-The logs injected into the final answer depend on `--memory_policy`:
+Memory injection is controlled by:
 
 - `tail`: the most recent `n_memory` records
 - `current_only`: only the logs generated in the current run
 - `off`: no log injection (still writes to JSONL)
+
+With `--memory_policy tail`, you can choose retrieval:
+
+- `--memory_retrieve tail`: literal tail
+- `--memory_retrieve similar|anti|mix`: cosine similarity over token-id embeddings
+
+And optionally remix the injected text with `--memory_remix`.
 
 ## Memory Report (Visualization)
 
