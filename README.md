@@ -26,6 +26,7 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Lens pipeline** — chain multiple lenses via `--ponder_pipeline` (with `--pipeline_context prev|all|none`).
 - **Multi-ponder** — generate multiple ponder logs per band with `--n_ponder`.
 - **Latent walk (hops)** — chain multiple drift steps via `--ponder_hops` (next-hop seeds from `--hop_keyword_source model|heuristic`).
+- **Presets** — apply curated settings with one flag (e.g. `--preset surreal`).
 - **Keyword refinement** — optionally rewrite token fragments into cleaner keywords via `--keyword_refine`.
 - **Keyword objectives** — pick seeds by dissonance/instability via `--keyword_objective dissonance|unstable`.
 - **Keyword diversity** — encourage more diverse seed keywords via `--keyword_diversity lex|embed`.
@@ -35,9 +36,10 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Spectral bands** — run multiple rank-bands (near/mid/far) via `--band_profile spectrum3` or define custom bands with `--band`.
 - **Memory retrieval** — pick memory by similarity/anti-similarity via `--memory_retrieve similar|anti|mix`.
 - **Memory remix** — shuffle/compress/dream the injected memory via `--memory_remix`.
+- **Answer style** — steer the final answer style via `--answer_style plain|surreal|metaphor|meta`.
 - **Answer ensemble** — generate per-band answers + merged answer with `--answer_per_band` / `--answer_ensemble`.
 - **Interactive pick** — choose keyword tokens yourself with `--interactive`.
-- **Controls pack** — run A/B packs via `--pack controls` (plus `--control ...` variants).
+- **Controls pack** — run A/B packs via `--pack controls|surreal` (plus `--control ...` variants).
 - **Highly configurable** — token selection strategy, generation hyperparameters, device, dtype, and more are all adjustable from the command line.
 
 ## Requirements
@@ -125,6 +127,26 @@ python3 sr_pondering_machine.py \
   --ponder_hops 3 \
   --hop_keyword_source model \
   --memory_policy current_only
+```
+
+### Preset: surreal (one-flag setup)
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "創造性って結局なに？" \
+  --mode ponder \
+  --preset surreal
+```
+
+### Pack: surreal (compare a few curated weirdness variants)
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "現実って何のインターフェース？" \
+  --pack surreal \
+  --pack_out ./pack_surreal.json
 ```
 
 ### Spectral: near/mid/far bands + current-only memory

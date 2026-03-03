@@ -476,43 +476,72 @@ def default_system_text(lang: str) -> str:
     return "After pondering the question, you provide an answer."
 
 
-def build_prompt_for_answer(query: str, memory_block: Optional[str], *, lang: str) -> str:
+def _answer_style_guidance(style: str, *, lang: str) -> str:
+    s = (style or "plain").strip().lower()
+    if s in ("", "plain", "default"):
+        return ""
+    if lang == "ja":
+        if s == "surreal":
+            return (
+                "文体: シュールで比喩・象徴を多めに（少しメタでもよい）。ただし意味を崩しすぎず、最後に1段落で平易に要点をまとめる。"
+            )
+        if s == "metaphor":
+            return "文体: 比喩・アナロジー中心。ただし最後に1〜2文で平易な要点まとめを添える。"
+        if s == "meta":
+            return "文体: メタ認知的に（問いの前提/フレーミングにも短く触れる）。その上で端的に回答する。"
+    else:
+        if s == "surreal":
+            return (
+                "Style: surreal, metaphor-heavy, slightly self-referential. Keep an anchor: end with a short plain-language summary paragraph."
+            )
+        if s == "metaphor":
+            return "Style: metaphor/analogy-driven, but end with 1-2 plain sentences summarizing the answer."
+        if s == "meta":
+            return "Style: briefly comment on the framing/assumptions of the question, then answer directly."
+    raise ValueError(f"Unknown answer_style: {style!r}")
+
+
+def build_prompt_for_answer(query: str, memory_block: Optional[str], *, lang: str, style: str = "plain") -> str:
+    style_note = _answer_style_guidance(style, lang=lang).strip()
+    prefix = f"{default_system_text(lang)}\n\n"
+    if style_note:
+        prefix += style_note + "\n\n"
     if memory_block:
         if lang == "ja":
             return (
-                f"{default_system_text(lang)}\n\n"
-                "以下は最近生成された「本題と直接関係しない Ponder Log」です。"
-                "ただし、隠れた前提や別の切り口に気づく助けになるなら軽く参照してもよい。\n"
-                "<ponder_log>\n"
-                f"{memory_block}\n"
-                "</ponder_log>\n\n"
-                "本題の質問:\n"
-                f"{query}\n\n"
-                "出力は回答本文のみ（見出しや引用は不要）。\n"
+                prefix
+                + "以下は最近生成された「本題と直接関係しない Ponder Log」です。"
+                + "ただし、隠れた前提や別の切り口に気づく助けになるなら軽く参照してもよい。\n"
+                + "<ponder_log>\n"
+                + f"{memory_block}\n"
+                + "</ponder_log>\n\n"
+                + "本題の質問:\n"
+                + f"{query}\n\n"
+                + "出力は回答本文のみ（見出しや引用は不要）。\n"
             )
         return (
-            f"{default_system_text(lang)}\n\n"
-            "The following is a recently generated Ponder Log Not Directly Related to the Main Topic."
-            "But you may use it casually if it helps you notice hidden assumptions or alternative framings.\n"
-            "<ponder_log>\n"
-            f"{memory_block}\n"
-            "</ponder_log>\n\n"
-            "Actual Question:\n"
-            f"{query}\n\n"
-            "Write only the answer in your output (headings and quotes are not needed).\n"
+            prefix
+            + "The following is a recently generated Ponder Log Not Directly Related to the Main Topic."
+            + "But you may use it casually if it helps you notice hidden assumptions or alternative framings.\n"
+            + "<ponder_log>\n"
+            + f"{memory_block}\n"
+            + "</ponder_log>\n\n"
+            + "Actual Question:\n"
+            + f"{query}\n\n"
+            + "Write only the answer in your output (headings and quotes are not needed).\n"
         )
     if lang == "ja":
         return (
-            f"{default_system_text(lang)}\n\n"
-            "本題の質問:\n"
-            f"{query}\n\n"
-            "出力は回答本文のみ（見出しや引用は不要）。\n"
+            prefix
+            + "本題の質問:\n"
+            + f"{query}\n\n"
+            + "出力は回答本文のみ（見出しや引用は不要）。\n"
         )
     return (
-        f"{default_system_text(lang)}\n\n"
-        "Actual Question:\n"
-        f"{query}\n\n"
-        "Write only the answer in your output (headings and quotes are not needed).\n"
+        prefix
+        + "Actual Question:\n"
+        + f"{query}\n\n"
+        + "Write only the answer in your output (headings and quotes are not needed).\n"
     )
 
 
@@ -1643,6 +1672,35 @@ def parse_ponder_pipeline(pipeline: str, *, fallback_mode: str) -> List[str]:
     return out or []
 
 
+def apply_preset_inplace(args: argparse.Namespace) -> None:
+    preset = str(getattr(args, "preset", "none") or "none").strip().lower()
+    if preset in ("", "none"):
+        return
+    if preset != "surreal":
+        raise ValueError(f"Unknown preset: {preset!r}")
+
+    # Apply curated surreal defaults, but only when the user didn't already opt into something else.
+    # Prefer options that can still be overridden by explicit CLI flags.
+    if str(getattr(args, "ponder_pipeline", "") or "").strip() == "":
+        args.ponder_pipeline = "metaphor,metaphor"
+    if str(getattr(args, "band_profile", "single") or "single").strip() == "single" and not list(getattr(args, "band", []) or []):
+        args.band_profile = "spectrum3"
+    if int(getattr(args, "ponder_hops", 1) or 1) <= 1:
+        args.ponder_hops = 3
+    if str(getattr(args, "keyword_objective", "random_band") or "random_band").strip() == "random_band":
+        args.keyword_objective = "dissonance"
+    if str(getattr(args, "keyword_diversity", "off") or "off").strip() == "off":
+        args.keyword_diversity = "embed"
+    if str(getattr(args, "memory_policy", "tail") or "tail").strip() == "tail":
+        args.memory_policy = "current_only"
+    if str(getattr(args, "memory_remix", "off") or "off").strip() == "off":
+        args.memory_remix = "dream"
+    if int(getattr(args, "prompt_jitter", 0) or 0) <= 0:
+        args.prompt_jitter = 2
+    if str(getattr(args, "answer_style", "plain") or "plain").strip() in ("plain", "default"):
+        args.answer_style = "surreal"
+
+
 def _cosine_sim(a: torch.Tensor, b: torch.Tensor, eps: float = 1e-8) -> float:
     aa = a.detach().float().cpu()
     bb = b.detach().float().cpu()
@@ -1852,7 +1910,11 @@ def select_memory_records_fuzzy(
     if memory_policy == "off":
         return []
     if memory_policy == "current_only":
-        return list(current_records)
+        take = max(0, int(n_memory))
+        if take <= 0:
+            return []
+        cur = list(current_records)
+        return cur[-take:] if len(cur) > take else cur
     if memory_policy != "tail":
         raise ValueError(f"Unknown memory_policy: {memory_policy!r}")
 
@@ -2082,7 +2144,11 @@ def select_memory_records(
     if memory_policy == "off":
         return []
     if memory_policy == "current_only":
-        return list(current_records)
+        take = max(0, int(n_memory))
+        if take <= 0:
+            return []
+        cur = list(current_records)
+        return cur[-take:] if len(cur) > take else cur
     if memory_policy != "tail":
         raise ValueError(f"Unknown memory_policy: {memory_policy!r}")
 
@@ -2575,6 +2641,40 @@ class LocalHFModel:
         self.start_of_turn_id = self._tok_id("<start_of_turn>")
         self.end_of_turn_id = self._tok_id("<end_of_turn>")
 
+        self._warned_prompt_trunc: bool = False
+
+    def _max_context_tokens(self) -> Optional[int]:
+        cfg = getattr(self.model, "config", None)
+        cands: List[int] = []
+        for k in ("max_position_embeddings", "n_positions", "n_ctx", "max_seq_len", "seq_length"):
+            v = getattr(cfg, k, None) if cfg is not None else None
+            if isinstance(v, int) and 32 <= v <= 262144:
+                cands.append(int(v))
+        tmax = getattr(self.tokenizer, "model_max_length", None)
+        if isinstance(tmax, int) and 32 <= tmax <= 262144:
+            cands.append(int(tmax))
+        if not cands:
+            return None
+        # Be conservative: some tokenizers expose a larger max than the model actually supports.
+        return int(min(cands))
+
+    def _truncate_batch_left(self, batch: Dict[str, Any], *, max_len: int) -> Dict[str, Any]:
+        ids = batch.get("input_ids")
+        if ids is None or not torch.is_tensor(ids):
+            return batch
+        if ids.ndim != 2:
+            return batch
+        cur = int(ids.shape[1])
+        if cur <= int(max_len):
+            return batch
+        sl = slice(cur - int(max_len), cur)
+        batch["input_ids"] = ids[:, sl]
+        for k in ("attention_mask", "token_type_ids"):
+            x = batch.get(k)
+            if x is not None and torch.is_tensor(x) and x.ndim == 2 and int(x.shape[1]) == cur:
+                batch[k] = x[:, sl]
+        return batch
+
     def _tok_id(self, token: str) -> Optional[int]:
         try:
             tid = self.tokenizer.convert_tokens_to_ids(token)
@@ -2644,6 +2744,9 @@ class LocalHFModel:
     @torch.inference_mode()
     def next_token_logits(self, prompt: str) -> torch.Tensor:
         inputs = self.tokenizer(prompt, return_tensors="pt")
+        max_ctx = self._max_context_tokens()
+        if max_ctx is not None:
+            inputs = self._truncate_batch_left(inputs, max_len=int(max_ctx))
         inputs = self._move_to_input_device(inputs)
         out = self.model(**inputs)
         return out.logits[0, -1, :].detach().float().cpu()
@@ -2681,6 +2784,26 @@ class LocalHFModel:
             set_all_seeds(seed)
 
         inputs = self.tokenizer(prompt, return_tensors="pt")
+
+        max_ctx = self._max_context_tokens()
+        if max_ctx is not None:
+            # Reserve at least 1 token for generation to avoid position-embedding overflow
+            prompt_cap = max(1, int(max_ctx) - 1)
+            cur = int(inputs["input_ids"].shape[1]) if "input_ids" in inputs else 0
+            if cur > prompt_cap:
+                inputs = self._truncate_batch_left(inputs, max_len=prompt_cap)
+                if not self._warned_prompt_trunc:
+                    self._warned_prompt_trunc = True
+                    print(f"[sr_ponder] [warn] prompt too long ({cur}>{prompt_cap}); truncating left to fit model context")
+
+            cur2 = int(inputs["input_ids"].shape[1]) if "input_ids" in inputs else 0
+            room = max(1, int(max_ctx) - cur2)
+            if int(max_new_tokens) > room:
+                if not self._warned_prompt_trunc:
+                    self._warned_prompt_trunc = True
+                    print(f"[sr_ponder] [warn] capping max_new_tokens {int(max_new_tokens)} -> {room} (context limit {int(max_ctx)})")
+                max_new_tokens = room
+
         inputs = self._move_to_input_device(inputs)
 
         eos_ids = self._eos_ids()
@@ -2749,6 +2872,7 @@ class RunConfig:
     band_profile: str = "single"  # single|spectrum3
     bands: List[Dict[str, Any]] = dataclasses.field(default_factory=list)  # [{label,start_rank,end_rank}]
 
+    answer_style: str = "plain"  # plain|surreal|metaphor|meta
     answer_max_new_tokens: int = 1550
     ponder_max_new_tokens: int = 1020
     temperature: float = 0.8
@@ -2807,7 +2931,10 @@ class RunConfig:
 
 
 def run_baseline(hf: LocalHFModel, cfg: RunConfig, query: str) -> str:
-    prompt = hf._apply_chat(build_prompt_for_answer(query, memory_block=None, lang=cfg.prompt_lang), system_text=None)
+    prompt = hf._apply_chat(
+        build_prompt_for_answer(query, memory_block=None, lang=cfg.prompt_lang, style=cfg.answer_style),
+        system_text=None,
+    )
     return hf.generate_text(
         prompt,
         max_new_tokens=cfg.answer_max_new_tokens,
@@ -2909,7 +3036,10 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
     if control == "random_keywords":
         objective = "random_vocab"
 
-    base_prompt = hf._apply_chat(build_prompt_for_answer(query, memory_block=None, lang=lang), system_text=None)
+    base_prompt = hf._apply_chat(
+        build_prompt_for_answer(query, memory_block=None, lang=lang, style=cfg.answer_style),
+        system_text=None,
+    )
     logits = hf.next_token_logits(base_prompt)
 
     sorted_ids = torch.argsort(logits, descending=True)
@@ -2974,7 +3104,10 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
             seed=int(cfg.seed) + 999,
         )
         for jq in jitter_queries:
-            jp = hf._apply_chat(build_prompt_for_answer(jq, memory_block=None, lang=lang), system_text=None)
+            jp = hf._apply_chat(
+                build_prompt_for_answer(jq, memory_block=None, lang=lang, style=cfg.answer_style),
+                system_text=None,
+            )
             jitter_logits.append(hf.next_token_logits(jp))
 
     records: List[Dict[str, Any]] = []
@@ -3326,7 +3459,10 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
                 temperature=cfg.memory_remix_temperature,
                 seed=int(cfg.seed) + 9000 + hash(bl) % 1000,
             )
-            fp = hf._apply_chat(build_prompt_for_answer(query, memory_block=band_mem, lang=lang), system_text=None)
+            fp = hf._apply_chat(
+                build_prompt_for_answer(query, memory_block=band_mem, lang=lang, style=cfg.answer_style),
+                system_text=None,
+            )
             band_ans = hf.generate_text(
                 fp,
                 max_new_tokens=cfg.answer_max_new_tokens,
@@ -3365,7 +3501,10 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
     if cfg.answer_ensemble and ensemble_final:
         answer = ensemble_final.strip()
     else:
-        final_prompt = hf._apply_chat(build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang), system_text=None)
+        final_prompt = hf._apply_chat(
+            build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang, style=cfg.answer_style),
+            system_text=None,
+        )
         answer = hf.generate_text(
             final_prompt,
             max_new_tokens=cfg.answer_max_new_tokens,
@@ -3426,7 +3565,10 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
         objective = "random_vocab"
 
     # Seed probe (optional): OpenAI-compatible top-logprobs for the *next* token.
-    base_prompt = hf._apply_chat(build_prompt_for_answer(query, memory_block=None, lang=lang), system_text=None)
+    base_prompt = hf._apply_chat(
+        build_prompt_for_answer(query, memory_block=None, lang=lang, style=cfg.answer_style),
+        system_text=None,
+    )
 
     seed_method = (cfg.api_seed_method or "auto").strip()
     top_n = int(cfg.api_logprobs_top_n)
@@ -3468,7 +3610,10 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
         )
         probe_n = max(32, top_n)
         for jq in jitter_queries:
-            jp = hf._apply_chat(build_prompt_for_answer(jq, memory_block=None, lang=lang), system_text=None)
+            jp = hf._apply_chat(
+                build_prompt_for_answer(jq, memory_block=None, lang=lang, style=cfg.answer_style),
+                system_text=None,
+            )
             try:
                 tops = hf.probe_top_logprobs(jp, top_n=probe_n)
             except Exception:
@@ -3854,7 +3999,10 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
                 temperature=cfg.memory_remix_temperature,
                 seed=int(cfg.seed) + 9000 + hash(bl) % 1000,
             )
-            fp = hf._apply_chat(build_prompt_for_answer(query, memory_block=band_mem, lang=lang), system_text=None)
+            fp = hf._apply_chat(
+                build_prompt_for_answer(query, memory_block=band_mem, lang=lang, style=cfg.answer_style),
+                system_text=None,
+            )
             band_ans = hf.generate_text(
                 fp,
                 max_new_tokens=cfg.answer_max_new_tokens,
@@ -3893,7 +4041,10 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
     if cfg.answer_ensemble and ensemble_final:
         answer = ensemble_final.strip()
     else:
-        final_prompt = hf._apply_chat(build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang), system_text=None)
+        final_prompt = hf._apply_chat(
+            build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang, style=cfg.answer_style),
+            system_text=None,
+        )
         answer = hf.generate_text(
             final_prompt,
             max_new_tokens=cfg.answer_max_new_tokens,
@@ -3985,6 +4136,7 @@ def main() -> None:
     g_core.add_argument("--memory", default="ponder_logs.jsonl", help="Path to JSONL memory log")
     g_core.add_argument("--mode", choices=["baseline", "ponder", "both"], default="both")
     g_core.add_argument("--prompt_lang", choices=["auto", "en", "ja"], default="auto", help="Prompt language")
+    g_core.add_argument("--preset", choices=["none", "surreal"], default="none", help="Apply curated settings")
 
     g_ponder.add_argument(
         "--ponder_mode",
@@ -4086,6 +4238,12 @@ def main() -> None:
     g_memory.add_argument("--memory_remix_max_new_tokens", type=int, default=240)
     g_memory.add_argument("--memory_remix_temperature", type=float, default=0.9)
 
+    g_answer.add_argument(
+        "--answer_style",
+        choices=["plain", "surreal", "metaphor", "meta"],
+        default="plain",
+        help="Prompt-only answer style guidance",
+    )
     g_answer.add_argument("--answer_max_new_tokens", type=int, default=256)
     g_answer.add_argument("--answer_per_band", action="store_true", help="Generate per-band answers (sensitivity)")
     g_answer.add_argument("--answer_ensemble", action="store_true", help="Merge per-band answers into a final answer")
@@ -4097,9 +4255,9 @@ def main() -> None:
 
     g_controls.add_argument(
         "--pack",
-        choices=["none", "controls"],
+        choices=["none", "controls", "surreal"],
         default="none",
-        help="Run a pack of control variants",
+        help="Run a pack of variants",
     )
     g_controls.add_argument("--pack_out", default="", help="Optional JSON output for pack results")
     g_controls.add_argument("--pack_write_memory", action="store_true", help="Allow pack runs to write to memory JSONL")
@@ -4150,6 +4308,8 @@ def main() -> None:
 
     args = ap.parse_args()
 
+    apply_preset_inplace(args)
+
     prompt_lang = resolve_prompt_lang(args.prompt_lang, args.query)
     bands = [_parse_band_spec(x) for x in (args.band or [])]
     pipeline = parse_ponder_pipeline(args.ponder_pipeline, fallback_mode=args.ponder_mode)
@@ -4190,6 +4350,7 @@ def main() -> None:
         ),
         band_profile=args.band_profile,
         bands=bands,
+        answer_style=args.answer_style,
         answer_max_new_tokens=args.answer_max_new_tokens,
         ponder_max_new_tokens=args.ponder_max_new_tokens,
         temperature=args.temperature,
@@ -4257,7 +4418,7 @@ def main() -> None:
             f"alloc_warmup={cfg.allocator_warmup} "
             f"gemma_turn_tokens={hf._has_gemma_turn_tokens()} lang={cfg.prompt_lang} "
             f"band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
-            f"objective={cfg.keyword_objective} diversity={cfg.keyword_diversity} hops={cfg.ponder_hops} "
+            f"objective={cfg.keyword_objective} diversity={cfg.keyword_diversity} hops={cfg.ponder_hops} answer_style={cfg.answer_style} "
             f"hf_local_only={cfg.hf_local_files_only} control={cfg.control} "
             f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
             f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} write_memory={cfg.write_memory}"
@@ -4281,7 +4442,7 @@ def main() -> None:
             f"[sr_ponder] backend=openai_compat model={cfg.model_path!r} base_url={cfg.api_base_url} "
             f"seed_method={cfg.api_seed_method} logprobs_top_n={cfg.api_logprobs_top_n} "
             f"lang={cfg.prompt_lang} band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
-            f"objective={cfg.keyword_objective} diversity={cfg.keyword_diversity} hops={cfg.ponder_hops} control={cfg.control} "
+            f"objective={cfg.keyword_objective} diversity={cfg.keyword_diversity} hops={cfg.ponder_hops} answer_style={cfg.answer_style} control={cfg.control} "
             f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
             f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} write_memory={cfg.write_memory}"
         )
@@ -4298,26 +4459,95 @@ def main() -> None:
             "items": [],
         }
 
-        items: List[Tuple[str, Dict[str, Any]]] = [
-            ("baseline", {"kind": "baseline"}),
-            ("ponder", {"kind": "ponder", "control": "none"}),
-            ("no_inject", {"kind": "ponder", "control": "no_inject"}),
-            ("random_keywords", {"kind": "ponder", "control": "random_keywords"}),
-            ("random_log", {"kind": "ponder", "control": "random_log"}),
-            ("lens_only", {"kind": "ponder", "control": "lens_only"}),
-        ]
+        items: List[Tuple[str, Dict[str, Any]]] = []
+        if args.pack == "controls":
+            items = [
+                ("baseline", {"kind": "baseline"}),
+                ("ponder", {"kind": "ponder", "control": "none"}),
+                ("no_inject", {"kind": "ponder", "control": "no_inject"}),
+                ("random_keywords", {"kind": "ponder", "control": "random_keywords"}),
+                ("random_log", {"kind": "ponder", "control": "random_log"}),
+                ("lens_only", {"kind": "ponder", "control": "lens_only"}),
+            ]
+        elif args.pack == "surreal":
+            surreal_walk_cfg: Dict[str, Any] = {
+                "answer_style": "surreal",
+                "band_profile": "spectrum3",
+                "bands": [],
+                "ponder_pipeline": ["metaphor", "metaphor"],
+                "pipeline_context": "prev",
+                "n_ponder": 1,
+                "ponder_hops": 3,
+                "hop_keyword_source": "model",
+                "keyword_objective": "dissonance",
+                "keyword_diversity": "embed",
+                "memory_policy": "current_only",
+                "memory_remix": "dream",
+                "prompt_jitter": 2,
+                "keyword_refine": True,
+            }
+            surreal_unstable_cfg: Dict[str, Any] = {
+                "answer_style": "surreal",
+                "band_profile": "spectrum3",
+                "bands": [],
+                "ponder_pipeline": ["metaphor", "metaphor"],
+                "pipeline_context": "prev",
+                "n_ponder": 1,
+                "ponder_hops": 2,
+                "hop_keyword_source": "model",
+                "keyword_objective": "unstable",
+                "keyword_diversity": "lex",
+                "memory_policy": "current_only",
+                "memory_remix": "compress",
+                "prompt_jitter": 4,
+                "keyword_refine": False,
+            }
+            surreal_questions_cfg: Dict[str, Any] = {
+                "answer_style": "meta",
+                "band_profile": "spectrum3",
+                "bands": [],
+                "ponder_pipeline": ["questions_only", "metaphor"],
+                "pipeline_context": "prev",
+                "n_ponder": 1,
+                "ponder_hops": 2,
+                "hop_keyword_source": "model",
+                "keyword_objective": "dissonance",
+                "keyword_diversity": "embed",
+                "memory_policy": "current_only",
+                "memory_remix": "dream",
+                "prompt_jitter": 1,
+                "keyword_refine": False,
+            }
+            items = [
+                ("baseline_plain", {"kind": "baseline", "cfg": {"answer_style": "plain"}}),
+                ("baseline_surreal", {"kind": "baseline", "cfg": {"answer_style": "surreal"}}),
+                ("walk_dissonance", {"kind": "ponder", "control": "none", "cfg": surreal_walk_cfg}),
+                ("walk_unstable", {"kind": "ponder", "control": "none", "cfg": surreal_unstable_cfg}),
+                ("questions_to_metaphor", {"kind": "ponder", "control": "none", "cfg": surreal_questions_cfg}),
+                ("lens_only_metaphor", {"kind": "ponder", "control": "lens_only", "cfg": surreal_walk_cfg}),
+            ]
+        else:
+            raise SystemExit(f"[sr_ponder] ERROR: unknown pack: {args.pack!r}")
 
         for name, spec in items:
             print(f"\n=== PACK: {name} ===\n")
+            cfg_overrides = dict(spec.get("cfg", {}) or {})
             if spec["kind"] == "baseline":
-                ans = run_baseline(hf, pack_cfg, args.query)
+                cfg2 = dataclasses.replace(pack_cfg, **cfg_overrides) if cfg_overrides else pack_cfg
+                ans = run_baseline(hf, cfg2, args.query)
                 print(ans)
-                results["items"].append({"name": name, "kind": "baseline", "answer": ans})
+                item: Dict[str, Any] = {"name": name, "kind": "baseline", "answer": ans}
+                if cfg_overrides:
+                    item["cfg_overrides"] = cfg_overrides
+                results["items"].append(item)
                 continue
-            cfg2 = dataclasses.replace(pack_cfg, control=str(spec.get("control", "none")))
+            cfg2 = dataclasses.replace(pack_cfg, control=str(spec.get("control", "none")), **cfg_overrides)
             ans, _, extras = run_ponder_dispatch(hf, cfg2, args.query)
             print(ans)
-            results["items"].append({"name": name, "kind": "ponder", "control": cfg2.control, "answer": ans, "extras": extras})
+            item = {"name": name, "kind": "ponder", "control": cfg2.control, "answer": ans, "extras": extras}
+            if cfg_overrides:
+                item["cfg_overrides"] = cfg_overrides
+            results["items"].append(item)
 
         if (args.pack_out or "").strip():
             out_path = Path((args.pack_out or "").strip())
