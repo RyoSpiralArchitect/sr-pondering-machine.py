@@ -48,6 +48,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import torch
+import transformers
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from urllib import error as urlerror
 from urllib import request as urlrequest
@@ -90,6 +91,138 @@ def sha256_short(s: str, n: int = 12) -> str:
 
 def safe_mkdir(p: Path) -> None:
     p.parent.mkdir(parents=True, exist_ok=True)
+
+
+def _jsonable(x: Any) -> Any:
+    if x is None:
+        return None
+    if isinstance(x, (str, int, float, bool)):
+        return x
+    if isinstance(x, Path):
+        return str(x)
+    if dataclasses.is_dataclass(x):
+        return _jsonable(dataclasses.asdict(x))
+    if isinstance(x, dict):
+        return {str(k): _jsonable(v) for k, v in x.items()}
+    if isinstance(x, (list, tuple)):
+        return [_jsonable(v) for v in x]
+    if isinstance(x, set):
+        return [_jsonable(v) for v in sorted(list(x), key=lambda z: str(z))]
+    return str(x)
+
+
+def write_json(path: Path, payload: Any) -> None:
+    safe_mkdir(path)
+    path.write_text(json.dumps(_jsonable(payload), ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+_REDACTED = "***REDACTED***"
+_SENSITIVE_HEADER_KEYS = {
+    "authorization",
+    "proxy-authorization",
+    "x-api-key",
+    "api-key",
+    "x-auth-token",
+    "x-authorization",
+}
+
+
+def _redact_header_line(line: str) -> str:
+    s = str(line or "").strip()
+    if not s:
+        return s
+    if ":" not in s:
+        return _REDACTED if "bearer " in s.lower() else s
+    k, v = s.split(":", 1)
+    k2 = k.strip()
+    v2 = v.strip()
+    if k2.lower() in _SENSITIVE_HEADER_KEYS:
+        return f"{k2}: {_REDACTED}"
+    if "bearer " in v2.lower():
+        return f"{k2}: {_REDACTED}"
+    return s
+
+
+def sanitize_cfg_dict(d: Dict[str, Any]) -> Dict[str, Any]:
+    out = dict(d or {})
+    if out.get("api_key"):
+        out["api_key"] = _REDACTED
+    hdrs = out.get("api_headers")
+    if isinstance(hdrs, list):
+        out["api_headers"] = [_redact_header_line(str(x)) for x in hdrs]
+    return out
+
+
+class TraceWriter:
+    def __init__(self, path: Path, *, session_id: str, preview_chars: int = 0) -> None:
+        self.path = path
+        self.session_id = str(session_id)
+        self.preview_chars = max(0, int(preview_chars))
+        safe_mkdir(path)
+
+    def preview(self, text: Optional[str]) -> Optional[str]:
+        if not text:
+            return None
+        n = int(self.preview_chars)
+        if n <= 0:
+            return None
+        t = str(text).strip()
+        if len(t) <= n:
+            return t
+        return t[:n].rstrip() + "…"
+
+    def event(self, name: str, /, **fields: Any) -> None:
+        rec: Dict[str, Any] = {"ts": now_iso(), "session_id": self.session_id, "event": str(name)}
+        rec.update(fields)
+        try:
+            with self.path.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(_jsonable(rec), ensure_ascii=False) + "\n")
+        except Exception:
+            pass
+
+
+def compute_run_metrics(
+    *,
+    query: str,
+    baseline_answer: Optional[str],
+    ponder_answer: Optional[str],
+    records: Sequence[Dict[str, Any]],
+    extras: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    metrics: Dict[str, Any] = {}
+    metrics["query_chars"] = len(query or "")
+    if baseline_answer is not None:
+        metrics["baseline_chars"] = len(baseline_answer or "")
+    if ponder_answer is not None:
+        metrics["ponder_chars"] = len(ponder_answer or "")
+    if baseline_answer and ponder_answer:
+        try:
+            ratio = difflib.SequenceMatcher(None, baseline_answer, ponder_answer).ratio()
+            metrics["baseline_ponder_diff"] = float(1.0 - float(ratio))
+        except Exception:
+            pass
+
+    metrics["records"] = int(len(list(records)))
+    uniq: set[str] = set()
+    max_hop = 0
+    for r in records or []:
+        hop_ix = r.get("hop_ix")
+        if isinstance(hop_ix, int):
+            max_hop = max(max_hop, hop_ix)
+        kws = r.get("keywords")
+        if isinstance(kws, list):
+            for k in kws:
+                kk = str(k or "").strip()
+                if kk:
+                    uniq.add(kk)
+    metrics["unique_keywords"] = int(len(uniq))
+    metrics["max_hop_ix"] = int(max_hop) if records else 0
+
+    if isinstance(extras, dict):
+        ms = extras.get("memory_selected")
+        if isinstance(ms, list):
+            metrics["memory_selected"] = int(len(ms))
+    return metrics
 
 
 def append_jsonl(path: Path, record: Dict[str, Any]) -> None:
@@ -1672,7 +1805,25 @@ def parse_ponder_pipeline(pipeline: str, *, fallback_mode: str) -> List[str]:
     return out or []
 
 
-def apply_preset_inplace(args: argparse.Namespace) -> None:
+def explicit_dests_from_argv(ap: argparse.ArgumentParser, argv: Sequence[str]) -> set[str]:
+    opt_to_dest: Dict[str, str] = {}
+    for a in ap._actions:
+        for opt in getattr(a, "option_strings", []) or []:
+            opt_to_dest[str(opt)] = str(getattr(a, "dest", ""))
+
+    out: set[str] = set()
+    for tok in list(argv or [])[1:]:
+        t = str(tok)
+        if not t.startswith("-"):
+            continue
+        key = t.split("=", 1)[0] if "=" in t else t
+        dest = opt_to_dest.get(key)
+        if dest:
+            out.add(dest)
+    return out
+
+
+def apply_preset_inplace(args: argparse.Namespace, *, explicit_dests: Optional[set[str]] = None) -> None:
     preset = str(getattr(args, "preset", "none") or "none").strip().lower()
     if preset in ("", "none"):
         return
@@ -1681,23 +1832,33 @@ def apply_preset_inplace(args: argparse.Namespace) -> None:
 
     # Apply curated surreal defaults, but only when the user didn't already opt into something else.
     # Prefer options that can still be overridden by explicit CLI flags.
-    if str(getattr(args, "ponder_pipeline", "") or "").strip() == "":
+    explicit_dests = explicit_dests or set()
+
+    def ok(dest: str) -> bool:
+        return str(dest) not in explicit_dests
+
+    if ok("ponder_pipeline") and str(getattr(args, "ponder_pipeline", "") or "").strip() == "":
         args.ponder_pipeline = "metaphor,metaphor"
-    if str(getattr(args, "band_profile", "single") or "single").strip() == "single" and not list(getattr(args, "band", []) or []):
+    if (
+        ok("band_profile")
+        and ok("band")
+        and str(getattr(args, "band_profile", "single") or "single").strip() == "single"
+        and not list(getattr(args, "band", []) or [])
+    ):
         args.band_profile = "spectrum3"
-    if int(getattr(args, "ponder_hops", 1) or 1) <= 1:
+    if ok("ponder_hops") and int(getattr(args, "ponder_hops", 1) or 1) <= 1:
         args.ponder_hops = 3
-    if str(getattr(args, "keyword_objective", "random_band") or "random_band").strip() == "random_band":
+    if ok("keyword_objective") and str(getattr(args, "keyword_objective", "random_band") or "random_band").strip() == "random_band":
         args.keyword_objective = "dissonance"
-    if str(getattr(args, "keyword_diversity", "off") or "off").strip() == "off":
+    if ok("keyword_diversity") and str(getattr(args, "keyword_diversity", "off") or "off").strip() == "off":
         args.keyword_diversity = "embed"
-    if str(getattr(args, "memory_policy", "tail") or "tail").strip() == "tail":
+    if ok("memory_policy") and str(getattr(args, "memory_policy", "tail") or "tail").strip() == "tail":
         args.memory_policy = "current_only"
-    if str(getattr(args, "memory_remix", "off") or "off").strip() == "off":
+    if ok("memory_remix") and str(getattr(args, "memory_remix", "off") or "off").strip() == "off":
         args.memory_remix = "dream"
-    if int(getattr(args, "prompt_jitter", 0) or 0) <= 0:
+    if ok("prompt_jitter") and int(getattr(args, "prompt_jitter", 0) or 0) <= 0:
         args.prompt_jitter = 2
-    if str(getattr(args, "answer_style", "plain") or "plain").strip() in ("plain", "default"):
+    if ok("answer_style") and str(getattr(args, "answer_style", "plain") or "plain").strip() in ("plain", "default"):
         args.answer_style = "surreal"
 
 
@@ -2930,12 +3091,20 @@ class RunConfig:
     hf_local_files_only: bool = True
 
 
-def run_baseline(hf: LocalHFModel, cfg: RunConfig, query: str) -> str:
+def run_baseline(
+    hf: Any,
+    cfg: RunConfig,
+    query: str,
+    *,
+    trace: Optional[TraceWriter] = None,
+    pack_item: Optional[str] = None,
+) -> str:
+    t0 = time.perf_counter()
     prompt = hf._apply_chat(
         build_prompt_for_answer(query, memory_block=None, lang=cfg.prompt_lang, style=cfg.answer_style),
         system_text=None,
     )
-    return hf.generate_text(
+    ans = hf.generate_text(
         prompt,
         max_new_tokens=cfg.answer_max_new_tokens,
         temperature=cfg.temperature,
@@ -2945,6 +3114,16 @@ def run_baseline(hf: LocalHFModel, cfg: RunConfig, query: str) -> str:
         no_repeat_ngram_size=cfg.no_repeat_ngram_size,
         seed=cfg.seed,
     )
+    if trace:
+        trace.event(
+            "baseline_answer",
+            pack_item=pack_item,
+            answer_style=cfg.answer_style,
+            elapsed_s=float(time.perf_counter() - t0),
+            answer_chars=len(ans or ""),
+            answer_preview=trace.preview(ans),
+        )
+    return ans
 
 
 def _print_probe_table(title: str, items: Sequence[Dict[str, Any]], *, limit: int) -> None:
@@ -3021,7 +3200,15 @@ def _single_band_from_rejected_cfg(cfg: RunConfig, *, vocab_size: int) -> Dict[s
     return {"label": label, "start_rank": start, "end_rank": end}
 
 
-def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[Dict[str, Any]], Dict[str, Any]]:
+def run_ponder(
+    hf: LocalHFModel,
+    cfg: RunConfig,
+    query: str,
+    *,
+    trace: Optional[TraceWriter] = None,
+    pack_item: Optional[str] = None,
+) -> Tuple[str, List[Dict[str, Any]], Dict[str, Any]]:
+    t_total0 = time.perf_counter()
     lang = cfg.prompt_lang
     n_ponder = max(1, int(cfg.n_ponder))  # per band
 
@@ -3036,11 +3223,40 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
     if control == "random_keywords":
         objective = "random_vocab"
 
+    if trace:
+        trace.event(
+            "ponder_start",
+            run_id=run_id,
+            pack_item=pack_item,
+            backend="hf",
+            query_sha=query_sha,
+            objective=objective,
+            control=control,
+            pipeline=pipeline,
+            hops=int(cfg.ponder_hops),
+            band_profile=cfg.band_profile,
+            memory_policy=cfg.memory_policy,
+            memory_retrieve=cfg.memory_retrieve,
+            memory_remix=cfg.memory_remix,
+            answer_style=cfg.answer_style,
+        )
+
+    t_probe0 = time.perf_counter()
     base_prompt = hf._apply_chat(
         build_prompt_for_answer(query, memory_block=None, lang=lang, style=cfg.answer_style),
         system_text=None,
     )
     logits = hf.next_token_logits(base_prompt)
+    probe_s = float(time.perf_counter() - t_probe0)
+    if trace:
+        trace.event(
+            "probe_done",
+            run_id=run_id,
+            pack_item=pack_item,
+            elapsed_s=probe_s,
+            prompt_chars=len(base_prompt or ""),
+            vocab_size=int(logits.numel()),
+        )
 
     sorted_ids = torch.argsort(logits, descending=True)
     ranks = torch.empty_like(sorted_ids)
@@ -3294,6 +3510,18 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
                             hop_keywords_source = "model_refine"
                             hop_token_ids = token_ids_from_keywords_text(hf, hop_keywords, special_ids=special_ids)
 
+                if trace:
+                    trace.event(
+                        "seed_keywords",
+                        run_id=run_id,
+                        pack_item=pack_item,
+                        band_label=band_label,
+                        band_ponder_ix=int(band_ponder_ix),
+                        hop_ix=int(hop_ix),
+                        keywords=hop_keywords,
+                        keywords_source=hop_keywords_source,
+                    )
+
                 # One ponder question per (hop, band, band_ponder_ix), reused across pipeline stages.
                 if control == "lens_only":
                     ponder_q = query
@@ -3323,6 +3551,7 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
                         build_prompt_for_pondering(ponder_q, mode=stage_mode, lang=lang, context=ctx_text),
                         system_text=None,
                     )
+                    t_gen0 = time.perf_counter()
                     ponder_log = hf.generate_text(
                         ponder_prompt,
                         max_new_tokens=cfg.ponder_max_new_tokens,
@@ -3333,7 +3562,22 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
                         no_repeat_ngram_size=cfg.no_repeat_ngram_size,
                         seed=int(cfg.seed) + 1 + log_ix,
                     )
+                    gen_s = float(time.perf_counter() - t_gen0)
                     stage_logs.append(ponder_log)
+                    if trace:
+                        trace.event(
+                            "ponder_stage",
+                            run_id=run_id,
+                            pack_item=pack_item,
+                            band_label=band_label,
+                            band_ponder_ix=int(band_ponder_ix),
+                            hop_ix=int(hop_ix),
+                            stage_ix=int(stage_ix),
+                            mode=stage_mode,
+                            elapsed_s=gen_s,
+                            text_chars=len(ponder_log or ""),
+                            text_preview=trace.preview(ponder_log),
+                        )
 
                     if cfg.print_probe and hop_selected_tokens:
                         _print_probe_table(
@@ -3369,6 +3613,7 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
                         "band": {"start_rank": band_start, "end_rank": band_end},
                         "ponder_question": ponder_q,
                         "ponder_log": ponder_log,
+                        "gen_elapsed_s": gen_s,
                     }
                     if cfg.probe_top_n > 0 and log_ix == 0 and hop_ix == 0:
                         record["probe_top"] = top_tokens[: int(cfg.probe_top_n)]
@@ -3401,7 +3646,30 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
     if control == "no_inject":
         mem_records = []
 
+    memory_selected_meta = [
+        {
+            "ts": r.get("ts"),
+            "run_id": r.get("run_id"),
+            "band_label": r.get("band_label"),
+            "ponder_ix": r.get("ponder_ix"),
+            "ponder_mode": r.get("ponder_mode"),
+        }
+        for r in (mem_records or [])
+    ]
+    if trace:
+        trace.event(
+            "memory_selected",
+            run_id=run_id,
+            pack_item=pack_item,
+            count=int(len(mem_records or [])),
+            memory_policy=cfg.memory_policy,
+            memory_retrieve=cfg.memory_retrieve,
+            memory_remix=cfg.memory_remix,
+            selected=memory_selected_meta[:12],
+        )
+
     memory_block = build_memory_block(mem_records, max_chars_per_log=700) if mem_records else None
+    t_remix0 = time.perf_counter()
     memory_block = remix_memory_block(
         hf,
         memory_block=memory_block,
@@ -3412,6 +3680,17 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
         temperature=cfg.memory_remix_temperature,
         seed=int(cfg.seed) + 777,
     )
+    remix_s = float(time.perf_counter() - t_remix0)
+    if trace:
+        trace.event(
+            "memory_remix_done",
+            run_id=run_id,
+            pack_item=pack_item,
+            remix=cfg.memory_remix,
+            elapsed_s=remix_s,
+            text_chars=len(memory_block or ""),
+            text_preview=trace.preview(memory_block),
+        )
 
     random_log_text: Optional[str] = None
     if control == "random_log":
@@ -3498,6 +3777,7 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
     final_answer_block = memory_block
     if control == "no_inject":
         final_answer_block = None
+    answer_s = 0.0
     if cfg.answer_ensemble and ensemble_final:
         answer = ensemble_final.strip()
     else:
@@ -3505,6 +3785,7 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
             build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang, style=cfg.answer_style),
             system_text=None,
         )
+        t_answer0 = time.perf_counter()
         answer = hf.generate_text(
             final_prompt,
             max_new_tokens=cfg.answer_max_new_tokens,
@@ -3515,24 +3796,29 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
             no_repeat_ngram_size=cfg.no_repeat_ngram_size,
             seed=cfg.seed,
         )
+        answer_s = float(time.perf_counter() - t_answer0)
+
+    if trace:
+        trace.event(
+            "answer_done",
+            run_id=run_id,
+            pack_item=pack_item,
+            elapsed_s=float(answer_s),
+            answer_chars=len(answer or ""),
+            answer_preview=trace.preview(answer),
+        )
+
+    total_s = float(time.perf_counter() - t_total0)
 
     extras: Dict[str, Any] = {
         "run_id": run_id,
         "control": control,
         "pipeline": pipeline,
+        "answer_style": cfg.answer_style,
         "memory_policy": cfg.memory_policy,
         "memory_retrieve": cfg.memory_retrieve,
         "memory_remix": cfg.memory_remix,
-        "memory_selected": [
-            {
-                "ts": r.get("ts"),
-                "run_id": r.get("run_id"),
-                "band_label": r.get("band_label"),
-                "ponder_ix": r.get("ponder_ix"),
-                "ponder_mode": r.get("ponder_mode"),
-            }
-            for r in (mem_records or [])
-        ],
+        "memory_selected": memory_selected_meta,
         "band_answers": band_answers if band_answers else None,
         "ensemble": {
             "raw": ensemble_raw,
@@ -3544,12 +3830,24 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
         else None,
         "random_log": random_log_text,
         "prompt_jitter_queries": jitter_queries if jitter_queries else None,
+        "timings": {"total_s": total_s, "probe_s": float(probe_s), "memory_remix_s": float(remix_s), "answer_s": float(answer_s)},
     }
+
+    if trace:
+        trace.event("ponder_end", run_id=run_id, pack_item=pack_item, elapsed_s=total_s)
 
     return answer, records, extras
 
 
-def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[str, List[Dict[str, Any]], Dict[str, Any]]:
+def run_ponder_api(
+    hf: OpenAICompatModel,
+    cfg: RunConfig,
+    query: str,
+    *,
+    trace: Optional[TraceWriter] = None,
+    pack_item: Optional[str] = None,
+) -> Tuple[str, List[Dict[str, Any]], Dict[str, Any]]:
+    t_total0 = time.perf_counter()
     lang = cfg.prompt_lang
     n_ponder = max(1, int(cfg.n_ponder))  # per band
 
@@ -3564,7 +3862,26 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
     if control == "random_keywords":
         objective = "random_vocab"
 
+    if trace:
+        trace.event(
+            "ponder_start",
+            run_id=run_id,
+            pack_item=pack_item,
+            backend="openai_compat",
+            query_sha=query_sha,
+            objective=objective,
+            control=control,
+            pipeline=pipeline,
+            hops=int(cfg.ponder_hops),
+            band_profile=cfg.band_profile,
+            memory_policy=cfg.memory_policy,
+            memory_retrieve=cfg.memory_retrieve,
+            memory_remix=cfg.memory_remix,
+            answer_style=cfg.answer_style,
+        )
+
     # Seed probe (optional): OpenAI-compatible top-logprobs for the *next* token.
+    t_probe0 = time.perf_counter()
     base_prompt = hf._apply_chat(
         build_prompt_for_answer(query, memory_block=None, lang=lang, style=cfg.answer_style),
         system_text=None,
@@ -3583,6 +3900,18 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
             probe_top = hf.probe_top_logprobs(base_prompt, top_n=probe_n)
         except Exception:
             probe_top = []
+    probe_s = float(time.perf_counter() - t_probe0)
+    if trace:
+        trace.event(
+            "probe_done",
+            run_id=run_id,
+            pack_item=pack_item,
+            elapsed_s=probe_s,
+            prompt_chars=len(base_prompt or ""),
+            use_logprobs=bool(use_logprobs),
+            top_n=int(top_n),
+            returned=int(len(probe_top or [])),
+        )
 
     if cfg.print_probe and probe_top:
         items = [
@@ -3835,6 +4164,18 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
                             hop_keywords = refined
                             hop_keywords_source = "model_refine"
 
+                if trace:
+                    trace.event(
+                        "seed_keywords",
+                        run_id=run_id,
+                        pack_item=pack_item,
+                        band_label=band_label,
+                        band_ponder_ix=int(band_ponder_ix),
+                        hop_ix=int(hop_ix),
+                        keywords=hop_keywords,
+                        keywords_source=hop_keywords_source,
+                    )
+
                 # One ponder question per (hop, band, band_ponder_ix), reused across pipeline stages.
                 if control == "lens_only":
                     ponder_q = query
@@ -3862,6 +4203,7 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
                         build_prompt_for_pondering(ponder_q, mode=stage_mode, lang=lang, context=ctx_text),
                         system_text=None,
                     )
+                    t_gen0 = time.perf_counter()
                     ponder_log = hf.generate_text(
                         ponder_prompt,
                         max_new_tokens=cfg.ponder_max_new_tokens,
@@ -3872,7 +4214,22 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
                         no_repeat_ngram_size=0,
                         seed=int(cfg.seed) + 1 + log_ix,
                     )
+                    gen_s = float(time.perf_counter() - t_gen0)
                     stage_logs.append(ponder_log)
+                    if trace:
+                        trace.event(
+                            "ponder_stage",
+                            run_id=run_id,
+                            pack_item=pack_item,
+                            band_label=band_label,
+                            band_ponder_ix=int(band_ponder_ix),
+                            hop_ix=int(hop_ix),
+                            stage_ix=int(stage_ix),
+                            mode=stage_mode,
+                            elapsed_s=gen_s,
+                            text_chars=len(ponder_log or ""),
+                            text_preview=trace.preview(ponder_log),
+                        )
 
                     if cfg.print_probe:
                         _print_probe_table(
@@ -3909,6 +4266,7 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
                         "band": {"start_rank": band_start, "end_rank": band_end},
                         "ponder_question": ponder_q,
                         "ponder_log": ponder_log,
+                        "gen_elapsed_s": gen_s,
                     }
                     if cfg.probe_top_n > 0 and log_ix == 0 and hop_ix == 0 and probe_top:
                         record["probe_top"] = probe_top[: int(cfg.probe_top_n)]
@@ -3940,6 +4298,30 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
         mem_records = []
 
     memory_block = build_memory_block(mem_records, max_chars_per_log=700) if mem_records else None
+
+    memory_selected_meta = [
+        {
+            "ts": r.get("ts"),
+            "run_id": r.get("run_id"),
+            "band_label": r.get("band_label"),
+            "ponder_ix": r.get("ponder_ix"),
+            "ponder_mode": r.get("ponder_mode"),
+        }
+        for r in (mem_records or [])
+    ]
+    if trace:
+        trace.event(
+            "memory_selected",
+            run_id=run_id,
+            pack_item=pack_item,
+            count=int(len(mem_records or [])),
+            memory_policy=cfg.memory_policy,
+            memory_retrieve=cfg.memory_retrieve,
+            memory_remix=cfg.memory_remix,
+            selected=memory_selected_meta[:12],
+        )
+
+    t_remix0 = time.perf_counter()
     memory_block = remix_memory_block(
         hf,
         memory_block=memory_block,
@@ -3950,6 +4332,17 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
         temperature=cfg.memory_remix_temperature,
         seed=int(cfg.seed) + 777,
     )
+    remix_s = float(time.perf_counter() - t_remix0)
+    if trace:
+        trace.event(
+            "memory_remix_done",
+            run_id=run_id,
+            pack_item=pack_item,
+            remix=cfg.memory_remix,
+            elapsed_s=remix_s,
+            text_chars=len(memory_block or ""),
+            text_preview=trace.preview(memory_block),
+        )
 
     random_log_text: Optional[str] = None
     if control == "random_log":
@@ -4038,6 +4431,7 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
     final_answer_block = memory_block
     if control == "no_inject":
         final_answer_block = None
+    answer_s = 0.0
     if cfg.answer_ensemble and ensemble_final:
         answer = ensemble_final.strip()
     else:
@@ -4045,6 +4439,7 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
             build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang, style=cfg.answer_style),
             system_text=None,
         )
+        t_answer0 = time.perf_counter()
         answer = hf.generate_text(
             final_prompt,
             max_new_tokens=cfg.answer_max_new_tokens,
@@ -4055,24 +4450,29 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
             no_repeat_ngram_size=0,
             seed=cfg.seed,
         )
+        answer_s = float(time.perf_counter() - t_answer0)
+
+    if trace:
+        trace.event(
+            "answer_done",
+            run_id=run_id,
+            pack_item=pack_item,
+            elapsed_s=float(answer_s),
+            answer_chars=len(answer or ""),
+            answer_preview=trace.preview(answer),
+        )
+
+    total_s = float(time.perf_counter() - t_total0)
 
     extras: Dict[str, Any] = {
         "run_id": run_id,
         "control": control,
         "pipeline": pipeline,
+        "answer_style": cfg.answer_style,
         "memory_policy": cfg.memory_policy,
         "memory_retrieve": cfg.memory_retrieve,
         "memory_remix": cfg.memory_remix,
-        "memory_selected": [
-            {
-                "ts": r.get("ts"),
-                "run_id": r.get("run_id"),
-                "band_label": r.get("band_label"),
-                "ponder_ix": r.get("ponder_ix"),
-                "ponder_mode": r.get("ponder_mode"),
-            }
-            for r in (mem_records or [])
-        ],
+        "memory_selected": memory_selected_meta,
         "band_answers": band_answers if band_answers else None,
         "ensemble": {
             "raw": ensemble_raw,
@@ -4085,15 +4485,26 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
         "random_log": random_log_text,
         "prompt_jitter_queries": jitter_queries if jitter_queries else None,
         "api_probe_top": probe_top[:50] if probe_top else None,
+        "timings": {"total_s": total_s, "probe_s": float(probe_s), "memory_remix_s": float(remix_s), "answer_s": float(answer_s)},
     }
+
+    if trace:
+        trace.event("ponder_end", run_id=run_id, pack_item=pack_item, elapsed_s=total_s)
 
     return answer, records, extras
 
 
-def run_ponder_dispatch(hf: Any, cfg: RunConfig, query: str) -> Tuple[str, List[Dict[str, Any]], Dict[str, Any]]:
+def run_ponder_dispatch(
+    hf: Any,
+    cfg: RunConfig,
+    query: str,
+    *,
+    trace: Optional[TraceWriter] = None,
+    pack_item: Optional[str] = None,
+) -> Tuple[str, List[Dict[str, Any]], Dict[str, Any]]:
     if (cfg.backend or "hf").strip() == "openai_compat":
-        return run_ponder_api(hf, cfg, query)
-    return run_ponder(hf, cfg, query)
+        return run_ponder_api(hf, cfg, query, trace=trace, pack_item=pack_item)
+    return run_ponder(hf, cfg, query, trace=trace, pack_item=pack_item)
 
 
 def main() -> None:
@@ -4111,6 +4522,29 @@ def main() -> None:
     class _Fmt(argparse.ArgumentDefaultsHelpFormatter, argparse.RawTextHelpFormatter):
         pass
 
+    # Optional JSON config (applies defaults; CLI flags still override).
+    config_path = ""
+    config_defaults: Dict[str, Any] = {}
+    try:
+        cp = argparse.ArgumentParser(add_help=False)
+        cp.add_argument("--config", default="")
+        pre, _ = cp.parse_known_args()
+        config_path = str(getattr(pre, "config", "") or "").strip()
+    except Exception:
+        config_path = ""
+
+    if config_path:
+        try:
+            # Windows editors often write UTF-8 with BOM; accept both.
+            raw = Path(config_path).read_text(encoding="utf-8-sig")
+            config_defaults = json.loads(raw)
+        except Exception as e:
+            raise SystemExit(f"[sr_ponder] ERROR: failed to read --config {config_path!r}: {e}")
+        if not isinstance(config_defaults, dict):
+            raise SystemExit(
+                f"[sr_ponder] ERROR: --config must be a JSON object (dict), got {type(config_defaults).__name__}"
+            )
+
     ap = argparse.ArgumentParser(
         description="Pondering machine (local HF + API) - rejected-token + lens + bands + memory.",
         formatter_class=_Fmt,
@@ -4126,6 +4560,7 @@ def main() -> None:
     g_answer = ap.add_argument_group("Answers")
     g_interactive = ap.add_argument_group("Interactive")
     g_controls = ap.add_argument_group("Controls / Pack")
+    g_observe = ap.add_argument_group("Observability / Artifacts")
     g_runtime = ap.add_argument_group("Runtime")
     g_api = ap.add_argument_group("API (OpenAI-compatible)")
     g_gen = ap.add_argument_group("Generation")
@@ -4137,6 +4572,7 @@ def main() -> None:
     g_core.add_argument("--mode", choices=["baseline", "ponder", "both"], default="both")
     g_core.add_argument("--prompt_lang", choices=["auto", "en", "ja"], default="auto", help="Prompt language")
     g_core.add_argument("--preset", choices=["none", "surreal"], default="none", help="Apply curated settings")
+    g_core.add_argument("--config", default=config_path, help="Optional JSON config file (sets defaults)")
 
     g_ponder.add_argument(
         "--ponder_mode",
@@ -4268,6 +4704,12 @@ def main() -> None:
         help="Print ponder records JSON",
     )
 
+    g_observe.add_argument("--print_config", action="store_true", help="Print resolved RunConfig JSON")
+    g_observe.add_argument("--print_config_only", action="store_true", help="Print resolved RunConfig JSON and exit")
+    g_observe.add_argument("--json_out", default="", help="Write full run (or pack) results to JSON")
+    g_observe.add_argument("--trace_out", default="", help="Write JSONL trace events")
+    g_observe.add_argument("--trace_preview_chars", type=int, default=180, help="Trace preview length (0 disables)")
+
     g_runtime.add_argument("--device", default="auto", help="auto|mps|cpu|cuda|cuda:0 ...")
     g_runtime.add_argument("--dtype", default="auto", help="auto|float16|bfloat16|float32")
     g_runtime.add_argument(
@@ -4306,9 +4748,40 @@ def main() -> None:
     g_gen.add_argument("--no_repeat_ngram_size", type=int, default=0)
     g_gen.add_argument("--seed", type=int, default=1234)
 
+    explicit_dests = explicit_dests_from_argv(ap, sys.argv)
+
+    config_append_defaults: Dict[str, Any] = {}
+    if config_defaults:
+        known = {a.dest for a in ap._actions}
+        unknown = sorted([k for k in config_defaults.keys() if k not in known])
+        if unknown:
+            raise SystemExit(f"[sr_ponder] ERROR: unknown keys in --config: {', '.join(unknown)}")
+
+        # For append-style flags (e.g., --band, --api_header), argparse merges defaults + CLI values.
+        # We want explicit CLI flags to override config, so apply append defaults after parsing.
+        append_dests: set[str] = set()
+        _AppendAction = getattr(argparse, "_AppendAction", None)
+        if _AppendAction is not None:
+            try:
+                append_dests = {a.dest for a in ap._actions if isinstance(a, _AppendAction)}
+            except Exception:
+                append_dests = set()
+
+        config_non_append = {k: v for k, v in config_defaults.items() if k not in append_dests}
+        config_append_defaults = {k: v for k, v in config_defaults.items() if k in append_dests}
+        ap.set_defaults(**config_non_append)
+
     args = ap.parse_args()
 
-    apply_preset_inplace(args)
+    for k, v in (config_append_defaults or {}).items():
+        if k in explicit_dests:
+            continue
+        try:
+            setattr(args, k, v)
+        except Exception:
+            pass
+
+    apply_preset_inplace(args, explicit_dests=explicit_dests)
 
     prompt_lang = resolve_prompt_lang(args.prompt_lang, args.query)
     bands = [_parse_band_spec(x) for x in (args.band or [])]
@@ -4401,6 +4874,47 @@ def main() -> None:
         hf_local_files_only=not bool(args.hf_online),
     )
 
+    trace: Optional[TraceWriter] = None
+    trace_path_s = str(getattr(args, "trace_out", "") or "").strip()
+    if trace_path_s:
+        session_id = sha256_short(f"{now_iso()}|{cfg.seed}|{cfg.backend}|{cfg.model_path}|{args.query}")
+        trace = TraceWriter(
+            Path(trace_path_s),
+            session_id=session_id,
+            preview_chars=int(getattr(args, "trace_preview_chars", 0) or 0),
+        )
+        trace.event(
+            "session_start",
+            query=args.query,
+            model=cfg.model_path,
+            backend=cfg.backend,
+            pack=args.pack,
+            preset=args.preset,
+            config=str(getattr(args, "config", "") or ""),
+            pid=os.getpid(),
+            versions={"python": sys.version, "torch": getattr(torch, "__version__", None), "transformers": getattr(transformers, "__version__", None)},
+        )
+
+    if bool(args.print_config) or bool(args.print_config_only):
+        cfg_dump = {
+            "ts": now_iso(),
+            "kind": "config",
+            "query": args.query,
+            "preset": args.preset,
+            "config": str(getattr(args, "config", "") or ""),
+            "cfg": sanitize_cfg_dict(dataclasses.asdict(cfg)),
+        }
+        print(json.dumps(_jsonable(cfg_dump), ensure_ascii=False, indent=2))
+        out_s = str(getattr(args, "json_out", "") or "").strip()
+        if out_s and bool(args.print_config_only):
+            out_path = Path(out_s)
+            write_json(out_path, cfg_dump)
+            print(f"\n[json_out] wrote {out_path}")
+        if bool(args.print_config_only):
+            if trace:
+                trace.event("config_only_exit")
+            return
+
     hf: Any
     if cfg.backend == "hf":
         hf = LocalHFModel(
@@ -4456,6 +4970,15 @@ def main() -> None:
             "model": cfg.model_path,
             "query": args.query,
             "pack": args.pack,
+            "preset": args.preset,
+            "config": str(getattr(args, "config", "") or ""),
+            "env": {
+                "python": sys.version,
+                "platform": sys.platform,
+                "torch": getattr(torch, "__version__", None),
+                "transformers": getattr(transformers, "__version__", None),
+            },
+            "base_cfg": sanitize_cfg_dict(dataclasses.asdict(pack_cfg)),
             "items": [],
         }
 
@@ -4532,70 +5055,129 @@ def main() -> None:
         for name, spec in items:
             print(f"\n=== PACK: {name} ===\n")
             cfg_overrides = dict(spec.get("cfg", {}) or {})
+            cfg_overrides_safe = sanitize_cfg_dict(cfg_overrides)
+            if trace:
+                trace.event(
+                    "pack_item_start",
+                    pack=args.pack,
+                    item=name,
+                    kind=str(spec.get("kind")),
+                    cfg_overrides=cfg_overrides_safe,
+                )
+            t0 = time.perf_counter()
             if spec["kind"] == "baseline":
                 cfg2 = dataclasses.replace(pack_cfg, **cfg_overrides) if cfg_overrides else pack_cfg
-                ans = run_baseline(hf, cfg2, args.query)
+                ans = run_baseline(hf, cfg2, args.query, trace=trace, pack_item=name)
                 print(ans)
                 item: Dict[str, Any] = {"name": name, "kind": "baseline", "answer": ans}
                 if cfg_overrides:
-                    item["cfg_overrides"] = cfg_overrides
+                    item["cfg_overrides"] = cfg_overrides_safe
+                item["metrics"] = {"answer_chars": len(ans or ""), "elapsed_s": float(time.perf_counter() - t0)}
                 results["items"].append(item)
+                if trace:
+                    trace.event("pack_item_end", pack=args.pack, item=name, elapsed_s=float(time.perf_counter() - t0))
                 continue
             cfg2 = dataclasses.replace(pack_cfg, control=str(spec.get("control", "none")), **cfg_overrides)
-            ans, _, extras = run_ponder_dispatch(hf, cfg2, args.query)
+            ans, recs, extras = run_ponder_dispatch(hf, cfg2, args.query, trace=trace, pack_item=name)
             print(ans)
             item = {"name": name, "kind": "ponder", "control": cfg2.control, "answer": ans, "extras": extras}
             if cfg_overrides:
-                item["cfg_overrides"] = cfg_overrides
+                item["cfg_overrides"] = cfg_overrides_safe
+            item["metrics"] = {"answer_chars": len(ans or ""), "records": int(len(recs)), "elapsed_s": float(time.perf_counter() - t0)}
             results["items"].append(item)
+            if trace:
+                trace.event("pack_item_end", pack=args.pack, item=name, elapsed_s=float(time.perf_counter() - t0))
 
-        if (args.pack_out or "").strip():
-            out_path = Path((args.pack_out or "").strip())
-            safe_mkdir(out_path)
-            out_path.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+        out_s = (args.pack_out or "").strip() or (getattr(args, "json_out", "") or "").strip()
+        if out_s:
+            out_path = Path(out_s)
+            write_json(out_path, results)
             print(f"\n[pack] wrote {out_path}")
+        if trace:
+            trace.event("pack_end", pack=args.pack, items=int(len(items)))
         return
 
+    baseline_ans: Optional[str] = None
+    ponder_ans: Optional[str] = None
+    ponder_recs: List[Dict[str, Any]] = []
+    ponder_extras: Dict[str, Any] = {}
+
     if args.mode in ("baseline", "both"):
-        ans = run_baseline(hf, cfg, args.query)
+        baseline_ans = run_baseline(hf, cfg, args.query, trace=trace)
         print("\n=== BASELINE ===\n")
-        print(ans)
+        print(baseline_ans)
 
     if args.mode in ("ponder", "both"):
-        ans, recs, extras = run_ponder_dispatch(hf, cfg, args.query)
+        ponder_ans, ponder_recs, ponder_extras = run_ponder_dispatch(hf, cfg, args.query, trace=trace)
 
         if args.print_records != "none":
-            if args.print_records == "all" or (args.print_records == "auto" and len(recs) <= 3):
-                payload: Any = recs if len(recs) > 1 else recs[0]
+            if args.print_records == "all" or (args.print_records == "auto" and len(ponder_recs) <= 3):
+                payload: Any = ponder_recs if len(ponder_recs) > 1 else ponder_recs[0]
             elif args.print_records == "auto":
-                payload = recs[0] if recs else []
+                payload = ponder_recs[0] if ponder_recs else []
             else:
                 payload = []
             if payload:
                 print("\n=== PONDER RECORD(S) (just written) ===\n")
                 print(json.dumps(payload, ensure_ascii=False, indent=2))
-                if args.print_records == "auto" and len(recs) > 3:
-                    print(f"\n[info] records={len(recs)} (use --print_records all to dump everything)")
+                if args.print_records == "auto" and len(ponder_recs) > 3:
+                    print(f"\n[info] records={len(ponder_recs)} (use --print_records all to dump everything)")
 
         # Extras (band answers + ensemble)
-        band_answers = extras.get("band_answers") if isinstance(extras, dict) else None
+        band_answers = ponder_extras.get("band_answers") if isinstance(ponder_extras, dict) else None
         if isinstance(band_answers, dict) and band_answers:
             print("\n=== BAND ANSWERS ===\n")
             for bl, txt in band_answers.items():
                 print(f"\n--- {bl} ---\n")
                 print(txt)
 
-        ens = extras.get("ensemble") if isinstance(extras, dict) else None
+        ens = ponder_extras.get("ensemble") if isinstance(ponder_extras, dict) else None
         if isinstance(ens, dict) and ens.get("raw"):
             print("\n=== ENSEMBLE (raw) ===\n")
             print(ens.get("raw"))
 
-        if extras.get("random_log"):
+        if ponder_extras.get("random_log"):
             print("\n=== CONTROL: RANDOM LOG ===\n")
-            print(extras.get("random_log"))
+            print(ponder_extras.get("random_log"))
 
         print("\n=== PONDERED ANSWER ===\n")
-        print(ans)
+        print(ponder_ans)
+
+    out_s = str(getattr(args, "json_out", "") or "").strip()
+    if out_s:
+        payload = {
+            "ts": now_iso(),
+            "kind": "run",
+            "query": args.query,
+            "preset": args.preset,
+            "config": str(getattr(args, "config", "") or ""),
+            "env": {
+                "python": sys.version,
+                "platform": sys.platform,
+                "torch": getattr(torch, "__version__", None),
+                "transformers": getattr(transformers, "__version__", None),
+            },
+            "cfg": sanitize_cfg_dict(dataclasses.asdict(cfg)),
+            "baseline": baseline_ans,
+            "ponder": ponder_ans,
+            "records": ponder_recs,
+            "extras": ponder_extras if ponder_extras else None,
+            "metrics": compute_run_metrics(
+                query=args.query,
+                baseline_answer=baseline_ans,
+                ponder_answer=ponder_ans,
+                records=ponder_recs,
+                extras=ponder_extras if ponder_extras else None,
+            ),
+        }
+        out_path = Path(out_s)
+        write_json(out_path, payload)
+        print(f"\n[json_out] wrote {out_path}")
+        if trace:
+            trace.event("json_out", path=str(out_path))
+
+    if trace:
+        trace.event("session_end")
 
 
 if __name__ == "__main__":

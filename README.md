@@ -40,6 +40,8 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Answer ensemble** — generate per-band answers + merged answer with `--answer_per_band` / `--answer_ensemble`.
 - **Interactive pick** — choose keyword tokens yourself with `--interactive`.
 - **Controls pack** — run A/B packs via `--pack controls|surreal` (plus `--control ...` variants).
+- **Artifacts & tracing** — export results with `--json_out` and write step-level traces with `--trace_out`.
+- **Config file** — set defaults from a JSON file via `--config` (CLI flags still override).
 - **Highly configurable** — token selection strategy, generation hyperparameters, device, dtype, and more are all adjustable from the command line.
 
 ## Requirements
@@ -147,6 +149,40 @@ python3 sr_pondering_machine.py \
   --query "現実って何のインターフェース？" \
   --pack surreal \
   --pack_out ./pack_surreal.json
+```
+
+### Artifacts: JSON output + trace (observability)
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "Why do we overfit narratives to randomness?" \
+  --mode both \
+  --json_out ./run.json \
+  --trace_out ./trace.jsonl
+```
+
+### Config: JSON defaults (CLI still overrides)
+
+Create `config.json`:
+
+```json
+{
+  "preset": "surreal",
+  "answer_style": "surreal",
+  "ponder_hops": 3,
+  "keyword_objective": "dissonance",
+  "keyword_diversity": "embed"
+}
+```
+
+Then run:
+
+```bash
+python3 sr_pondering_machine.py \
+  --config ./config.json \
+  --model ./model/gemma-3-270m-it \
+  --query "創造性って結局なに？"
 ```
 
 ### Spectral: near/mid/far bands + current-only memory
