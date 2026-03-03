@@ -25,8 +25,10 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Ponder lenses** — switch between association / assumptions / counterexamples / questions-only / metaphor via `--ponder_mode`.
 - **Lens pipeline** — chain multiple lenses via `--ponder_pipeline` (with `--pipeline_context prev|all|none`).
 - **Multi-ponder** — generate multiple ponder logs per band with `--n_ponder`.
+- **Latent walk (hops)** — chain multiple drift steps via `--ponder_hops` (next-hop seeds from `--hop_keyword_source model|heuristic`).
 - **Keyword refinement** — optionally rewrite token fragments into cleaner keywords via `--keyword_refine`.
 - **Keyword objectives** — pick seeds by dissonance/instability via `--keyword_objective dissonance|unstable`.
+- **Keyword diversity** — encourage more diverse seed keywords via `--keyword_diversity lex|embed`.
 - **Prompt jitter** — paraphrase the query (`--prompt_jitter`) to find unstable seed tokens (sharper drift).
 - **Prompt language auto** — `--prompt_lang auto|en|ja` (auto-detects Japanese queries).
 - **Probe tracing** — print/store probe token info with `--print_probe` / `--probe_top_n`.
@@ -43,7 +45,7 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - Python 3.9+
 - [PyTorch](https://pytorch.org/) (with MPS, CUDA, or CPU support)
 - [Transformers](https://github.com/huggingface/transformers) (`pip install transformers`)
-- A locally downloaded Hugging Face causal LM (e.g. `gemma-3-270m-it`)
+- A locally downloaded Hugging Face causal LM (e.g. `gemma-3-270m-it`) — or use `--hf_online` to allow Hub downloads.
 
 ```
 pip install torch transformers
@@ -107,6 +109,21 @@ python3 sr_pondering_machine.py \
   --mode ponder \
   --ponder_mode counterexample \
   --n_ponder 3 \
+  --memory_policy current_only
+```
+
+### Latent walk: hops + keyword diversity (stronger drift)
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "What is creativity, really?" \
+  --mode ponder \
+  --band_profile spectrum3 \
+  --keyword_objective dissonance \
+  --keyword_diversity embed \
+  --ponder_hops 3 \
+  --hop_keyword_source model \
   --memory_policy current_only
 ```
 

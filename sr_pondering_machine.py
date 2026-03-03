@@ -372,6 +372,43 @@ def decode_keyword_tokens(tokenizer, token_ids: Sequence[int], *, max_len: int =
     return out
 
 
+def token_ids_from_keywords_text(
+    hf: "LocalHFModel",
+    keywords: Sequence[str],
+    *,
+    special_ids: Sequence[int],
+    max_total: int = 96,
+) -> List[int]:
+    special = set(int(x) for x in (special_ids or []))
+    out: List[int] = []
+    seen = set()
+    for kw in keywords or []:
+        s = str(kw or "").strip()
+        if not s:
+            continue
+        try:
+            enc = hf.tokenizer(s, add_special_tokens=False)
+            ids = enc.get("input_ids") if isinstance(enc, dict) else None
+        except Exception:
+            ids = None
+        if not isinstance(ids, list):
+            continue
+        for tid in ids:
+            try:
+                tid_i = int(tid)
+            except Exception:
+                continue
+            if tid_i in special:
+                continue
+            if tid_i in seen:
+                continue
+            seen.add(tid_i)
+            out.append(tid_i)
+            if len(out) >= int(max_total):
+                return out
+    return out
+
+
 # -----------------------------
 # Ponder question + prompts
 # -----------------------------
@@ -413,6 +450,8 @@ def build_memory_block(records: Sequence[Dict[str, Any]], *, max_chars_per_log: 
             meta_bits.append(f"run:{r['run_id']}")
         if r.get("band_label"):
             meta_bits.append(f"band:{r['band_label']}")
+        if r.get("hop_ix") is not None:
+            meta_bits.append(f"hop:{r['hop_ix']}")
         if r.get("ponder_ix") is not None:
             meta_bits.append(f"ix:{r['ponder_ix']}")
         if r.get("ponder_mode"):
@@ -662,6 +701,164 @@ def build_prompt_for_keyword_refine(query: str, seed_keywords: Sequence[str], *,
         f"Original question: {query}\n"
         f"Fragments: {kws}\n"
     )
+
+
+def build_prompt_for_hop_keyword_extract(
+    query: str,
+    prev_keywords: Sequence[str],
+    ponder_log: str,
+    *,
+    n: int,
+    lang: str,
+) -> str:
+    prev = ", ".join([str(x).strip() for x in (prev_keywords or []) if str(x).strip()][:24])
+    plog = (ponder_log or "").strip()
+    if len(plog) > 1400:
+        plog = plog[:1400] + "\n…"
+    if lang == "ja":
+        return (
+            "あなたは pondering machine の「次ホップ用キーワード抽出器」です。\n"
+            "直前の ponder log から、さらに思考を逸脱させるための新しい種キーワードを提案してください。\n"
+            "制約:\n"
+            f"- 出力は JSON の文字列配列のみ（要素数はちょうど {n}）\n"
+            "- 説明文は禁止\n"
+            "- 直前キーワードの言い換え/重複は禁止\n"
+            "- 本題の単語をそのまま繰り返すのは避ける\n"
+            "- 1〜3語程度の短い語句（抽象語より具体語を優先）\n\n"
+            f"本題: {query}\n"
+            f"直前キーワード: {prev}\n\n"
+            "<ponder_log>\n"
+            f"{plog}\n"
+            "</ponder_log>\n"
+        )
+    return (
+        "You generate next-hop seed keywords for a pondering machine.\n"
+        "From the previous ponder log, propose NEW seed keywords that push the thought into adjacent, surprising regions.\n"
+        "Constraints:\n"
+        f"- Output ONLY a JSON array of strings (exactly {n} items)\n"
+        "- No explanations\n"
+        "- Avoid paraphrases/duplicates of previous keywords\n"
+        "- Avoid simply repeating obvious words from the original question\n"
+        "- Short phrases (1 to 3 words), prefer concrete words over abstractions\n\n"
+        f"Original question: {query}\n"
+        f"Previous keywords: {prev}\n\n"
+        "<ponder_log>\n"
+        f"{plog}\n"
+        "</ponder_log>\n"
+    )
+
+
+_EN_HOP_WORD_RE = re.compile(r"[A-Za-z][A-Za-z0-9_\-]{2,}")
+_JA_HOP_WORD_RE = re.compile(r"[\u3040-\u30ff\u3400-\u9fff]{2,}")
+
+
+def _ban_norm_set(query: str, prev_keywords: Sequence[str], *, lang: str) -> set:
+    ban = set()
+    for x in (prev_keywords or []):
+        ban.add(_norm_for_sim(str(x)))
+    # also ban obvious query words (heuristic)
+    q = str(query or "")
+    if lang == "ja":
+        toks = _JA_HOP_WORD_RE.findall(q)
+    else:
+        toks = _EN_HOP_WORD_RE.findall(q)
+    for t in toks[:200]:
+        ban.add(_norm_for_sim(t))
+    return ban
+
+
+def extract_hop_keywords_heuristic(
+    *,
+    query: str,
+    prev_keywords: Sequence[str],
+    ponder_log: str,
+    n: int,
+    lang: str,
+    rng: random.Random,
+) -> List[str]:
+    if n <= 0:
+        return []
+    s = re.sub(r"<[^>]+>", " ", str(ponder_log or ""))
+    s = re.sub(r"[\r\n\t]+", " ", s)
+    if lang == "ja":
+        toks = _JA_HOP_WORD_RE.findall(s)
+    else:
+        toks = _EN_HOP_WORD_RE.findall(s)
+
+    ban = _ban_norm_set(query, prev_keywords, lang=lang)
+    counts: Dict[str, int] = {}
+    raw_map: Dict[str, str] = {}
+    for t in toks:
+        t2 = clean_token_text(t)
+        nt = _norm_for_sim(t2)
+        if not nt:
+            continue
+        if nt in ban:
+            continue
+        if len(nt) < 3:
+            continue
+        if len(nt) > 24:
+            continue
+        counts[nt] = int(counts.get(nt, 0)) + 1
+        raw_map.setdefault(nt, t2)
+
+    if not counts:
+        return []
+
+    scored = sorted(counts.items(), key=lambda kv: (kv[1] * len(kv[0]), kv[1], len(kv[0])), reverse=True)
+    pool = [raw_map.get(k, k) for k, _ in scored[: max(24, n * 8)]]
+    pool = [p for p in pool if p and _norm_for_sim(p) not in ban]
+    if len(pool) <= n:
+        return pool[:n]
+    return rng.sample(pool, k=n)
+
+
+def extract_hop_keywords_with_model(
+    hf: Any,
+    *,
+    query: str,
+    prev_keywords: Sequence[str],
+    ponder_log: str,
+    n: int,
+    lang: str,
+    seed: int,
+) -> List[str]:
+    if n <= 0:
+        return []
+    prompt = hf._apply_chat(
+        build_prompt_for_hop_keyword_extract(query, prev_keywords, ponder_log, n=n, lang=lang),
+        system_text=None,
+    )
+    out = hf.generate_text(
+        prompt,
+        max_new_tokens=180,
+        temperature=0.5,
+        top_p=0.9,
+        top_k=0,
+        repetition_penalty=1.0,
+        no_repeat_ngram_size=0,
+        seed=int(seed),
+    )
+    kws = extract_json_array(out)
+    ban = _ban_norm_set(query, prev_keywords, lang=lang)
+    out2: List[str] = []
+    seen = set()
+    for k in kws:
+        k2 = clean_token_text(str(k or "")).strip()
+        nk = _norm_for_sim(k2)
+        if not nk:
+            continue
+        if nk in ban:
+            continue
+        if nk in seen:
+            continue
+        if len(k2) > 32:
+            continue
+        seen.add(nk)
+        out2.append(k2)
+        if len(out2) >= n:
+            break
+    return out2[:n]
 
 
 def build_prompt_for_api_seed_keywords(
@@ -1000,12 +1197,16 @@ def select_token_ids_by_objective(
 
     if objective == "random_vocab":
         out: List[int] = []
+        seen = set()
         tries = 0
         while len(out) < n and tries < n * 50:
             tries += 1
             tid = int(rng.randrange(0, int(vocab_size)))
             if tid in special:
                 continue
+            if tid in seen:
+                continue
+            seen.add(tid)
             out.append(tid)
         return out
 
@@ -1032,6 +1233,273 @@ def select_token_ids_by_objective(
 
     # default: random within band
     return sample_token_ids(rng=rng, pool=[tid for tid in candidate_pool if int(tid) not in special], n=n)
+
+
+def _norm_for_sim(s: str) -> str:
+    s2 = clean_token_text(str(s or ""))
+    s2 = re.sub(r"\s+", " ", s2).strip().lower()
+    return s2
+
+
+def _sim_ratio(a: str, b: str) -> float:
+    aa = _norm_for_sim(a)
+    bb = _norm_for_sim(b)
+    if not aa or not bb:
+        return 0.0
+    if aa == bb:
+        return 1.0
+    return float(difflib.SequenceMatcher(a=aa, b=bb).ratio())
+
+
+def pick_diverse_strings(
+    strings: Sequence[str],
+    *,
+    rng: random.Random,
+    n: int,
+    threshold: float,
+    preserve_order: bool,
+) -> List[str]:
+    if n <= 0:
+        return []
+    items = [str(s) for s in (strings or []) if isinstance(s, str) and str(s).strip()]
+    if not preserve_order:
+        items = list(items)
+        rng.shuffle(items)
+    out: List[str] = []
+    out_norm: List[str] = []
+    for s in items:
+        if len(out) >= n:
+            break
+        ns = _norm_for_sim(s)
+        if not ns:
+            continue
+        if any(float(difflib.SequenceMatcher(a=ns, b=t).ratio()) >= float(threshold) for t in out_norm):
+            continue
+        out.append(s)
+        out_norm.append(ns)
+    if len(out) < n:
+        rest = [s for s in items if s not in set(out)]
+        rng.shuffle(rest)
+        out.extend(rest[: max(0, n - len(out))])
+    return out[:n]
+
+
+def pick_diverse_token_ids_by_text(
+    hf: "LocalHFModel",
+    *,
+    rng: random.Random,
+    candidate_ids: Sequence[int],
+    n: int,
+    threshold: float,
+    preserve_order: bool,
+) -> List[int]:
+    if n <= 0:
+        return []
+    items: List[Tuple[int, str]] = []
+    for tid in candidate_ids or []:
+        try:
+            tid_i = int(tid)
+        except Exception:
+            continue
+        txt = _token_text(hf.tokenizer, tid_i)
+        nt = _norm_for_sim(txt)
+        if not nt:
+            continue
+        items.append((tid_i, nt))
+
+    if not preserve_order:
+        rng.shuffle(items)
+
+    out: List[int] = []
+    out_norm: List[str] = []
+    for tid_i, nt in items:
+        if len(out) >= n:
+            break
+        if any(float(difflib.SequenceMatcher(a=nt, b=t).ratio()) >= float(threshold) for t in out_norm):
+            continue
+        out.append(tid_i)
+        out_norm.append(nt)
+
+    if len(out) < n:
+        rest = [tid_i for tid_i, _ in items if tid_i not in set(out)]
+        out.extend(sample_token_ids(rng=rng, pool=rest, n=max(0, n - len(out))))
+    return out[:n]
+
+
+def pick_diverse_token_ids_by_embedding(
+    hf: "LocalHFModel",
+    *,
+    rng: random.Random,
+    candidate_ids: Sequence[int],
+    n: int,
+) -> List[int]:
+    if n <= 0:
+        return []
+    ids: List[int] = []
+    for tid in candidate_ids or []:
+        try:
+            ids.append(int(tid))
+        except Exception:
+            continue
+    if not ids:
+        return []
+    if len(ids) <= n:
+        return ids[:n]
+
+    try:
+        emb = hf.model.get_input_embeddings()
+        weight = emb.weight
+        idx = torch.tensor(ids, device=weight.device, dtype=torch.long)
+        rows = weight.index_select(0, idx).detach().float().cpu()
+    except Exception:
+        return sample_token_ids(rng=rng, pool=ids, n=n)
+
+    rows = _l2_normalize(rows, eps=1e-8)
+    m = int(rows.shape[0])
+    if m <= n:
+        return ids[:n]
+
+    start = int(rng.randrange(0, max(1, min(m, 8))))
+    selected = [start]
+    min_dist = (1.0 - (rows @ rows[start])).to(torch.float32)
+    min_dist[start] = -1.0
+
+    for _ in range(1, int(n)):
+        next_i = int(torch.argmax(min_dist).item())
+        if float(min_dist[next_i].item()) < 0.0:
+            break
+        selected.append(next_i)
+        new_dist = (1.0 - (rows @ rows[next_i])).to(torch.float32)
+        min_dist = torch.minimum(min_dist, new_dist)
+        min_dist[next_i] = -1.0
+
+    out_ids = [ids[i] for i in selected]
+    if len(out_ids) < n:
+        rest = [tid for tid in ids if tid not in set(out_ids)]
+        out_ids.extend(sample_token_ids(rng=rng, pool=rest, n=max(0, n - len(out_ids))))
+    return out_ids[:n]
+
+
+def select_keyword_token_ids_hf(
+    hf: "LocalHFModel",
+    *,
+    objective: str,
+    rng: random.Random,
+    vocab_size: int,
+    candidate_pool: Sequence[int],
+    n_keywords: int,
+    special_ids: Sequence[int],
+    dissonance: Optional[Dict[int, float]] = None,
+    dissonance_target: float = 0.9,
+    dissonance_width: float = 0.6,
+    unstable: Optional[Dict[int, float]] = None,
+    select_top: int = 128,
+    diversity: str = "off",  # off|lex|embed
+    diversity_threshold: float = 0.82,
+) -> List[int]:
+    n = int(n_keywords)
+    if n <= 0:
+        return []
+
+    if (diversity or "off").strip() == "off":
+        return select_token_ids_by_objective(
+            objective=objective,
+            rng=rng,
+            vocab_size=vocab_size,
+            candidate_pool=candidate_pool,
+            n_keywords=n_keywords,
+            special_ids=special_ids,
+            dissonance=dissonance,
+            dissonance_target=dissonance_target,
+            dissonance_width=dissonance_width,
+            unstable=unstable,
+            select_top=select_top,
+        )
+
+    special = set(int(x) for x in (special_ids or []))
+    base_pool = [int(t) for t in (candidate_pool or []) if int(t) not in special]
+    if not base_pool and objective != "random_vocab":
+        return []
+
+    k_top = max(1, int(select_top))
+    want = max(k_top, n * 16)
+
+    # Objective: narrow down candidates, then pick diverse samples.
+    cand = base_pool
+    if objective == "random_vocab":
+        cand = []
+        seen = set()
+        tries = 0
+        while len(cand) < want and tries < want * 80:
+            tries += 1
+            tid = int(rng.randrange(0, int(vocab_size)))
+            if tid in special or tid in seen:
+                continue
+            seen.add(tid)
+            cand.append(tid)
+    elif objective == "unstable" and unstable:
+        items = [(tid, float(unstable.get(int(tid), 0.0))) for tid in cand]
+        items.sort(key=lambda x: x[1], reverse=True)
+        cand = [tid for tid, _ in items[:want]]
+    elif objective == "dissonance" and dissonance:
+        lo = float(dissonance_target) - float(dissonance_width) / 2.0
+        hi = float(dissonance_target) + float(dissonance_width) / 2.0
+        filtered = [tid for tid in cand if lo <= float(dissonance.get(int(tid), -1e9)) <= hi]
+        if filtered:
+            filtered.sort(key=lambda tid: abs(float(dissonance.get(int(tid), 0.0)) - float(dissonance_target)))
+            cand = filtered[:want]
+        else:
+            items = [(tid, float(dissonance.get(int(tid), -1e9))) for tid in cand]
+            items.sort(key=lambda x: x[1], reverse=True)
+            cand = [tid for tid, _ in items[:want]]
+    else:
+        cand = cand[:want]
+
+    cand = list(dict.fromkeys([int(t) for t in cand if int(t) not in special]))
+    if not cand:
+        return []
+
+    div = (diversity or "off").strip()
+    if div == "embed":
+        picked = pick_diverse_token_ids_by_embedding(hf, rng=rng, candidate_ids=cand, n=n)
+        if picked:
+            return picked[:n]
+
+    preserve = objective in ("dissonance", "unstable")
+    return pick_diverse_token_ids_by_text(
+        hf,
+        rng=rng,
+        candidate_ids=cand,
+        n=n,
+        threshold=float(diversity_threshold),
+        preserve_order=preserve,
+    )
+
+
+def api_lex_dissonance_scores(query: str, tokens: Sequence[str], *, lang: str) -> Dict[str, float]:
+    q = str(query or "")
+    if lang == "ja":
+        q_words = _JA_HOP_WORD_RE.findall(q)
+    else:
+        q_words = _EN_HOP_WORD_RE.findall(q)
+    q_words = [w for w in q_words if w]
+    q_words = q_words[:128]
+
+    out: Dict[str, float] = {}
+    for t in tokens or []:
+        if not isinstance(t, str):
+            continue
+        tt = clean_token_text(t).strip()
+        if not tt:
+            continue
+        if q_words:
+            max_sim = 0.0
+            for qw in q_words:
+                max_sim = max(max_sim, _sim_ratio(tt, qw))
+            out[tt] = float(1.0 - max_sim)
+        else:
+            out[tt] = float(1.0 - _sim_ratio(tt, q))
+    return out
 
 
 def interactive_pick_token_ids(
@@ -2060,6 +2528,7 @@ class LocalHFModel:
         use_chat_template: bool = True,
         force_gemma_format: bool = True,
         allocator_warmup: str = "auto",
+        local_files_only: bool = True,
     ) -> None:
         self.model_path = resolve_model_ref(model_path)
         self.use_chat_template = use_chat_template
@@ -2073,7 +2542,7 @@ class LocalHFModel:
 
         self.tokenizer = AutoTokenizer.from_pretrained(
             self.model_path,
-            local_files_only=True,
+            local_files_only=bool(local_files_only),
             trust_remote_code=trust_remote_code,
             use_fast=True,
         )
@@ -2081,7 +2550,7 @@ class LocalHFModel:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
         model_kwargs: Dict[str, Any] = dict(
-            local_files_only=True,
+            local_files_only=bool(local_files_only),
             trust_remote_code=trust_remote_code,
         )
         try:
@@ -2295,12 +2764,17 @@ class RunConfig:
     pipeline_context: str = "prev"  # none|prev|all
     pipeline_context_max_chars: int = 1200
     n_ponder: int = 1  # per band
+    ponder_hops: int = 1  # sequential hops per (band, band_ponder_ix)
+    hop_keyword_source: str = "model"  # model|heuristic
+    hop_context_max_chars: int = 900  # prev-hop context injected into hop>0 stage0
 
     keyword_refine: bool = False
     keyword_refine_max_new_tokens: int = 96
     keyword_refine_temperature: float = 0.3
     keyword_objective: str = "random_band"  # random_band|dissonance|unstable|random_vocab
     keyword_select_top: int = 128
+    keyword_diversity: str = "off"  # off|lex|embed
+    keyword_diversity_threshold: float = 0.82  # lex similarity cutoff (>= threshold => reject)
     dissonance_target: float = 0.9
     dissonance_width: float = 0.6
     dissonance_tail_k: int = 64
@@ -2329,6 +2803,7 @@ class RunConfig:
     trust_remote_code: bool = False
     use_chat_template: bool = True
     force_gemma_format: bool = True
+    hf_local_files_only: bool = True
 
 
 def run_baseline(hf: LocalHFModel, cfg: RunConfig, query: str) -> str:
@@ -2532,7 +3007,8 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
             n_kw = int(cfg.rejected.n_keywords)
             rng = random.Random(int(cfg.seed) + 99991 + band_ix * 10007 + band_ponder_ix * 101 + log_ix * 37)
 
-            token_ids = select_token_ids_by_objective(
+            token_ids = select_keyword_token_ids_hf(
+                hf,
                 objective=objective,
                 rng=rng,
                 vocab_size=vocab_size,
@@ -2544,6 +3020,8 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
                 dissonance_width=float(cfg.dissonance_width),
                 unstable=band_unstable,
                 select_top=int(cfg.keyword_select_top),
+                diversity=str(cfg.keyword_diversity),
+                diversity_threshold=float(cfg.keyword_diversity_threshold),
             )
 
             keywords_source = "rejected_tokens"
@@ -2597,96 +3075,180 @@ def run_ponder(hf: LocalHFModel, cfg: RunConfig, query: str) -> Tuple[str, List[
                     keywords = refined_keywords
                     keywords_source = "model_refine"
 
-            # One ponder question per (band, band_ponder_ix), reused across pipeline stages.
-            if control == "lens_only":
-                ponder_q = query
-            else:
-                q_rng = random.Random(int(cfg.seed) + 12345 + band_ix * 10007 + band_ponder_ix * 101)
-                ponder_q = make_unrelated_question(keywords, lang=lang, rng=q_rng)
+            # Hop loop ("latent walk"): each hop derives new keywords from the previous ponder log.
+            hop_n = max(1, int(cfg.ponder_hops))
+            prev_hop_log: Optional[str] = None
+            prev_hop_keywords: List[str] = list(keywords)
 
-            stage_logs: List[str] = []
-            for stage_ix, stage_mode in enumerate(pipeline):
-                ctx_text: Optional[str] = None
-                if pipeline_ctx == "prev" and stage_logs:
-                    ctx_text = stage_logs[-1]
-                elif pipeline_ctx == "all" and stage_logs:
-                    ctx_text = "\n\n".join(stage_logs)
-
-                if ctx_text and len(ctx_text) > int(cfg.pipeline_context_max_chars):
-                    ctx_text = ctx_text[-int(cfg.pipeline_context_max_chars) :]
-
-                ponder_prompt = hf._apply_chat(
-                    build_prompt_for_pondering(ponder_q, mode=stage_mode, lang=lang, context=ctx_text),
-                    system_text=None,
-                )
-                ponder_log = hf.generate_text(
-                    ponder_prompt,
-                    max_new_tokens=cfg.ponder_max_new_tokens,
-                    temperature=max(0.4, cfg.temperature),
-                    top_p=cfg.top_p,
-                    top_k=cfg.top_k,
-                    repetition_penalty=cfg.repetition_penalty,
-                    no_repeat_ngram_size=cfg.no_repeat_ngram_size,
-                    seed=int(cfg.seed) + 1 + log_ix,
-                )
-                stage_logs.append(ponder_log)
-
-                selected_tokens = []
-                for tid in token_ids:
-                    t: Dict[str, Any] = {
-                        "token_id": int(tid),
-                        "token": _token_text(hf.tokenizer, tid),
-                        "rank": int(ranks[int(tid)].item()),
-                        "prob": _token_prob(logits, tid, log_z),
-                    }
-                    if band_dissonance is not None and int(tid) in band_dissonance:
-                        t["dissonance"] = float(band_dissonance[int(tid)])
-                    if band_unstable is not None and int(tid) in band_unstable:
-                        t["unstable"] = float(band_unstable[int(tid)])
-                    selected_tokens.append(t)
-
-                if cfg.print_probe:
-                    _print_probe_table(
-                        f"REJECTED TOKENS (band={band_label} ix={log_ix} stage={stage_mode})",
-                        selected_tokens,
-                        limit=len(selected_tokens),
-                    )
-                    print(f"\nkeywords_source={keywords_source} keywords={keywords}\n")
-
-                record: Dict[str, Any] = {
-                    "ts": now_iso(),
-                    "run_id": run_id,
-                    "query_sha": query_sha,
-                    "prompt_lang": lang,
-                    "control": control,
-                    "band_profile": cfg.band_profile,
-                    "band_ix": band_ix,
-                    "band_label": band_label,
-                    "band_ponder_ix": band_ponder_ix,
-                    "pipeline": pipeline,
-                    "pipeline_stage_ix": stage_ix,
-                    "pipeline_context": pipeline_ctx,
-                    "ponder_ix": log_ix,
-                    "ponder_mode": stage_mode,
-                    "keywords_source": keywords_source,
-                    "keywords_raw": raw_keywords,
-                    "keywords": keywords,
-                    "token_ids": token_ids,
-                    "selected_tokens": selected_tokens,
-                    "rejected_cfg": dataclasses.asdict(cfg.rejected),
-                    "band": {"start_rank": band_start, "end_rank": band_end},
-                    "ponder_question": ponder_q,
-                    "ponder_log": ponder_log,
+            selected_tokens0: List[Dict[str, Any]] = []
+            for tid in token_ids:
+                t0: Dict[str, Any] = {
+                    "token_id": int(tid),
+                    "token": _token_text(hf.tokenizer, tid),
+                    "rank": int(ranks[int(tid)].item()),
+                    "prob": _token_prob(logits, tid, log_z),
                 }
-                if cfg.probe_top_n > 0 and log_ix == 0:
-                    record["probe_top"] = top_tokens[: int(cfg.probe_top_n)]
-                if jitter_queries and log_ix == 0:
-                    record["prompt_jitter_queries"] = jitter_queries
+                if band_dissonance is not None and int(tid) in band_dissonance:
+                    t0["dissonance"] = float(band_dissonance[int(tid)])
+                if band_unstable is not None and int(tid) in band_unstable:
+                    t0["unstable"] = float(band_unstable[int(tid)])
+                selected_tokens0.append(t0)
 
-                if cfg.write_memory:
-                    append_jsonl(cfg.memory_path, record)
-                records.append(record)
-                log_ix += 1
+            for hop_ix in range(hop_n):
+                hop_keyword_source: Optional[str] = None
+                hop_keywords_source = keywords_source
+                hop_raw_keywords = list(raw_keywords)
+                hop_keywords = list(keywords)
+                hop_token_ids = list(token_ids)
+                hop_selected_tokens = selected_tokens0
+
+                if hop_ix > 0:
+                    hop_keyword_source = (cfg.hop_keyword_source or "model").strip()
+                    if hop_keyword_source not in ("model", "heuristic"):
+                        hop_keyword_source = "model"
+
+                    hk_seed = int(cfg.seed) + 6000 + band_ix * 10007 + band_ponder_ix * 101 + hop_ix * 271
+                    new_raw: List[str] = []
+                    if hop_keyword_source == "model" and prev_hop_log:
+                        try:
+                            new_raw = extract_hop_keywords_with_model(
+                                hf,
+                                query=query,
+                                prev_keywords=prev_hop_keywords,
+                                ponder_log=prev_hop_log,
+                                n=n_kw,
+                                lang=lang,
+                                seed=hk_seed,
+                            )
+                        except Exception:
+                            new_raw = []
+
+                    if not new_raw and prev_hop_log:
+                        hrng = random.Random(int(cfg.seed) + 6100 + band_ix * 10007 + band_ponder_ix * 101 + hop_ix * 271)
+                        new_raw = extract_hop_keywords_heuristic(
+                            query=query,
+                            prev_keywords=prev_hop_keywords,
+                            ponder_log=prev_hop_log,
+                            n=n_kw,
+                            lang=lang,
+                            rng=hrng,
+                        )
+                        if new_raw:
+                            hop_keyword_source = "heuristic"
+
+                    if not new_raw:
+                        new_raw = list(prev_hop_keywords)
+
+                    hop_raw_keywords = list(new_raw)
+                    hop_keywords = list(new_raw)
+                    hop_keywords_source = f"hop_{hop_keyword_source}"
+                    hop_selected_tokens = []
+                    hop_token_ids = token_ids_from_keywords_text(hf, hop_keywords, special_ids=special_ids)
+
+                    if cfg.keyword_refine:
+                        refined = refine_keywords_with_model(
+                            hf,
+                            query=query,
+                            seed_keywords=hop_raw_keywords,
+                            n_keywords=n_kw,
+                            lang=lang,
+                            max_new_tokens=int(cfg.keyword_refine_max_new_tokens),
+                            temperature=float(cfg.keyword_refine_temperature),
+                            seed=int(cfg.seed) + 220 + log_ix + hop_ix * 11,
+                        )
+                        if refined:
+                            hop_keywords = refined
+                            hop_keywords_source = "model_refine"
+                            hop_token_ids = token_ids_from_keywords_text(hf, hop_keywords, special_ids=special_ids)
+
+                # One ponder question per (hop, band, band_ponder_ix), reused across pipeline stages.
+                if control == "lens_only":
+                    ponder_q = query
+                else:
+                    q_rng = random.Random(int(cfg.seed) + 12345 + band_ix * 10007 + band_ponder_ix * 101 + hop_ix * 1009)
+                    ponder_q = make_unrelated_question(hop_keywords, lang=lang, rng=q_rng)
+
+                stage_logs: List[str] = []
+                for stage_ix, stage_mode in enumerate(pipeline):
+                    ctx_text: Optional[str] = None
+
+                    # Hop context: feed the previous hop's log into the first stage as soft background.
+                    if hop_ix > 0 and stage_ix == 0 and prev_hop_log:
+                        ctx_text = prev_hop_log
+                        if ctx_text and len(ctx_text) > int(cfg.hop_context_max_chars):
+                            ctx_text = ctx_text[-int(cfg.hop_context_max_chars) :]
+
+                    if pipeline_ctx == "prev" and stage_logs:
+                        ctx_text = stage_logs[-1]
+                    elif pipeline_ctx == "all" and stage_logs:
+                        ctx_text = "\n\n".join(stage_logs)
+
+                    if ctx_text and len(ctx_text) > int(cfg.pipeline_context_max_chars):
+                        ctx_text = ctx_text[-int(cfg.pipeline_context_max_chars) :]
+
+                    ponder_prompt = hf._apply_chat(
+                        build_prompt_for_pondering(ponder_q, mode=stage_mode, lang=lang, context=ctx_text),
+                        system_text=None,
+                    )
+                    ponder_log = hf.generate_text(
+                        ponder_prompt,
+                        max_new_tokens=cfg.ponder_max_new_tokens,
+                        temperature=max(0.4, cfg.temperature),
+                        top_p=cfg.top_p,
+                        top_k=cfg.top_k,
+                        repetition_penalty=cfg.repetition_penalty,
+                        no_repeat_ngram_size=cfg.no_repeat_ngram_size,
+                        seed=int(cfg.seed) + 1 + log_ix,
+                    )
+                    stage_logs.append(ponder_log)
+
+                    if cfg.print_probe and hop_selected_tokens:
+                        _print_probe_table(
+                            f"REJECTED TOKENS (band={band_label} hop={hop_ix} ix={log_ix} stage={stage_mode})",
+                            hop_selected_tokens,
+                            limit=len(hop_selected_tokens),
+                        )
+                        print(f"\nkeywords_source={hop_keywords_source} keywords={hop_keywords}\n")
+
+                    record: Dict[str, Any] = {
+                        "ts": now_iso(),
+                        "run_id": run_id,
+                        "query_sha": query_sha,
+                        "prompt_lang": lang,
+                        "control": control,
+                        "band_profile": cfg.band_profile,
+                        "band_ix": band_ix,
+                        "band_label": band_label,
+                        "band_ponder_ix": band_ponder_ix,
+                        "hop_ix": hop_ix,
+                        "hop_keyword_source": hop_keyword_source,
+                        "pipeline": pipeline,
+                        "pipeline_stage_ix": stage_ix,
+                        "pipeline_context": pipeline_ctx,
+                        "ponder_ix": log_ix,
+                        "ponder_mode": stage_mode,
+                        "keywords_source": hop_keywords_source,
+                        "keywords_raw": hop_raw_keywords,
+                        "keywords": hop_keywords,
+                        "token_ids": hop_token_ids,
+                        "selected_tokens": hop_selected_tokens,
+                        "rejected_cfg": dataclasses.asdict(cfg.rejected),
+                        "band": {"start_rank": band_start, "end_rank": band_end},
+                        "ponder_question": ponder_q,
+                        "ponder_log": ponder_log,
+                    }
+                    if cfg.probe_top_n > 0 and log_ix == 0 and hop_ix == 0:
+                        record["probe_top"] = top_tokens[: int(cfg.probe_top_n)]
+                    if jitter_queries and log_ix == 0 and hop_ix == 0:
+                        record["prompt_jitter_queries"] = jitter_queries
+
+                    if cfg.write_memory:
+                        append_jsonl(cfg.memory_path, record)
+                    records.append(record)
+                    log_ix += 1
+
+                prev_hop_log = "\n\n".join(stage_logs).strip() if stage_logs else prev_hop_log
+                prev_hop_keywords = list(hop_keywords)
 
     # Select memory records for final answer injection
     exclude_run_id = run_id if cfg.memory_exclude_current_run and cfg.memory_policy == "tail" else None
@@ -2887,8 +3449,6 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
         ]
         _print_probe_table("PROBE TOP TOKENS (API)", items, limit=min(len(items), 50))
 
-    warned_objective = False
-
     # Unstable objective (logprobs-only): compute per-token stddev across prompt jitters.
     jitter_queries: List[str] = []
     jitter_maps: List[Dict[str, float]] = []
@@ -2952,14 +3512,7 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
                 if band_end > band_start:
                     pool = pool[band_start:band_end]
                 pool = [x for x in pool if isinstance(x.get("token"), str) and str(x.get("token")).strip()]
-                # objective handling
-                if objective == "dissonance":
-                    if not warned_objective:
-                        print("[sr_ponder] WARN: keyword_objective=dissonance not supported for API; using random_band.", file=sys.stderr)
-                        warned_objective = True
-                    obj_mode = "random_band"
-                else:
-                    obj_mode = objective
+                obj_mode = objective
 
                 tokens = [str(x.get("token", "")).strip() for x in pool]
                 # de-dupe preserve order
@@ -2973,12 +3526,36 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
                     seen.add(t)
                     tokens2.append(t)
 
+                dissonance_scores: Dict[str, float] = {}
+                preserve = False
                 if obj_mode == "unstable" and unstable_scores:
                     tokens2.sort(key=lambda t: float(unstable_scores.get(t, 0.0)), reverse=True)
                     tokens2 = tokens2[: max(1, int(cfg.keyword_select_top))]
+                    preserve = True
+                elif obj_mode == "dissonance":
+                    dissonance_scores = api_lex_dissonance_scores(query, tokens2, lang=lang)
+                    lo = float(cfg.dissonance_target) - float(cfg.dissonance_width) / 2.0
+                    hi = float(cfg.dissonance_target) + float(cfg.dissonance_width) / 2.0
+                    filtered = [t for t in tokens2 if lo <= float(dissonance_scores.get(t, 0.0)) <= hi]
+                    if filtered:
+                        filtered.sort(key=lambda t: abs(float(dissonance_scores.get(t, 0.0)) - float(cfg.dissonance_target)))
+                        tokens2 = filtered[: max(1, int(cfg.keyword_select_top))]
+                    else:
+                        tokens2.sort(key=lambda t: float(dissonance_scores.get(t, 0.0)), reverse=True)
+                        tokens2 = tokens2[: max(1, int(cfg.keyword_select_top))]
+                    preserve = True
 
                 if len(tokens2) >= n_kw:
-                    picked = rng.sample(tokens2, k=n_kw)
+                    if str(cfg.keyword_diversity).strip() != "off":
+                        picked = pick_diverse_strings(
+                            tokens2,
+                            rng=rng,
+                            n=n_kw,
+                            threshold=float(cfg.keyword_diversity_threshold),
+                            preserve_order=preserve,
+                        )
+                    else:
+                        picked = rng.sample(tokens2, k=n_kw)
                 else:
                     picked = []
 
@@ -2995,6 +3572,7 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
                                 "rank": x.get("rank"),
                                 "prob": x.get("prob"),
                                 "logprob": x.get("logprob"),
+                                "dissonance": dissonance_scores.get(t) if dissonance_scores else None,
                                 "unstable": unstable_scores.get(t) if unstable_scores else None,
                             }
                         )
@@ -3044,83 +3622,161 @@ def run_ponder_api(hf: OpenAICompatModel, cfg: RunConfig, query: str) -> Tuple[s
                     keywords = picked
                     keywords_source = "human_pick"
 
-            # One ponder question per (band, band_ponder_ix), reused across pipeline stages.
-            if control == "lens_only":
-                ponder_q = query
-            else:
-                q_rng = random.Random(int(cfg.seed) + 12345 + band_ix * 10007 + band_ponder_ix * 101)
-                ponder_q = make_unrelated_question(keywords, lang=lang, rng=q_rng)
+            hop_n = max(1, int(cfg.ponder_hops))
+            prev_hop_log: Optional[str] = None
+            prev_hop_keywords: List[str] = list(keywords)
 
-            stage_logs: List[str] = []
-            for stage_ix, stage_mode in enumerate(pipeline):
-                ctx_text: Optional[str] = None
-                if pipeline_ctx == "prev" and stage_logs:
-                    ctx_text = stage_logs[-1]
-                elif pipeline_ctx == "all" and stage_logs:
-                    ctx_text = "\n\n".join(stage_logs)
+            for hop_ix in range(hop_n):
+                hop_keyword_source: Optional[str] = None
+                hop_keywords_source = keywords_source
+                hop_raw_keywords = list(raw_keywords)
+                hop_keywords = list(keywords)
+                hop_picked_items = list(picked_items)
 
-                if ctx_text and len(ctx_text) > int(cfg.pipeline_context_max_chars):
-                    ctx_text = ctx_text[-int(cfg.pipeline_context_max_chars) :]
+                if hop_ix > 0:
+                    hop_keyword_source = (cfg.hop_keyword_source or "model").strip()
+                    if hop_keyword_source not in ("model", "heuristic"):
+                        hop_keyword_source = "model"
 
-                ponder_prompt = hf._apply_chat(
-                    build_prompt_for_pondering(ponder_q, mode=stage_mode, lang=lang, context=ctx_text),
-                    system_text=None,
-                )
-                ponder_log = hf.generate_text(
-                    ponder_prompt,
-                    max_new_tokens=cfg.ponder_max_new_tokens,
-                    temperature=max(0.4, cfg.temperature),
-                    top_p=cfg.top_p,
-                    top_k=0,
-                    repetition_penalty=1.0,
-                    no_repeat_ngram_size=0,
-                    seed=int(cfg.seed) + 1 + log_ix,
-                )
-                stage_logs.append(ponder_log)
+                    hk_seed = int(cfg.seed) + 6000 + band_ix * 10007 + band_ponder_ix * 101 + hop_ix * 271
+                    new_raw: List[str] = []
+                    if hop_keyword_source == "model" and prev_hop_log:
+                        try:
+                            new_raw = extract_hop_keywords_with_model(
+                                hf,
+                                query=query,
+                                prev_keywords=prev_hop_keywords,
+                                ponder_log=prev_hop_log,
+                                n=n_kw,
+                                lang=lang,
+                                seed=hk_seed,
+                            )
+                        except Exception:
+                            new_raw = []
 
-                if cfg.print_probe:
-                    _print_probe_table(
-                        f"SEED KEYWORDS (API band={band_label} ix={log_ix} stage={stage_mode})",
-                        [{"token_id": None, "token": t, "rank": None, "prob": None} for t in (keywords or [])],
-                        limit=len(keywords or []),
+                    if not new_raw and prev_hop_log:
+                        hrng = random.Random(int(cfg.seed) + 6100 + band_ix * 10007 + band_ponder_ix * 101 + hop_ix * 271)
+                        new_raw = extract_hop_keywords_heuristic(
+                            query=query,
+                            prev_keywords=prev_hop_keywords,
+                            ponder_log=prev_hop_log,
+                            n=n_kw,
+                            lang=lang,
+                            rng=hrng,
+                        )
+                        if new_raw:
+                            hop_keyword_source = "heuristic"
+
+                    if not new_raw:
+                        new_raw = list(prev_hop_keywords)
+
+                    hop_raw_keywords = list(new_raw)
+                    hop_keywords = list(new_raw)
+                    hop_keywords_source = f"hop_{hop_keyword_source}"
+                    hop_picked_items = []
+
+                    if cfg.keyword_refine:
+                        refined = refine_keywords_with_model(
+                            hf,
+                            query=query,
+                            seed_keywords=hop_raw_keywords,
+                            n_keywords=n_kw,
+                            lang=lang,
+                            max_new_tokens=int(cfg.keyword_refine_max_new_tokens),
+                            temperature=float(cfg.keyword_refine_temperature),
+                            seed=int(cfg.seed) + 220 + log_ix + hop_ix * 11,
+                        )
+                        if refined:
+                            hop_keywords = refined
+                            hop_keywords_source = "model_refine"
+
+                # One ponder question per (hop, band, band_ponder_ix), reused across pipeline stages.
+                if control == "lens_only":
+                    ponder_q = query
+                else:
+                    q_rng = random.Random(int(cfg.seed) + 12345 + band_ix * 10007 + band_ponder_ix * 101 + hop_ix * 1009)
+                    ponder_q = make_unrelated_question(hop_keywords, lang=lang, rng=q_rng)
+
+                stage_logs: List[str] = []
+                for stage_ix, stage_mode in enumerate(pipeline):
+                    ctx_text: Optional[str] = None
+                    if hop_ix > 0 and stage_ix == 0 and prev_hop_log:
+                        ctx_text = prev_hop_log
+                        if ctx_text and len(ctx_text) > int(cfg.hop_context_max_chars):
+                            ctx_text = ctx_text[-int(cfg.hop_context_max_chars) :]
+
+                    if pipeline_ctx == "prev" and stage_logs:
+                        ctx_text = stage_logs[-1]
+                    elif pipeline_ctx == "all" and stage_logs:
+                        ctx_text = "\n\n".join(stage_logs)
+
+                    if ctx_text and len(ctx_text) > int(cfg.pipeline_context_max_chars):
+                        ctx_text = ctx_text[-int(cfg.pipeline_context_max_chars) :]
+
+                    ponder_prompt = hf._apply_chat(
+                        build_prompt_for_pondering(ponder_q, mode=stage_mode, lang=lang, context=ctx_text),
+                        system_text=None,
                     )
-                    print(f"\nkeywords_source={keywords_source} keywords={keywords}\n")
+                    ponder_log = hf.generate_text(
+                        ponder_prompt,
+                        max_new_tokens=cfg.ponder_max_new_tokens,
+                        temperature=max(0.4, cfg.temperature),
+                        top_p=cfg.top_p,
+                        top_k=0,
+                        repetition_penalty=1.0,
+                        no_repeat_ngram_size=0,
+                        seed=int(cfg.seed) + 1 + log_ix,
+                    )
+                    stage_logs.append(ponder_log)
 
-                record: Dict[str, Any] = {
-                    "ts": now_iso(),
-                    "run_id": run_id,
-                    "query_sha": query_sha,
-                    "prompt_lang": lang,
-                    "backend": "openai_compat",
-                    "control": control,
-                    "band_profile": cfg.band_profile,
-                    "band_ix": band_ix,
-                    "band_label": band_label,
-                    "band_ponder_ix": band_ponder_ix,
-                    "pipeline": pipeline,
-                    "pipeline_stage_ix": stage_ix,
-                    "pipeline_context": pipeline_ctx,
-                    "ponder_ix": log_ix,
-                    "ponder_mode": stage_mode,
-                    "keywords_source": keywords_source,
-                    "keywords_raw": raw_keywords,
-                    "keywords": keywords,
-                    "token_ids": [],
-                    "selected_tokens": picked_items,
-                    "rejected_cfg": dataclasses.asdict(cfg.rejected),
-                    "band": {"start_rank": band_start, "end_rank": band_end},
-                    "ponder_question": ponder_q,
-                    "ponder_log": ponder_log,
-                }
-                if cfg.probe_top_n > 0 and log_ix == 0 and probe_top:
-                    record["probe_top"] = probe_top[: int(cfg.probe_top_n)]
-                if jitter_queries and log_ix == 0:
-                    record["prompt_jitter_queries"] = jitter_queries
+                    if cfg.print_probe:
+                        _print_probe_table(
+                            f"SEED KEYWORDS (API band={band_label} hop={hop_ix} ix={log_ix} stage={stage_mode})",
+                            [{"token_id": None, "token": t, "rank": None, "prob": None} for t in (hop_keywords or [])],
+                            limit=len(hop_keywords or []),
+                        )
+                        print(f"\nkeywords_source={hop_keywords_source} keywords={hop_keywords}\n")
 
-                if cfg.write_memory:
-                    append_jsonl(cfg.memory_path, record)
-                records.append(record)
-                log_ix += 1
+                    record: Dict[str, Any] = {
+                        "ts": now_iso(),
+                        "run_id": run_id,
+                        "query_sha": query_sha,
+                        "prompt_lang": lang,
+                        "backend": "openai_compat",
+                        "control": control,
+                        "band_profile": cfg.band_profile,
+                        "band_ix": band_ix,
+                        "band_label": band_label,
+                        "band_ponder_ix": band_ponder_ix,
+                        "hop_ix": hop_ix,
+                        "hop_keyword_source": hop_keyword_source,
+                        "pipeline": pipeline,
+                        "pipeline_stage_ix": stage_ix,
+                        "pipeline_context": pipeline_ctx,
+                        "ponder_ix": log_ix,
+                        "ponder_mode": stage_mode,
+                        "keywords_source": hop_keywords_source,
+                        "keywords_raw": hop_raw_keywords,
+                        "keywords": hop_keywords,
+                        "token_ids": [],
+                        "selected_tokens": hop_picked_items,
+                        "rejected_cfg": dataclasses.asdict(cfg.rejected),
+                        "band": {"start_rank": band_start, "end_rank": band_end},
+                        "ponder_question": ponder_q,
+                        "ponder_log": ponder_log,
+                    }
+                    if cfg.probe_top_n > 0 and log_ix == 0 and hop_ix == 0 and probe_top:
+                        record["probe_top"] = probe_top[: int(cfg.probe_top_n)]
+                    if jitter_queries and log_ix == 0 and hop_ix == 0:
+                        record["prompt_jitter_queries"] = jitter_queries
+
+                    if cfg.write_memory:
+                        append_jsonl(cfg.memory_path, record)
+                    records.append(record)
+                    log_ix += 1
+
+                prev_hop_log = "\n\n".join(stage_logs).strip() if stage_logs else prev_hop_log
+                prev_hop_keywords = list(hop_keywords)
 
     # Select memory records for final answer injection (API: fuzzy retrieval via hashed char n-grams)
     exclude_run_id = run_id if cfg.memory_exclude_current_run and cfg.memory_policy == "tail" else None
@@ -3290,11 +3946,22 @@ def run_ponder_dispatch(hf: Any, cfg: RunConfig, query: str) -> Tuple[str, List[
 
 
 def main() -> None:
+    # Windows console defaults (e.g., cp932) can crash on arbitrary Unicode coming from model outputs.
+    # Prefer UTF-8 with replacement to keep the CLI usable.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
+    except Exception:
+        pass
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
+    except Exception:
+        pass
+
     class _Fmt(argparse.ArgumentDefaultsHelpFormatter, argparse.RawTextHelpFormatter):
         pass
 
     ap = argparse.ArgumentParser(
-        description="Pondering machine (local HF + API) — rejected-token + lens + bands + memory.",
+        description="Pondering machine (local HF + API) - rejected-token + lens + bands + memory.",
         formatter_class=_Fmt,
     )
 
@@ -3326,6 +3993,14 @@ def main() -> None:
         help="Ponder lens (used when --ponder_pipeline is empty)",
     )
     g_ponder.add_argument("--n_ponder", type=int, default=1, help="Number of ponder logs per band")
+    g_ponder.add_argument("--ponder_hops", type=int, default=1, help="Sequential hops per ponder log (latent walk)")
+    g_ponder.add_argument(
+        "--hop_keyword_source",
+        choices=["model", "heuristic"],
+        default="model",
+        help="How to derive next-hop keywords from the previous hop's ponder log",
+    )
+    g_ponder.add_argument("--hop_context_max_chars", type=int, default=900, help="Prev-hop context size for hop>0")
     g_ponder.add_argument(
         "--control",
         choices=["none", "no_inject", "random_log", "random_keywords", "lens_only"],
@@ -3365,6 +4040,18 @@ def main() -> None:
         help="How to pick keyword token_ids inside each band",
     )
     g_keywords.add_argument("--keyword_select_top", type=int, default=128, help="Top candidates to sample from")
+    g_keywords.add_argument(
+        "--keyword_diversity",
+        choices=["off", "lex", "embed"],
+        default="off",
+        help="Encourage diverse keywords (lexical or embedding) instead of pure random sampling",
+    )
+    g_keywords.add_argument(
+        "--keyword_diversity_threshold",
+        type=float,
+        default=0.82,
+        help="Lexical similarity cutoff (>= threshold => reject as too similar)",
+    )
     g_keywords.add_argument("--dissonance_target", type=float, default=0.9)
     g_keywords.add_argument("--dissonance_width", type=float, default=0.6)
     g_keywords.add_argument("--dissonance_tail_k", type=int, default=64)
@@ -3432,6 +4119,7 @@ def main() -> None:
         help="Transformers caching allocator warmup (auto disables on MPS)",
     )
     g_runtime.add_argument("--trust_remote_code", action="store_true")
+    g_runtime.add_argument("--hf_online", action="store_true", help="Allow downloading HF models (local_files_only=False)")
     g_runtime.add_argument("--no_chat_template", action="store_true")
     g_runtime.add_argument("--no_gemma_format", action="store_true", help="Disable Gemma-native turn formatting")
     g_runtime.add_argument("--probe_top_n", type=int, default=0, help="Store probe top-N tokens in record (0=off)")
@@ -3516,11 +4204,16 @@ def main() -> None:
         pipeline_context=args.pipeline_context,
         pipeline_context_max_chars=args.pipeline_context_max_chars,
         n_ponder=args.n_ponder,
+        ponder_hops=args.ponder_hops,
+        hop_keyword_source=args.hop_keyword_source,
+        hop_context_max_chars=args.hop_context_max_chars,
         keyword_refine=args.keyword_refine,
         keyword_refine_max_new_tokens=args.keyword_refine_max_new_tokens,
         keyword_refine_temperature=args.keyword_refine_temperature,
         keyword_objective=args.keyword_objective,
         keyword_select_top=args.keyword_select_top,
+        keyword_diversity=args.keyword_diversity,
+        keyword_diversity_threshold=args.keyword_diversity_threshold,
         dissonance_target=args.dissonance_target,
         dissonance_width=args.dissonance_width,
         dissonance_tail_k=args.dissonance_tail_k,
@@ -3544,6 +4237,7 @@ def main() -> None:
         trust_remote_code=args.trust_remote_code,
         use_chat_template=not args.no_chat_template,
         force_gemma_format=not args.no_gemma_format,
+        hf_local_files_only=not bool(args.hf_online),
     )
 
     hf: Any
@@ -3556,13 +4250,15 @@ def main() -> None:
             use_chat_template=cfg.use_chat_template,
             force_gemma_format=cfg.force_gemma_format,
             allocator_warmup=cfg.allocator_warmup,
+            local_files_only=cfg.hf_local_files_only,
         )
         print(
             f"[sr_ponder] backend=hf device={hf.device_str} input_device={hf.input_device} dtype={hf.torch_dtype} "
             f"alloc_warmup={cfg.allocator_warmup} "
             f"gemma_turn_tokens={hf._has_gemma_turn_tokens()} lang={cfg.prompt_lang} "
             f"band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
-            f"objective={cfg.keyword_objective} control={cfg.control} "
+            f"objective={cfg.keyword_objective} diversity={cfg.keyword_diversity} hops={cfg.ponder_hops} "
+            f"hf_local_only={cfg.hf_local_files_only} control={cfg.control} "
             f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
             f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} write_memory={cfg.write_memory}"
         )
@@ -3585,7 +4281,7 @@ def main() -> None:
             f"[sr_ponder] backend=openai_compat model={cfg.model_path!r} base_url={cfg.api_base_url} "
             f"seed_method={cfg.api_seed_method} logprobs_top_n={cfg.api_logprobs_top_n} "
             f"lang={cfg.prompt_lang} band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
-            f"objective={cfg.keyword_objective} control={cfg.control} "
+            f"objective={cfg.keyword_objective} diversity={cfg.keyword_diversity} hops={cfg.ponder_hops} control={cfg.control} "
             f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
             f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} write_memory={cfg.write_memory}"
         )

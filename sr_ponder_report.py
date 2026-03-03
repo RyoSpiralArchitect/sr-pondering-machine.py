@@ -142,6 +142,7 @@ def _describe(vals: Sequence[float]) -> Dict[str, Any]:
 def analyze_memory(path: Path, *, max_records: int, top_keywords: int) -> Dict[str, Any]:
     mode = Counter()
     band = Counter()
+    hop = Counter()
     lang = Counter()
     kw_source = Counter()
     keywords = Counter()
@@ -172,6 +173,8 @@ def analyze_memory(path: Path, *, max_records: int, top_keywords: int) -> Dict[s
         mode[str(r.get("ponder_mode", "unknown"))] += 1
         lang[str(r.get("prompt_lang", "unknown"))] += 1
         kw_source[str(r.get("keywords_source", "unknown"))] += 1
+        if r.get("hop_ix") is not None:
+            hop[str(r.get("hop_ix"))] += 1
 
         band_label = r.get("band_label")
         if not band_label and isinstance(r.get("band"), dict):
@@ -223,6 +226,7 @@ def analyze_memory(path: Path, *, max_records: int, top_keywords: int) -> Dict[s
         "ts_max": ts_max.isoformat() if ts_max else None,
         "mode": mode,
         "band": band,
+        "hop": hop,
         "lang": lang,
         "keywords_source": kw_source,
         "top_keywords": keywords.most_common(top_keywords),
@@ -245,6 +249,7 @@ def render_text_report(stats: Dict[str, Any], *, max_rows: int) -> str:
 
     lines.append(_format_counter(stats.get("mode", Counter()), title="Ponder mode", total=total, max_rows=max_rows))
     lines.append(_format_counter(stats.get("band", Counter()), title="Band label", total=total, max_rows=max_rows))
+    lines.append(_format_counter(stats.get("hop", Counter()), title="Hop ix", total=total, max_rows=max_rows))
     lines.append(_format_counter(stats.get("keywords_source", Counter()), title="Keyword source", total=total, max_rows=max_rows))
     lines.append(_format_counter(stats.get("lang", Counter()), title="Prompt lang", total=total, max_rows=max_rows))
 
@@ -359,6 +364,7 @@ def render_html_report(stats: Dict[str, Any], *, max_rows: int) -> str:
 <div class="grid">
   <div class="box">{_render_html_bar_table("Ponder mode", stats.get("mode", Counter()), total=total, max_rows=max_rows)}</div>
   <div class="box">{_render_html_bar_table("Band label", stats.get("band", Counter()), total=total, max_rows=max_rows)}</div>
+  <div class="box">{_render_html_bar_table("Hop ix", stats.get("hop", Counter()), total=total, max_rows=max_rows)}</div>
   <div class="box">{_render_html_bar_table("Keyword source", stats.get("keywords_source", Counter()), total=total, max_rows=max_rows)}</div>
   <div class="box">{_render_html_bar_table("Prompt lang", stats.get("lang", Counter()), total=total, max_rows=max_rows)}</div>
 </div>
@@ -423,4 +429,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
