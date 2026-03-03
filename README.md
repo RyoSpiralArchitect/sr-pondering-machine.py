@@ -40,16 +40,21 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Answer ensemble** — generate per-band answers + merged answer with `--answer_per_band` / `--answer_ensemble`.
 - **Interactive pick** — choose keyword tokens yourself with `--interactive`.
 - **Controls pack** — run A/B packs via `--pack controls|surreal` (or bring your own with `--pack_file`).
+- **Pack resume** — skip already-completed pack items with `--pack_resume`.
 - **Artifacts & tracing** — export results with `--json_out` and write step-level traces with `--trace_out` (or use `--out_dir` for auto-naming).
+- **Trace report** — turn `--trace_out` into an HTML timeline with `sr_trace_report.py`.
 - **Config file** — set defaults from a JSON file via `--config` (CLI flags still override).
 - **Highly configurable** — token selection strategy, generation hyperparameters, device, dtype, and more are all adjustable from the command line.
 
 ## Requirements
 
 - Python 3.9+
-- [PyTorch](https://pytorch.org/) (with MPS, CUDA, or CPU support)
-- [Transformers](https://github.com/huggingface/transformers) (`pip install transformers`)
-- A locally downloaded Hugging Face causal LM (e.g. `gemma-3-270m-it`) — or use `--hf_online` to allow Hub downloads.
+- For `--backend hf`:
+  - [PyTorch](https://pytorch.org/) (with MPS, CUDA, or CPU support)
+  - [Transformers](https://github.com/huggingface/transformers)
+  - A locally downloaded Hugging Face causal LM (e.g. `gemma-3-270m-it`) — or use `--hf_online` to allow Hub downloads.
+- For `--backend openai_compat`:
+  - Python stdlib only (no `torch`/`transformers` required)
 
 ```
 pip install torch transformers
@@ -76,6 +81,7 @@ This runs both the **baseline** (direct answer) and the **ponder** (wander-then-
 ## API Quick Start (OpenAI-compatible)
 
 Use `--backend openai_compat` to call an OpenAI-style API endpoint.
+This backend can run without installing `torch`/`transformers`.
 
 ```bash
 export OPENAI_API_KEY="..."
@@ -152,6 +158,16 @@ python3 sr_pondering_machine.py \
 ```
 
 Tip: pack results write to `--pack_out` (or `--json_out`), and traces write to `--trace_out` (or auto-name both via `--out_dir`).
+If you re-run the same pack with the same `--pack_out`/`--json_out`, you can resume/skip completed items:
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "現実って何のインターフェース？" \
+  --pack surreal \
+  --pack_out ./pack_surreal.json \
+  --pack_resume
+```
 
 ### Pack: custom (JSON file)
 
@@ -215,6 +231,14 @@ python3 sr_pondering_machine.py \
   --out_dir ./artifacts \
   --run_name overfit_ab
 ```
+
+To view traces as a timeline, render an HTML report:
+
+```bash
+python3 sr_trace_report.py --trace ./trace.jsonl --out ./trace_report.html
+```
+
+Tip: `--trace_out -` writes trace JSONL events to **stderr** (useful for piping without mixing with the main stdout).
 
 ### Config: JSON defaults (CLI still overrides)
 

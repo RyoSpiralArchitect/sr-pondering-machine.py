@@ -47,9 +47,20 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-import torch
-import transformers
-from transformers import AutoModelForCausalLM, AutoTokenizer
+# Optional heavy deps (allow --backend openai_compat to work without torch/transformers installed).
+try:  # pragma: no cover - environment dependent
+    import torch  # type: ignore
+except Exception:  # pragma: no cover - environment dependent
+    torch = None  # type: ignore
+
+try:  # pragma: no cover - environment dependent
+    import transformers  # type: ignore
+    from transformers import AutoModelForCausalLM, AutoTokenizer  # type: ignore
+except Exception:  # pragma: no cover - environment dependent
+    transformers = None  # type: ignore
+    AutoModelForCausalLM = None  # type: ignore
+    AutoTokenizer = None  # type: ignore
+
 from urllib import error as urlerror
 from urllib import request as urlrequest
 
@@ -58,6 +69,37 @@ from urllib import request as urlrequest
 # Utilities
 # -----------------------------
 
+
+def _inference_mode() -> Any:
+    """Decorator/context wrapper for torch.inference_mode() that becomes a no-op when torch is missing.
+
+    This keeps the module importable for API-only usage (openai_compat backend).
+    """
+
+    if torch is None:
+        def _noop(fn: Any) -> Any:
+            return fn
+
+        return _noop
+    return torch.inference_mode()
+
+
+def _expand_path_str(s: str) -> str:
+    """Expand env vars and ~ in filesystem paths. Keeps '-' intact for stream-style destinations."""
+
+    t = str(s or "").strip()
+    if not t:
+        return ""
+    if t == "-":
+        return t
+    try:
+        t = os.path.expandvars(t)
+    except Exception:
+        pass
+    try:
+        return str(Path(t).expanduser())
+    except Exception:
+        return t
 
 def set_all_seeds(seed: int) -> None:
     random.seed(seed)
@@ -121,6 +163,28 @@ def _jsonable(x: Any) -> Any:
 def write_json(path: Path, payload: Any) -> None:
     safe_mkdir(path)
     path.write_text(json.dumps(_jsonable(payload), ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def write_json_dest(dest: str, payload: Any, *, stream: Optional[Any] = None) -> Optional[Path]:
+    """Write a JSON payload to a destination path.
+
+    - dest == "-" writes to the provided stream (default stdout).
+    - otherwise writes to a file (creating parent dirs via safe_mkdir).
+    """
+
+    d = _expand_path_str(dest)
+    if not d:
+        return None
+    if d == "-":
+        out = stream if stream is not None else sys.stdout
+        try:
+            out.write(json.dumps(_jsonable(payload), ensure_ascii=False, indent=2) + "\n")
+        except Exception:
+            pass
+        return None
+    path = Path(d)
+    write_json(path, payload)
+    return path
 
 
 _REDACTED = "***REDACTED***"
@@ -267,6 +331,39 @@ class TraceWriter:
         try:
             with self.path.open("a", encoding="utf-8") as f:
                 f.write(json.dumps(_jsonable(rec), ensure_ascii=False) + "\n")
+        except Exception:
+            pass
+
+
+class StreamTraceWriter:
+    """TraceWriter that writes JSONL events to a stream (e.g. stderr) instead of a file."""
+
+    def __init__(self, stream: Any, *, session_id: str, preview_chars: int = 0, label: str = "-") -> None:
+        self.path = Path(str(label or "-"))
+        self.session_id = str(session_id)
+        self.preview_chars = max(0, int(preview_chars))
+        self._stream = stream
+
+    def preview(self, text: Optional[str]) -> Optional[str]:
+        if not text:
+            return None
+        n = int(self.preview_chars)
+        if n <= 0:
+            return None
+        t = str(text).strip()
+        if len(t) <= n:
+            return t
+        return t[:n].rstrip() + "…"
+
+    def event(self, name: str, /, **fields: Any) -> None:
+        rec: Dict[str, Any] = {"ts": now_iso(), "session_id": self.session_id, "event": str(name)}
+        rec.update(fields)
+        try:
+            self._stream.write(json.dumps(_jsonable(rec), ensure_ascii=False) + "\n")
+            try:
+                self._stream.flush()
+            except Exception:
+                pass
         except Exception:
             pass
 
@@ -2992,7 +3089,7 @@ class LocalHFModel:
         # Last-resort fallback
         return f"{user_text}\n\nAssistant:"
 
-    @torch.inference_mode()
+    @_inference_mode()
     def next_token_logits(self, prompt: str) -> torch.Tensor:
         inputs = self.tokenizer(prompt, return_tensors="pt")
         max_ctx = self._max_context_tokens()
@@ -3018,7 +3115,7 @@ class LocalHFModel:
                 out.append(x)
         return out
 
-    @torch.inference_mode()
+    @_inference_mode()
     def generate_text(
         self,
         prompt: str,
@@ -4787,6 +4884,11 @@ def main() -> None:
     )
     g_controls.add_argument("--pack_file", default="", help="Run a custom pack from a JSON file")
     g_controls.add_argument("--pack_out", default="", help="Optional JSON output for pack results")
+    g_controls.add_argument(
+        "--pack_resume",
+        action="store_true",
+        help="If the pack output JSON already exists, reuse completed items and skip re-running them",
+    )
     g_controls.add_argument("--pack_write_memory", action="store_true", help="Allow pack runs to write to memory JSONL")
     g_controls.add_argument(
         "--print_records",
@@ -4874,15 +4976,17 @@ def main() -> None:
         except Exception:
             pass
 
-    pack_file_s = str(getattr(args, "pack_file", "") or "").strip()
+    pack_file_s = _expand_path_str(str(getattr(args, "pack_file", "") or ""))
+    args.pack_file = pack_file_s
     if pack_file_s and str(getattr(args, "pack", "none") or "none") != "none":
         raise SystemExit("[sr_ponder] ERROR: use either --pack or --pack_file (not both)")
 
     apply_preset_inplace(args, explicit_dests=explicit_dests)
 
     # Convenience: write artifacts into a directory with stable filenames.
-    out_dir_s = str(getattr(args, "out_dir", "") or "").strip()
+    out_dir_s = _expand_path_str(str(getattr(args, "out_dir", "") or ""))
     if out_dir_s:
+        args.out_dir = out_dir_s
         od = Path(out_dir_s)
         od.mkdir(parents=True, exist_ok=True)
         stamp = now_slug()
@@ -4906,6 +5010,15 @@ def main() -> None:
             args.json_out = str(od / f"{base}.json")
         if (not trace_out_is_explicit) and (out_dir_is_explicit or (not str(getattr(args, "trace_out", "") or "").strip())):
             args.trace_out = str(od / f"{base}.trace.jsonl")
+
+    # Normalize common path-like args (expand env vars / ~, keep '-' intact).
+    try:
+        args.json_out = _expand_path_str(str(getattr(args, "json_out", "") or ""))
+        args.trace_out = _expand_path_str(str(getattr(args, "trace_out", "") or ""))
+        args.pack_out = _expand_path_str(str(getattr(args, "pack_out", "") or ""))
+        args.pack_file = _expand_path_str(str(getattr(args, "pack_file", "") or ""))
+    except Exception:
+        pass
 
     prompt_lang = resolve_prompt_lang(args.prompt_lang, args.query)
     bands = [_parse_band_spec(x) for x in (args.band or [])]
@@ -4998,15 +5111,24 @@ def main() -> None:
         hf_local_files_only=not bool(args.hf_online),
     )
 
-    trace: Optional[TraceWriter] = None
+    trace: Optional[Any] = None
     trace_path_s = str(getattr(args, "trace_out", "") or "").strip()
     if trace_path_s:
         session_id = sha256_short(f"{now_iso()}|{cfg.seed}|{cfg.backend}|{cfg.model_path}|{args.query}")
-        trace = TraceWriter(
-            Path(trace_path_s),
-            session_id=session_id,
-            preview_chars=int(getattr(args, "trace_preview_chars", 0) or 0),
-        )
+        if trace_path_s == "-":
+            # Stream traces to stderr to avoid mixing with the main output stream.
+            trace = StreamTraceWriter(
+                sys.stderr,
+                session_id=session_id,
+                preview_chars=int(getattr(args, "trace_preview_chars", 0) or 0),
+                label="-",
+            )
+        else:
+            trace = TraceWriter(
+                Path(trace_path_s),
+                session_id=session_id,
+                preview_chars=int(getattr(args, "trace_preview_chars", 0) or 0),
+            )
         trace.event(
             "session_start",
             query=args.query,
@@ -5032,9 +5154,11 @@ def main() -> None:
         print(json.dumps(_jsonable(cfg_dump), ensure_ascii=False, indent=2))
         out_s = str(getattr(args, "json_out", "") or "").strip()
         if out_s and bool(args.print_config_only):
-            out_path = Path(out_s)
-            write_json(out_path, cfg_dump)
-            print(f"\n[json_out] wrote {out_path}")
+            out_path = write_json_dest(out_s, cfg_dump)
+            if out_path is not None:
+                print(f"\n[json_out] wrote {out_path}")
+            else:
+                print("\n[json_out] wrote -")
         if bool(args.print_config_only):
             if trace:
                 trace.event("config_only_exit")
@@ -5042,6 +5166,11 @@ def main() -> None:
 
     hf: Any
     if cfg.backend == "hf":
+        if torch is None or transformers is None or AutoModelForCausalLM is None or AutoTokenizer is None:
+            raise SystemExit(
+                "[sr_ponder] ERROR: backend=hf requires torch + transformers. "
+                "Install deps (example): pip install torch transformers"
+            )
         hf = LocalHFModel(
             cfg.model_path,
             device=cfg.device,
@@ -5209,6 +5338,43 @@ def main() -> None:
         else:
             out_label = ""
             out_s = ""
+
+        # Optional resume: if an output file already exists, reuse compatible items and skip them.
+        prev_by_name: Dict[str, Dict[str, Any]] = {}
+        resume_path: Optional[Path] = None
+        if bool(getattr(args, "pack_resume", False)) and out_s and out_s != "-":
+            resume_path = Path(out_s)
+            if resume_path.exists():
+                try:
+                    prev = json.loads(resume_path.read_text(encoding="utf-8"))
+                except Exception as e:
+                    raise SystemExit(f"[sr_ponder] ERROR: failed to read --pack_resume file {str(resume_path)!r}: {e}")
+                if not isinstance(prev, dict) or str(prev.get("kind") or "").strip() != "pack":
+                    raise SystemExit(f"[sr_ponder] ERROR: --pack_resume expects a pack results JSON (kind=pack): {str(resume_path)!r}")
+                if str(prev.get("pack") or "") != str(pack_id):
+                    raise SystemExit(
+                        f"[sr_ponder] ERROR: --pack_resume pack mismatch: file has pack={prev.get('pack')!r}, current pack={pack_id!r}"
+                    )
+                if str(prev.get("query") or "") != str(args.query or ""):
+                    raise SystemExit("[sr_ponder] ERROR: --pack_resume query mismatch (refusing to mix results)")
+                prev_items = prev.get("items")
+                if prev_items and not isinstance(prev_items, list):
+                    raise SystemExit("[sr_ponder] ERROR: --pack_resume file has invalid items (expected array)")
+                for it in (prev_items or []):
+                    if not isinstance(it, dict):
+                        continue
+                    nm = str(it.get("name") or "").strip()
+                    if nm:
+                        prev_by_name[nm] = it
+
+        results["artifacts"] = {
+            "out_label": out_label if out_s else "",
+            "out": out_s,
+            "trace_out": str(trace.path) if trace else "",
+            "out_dir": str(getattr(args, "out_dir", "") or ""),
+            "resume_from": str(resume_path) if resume_path and resume_path.exists() else "",
+        }
+
         if trace:
             trace.event(
                 "pack_start",
@@ -5218,6 +5384,7 @@ def main() -> None:
                 out_path=out_s,
                 out_label=out_label if out_s else "",
                 trace_out=str(trace.path),
+                resume_from=str(resume_path) if resume_path and resume_path.exists() else "",
             )
 
         for name, spec in items:
@@ -5228,6 +5395,33 @@ def main() -> None:
             qv = spec.get("query")
             if isinstance(qv, str):
                 item_query = qv
+
+            # Resume/skip if this item is already present and compatible.
+            if prev_by_name:
+                prev_it = prev_by_name.get(str(name))
+                if isinstance(prev_it, dict):
+                    want_kind = str(spec.get("kind") or "").strip()
+                    want_kind = "baseline" if want_kind == "baseline" else "ponder"
+                    prev_kind = str(prev_it.get("kind") or "").strip()
+                    prev_control = str(prev_it.get("control") or "").strip()
+                    want_control = str(spec.get("control", "none") or "none").strip()
+                    prev_query = str(prev_it.get("query") or args.query)
+                    prev_overrides = prev_it.get("cfg_overrides")
+                    if not isinstance(prev_overrides, dict):
+                        prev_overrides = {}
+                    match = (
+                        (prev_kind == want_kind)
+                        and (want_kind == "baseline" or prev_control == want_control)
+                        and (prev_query == str(item_query))
+                        and (dict(prev_overrides) == dict(cfg_overrides_safe) if cfg_overrides else dict(prev_overrides) == {})
+                    )
+                    if match:
+                        print(f"[sr_ponder] [resume] skipping {name!r} (already in {str(resume_path)!r})")
+                        results["items"].append(prev_it)
+                        if trace:
+                            trace.event("pack_item_skip", pack=pack_id, item=name)
+                        continue
+
             if trace:
                 trace.event(
                     "pack_item_start",
@@ -5270,10 +5464,54 @@ def main() -> None:
             if trace:
                 trace.event("pack_item_end", pack=pack_id, item=name, elapsed_s=float(time.perf_counter() - t0))
 
+        # Pack summary (human-readable).
+        try:
+            rows: List[Dict[str, Any]] = []
+            for it in results.get("items") or []:
+                if not isinstance(it, dict):
+                    continue
+                m = it.get("metrics") if isinstance(it.get("metrics"), dict) else {}
+                kind = str(it.get("kind") or "")
+                ctrl = str(it.get("control") or "") if kind == "ponder" else ""
+                rows.append(
+                    {
+                        "name": str(it.get("name") or ""),
+                        "kind": kind,
+                        "control": ctrl,
+                        "chars": m.get("answer_chars"),
+                        "records": m.get("records"),
+                        "elapsed_s": m.get("elapsed_s"),
+                    }
+                )
+            if rows:
+                print("\n=== PACK SUMMARY ===\n")
+                cols = ["name", "kind", "control", "chars", "records", "elapsed_s"]
+                widths = {c: len(c) for c in cols}
+                for r in rows:
+                    for c in cols:
+                        widths[c] = max(widths[c], len(str(r.get(c, "") if r.get(c, "") is not None else "")))
+                widths["name"] = min(widths["name"], 42)
+                header = "  ".join(c.ljust(widths[c]) for c in cols)
+                print(header)
+                print("  ".join("-" * widths[c] for c in cols))
+                for r in rows:
+                    line_parts: List[str] = []
+                    for c in cols:
+                        v = r.get(c, "")
+                        s = "" if v is None else str(v)
+                        if c == "name" and len(s) > widths["name"]:
+                            s = s[: max(0, widths["name"] - 1)] + "…"
+                        line_parts.append(s.ljust(widths[c]))
+                    print("  ".join(line_parts))
+        except Exception:
+            pass
+
         if out_s:
-            out_path = Path(out_s)
-            write_json(out_path, results)
-            print(f"\n[{out_label}] wrote {out_path}")
+            out_path = write_json_dest(out_s, results)
+            if out_path is not None:
+                print(f"\n[{out_label}] wrote {out_path}")
+            else:
+                print(f"\n[{out_label}] wrote -")
         if trace:
             trace.event("pack_end", pack=pack_id, items=int(len(items)))
         return
@@ -5332,6 +5570,11 @@ def main() -> None:
             "query": args.query,
             "preset": args.preset,
             "config": str(getattr(args, "config", "") or ""),
+            "artifacts": {
+                "json_out": out_s,
+                "trace_out": str(trace.path) if trace else "",
+                "out_dir": str(getattr(args, "out_dir", "") or ""),
+            },
             "env": {
                 "python": sys.version,
                 "platform": sys.platform,
@@ -5351,11 +5594,13 @@ def main() -> None:
                 extras=ponder_extras if ponder_extras else None,
             ),
         }
-        out_path = Path(out_s)
-        write_json(out_path, payload)
-        print(f"\n[json_out] wrote {out_path}")
+        out_path = write_json_dest(out_s, payload)
+        if out_path is not None:
+            print(f"\n[json_out] wrote {out_path}")
+        else:
+            print("\n[json_out] wrote -")
         if trace:
-            trace.event("json_out", path=str(out_path))
+            trace.event("json_out", path=str(out_path) if out_path is not None else "-")
 
     if trace:
         trace.event("session_end")
