@@ -239,6 +239,7 @@ python3 sr_trace_report.py --trace ./trace.jsonl --out ./trace_report.html
 ```
 
 Tip: `--trace_out -` writes trace JSONL events to **stderr** (useful for piping without mixing with the main stdout).
+Tip: `--json_out -` writes the JSON payload to **stdout**.
 
 ### Config: JSON defaults (CLI still overrides)
 
