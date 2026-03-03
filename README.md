@@ -39,7 +39,7 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Answer style** — steer the final answer style via `--answer_style plain|surreal|metaphor|meta`.
 - **Answer ensemble** — generate per-band answers + merged answer with `--answer_per_band` / `--answer_ensemble`.
 - **Interactive pick** — choose keyword tokens yourself with `--interactive`.
-- **Controls pack** — run A/B packs via `--pack controls|surreal` (plus `--control ...` variants).
+- **Controls pack** — run A/B packs via `--pack controls|surreal` (or bring your own with `--pack_file`).
 - **Artifacts & tracing** — export results with `--json_out` and write step-level traces with `--trace_out` (or use `--out_dir` for auto-naming).
 - **Config file** — set defaults from a JSON file via `--config` (CLI flags still override).
 - **Highly configurable** — token selection strategy, generation hyperparameters, device, dtype, and more are all adjustable from the command line.
@@ -149,6 +149,49 @@ python3 sr_pondering_machine.py \
   --query "現実って何のインターフェース？" \
   --pack surreal \
   --pack_out ./pack_surreal.json
+```
+
+Tip: pack results write to `--pack_out` (or `--json_out`), and traces write to `--trace_out` (or auto-name both via `--out_dir`).
+
+### Pack: custom (JSON file)
+
+Create `pack.json`:
+
+```json
+{
+  "name": "surreal_lab",
+  "base_cfg": {
+    "band_profile": "spectrum3",
+    "memory_policy": "current_only"
+  },
+  "items": [
+    { "name": "baseline_plain", "kind": "baseline", "cfg": { "answer_style": "plain" } },
+    {
+      "name": "walk_dissonance",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "answer_style": "surreal",
+        "ponder_hops": 3,
+        "keyword_objective": "dissonance",
+        "keyword_diversity": "embed",
+        "ponder_pipeline": ["metaphor", "metaphor"]
+      }
+    },
+    { "name": "lens_only_metaphor", "kind": "ponder", "control": "lens_only", "cfg": { "ponder_mode": "metaphor" } }
+  ]
+}
+```
+
+Run it:
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "Why do we overfit narratives to randomness?" \
+  --pack_file ./pack.json \
+  --out_dir ./artifacts \
+  --run_name surreal_lab
 ```
 
 ### Artifacts: JSON output + trace (observability)
@@ -402,7 +445,8 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | Argument | Default | Description |
 |---|---|---|
 | `--interactive` | `False` | Pick keywords interactively |
-| `--pack` | `none` | `none` · `controls` |
+| `--pack` | `none` | `none` · `controls` · `surreal` |
+| `--pack_file` | *(empty)* | Run a custom pack from a JSON file |
 | `--pack_out` | *(empty)* | Optional JSON results |
 
 ## Rejected-Token Selection Strategies

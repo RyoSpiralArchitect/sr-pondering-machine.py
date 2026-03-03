@@ -95,6 +95,8 @@ def sha256_short(s: str, n: int = 12) -> str:
 
 
 def safe_mkdir(p: Path) -> None:
+    # For "trace.jsonl" / "run.json", `p.parent` becomes "." (current directory),
+    # which is safe to mkdir with exist_ok=True.
     p.parent.mkdir(parents=True, exist_ok=True)
 
 
@@ -167,6 +169,78 @@ def sanitize_cfg_dict(d: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(hdrs, list):
         out["api_headers"] = [_redact_header_line(str(x)) for x in hdrs]
     return out
+
+
+_CONTROL_VARIANTS = ("none", "no_inject", "random_log", "random_keywords", "lens_only")
+
+
+def load_pack_file(path: Path) -> Tuple[str, List[Tuple[str, Dict[str, Any]]]]:
+    try:
+        raw = path.read_text(encoding="utf-8-sig")
+        data = json.loads(raw)
+    except Exception as e:
+        raise SystemExit(f"[sr_ponder] ERROR: failed to read --pack_file {str(path)!r}: {e}")
+
+    if not isinstance(data, dict):
+        raise SystemExit(
+            f"[sr_ponder] ERROR: --pack_file must be a JSON object (dict), got {type(data).__name__}"
+        )
+
+    name = str(data.get("name") or "").strip() or path.stem
+
+    base_cfg = data.get("base_cfg") or {}
+    if base_cfg and not isinstance(base_cfg, dict):
+        raise SystemExit(
+            f"[sr_ponder] ERROR: --pack_file base_cfg must be an object (dict), got {type(base_cfg).__name__}"
+        )
+
+    items_raw = data.get("items")
+    if not isinstance(items_raw, list) or not items_raw:
+        raise SystemExit("[sr_ponder] ERROR: --pack_file must include a non-empty 'items' array")
+
+    allowed_controls = set(_CONTROL_VARIANTS)
+    items: List[Tuple[str, Dict[str, Any]]] = []
+    for ix, it in enumerate(items_raw):
+        if not isinstance(it, dict):
+            raise SystemExit(
+                f"[sr_ponder] ERROR: --pack_file items[{ix}] must be an object (dict), got {type(it).__name__}"
+            )
+        item_name = str(it.get("name") or "").strip()
+        if not item_name:
+            raise SystemExit(f"[sr_ponder] ERROR: --pack_file items[{ix}].name is required")
+
+        kind = str(it.get("kind") or "ponder").strip().lower()
+        if kind not in ("baseline", "ponder"):
+            raise SystemExit(
+                f"[sr_ponder] ERROR: --pack_file items[{ix}].kind must be 'baseline'|'ponder', got {kind!r}"
+            )
+
+        control = str(it.get("control") or "none").strip()
+        if kind == "ponder" and control not in allowed_controls:
+            raise SystemExit(
+                f"[sr_ponder] ERROR: --pack_file items[{ix}].control must be one of {sorted(list(allowed_controls))}, got {control!r}"
+            )
+
+        cfg = it.get("cfg") or {}
+        if cfg and not isinstance(cfg, dict):
+            raise SystemExit(
+                f"[sr_ponder] ERROR: --pack_file items[{ix}].cfg must be an object (dict), got {type(cfg).__name__}"
+            )
+
+        cfg_merged: Dict[str, Any] = dict(base_cfg or {})
+        cfg_merged.update(dict(cfg or {}))
+
+        spec: Dict[str, Any] = {"kind": kind}
+        if kind == "ponder":
+            spec["control"] = control
+        if cfg_merged:
+            spec["cfg"] = cfg_merged
+        qv = it.get("query")
+        if qv is not None:
+            spec["query"] = str(qv)
+        items.append((item_name, spec))
+
+    return name, items
 
 
 class TraceWriter:
@@ -4607,7 +4681,7 @@ def main() -> None:
     g_ponder.add_argument("--hop_context_max_chars", type=int, default=900, help="Prev-hop context size for hop>0")
     g_ponder.add_argument(
         "--control",
-        choices=["none", "no_inject", "random_log", "random_keywords", "lens_only"],
+        choices=list(_CONTROL_VARIANTS),
         default="none",
         help="Control variant for A/B testing",
     )
@@ -4711,6 +4785,7 @@ def main() -> None:
         default="none",
         help="Run a pack of variants",
     )
+    g_controls.add_argument("--pack_file", default="", help="Run a custom pack from a JSON file")
     g_controls.add_argument("--pack_out", default="", help="Optional JSON output for pack results")
     g_controls.add_argument("--pack_write_memory", action="store_true", help="Allow pack runs to write to memory JSONL")
     g_controls.add_argument(
@@ -4799,6 +4874,10 @@ def main() -> None:
         except Exception:
             pass
 
+    pack_file_s = str(getattr(args, "pack_file", "") or "").strip()
+    if pack_file_s and str(getattr(args, "pack", "none") or "none") != "none":
+        raise SystemExit("[sr_ponder] ERROR: use either --pack or --pack_file (not both)")
+
     apply_preset_inplace(args, explicit_dests=explicit_dests)
 
     # Convenience: write artifacts into a directory with stable filenames.
@@ -4816,6 +4895,8 @@ def main() -> None:
             kind = "config"
         elif str(getattr(args, "pack", "none") or "none") != "none":
             kind = f"pack_{str(getattr(args, 'pack', 'pack')).strip()}"
+        elif pack_file_s:
+            kind = f"pack_{slugify_filename(Path(pack_file_s).stem)}"
         else:
             kind = "run"
         base = f"{kind}_{stamp}{suffix}"
@@ -4831,7 +4912,7 @@ def main() -> None:
     pipeline = parse_ponder_pipeline(args.ponder_pipeline, fallback_mode=args.ponder_mode)
 
     write_memory = not bool(args.no_write_memory)
-    if args.pack != "none" and not bool(args.pack_write_memory):
+    if (args.pack != "none" or pack_file_s) and not bool(args.pack_write_memory):
         write_memory = False
 
     cfg = RunConfig(
@@ -4932,6 +5013,7 @@ def main() -> None:
             model=cfg.model_path,
             backend=cfg.backend,
             pack=args.pack,
+            pack_file=pack_file_s,
             preset=args.preset,
             config=str(getattr(args, "config", "") or ""),
             pid=os.getpid(),
@@ -5006,13 +5088,21 @@ def main() -> None:
     else:
         raise SystemExit(f"[sr_ponder] ERROR: unknown backend: {cfg.backend!r}")
 
-    if args.pack != "none":
+    if args.pack != "none" or pack_file_s:
         pack_cfg = dataclasses.replace(cfg, interactive=False, answer_per_band=False, answer_ensemble=False)
+        pack_id = str(getattr(args, "pack", "none") or "none")
+        pack_file_path: Optional[Path] = None
+        items: List[Tuple[str, Dict[str, Any]]] = []
+        if pack_file_s:
+            pack_file_path = Path(pack_file_s)
+            pack_id, items = load_pack_file(pack_file_path)
+
         results: Dict[str, Any] = {
             "ts": now_iso(),
             "model": cfg.model_path,
             "query": args.query,
-            "pack": args.pack,
+            "pack": pack_id,
+            "pack_file": str(pack_file_path) if pack_file_path else "",
             "preset": args.preset,
             "config": str(getattr(args, "config", "") or ""),
             "env": {
@@ -5025,8 +5115,7 @@ def main() -> None:
             "items": [],
         }
 
-        items: List[Tuple[str, Dict[str, Any]]] = []
-        if args.pack == "controls":
+        if not items and args.pack == "controls":
             items = [
                 ("baseline", {"kind": "baseline"}),
                 ("ponder", {"kind": "ponder", "control": "none"}),
@@ -5035,7 +5124,7 @@ def main() -> None:
                 ("random_log", {"kind": "ponder", "control": "random_log"}),
                 ("lens_only", {"kind": "ponder", "control": "lens_only"}),
             ]
-        elif args.pack == "surreal":
+        elif not items and args.pack == "surreal":
             surreal_walk_cfg: Dict[str, Any] = {
                 "answer_style": "surreal",
                 "band_profile": "spectrum3",
@@ -5092,52 +5181,81 @@ def main() -> None:
                 ("questions_to_metaphor", {"kind": "ponder", "control": "none", "cfg": surreal_questions_cfg}),
                 ("lens_only_metaphor", {"kind": "ponder", "control": "lens_only", "cfg": surreal_walk_cfg}),
             ]
-        else:
+        elif not items:
             raise SystemExit(f"[sr_ponder] ERROR: unknown pack: {args.pack!r}")
+
+        out_label = "pack_out"
+        out_s = (args.pack_out or "").strip()
+        if not out_s:
+            out_label = "json_out"
+            out_s = str(getattr(args, "json_out", "") or "").strip()
+        if trace:
+            trace.event(
+                "pack_start",
+                pack=pack_id,
+                pack_file=str(pack_file_path) if pack_file_path else "",
+                items=int(len(items)),
+                out_path=out_s,
+                out_label=out_label if out_s else "",
+                trace_out=str(trace.path),
+            )
 
         for name, spec in items:
             print(f"\n=== PACK: {name} ===\n")
             cfg_overrides = dict(spec.get("cfg", {}) or {})
             cfg_overrides_safe = sanitize_cfg_dict(cfg_overrides)
+            item_query = args.query
+            qv = spec.get("query")
+            if isinstance(qv, str):
+                item_query = qv
             if trace:
                 trace.event(
                     "pack_item_start",
-                    pack=args.pack,
+                    pack=pack_id,
                     item=name,
                     kind=str(spec.get("kind")),
                     cfg_overrides=cfg_overrides_safe,
                 )
             t0 = time.perf_counter()
             if spec["kind"] == "baseline":
-                cfg2 = dataclasses.replace(pack_cfg, **cfg_overrides) if cfg_overrides else pack_cfg
-                ans = run_baseline(hf, cfg2, args.query, trace=trace, pack_item=name)
+                try:
+                    cfg2 = dataclasses.replace(pack_cfg, **cfg_overrides) if cfg_overrides else pack_cfg
+                except TypeError as e:
+                    raise SystemExit(f"[sr_ponder] ERROR: pack item {name!r} has invalid cfg overrides: {e}")
+                ans = run_baseline(hf, cfg2, item_query, trace=trace, pack_item=name)
                 print(ans)
                 item: Dict[str, Any] = {"name": name, "kind": "baseline", "answer": ans}
+                if item_query != args.query:
+                    item["query"] = item_query
                 if cfg_overrides:
                     item["cfg_overrides"] = cfg_overrides_safe
                 item["metrics"] = {"answer_chars": len(ans or ""), "elapsed_s": float(time.perf_counter() - t0)}
                 results["items"].append(item)
                 if trace:
-                    trace.event("pack_item_end", pack=args.pack, item=name, elapsed_s=float(time.perf_counter() - t0))
+                    trace.event("pack_item_end", pack=pack_id, item=name, elapsed_s=float(time.perf_counter() - t0))
                 continue
-            cfg2 = dataclasses.replace(pack_cfg, control=str(spec.get("control", "none")), **cfg_overrides)
-            ans, recs, extras = run_ponder_dispatch(hf, cfg2, args.query, trace=trace, pack_item=name)
+            try:
+                cfg2 = dataclasses.replace(pack_cfg, control=str(spec.get("control", "none")), **cfg_overrides)
+            except TypeError as e:
+                raise SystemExit(f"[sr_ponder] ERROR: pack item {name!r} has invalid cfg overrides: {e}")
+            ans, recs, extras = run_ponder_dispatch(hf, cfg2, item_query, trace=trace, pack_item=name)
             print(ans)
             item = {"name": name, "kind": "ponder", "control": cfg2.control, "answer": ans, "extras": extras}
+            if item_query != args.query:
+                item["query"] = item_query
             if cfg_overrides:
                 item["cfg_overrides"] = cfg_overrides_safe
             item["metrics"] = {"answer_chars": len(ans or ""), "records": int(len(recs)), "elapsed_s": float(time.perf_counter() - t0)}
             results["items"].append(item)
             if trace:
-                trace.event("pack_item_end", pack=args.pack, item=name, elapsed_s=float(time.perf_counter() - t0))
+                trace.event("pack_item_end", pack=pack_id, item=name, elapsed_s=float(time.perf_counter() - t0))
 
-        out_s = (args.pack_out or "").strip() or (getattr(args, "json_out", "") or "").strip()
         if out_s:
             out_path = Path(out_s)
             write_json(out_path, results)
-            print(f"\n[pack] wrote {out_path}")
+            print(f"\n[{out_label}] wrote {out_path}")
         if trace:
-            trace.event("pack_end", pack=args.pack, items=int(len(items)))
+            trace.event("pack_end", pack=pack_id, items=int(len(items)))
         return
 
     baseline_ans: Optional[str] = None
