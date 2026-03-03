@@ -108,6 +108,8 @@ python3 sr_pondering_machine.py \
   --api_logprobs_top_n 128
 ```
 
+Note: some providers/models use `max_completion_tokens` instead of `max_tokens`. This tool retries automatically when it detects that mismatch.
+
 ## Experimental Recipes
 
 ### Lens: counterexamples + multi-ponder

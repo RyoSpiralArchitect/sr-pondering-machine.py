@@ -2820,13 +2820,43 @@ class OpenAICompatModel:
     def _chat(self, *, messages: List[Dict[str, str]], **kwargs: Any) -> Dict[str, Any]:
         payload: Dict[str, Any] = {"model": self.model, "messages": messages}
         payload.update(kwargs)
-        return _http_post_json(
-            self.url,
-            headers=self.headers,
-            payload=payload,
-            timeout=self.timeout,
-            max_retries=self.max_retries,
-        )
+        try:
+            return _http_post_json(
+                self.url,
+                headers=self.headers,
+                payload=payload,
+                timeout=self.timeout,
+                max_retries=self.max_retries,
+            )
+        except RuntimeError as e:
+            # Compatibility: some providers/models moved from max_tokens -> max_completion_tokens.
+            # If we see that error, retry once with the alternative name.
+            msg = str(e)
+            if "max_tokens" in payload and ("max_tokens" in msg and "max_completion_tokens" in msg):
+                payload2 = dict(payload)
+                v = payload2.pop("max_tokens", None)
+                if v is not None and "max_completion_tokens" not in payload2:
+                    payload2["max_completion_tokens"] = v
+                return _http_post_json(
+                    self.url,
+                    headers=self.headers,
+                    payload=payload2,
+                    timeout=self.timeout,
+                    max_retries=self.max_retries,
+                )
+            if "max_completion_tokens" in payload and ("max_completion_tokens" in msg and "max_tokens" in msg):
+                payload2 = dict(payload)
+                v = payload2.pop("max_completion_tokens", None)
+                if v is not None and "max_tokens" not in payload2:
+                    payload2["max_tokens"] = v
+                return _http_post_json(
+                    self.url,
+                    headers=self.headers,
+                    payload=payload2,
+                    timeout=self.timeout,
+                    max_retries=self.max_retries,
+                )
+            raise
 
     def generate_text(
         self,
