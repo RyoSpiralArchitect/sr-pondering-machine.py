@@ -40,7 +40,7 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Answer ensemble** — generate per-band answers + merged answer with `--answer_per_band` / `--answer_ensemble`.
 - **Interactive pick** — choose keyword tokens yourself with `--interactive`.
 - **Controls pack** — run A/B packs via `--pack controls|surreal` (plus `--control ...` variants).
-- **Artifacts & tracing** — export results with `--json_out` and write step-level traces with `--trace_out`.
+- **Artifacts & tracing** — export results with `--json_out` and write step-level traces with `--trace_out` (or use `--out_dir` for auto-naming).
 - **Config file** — set defaults from a JSON file via `--config` (CLI flags still override).
 - **Highly configurable** — token selection strategy, generation hyperparameters, device, dtype, and more are all adjustable from the command line.
 
@@ -160,6 +160,17 @@ python3 sr_pondering_machine.py \
   --mode both \
   --json_out ./run.json \
   --trace_out ./trace.jsonl
+```
+
+Or let the tool name files for you:
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "Why do we overfit narratives to randomness?" \
+  --mode both \
+  --out_dir ./artifacts \
+  --run_name overfit_ab
 ```
 
 ### Config: JSON defaults (CLI still overrides)

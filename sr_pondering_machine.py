@@ -72,6 +72,11 @@ def now_iso() -> str:
     return dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+def now_slug() -> str:
+    # Filesystem-friendly UTC timestamp (Windows-safe).
+    return dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d_%H%M%SZ")
+
+
 _JA_RE = re.compile(r"[\u3040-\u30ff\u3400-\u9fff]")  # hiragana/katakana/CJK
 
 
@@ -125,6 +130,17 @@ _SENSITIVE_HEADER_KEYS = {
     "x-auth-token",
     "x-authorization",
 }
+
+
+_FILENAME_SAFE_RE = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def slugify_filename(s: str, *, max_len: int = 64) -> str:
+    t = _FILENAME_SAFE_RE.sub("-", str(s or "").strip())
+    t = re.sub(r"-{2,}", "-", t).strip("-")
+    if not t:
+        return "run"
+    return t[: max(8, int(max_len))]
 
 
 def _redact_header_line(line: str) -> str:
@@ -4709,6 +4725,8 @@ def main() -> None:
     g_observe.add_argument("--json_out", default="", help="Write full run (or pack) results to JSON")
     g_observe.add_argument("--trace_out", default="", help="Write JSONL trace events")
     g_observe.add_argument("--trace_preview_chars", type=int, default=180, help="Trace preview length (0 disables)")
+    g_observe.add_argument("--out_dir", default="", help="If set, auto-fill --json_out/--trace_out into this dir")
+    g_observe.add_argument("--run_name", default="", help="Optional label used in artifact filenames")
 
     g_runtime.add_argument("--device", default="auto", help="auto|mps|cpu|cuda|cuda:0 ...")
     g_runtime.add_argument("--dtype", default="auto", help="auto|float16|bfloat16|float32")
@@ -4782,6 +4800,31 @@ def main() -> None:
             pass
 
     apply_preset_inplace(args, explicit_dests=explicit_dests)
+
+    # Convenience: write artifacts into a directory with stable filenames.
+    out_dir_s = str(getattr(args, "out_dir", "") or "").strip()
+    if out_dir_s:
+        od = Path(out_dir_s)
+        od.mkdir(parents=True, exist_ok=True)
+        stamp = now_slug()
+        run_name_s = str(getattr(args, "run_name", "") or "").strip()
+        suffix = ("_" + slugify_filename(run_name_s)) if run_name_s else ""
+        out_dir_is_explicit = "out_dir" in explicit_dests
+        json_out_is_explicit = "json_out" in explicit_dests
+        trace_out_is_explicit = "trace_out" in explicit_dests
+        if bool(getattr(args, "print_config_only", False)):
+            kind = "config"
+        elif str(getattr(args, "pack", "none") or "none") != "none":
+            kind = f"pack_{str(getattr(args, 'pack', 'pack')).strip()}"
+        else:
+            kind = "run"
+        base = f"{kind}_{stamp}{suffix}"
+        # If --out_dir is explicitly provided, prefer it over config defaults
+        # unless the artifact paths are also explicitly specified on the CLI.
+        if (not json_out_is_explicit) and (out_dir_is_explicit or (not str(getattr(args, "json_out", "") or "").strip())):
+            args.json_out = str(od / f"{base}.json")
+        if (not trace_out_is_explicit) and (out_dir_is_explicit or (not str(getattr(args, "trace_out", "") or "").strip())):
+            args.trace_out = str(od / f"{base}.trace.jsonl")
 
     prompt_lang = resolve_prompt_lang(args.prompt_lang, args.query)
     bands = [_parse_band_spec(x) for x in (args.band or [])]
