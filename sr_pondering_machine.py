@@ -5099,6 +5099,7 @@ def main() -> None:
 
         results: Dict[str, Any] = {
             "ts": now_iso(),
+            "kind": "pack",
             "model": cfg.model_path,
             "query": args.query,
             "pack": pack_id,
@@ -5184,11 +5185,30 @@ def main() -> None:
         elif not items:
             raise SystemExit(f"[sr_ponder] ERROR: unknown pack: {args.pack!r}")
 
-        out_label = "pack_out"
-        out_s = (args.pack_out or "").strip()
-        if not out_s:
+        # Output selection for pack runs:
+        # - Prefer --json_out when explicitly provided (or when --out_dir is explicitly provided),
+        #   even if pack_out is set via config defaults. This makes packs consistent with runs.
+        # - Otherwise, use --pack_out if set, falling back to --json_out.
+        out_dir_is_explicit = "out_dir" in explicit_dests
+        json_out_is_explicit = "json_out" in explicit_dests
+        pack_out_is_explicit = "pack_out" in explicit_dests
+
+        pack_out_s = (args.pack_out or "").strip()
+        json_out_s = str(getattr(args, "json_out", "") or "").strip()
+
+        prefer_json = (json_out_is_explicit and not pack_out_is_explicit) or (out_dir_is_explicit and not pack_out_is_explicit)
+        if prefer_json and json_out_s:
             out_label = "json_out"
-            out_s = str(getattr(args, "json_out", "") or "").strip()
+            out_s = json_out_s
+        elif pack_out_s:
+            out_label = "pack_out"
+            out_s = pack_out_s
+        elif json_out_s:
+            out_label = "json_out"
+            out_s = json_out_s
+        else:
+            out_label = ""
+            out_s = ""
         if trace:
             trace.event(
                 "pack_start",
