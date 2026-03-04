@@ -187,7 +187,15 @@ class TestPackBehavior(unittest.TestCase):
                 # out_dir auto-names a trace file too.
                 trace_files = list(out_dir.glob("*.trace.jsonl"))
                 self.assertEqual(len(trace_files), 1)
-                self.assertTrue(trace_files[0].read_text(encoding="utf-8"))
+                trace_txt = trace_files[0].read_text(encoding="utf-8")
+                self.assertTrue(trace_txt)
+                self.assertIn('"event": "session_end"', trace_txt)
+
+                # out_dir auto-names a trace report too.
+                html_files = list(out_dir.glob("*.trace.html"))
+                self.assertEqual(len(html_files), 1)
+                html_txt = html_files[0].read_text(encoding="utf-8").lower()
+                self.assertIn("<html", html_txt)
 
     def test_pack_resume_skips_completed_items(self) -> None:
         with _tempdir() as td:

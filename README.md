@@ -41,8 +41,8 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Interactive pick** — choose keyword tokens yourself with `--interactive`.
 - **Controls pack** — run A/B packs via `--pack controls|surreal` (or bring your own with `--pack_file`).
 - **Pack resume** — skip already-completed pack items with `--pack_resume`.
-- **Artifacts & tracing** — export results with `--json_out` and write step-level traces with `--trace_out` (or use `--out_dir` for auto-naming).
-- **Trace report** — turn `--trace_out` into an HTML timeline with `sr_trace_report.py`.
+- **Artifacts & tracing** — export results with `--json_out`, write step-level traces with `--trace_out`, and generate an HTML timeline with `--trace_report_out` (or use `--out_dir` for auto-naming).
+- **Trace report** — write a report with `--trace_report_out` or post-process traces with `sr_trace_report.py`.
 - **Config file** — set defaults from a JSON file via `--config` (CLI flags still override).
 - **Highly configurable** — token selection strategy, generation hyperparameters, device, dtype, and more are all adjustable from the command line.
 
@@ -159,7 +159,7 @@ python3 sr_pondering_machine.py \
   --pack_out ./pack_surreal.json
 ```
 
-Tip: pack results write to `--pack_out` (or `--json_out`), and traces write to `--trace_out` (or auto-name both via `--out_dir`).
+Tip: pack results write to `--pack_out` (or `--json_out`), traces write to `--trace_out`, and reports write to `--trace_report_out` (or auto-name all via `--out_dir`).
 If you re-run the same pack with the same `--pack_out`/`--json_out`, you can resume/skip completed items:
 
 ```bash
@@ -220,7 +220,8 @@ python3 sr_pondering_machine.py \
   --query "Why do we overfit narratives to randomness?" \
   --mode both \
   --json_out ./run.json \
-  --trace_out ./trace.jsonl
+  --trace_out ./trace.jsonl \
+  --trace_report_out ./trace_report.html
 ```
 
 Or let the tool name files for you:
@@ -233,6 +234,8 @@ python3 sr_pondering_machine.py \
   --out_dir ./artifacts \
   --run_name overfit_ab
 ```
+
+This will auto-write a JSON result file, a JSONL trace, and an HTML trace report into `./artifacts`.
 
 To view traces as a timeline, render an HTML report:
 

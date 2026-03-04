@@ -187,6 +187,60 @@ def write_json_dest(dest: str, payload: Any, *, stream: Optional[Any] = None) ->
     return path
 
 
+def write_text_dest(dest: str, text: str) -> Optional[Path]:
+    """Write a UTF-8 text payload to a destination path.
+
+    - dest == "-" is intentionally treated as disabled (return None) because
+      this CLI prints normal output to stdout; mixing HTML with stdout is easy to
+      footgun. Use a file path.
+    - otherwise writes to a file (creating parent dirs via safe_mkdir).
+    """
+
+    d = _expand_path_str(dest)
+    if not d:
+        return None
+    if d == "-":
+        return None
+    path = Path(d)
+    safe_mkdir(path)
+    path.write_text(str(text), encoding="utf-8")
+    return path
+
+
+def maybe_write_trace_report(
+    *,
+    trace: Optional[Any],
+    dest: str,
+    session_id: str,
+    max_records: int = 0,
+    session_filter: str = "",
+) -> Optional[Path]:
+    """Optionally write an HTML trace report for the current session."""
+
+    d = _expand_path_str(str(dest or ""))
+    if not d or d == "-":
+        return None
+    if trace is None:
+        return None
+    tp_s = str(getattr(trace, "path", "") or "").strip()
+    if (not tp_s) or tp_s == "-":
+        return None
+    tp = Path(tp_s)
+    if not tp.exists():
+        return None
+    try:
+        import sr_trace_report as tr
+    except Exception:
+        return None
+    try:
+        sid = str(session_filter or session_id or "").strip()
+        report = tr.analyze_trace(tp, max_records=int(max_records or 0), session_id=sid)
+        html_s = tr.render_html(report)
+    except Exception:
+        return None
+    return write_text_dest(d, html_s)
+
+
 _REDACTED = "***REDACTED***"
 _SENSITIVE_HEADER_KEYS = {
     "authorization",
@@ -4932,7 +4986,15 @@ def main() -> None:
     g_observe.add_argument("--json_out", default="", help="Write full run (or pack) results to JSON")
     g_observe.add_argument("--trace_out", default="", help="Write JSONL trace events")
     g_observe.add_argument("--trace_preview_chars", type=int, default=180, help="Trace preview length (0 disables)")
-    g_observe.add_argument("--out_dir", default="", help="If set, auto-fill --json_out/--trace_out into this dir")
+    g_observe.add_argument("--trace_report_out", default="", help="Write an HTML trace report (requires --trace_out file)")
+    g_observe.add_argument(
+        "--trace_report_max_records",
+        type=int,
+        default=0,
+        help="Max JSONL records to read for trace report (0=all)",
+    )
+    g_observe.add_argument("--trace_report_session_id", default="", help="Filter trace report to a session_id (default: current run)")
+    g_observe.add_argument("--out_dir", default="", help="If set, auto-fill --json_out/--trace_out/--trace_report_out into this dir")
     g_observe.add_argument("--run_name", default="", help="Optional label used in artifact filenames")
 
     g_runtime.add_argument("--device", default="auto", help="auto|mps|cpu|cuda|cuda:0 ...")
@@ -5025,6 +5087,7 @@ def main() -> None:
         out_dir_is_explicit = "out_dir" in explicit_dests
         json_out_is_explicit = "json_out" in explicit_dests
         trace_out_is_explicit = "trace_out" in explicit_dests
+        trace_report_out_is_explicit = "trace_report_out" in explicit_dests
         if bool(getattr(args, "print_config_only", False)):
             kind = "config"
         elif str(getattr(args, "pack", "none") or "none") != "none":
@@ -5040,11 +5103,16 @@ def main() -> None:
             args.json_out = str(od / f"{base}.json")
         if (not trace_out_is_explicit) and (out_dir_is_explicit or (not str(getattr(args, "trace_out", "") or "").strip())):
             args.trace_out = str(od / f"{base}.trace.jsonl")
+        if (not trace_report_out_is_explicit) and (
+            out_dir_is_explicit or (not str(getattr(args, "trace_report_out", "") or "").strip())
+        ):
+            args.trace_report_out = str(od / f"{base}.trace.html")
 
     # Normalize common path-like args (expand env vars / ~, keep '-' intact).
     try:
         args.json_out = _expand_path_str(str(getattr(args, "json_out", "") or ""))
         args.trace_out = _expand_path_str(str(getattr(args, "trace_out", "") or ""))
+        args.trace_report_out = _expand_path_str(str(getattr(args, "trace_report_out", "") or ""))
         args.pack_out = _expand_path_str(str(getattr(args, "pack_out", "") or ""))
         args.pack_file = _expand_path_str(str(getattr(args, "pack_file", "") or ""))
     except Exception:
@@ -5401,6 +5469,7 @@ def main() -> None:
             "out_label": out_label if out_s else "",
             "out": out_s,
             "trace_out": str(trace.path) if trace else "",
+            "trace_report_out": str(getattr(args, "trace_report_out", "") or "").strip(),
             "out_dir": str(getattr(args, "out_dir", "") or ""),
             "resume_from": str(resume_path) if resume_path and resume_path.exists() else "",
         }
@@ -5414,6 +5483,7 @@ def main() -> None:
                 out_path=out_s,
                 out_label=out_label if out_s else "",
                 trace_out=str(trace.path),
+                trace_report_out=str(getattr(args, "trace_report_out", "") or "").strip(),
                 resume_from=str(resume_path) if resume_path and resume_path.exists() else "",
             )
 
@@ -5542,8 +5612,24 @@ def main() -> None:
                 print(f"\n[{out_label}] wrote {out_path}")
             else:
                 print(f"\n[{out_label}] wrote -")
+
+        trace_report_s = str(getattr(args, "trace_report_out", "") or "").strip()
+        if trace_report_s and trace:
+            sid_filter = str(getattr(args, "trace_report_session_id", "") or "").strip() or session_id
+            rep_path = maybe_write_trace_report(
+                trace=trace,
+                dest=trace_report_s,
+                session_id=session_id,
+                max_records=int(getattr(args, "trace_report_max_records", 0) or 0),
+                session_filter=sid_filter,
+            )
+            if rep_path is not None:
+                print(f"\n[trace_report_out] wrote {rep_path}")
+                trace.event("trace_report_out", path=str(rep_path), session_id_filter=sid_filter)
+
         if trace:
             trace.event("pack_end", pack=pack_id, items=int(len(items)))
+            trace.event("session_end")
         return
 
     baseline_ans: Optional[str] = None
@@ -5603,6 +5689,7 @@ def main() -> None:
             "artifacts": {
                 "json_out": out_s,
                 "trace_out": str(trace.path) if trace else "",
+                "trace_report_out": str(getattr(args, "trace_report_out", "") or "").strip(),
                 "out_dir": str(getattr(args, "out_dir", "") or ""),
             },
             "env": {
@@ -5631,6 +5718,20 @@ def main() -> None:
             print("\n[json_out] wrote -")
         if trace:
             trace.event("json_out", path=str(out_path) if out_path is not None else "-")
+
+    trace_report_s = str(getattr(args, "trace_report_out", "") or "").strip()
+    if trace_report_s and trace:
+        sid_filter = str(getattr(args, "trace_report_session_id", "") or "").strip() or session_id
+        rep_path = maybe_write_trace_report(
+            trace=trace,
+            dest=trace_report_s,
+            session_id=session_id,
+            max_records=int(getattr(args, "trace_report_max_records", 0) or 0),
+            session_filter=sid_filter,
+        )
+        if rep_path is not None:
+            print(f"\n[trace_report_out] wrote {rep_path}")
+            trace.event("trace_report_out", path=str(rep_path), session_id_filter=sid_filter)
 
     if trace:
         trace.event("session_end")
