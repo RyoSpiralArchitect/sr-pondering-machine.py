@@ -105,10 +105,11 @@ python3 sr_pondering_machine.py \
   --query "Why do we overfit narratives to randomness?" \
   --mode ponder \
   --api_seed_method logprobs \
-  --api_logprobs_top_n 128
+  --api_logprobs_top_n 32
 ```
 
 Note: some providers/models use `max_completion_tokens` instead of `max_tokens`. This tool retries automatically when it detects that mismatch.
+Start with a small value like `32`: providers often cap `top_logprobs`, and if the returned depth is shallower than your requested band range, that band falls back to self-seeded keywords with a warning.
 
 ## Experimental Recipes
 
@@ -404,7 +405,7 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 
 | Argument | Default | Description |
 |---|---|---|
-| `--model` | *(required)* | Path to a local model directory. |
+| `--model` | *(required)* | `hf`: local model directory · `openai_compat`: model name |
 | `--query` | *(required)* | The question to answer. |
 | `--memory` | `ponder_logs.jsonl` | Path to the JSONL memory log. |
 | `--mode` | `both` | `baseline` · `ponder` · `both` |
@@ -543,7 +544,9 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.h
 - **Use the `-it` (instruction-tuned) variant** of Gemma for best results. The base model does not reliably follow instructions.
 - For `--backend hf`, the model must already be **downloaded locally**. Network access is disabled at inference time (`local_files_only=True`).
 - For `--backend openai_compat`, set an API key (default env: `OPENAI_API_KEY`) and point `--api_base_url` at an OpenAI-style provider.
+- For `--backend openai_compat`, `--seed`, `--top_k`, `--repetition_penalty`, and `--no_repeat_ngram_size` are currently not forwarded; the script now prints a warning so cross-backend comparisons stay honest.
 - For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams + IDF weighting). It’s not as strong as real embedding retrieval, but better than raw tail.
+- For API backends, `--api_logprobs_top_n` is provider-capped. If the returned logprob depth is shallower than a requested band (for example `spectrum3` + `far`), that band degrades to self-seeded keywords and the script warns about it.
 - If you see an error like “Repo id must be in the form …” while passing an absolute `--model` path, it usually means the directory does not exist (Transformers falls back to treating it like a Hub ID). Double-check the path and try the closest matching folder name.
 - On Apple Silicon (MPS), Transformers 5.x “caching allocator warmup” can crash on large models with `RuntimeError: Invalid buffer size: ...`. The script defaults to `--allocator_warmup auto` (which disables warmup on MPS). You can also force it off with `--allocator_warmup off`.
 - `--keyword_refine` adds an extra generation call before the ponder step (slower, but often produces better keywords).

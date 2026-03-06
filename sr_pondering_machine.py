@@ -33,6 +33,7 @@ Notes:
 from __future__ import annotations
 
 import argparse
+from collections import deque
 import dataclasses
 import datetime as dt
 import difflib
@@ -42,6 +43,7 @@ import math
 import os
 import random
 import re
+import secrets
 import sys
 import time
 from pathlib import Path
@@ -134,6 +136,18 @@ def resolve_prompt_lang(prompt_lang: str, query: str) -> str:
 
 def sha256_short(s: str, n: int = 12) -> str:
     return hashlib.sha256((s or "").encode("utf-8")).hexdigest()[:n]
+
+
+def stable_hash_mod(s: str, mod: int) -> int:
+    mm = max(1, int(mod))
+    digest = hashlib.sha256((s or "").encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big", signed=False) % mm
+
+
+def make_run_id(seed: int, query: str) -> str:
+    stamp = dt.datetime.now(dt.timezone.utc).isoformat(timespec="microseconds")
+    nonce = secrets.token_hex(4)
+    return sha256_short(f"{stamp}|pid={os.getpid()}|nonce={nonce}|seed={seed}|query={query}", n=16)
 
 
 def safe_mkdir(p: Path) -> None:
@@ -477,17 +491,16 @@ def tail_jsonl(path: Path, n: int) -> List[Dict[str, Any]]:
         return []
     if not path.exists():
         return []
-    with path.open("r", encoding="utf-8") as f:
-        lines = f.readlines()
     out: List[Dict[str, Any]] = []
-    for line in lines[-n:]:
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            out.append(json.loads(line))
-        except json.JSONDecodeError:
-            continue
+    with path.open("r", encoding="utf-8") as f:
+        for line in deque(f, maxlen=n):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                out.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
     return out
 
 
@@ -562,7 +575,17 @@ def resolve_model_ref(model_ref: str) -> str:
         if not p.is_dir():
             raise SystemExit(f"[sr_ponder] ERROR: --model must be a directory, got: {p}")
         if not (p / "config.json").exists():
-            raise SystemExit(f"[sr_ponder] ERROR: not a HF model dir (missing config.json): {p}")
+            snap_root = p / "snapshots"
+            if snap_root.is_dir():
+                candidates = [d for d in snap_root.iterdir() if d.is_dir() and (d / "config.json").exists()]
+                if candidates:
+                    candidates.sort(key=lambda d: d.stat().st_mtime, reverse=True)
+                    return str(candidates[0].resolve())
+            raise SystemExit(
+                f"[sr_ponder] ERROR: not a HF model dir (missing config.json): {p}\n"
+                "[sr_ponder] Tip: if this is a Hugging Face cache root, pass the snapshots/<hash> directory "
+                "or the cache root itself and the newest snapshot will be auto-resolved."
+            )
         return str(p.resolve())
 
     if _looks_like_local_path(model_ref) or _looks_like_local_path(expanded):
@@ -621,6 +644,7 @@ def configure_transformers_allocator_warmup(mode: str) -> None:
 
         if m == "auto":
             # Warmup is designed/optimized for cuda/xpu; skip for MPS (and any other non-cuda/xpu accelerator types).
+            saw_accelerator = False
             for dev in (expanded_device_map or {}).values():
                 if dev in ("disk", "cpu", "meta"):
                     continue
@@ -628,8 +652,11 @@ def configure_transformers_allocator_warmup(mode: str) -> None:
                     tdev = torch.device(dev)
                 except Exception:
                     continue
+                saw_accelerator = True
                 if tdev.type not in ("cuda", "xpu"):
                     return
+            if not saw_accelerator:
+                return
 
         return getattr(mu, "_sr_ponder_allocator_warmup_orig")(model, expanded_device_map, hf_quantizer)
 
@@ -639,7 +666,10 @@ def configure_transformers_allocator_warmup(mode: str) -> None:
 
 def resolve_device(device: str) -> str:
     if device != "auto":
-        return device
+        try:
+            return str(torch.device(device))
+        except Exception as e:
+            raise ValueError(f"Invalid device: {device!r}") from e
     if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available():
         return "mps"
     if torch.cuda.is_available():
@@ -649,8 +679,11 @@ def resolve_device(device: str) -> str:
 
 def resolve_dtype(dtype: str, device: str) -> torch.dtype:
     if dtype != "auto":
-        return getattr(torch, dtype)
-    if device in ("mps", "cuda"):
+        dt_obj = getattr(torch, dtype, None)
+        if not isinstance(dt_obj, torch.dtype):
+            raise ValueError(f"Invalid dtype: {dtype!r}")
+        return dt_obj
+    if device == "mps" or str(device).startswith("cuda"):
         return torch.float16
     return torch.float32
 
@@ -1357,7 +1390,7 @@ def generate_seed_keywords_self(
 
 
 def refine_keywords_with_model(
-    hf: "LocalHFModel",
+    hf: Any,
     *,
     query: str,
     seed_keywords: Sequence[str],
@@ -2149,22 +2182,6 @@ def _hashed_char_ngrams(text: str, *, n: int = 3, dim: int = 4096, max_chars: in
     return d
 
 
-def _cosine_sim_sparse(a: Dict[int, float], b: Dict[int, float], eps: float = 1e-12) -> float:
-    if not a or not b:
-        return 0.0
-    if len(a) > len(b):
-        a, b = b, a
-    dot = 0.0
-    for k, av in a.items():
-        bv = b.get(k)
-        if bv:
-            dot += float(av) * float(bv)
-    na = math.sqrt(sum(float(v) * float(v) for v in a.values()))
-    nb = math.sqrt(sum(float(v) * float(v) for v in b.values()))
-    denom = na * nb + float(eps)
-    return float(dot / denom) if denom > 0 else 0.0
-
-
 def _add_hashed_char_ngrams_multi(
     dst: Dict[int, float],
     text: str,
@@ -2858,7 +2875,8 @@ class OpenAICompatModel:
             try:
                 k, v = _parse_header_kv(str(h))
                 headers[k] = v
-            except Exception:
+            except Exception as e:
+                print(f"[sr_ponder] WARN: ignoring malformed --api_header {h!r}: {e}", file=sys.stderr)
                 continue
         self.headers = headers
 
@@ -2941,6 +2959,26 @@ class OpenAICompatModel:
         content = msg.get("content")
         if isinstance(content, str):
             return content.strip()
+        if isinstance(content, list):
+            parts: List[str] = []
+            for item in content:
+                if isinstance(item, str):
+                    s = item.strip()
+                    if s:
+                        parts.append(s)
+                    continue
+                if not isinstance(item, dict):
+                    continue
+                text_part = item.get("text")
+                if isinstance(text_part, str) and text_part.strip():
+                    parts.append(text_part.strip())
+                    continue
+                if item.get("type") == "output_text":
+                    nested = item.get("text")
+                    if isinstance(nested, str) and nested.strip():
+                        parts.append(nested.strip())
+            if parts:
+                return "\n".join(parts).strip()
         text = c0.get("text")
         if isinstance(text, str):
             return text.strip()
@@ -3362,6 +3400,17 @@ class RunConfig:
     hf_local_files_only: bool = True
 
 
+def api_ignored_generation_args(cfg: RunConfig) -> List[str]:
+    ignored = ["--seed"]
+    if int(cfg.top_k) > 0:
+        ignored.append("--top_k")
+    if abs(float(cfg.repetition_penalty) - 1.0) > 1e-9:
+        ignored.append("--repetition_penalty")
+    if int(cfg.no_repeat_ngram_size) > 0:
+        ignored.append("--no_repeat_ngram_size")
+    return ignored
+
+
 def run_baseline(
     hf: Any,
     cfg: RunConfig,
@@ -3483,7 +3532,7 @@ def run_ponder(
     lang = cfg.prompt_lang
     n_ponder = max(1, int(cfg.n_ponder))  # per band
 
-    run_id = sha256_short(f"{now_iso()}|{cfg.seed}|{query}")
+    run_id = make_run_id(cfg.seed, query)
     query_sha = sha256_short(query)
 
     pipeline = list(cfg.ponder_pipeline) if cfg.ponder_pipeline else [cfg.ponder_mode]
@@ -4007,7 +4056,7 @@ def run_ponder(
                 keep_original=False,
                 max_new_tokens=cfg.memory_remix_max_new_tokens,
                 temperature=cfg.memory_remix_temperature,
-                seed=int(cfg.seed) + 9000 + hash(bl) % 1000,
+                seed=int(cfg.seed) + 9000 + stable_hash_mod(bl, 1000),
             )
             fp = hf._apply_chat(
                 build_prompt_for_answer(query, memory_block=band_mem, lang=lang, style=cfg.answer_style),
@@ -4122,7 +4171,7 @@ def run_ponder_api(
     lang = cfg.prompt_lang
     n_ponder = max(1, int(cfg.n_ponder))  # per band
 
-    run_id = sha256_short(f"{now_iso()}|{cfg.seed}|{query}")
+    run_id = make_run_id(cfg.seed, query)
     query_sha = sha256_short(query)
 
     pipeline = list(cfg.ponder_pipeline) if cfg.ponder_pipeline else [cfg.ponder_mode]
@@ -4238,6 +4287,12 @@ def run_ponder_api(
     if not bands:
         bands = [{"label": "single", "start_rank": 0, "end_rank": 0}]
 
+    api_warnings: List[str] = []
+    warned_probe_short = set()
+    probe_depth = len(probe_top)
+    if use_logprobs and probe_depth <= 0:
+        api_warnings.append("API logprobs probing returned no usable tokens; keyword seeding will fall back to self-generation.")
+
     for band_ix, band in enumerate(bands):
         band_label = str(band.get("label", f"band{band_ix}"))
         band_start = int(band.get("start_rank", 0))
@@ -4250,12 +4305,39 @@ def run_ponder_api(
             keywords_source = "api_self"
             raw_keywords: List[str] = []
             picked_items: List[Dict[str, Any]] = []
+            seed_fallback_reason: Optional[str] = None
+            api_seed_method_used = "self"
+            api_band_probe_truncated = False
 
             # Attempt logprobs-based seed selection when available.
             if use_logprobs and probe_top:
                 pool = probe_top
                 if band_end > band_start:
-                    pool = pool[band_start:band_end]
+                    api_band_probe_truncated = probe_depth < band_end
+                    if band_start >= probe_depth:
+                        pool = []
+                        seed_fallback_reason = f"probe_depth={probe_depth} < band_start={band_start}"
+                    elif band_end > probe_depth:
+                        pool = pool[band_start:probe_depth]
+                        seed_fallback_reason = f"probe_depth={probe_depth} < band_end={band_end}"
+                    else:
+                        pool = pool[band_start:band_end]
+                if seed_fallback_reason:
+                    warn_key = (band_label, band_start, band_end, probe_depth)
+                    if warn_key not in warned_probe_short:
+                        warned_probe_short.add(warn_key)
+                        if band_start >= probe_depth:
+                            msg = (
+                                f"API logprobs depth {probe_depth} does not reach band {band_label!r} "
+                                f"({band_start}:{band_end}); falling back to self-seeded keywords for this band."
+                            )
+                        else:
+                            msg = (
+                                f"API logprobs depth {probe_depth} only partially covers band {band_label!r} "
+                                f"({band_start}:{band_end}); using truncated logprobs and self-seeded fallback if needed."
+                            )
+                        api_warnings.append(msg)
+                        print(f"[sr_ponder] WARN: {msg}", file=sys.stderr)
                 pool = [x for x in pool if isinstance(x.get("token"), str) and str(x.get("token")).strip()]
                 obj_mode = objective
 
@@ -4306,6 +4388,8 @@ def run_ponder_api(
 
                 if picked:
                     keywords_source = "api_logprobs"
+                    api_seed_method_used = "logprobs"
+                    seed_fallback_reason = None
                     raw_keywords = picked
                     lookup = {str(x.get("token", "")).strip(): x for x in probe_top}
                     for t in picked:
@@ -4336,6 +4420,7 @@ def run_ponder_api(
                     seed=int(cfg.seed) + 5000 + log_ix,
                 )
                 keywords_source = "api_self"
+                api_seed_method_used = "self"
                 picked_items = [{"token_id": None, "token": t, "rank": None, "prob": None} for t in raw_keywords]
 
             keywords = raw_keywords
@@ -4535,6 +4620,11 @@ def run_ponder_api(
                         "selected_tokens": hop_picked_items,
                         "rejected_cfg": dataclasses.asdict(cfg.rejected),
                         "band": {"start_rank": band_start, "end_rank": band_end},
+                        "api_seed_method_requested": seed_method,
+                        "api_seed_method_used": api_seed_method_used,
+                        "api_probe_depth": probe_depth,
+                        "api_band_probe_truncated": api_band_probe_truncated,
+                        "api_seed_fallback_reason": seed_fallback_reason,
                         "ponder_question": ponder_q,
                         "ponder_log": ponder_log,
                         "gen_elapsed_s": gen_s,
@@ -4661,7 +4751,7 @@ def run_ponder_api(
                 keep_original=False,
                 max_new_tokens=cfg.memory_remix_max_new_tokens,
                 temperature=cfg.memory_remix_temperature,
-                seed=int(cfg.seed) + 9000 + hash(bl) % 1000,
+                seed=int(cfg.seed) + 9000 + stable_hash_mod(bl, 1000),
             )
             fp = hf._apply_chat(
                 build_prompt_for_answer(query, memory_block=band_mem, lang=lang, style=cfg.answer_style),
@@ -4757,6 +4847,7 @@ def run_ponder_api(
         "prompt_jitter_queries": jitter_queries if jitter_queries else None,
         "api_probe_top": probe_top[:50] if probe_top else None,
         "timings": {"total_s": total_s, "probe_s": float(probe_s), "memory_remix_s": float(remix_s), "answer_s": float(answer_s)},
+        "api_warnings": api_warnings if api_warnings else None,
     }
 
     if trace:
@@ -4837,7 +4928,7 @@ def main() -> None:
     g_gen = ap.add_argument_group("Generation")
 
     g_core.add_argument("--backend", choices=["hf", "openai_compat"], default="hf", help="Model backend")
-    g_core.add_argument("--model", required=True, help="hf: local model dir; openai_compat: model name")
+    g_core.add_argument("--model", required=True, help="hf: local model dir (cache roots auto-resolve latest snapshot); openai_compat: model name")
     g_core.add_argument("--query", required=True, help="User query (main question)")
     g_core.add_argument("--memory", default="ponder_logs.jsonl", help="Path to JSONL memory log")
     g_core.add_argument("--mode", choices=["baseline", "ponder", "both"], default="both")
@@ -5025,7 +5116,12 @@ def main() -> None:
         default="auto",
         help="API keyword seeding: self (prompted) or logprobs (if supported)",
     )
-    g_api.add_argument("--api_logprobs_top_n", type=int, default=0, help="Top-N logprobs to request (0=off)")
+    g_api.add_argument(
+        "--api_logprobs_top_n",
+        type=int,
+        default=0,
+        help="Top-N logprobs to request (0=off; provider-capped, shallow probes warn and fall back to self-seeded keywords)",
+    )
 
     g_gen.add_argument("--ponder_max_new_tokens", type=int, default=160)
     g_gen.add_argument("--temperature", type=float, default=0.7)
@@ -5269,16 +5365,19 @@ def main() -> None:
                 "[sr_ponder] ERROR: backend=hf requires torch + transformers. "
                 "Install deps (example): pip install torch transformers"
             )
-        hf = LocalHFModel(
-            cfg.model_path,
-            device=cfg.device,
-            dtype=cfg.dtype,
-            trust_remote_code=cfg.trust_remote_code,
-            use_chat_template=cfg.use_chat_template,
-            force_gemma_format=cfg.force_gemma_format,
-            allocator_warmup=cfg.allocator_warmup,
-            local_files_only=cfg.hf_local_files_only,
-        )
+        try:
+            hf = LocalHFModel(
+                cfg.model_path,
+                device=cfg.device,
+                dtype=cfg.dtype,
+                trust_remote_code=cfg.trust_remote_code,
+                use_chat_template=cfg.use_chat_template,
+                force_gemma_format=cfg.force_gemma_format,
+                allocator_warmup=cfg.allocator_warmup,
+                local_files_only=cfg.hf_local_files_only,
+            )
+        except ValueError as e:
+            raise SystemExit(f"[sr_ponder] ERROR: {e}") from e
         print(
             f"[sr_ponder] backend=hf device={hf.device_str} input_device={hf.input_device} dtype={hf.torch_dtype} "
             f"alloc_warmup={cfg.allocator_warmup} "
@@ -5312,6 +5411,22 @@ def main() -> None:
             f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
             f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} write_memory={cfg.write_memory}"
         )
+        ignored_args = api_ignored_generation_args(cfg)
+        if ignored_args:
+            print(
+                "[sr_ponder] NOTE: openai_compat does not currently forward "
+                + ", ".join(ignored_args)
+                + " (provider-compatibility fallback).",
+                file=sys.stderr,
+            )
+        if cfg.api_seed_method in ("auto", "logprobs"):
+            band_end_max = max((int(b.get("end_rank", 0)) for b in (cfg.bands or _default_bands_from_profile(cfg.band_profile))), default=0)
+            if band_end_max > 0 and int(cfg.api_logprobs_top_n) > 0 and int(cfg.api_logprobs_top_n) < band_end_max:
+                print(
+                    f"[sr_ponder] WARN: --api_logprobs_top_n={int(cfg.api_logprobs_top_n)} is shallower than the "
+                    f"largest band end ({band_end_max}); some API bands will fall back to self-seeded keywords.",
+                    file=sys.stderr,
+                )
     else:
         raise SystemExit(f"[sr_ponder] ERROR: unknown backend: {cfg.backend!r}")
 
