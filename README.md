@@ -33,6 +33,7 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Prompt jitter** — paraphrase the query (`--prompt_jitter`) to find unstable seed tokens (sharper drift).
 - **Prompt language auto** — `--prompt_lang auto|en|ja` (auto-detects Japanese queries).
 - **Probe tracing** — print/store probe token info with `--print_probe` / `--probe_top_n`.
+- **Probe compare** — measure how pondering changes the next-token distribution with `--probe_compare` and `--probe_compare_stages` (rank movers + JS divergence).
 - **Spectral bands** — run multiple rank-bands (near/mid/far) via `--band_profile spectrum3` or define custom bands with `--band`.
 - **Memory retrieval** — pick memory by similarity/anti-similarity via `--memory_retrieve similar|anti|mix`.
 - **Memory remix** — shuffle/compress/dream the injected memory via `--memory_remix`.
@@ -310,6 +311,27 @@ python3 sr_pondering_machine.py \
   --print_probe
 ```
 
+### Probe compare (what changed before vs after pondering?)
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "Should we optimize for accuracy or speed in LLM systems?" \
+  --mode ponder \
+  --ponder_mode counterexample \
+  --n_ponder 3 \
+  --memory_policy current_only \
+  --probe_compare \
+  --probe_compare_stages \
+  --probe_compare_top_n 32 \
+  --trace_out ./run.trace.jsonl \
+  --json_out ./run.json
+```
+
+This stores a run-level `extras.probe_compare` block, a per-stage `extras.probe_compare_stages` timeline, and `probe_compare` / `probe_compare_stage` trace events.
+For `--backend hf`, JS divergence is computed over the full vocabulary. For `--backend openai_compat`, it is an approximation over the returned top-logprobs union.
+`--probe_compare_stages` probes the answer prompt after every ponder stage, so it adds one extra forward pass (HF) or one extra logprobs API call per stage.
+
 ### Pipeline: assumption → counterexample → questions_only → metaphor
 
 ```bash
@@ -480,6 +502,25 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | `--pack_file` | *(empty)* | Run a custom pack from a JSON file |
 | `--pack_out` | *(empty)* | Optional JSON results |
 
+### Observability / Runtime / API
+
+| Argument | Default | Description |
+|---|---|---|
+| `--json_out` | *(empty)* | Write full run/pack results to JSON |
+| `--trace_out` | *(empty)* | Write step-level trace JSONL |
+| `--trace_report_out` | *(empty)* | Write HTML trace report |
+| `--probe_top_n` | `0` | Store base probe top-N tokens in the first record |
+| `--probe_compare` | `False` | Compare pre/post-ponder next-token distributions |
+| `--probe_compare_stages` | `False` | Capture a base→stage→final probe timeline |
+| `--probe_compare_top_n` | `32` | Top-N window used by `--probe_compare` |
+| `--print_probe` | `False` | Print probe tables (and probe-compare summary) to stdout |
+| `--device` | `auto` | `auto` · `mps` · `cpu` · `cuda[:N]` |
+| `--dtype` | `auto` | `auto` · `float16` · `bfloat16` · `float32` |
+| `--allocator_warmup` | `auto` | `auto` · `on` · `off` |
+| `--backend` | `hf` | `hf` · `openai_compat` |
+| `--api_seed_method` | `auto` | `auto` · `self` · `logprobs` |
+| `--api_logprobs_top_n` | `0` | Top-logprobs depth requested from the API |
+
 ## Rejected-Token Selection Strategies
 
 | Strategy | Description |
@@ -547,6 +588,8 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.h
 - For `--backend openai_compat`, `--seed`, `--top_k`, `--repetition_penalty`, and `--no_repeat_ngram_size` are currently not forwarded; the script now prints a warning so cross-backend comparisons stay honest.
 - For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams + IDF weighting). It’s not as strong as real embedding retrieval, but better than raw tail.
 - For API backends, `--api_logprobs_top_n` is provider-capped. If the returned logprob depth is shallower than a requested band (for example `spectrum3` + `far`), that band degrades to self-seeded keywords and the script warns about it.
+- For `--probe_compare`, `--backend hf` computes JS divergence on the full vocab; `--backend openai_compat` computes an approximate JS divergence on the observed top-logprobs union and reports the observed mass.
+- `--probe_compare_stages` uses the current run’s accumulated ponder logs as the injected memory source for each timeline point. This is diagnostic by design; the final answer may still use a different selected/remixed memory block.
 - If you see an error like “Repo id must be in the form …” while passing an absolute `--model` path, it usually means the directory does not exist (Transformers falls back to treating it like a Hub ID). Double-check the path and try the closest matching folder name.
 - On Apple Silicon (MPS), Transformers 5.x “caching allocator warmup” can crash on large models with `RuntimeError: Invalid buffer size: ...`. The script defaults to `--allocator_warmup auto` (which disables warmup on MPS). You can also force it off with `--allocator_warmup off`.
 - `--keyword_refine` adds an extra generation call before the ponder step (slower, but often produces better keywords).

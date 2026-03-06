@@ -94,6 +94,79 @@ class TestArtifactsAndTrace(unittest.TestCase):
         self.assertIn('"event": "hello"', s.getvalue())
 
 
+class TestProbeCompare(unittest.TestCase):
+    def test_build_probe_compare_tracks_rank_flips(self) -> None:
+        before = [
+            {"token": "alpha", "token_id": 1, "rank": 0, "prob": 0.60},
+            {"token": "beta", "token_id": 2, "rank": 1, "prob": 0.30},
+            {"token": "gamma", "token_id": 3, "rank": 2, "prob": 0.10},
+        ]
+        after = [
+            {"token": "beta", "token_id": 2, "rank": 0, "prob": 0.50},
+            {"token": "delta", "token_id": 4, "rank": 1, "prob": 0.30},
+            {"token": "alpha", "token_id": 1, "rank": 2, "prob": 0.20},
+        ]
+
+        comp = sp.build_probe_compare(before, after, top_n=3)
+
+        self.assertTrue(comp["top1_changed"])
+        self.assertEqual(comp["overlap_count"], 2)
+        self.assertEqual(comp["entered_count"], 1)
+        self.assertEqual(comp["exited_count"], 1)
+        self.assertEqual(comp["mover_count"], 2)
+        self.assertGreater(comp["js_divergence"], 0.0)
+        self.assertEqual(comp["entered"][0]["token"], "delta")
+        self.assertEqual(comp["exited"][0]["token"], "gamma")
+        self.assertEqual({x["token"] for x in comp["movers"]}, {"alpha", "beta"})
+
+    def test_make_probe_compare_timeline_entry(self) -> None:
+        entry = sp.make_probe_compare_timeline_entry(
+            source="current_records",
+            point="stage",
+            record={
+                "ponder_ix": 3,
+                "band_label": "mid",
+                "band_ponder_ix": 1,
+                "hop_ix": 2,
+                "pipeline_stage_ix": 0,
+                "ponder_mode": "counterexample",
+            },
+            compare_from_base={"js_divergence": 0.12},
+            compare_from_prev={"js_divergence": 0.03},
+            memory_chars=120,
+            prompt_chars=240,
+        )
+        self.assertEqual(entry["source"], "current_records")
+        self.assertEqual(entry["point"], "stage")
+        self.assertEqual(entry["band_label"], "mid")
+        self.assertEqual(entry["hop_ix"], 2)
+        self.assertEqual(entry["memory_chars"], 120)
+        self.assertEqual(entry["compare_from_base"]["js_divergence"], 0.12)
+        self.assertEqual(entry["compare_from_prev"]["js_divergence"], 0.03)
+
+    def test_print_config_only_includes_probe_compare(self) -> None:
+        out, _err = _run_main(
+            [
+                "--backend",
+                "openai_compat",
+                "--model",
+                "dummy",
+                "--query",
+                "q",
+                "--probe_compare",
+                "--probe_compare_stages",
+                "--probe_compare_top_n",
+                "17",
+                "--print_config_only",
+            ]
+        )
+        obj = json.loads(out)
+        cfg = obj.get("cfg") or {}
+        self.assertEqual(cfg.get("probe_compare"), True)
+        self.assertEqual(cfg.get("probe_compare_stages"), True)
+        self.assertEqual(cfg.get("probe_compare_top_n"), 17)
+
+
 class TestPackBehavior(unittest.TestCase):
     def setUp(self) -> None:
         os.environ["OPENAI_API_KEY"] = "test"

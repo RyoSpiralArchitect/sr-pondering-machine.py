@@ -477,6 +477,35 @@ def compute_run_metrics(
         ms = extras.get("memory_selected")
         if isinstance(ms, list):
             metrics["memory_selected"] = int(len(ms))
+        pc = extras.get("probe_compare")
+        if isinstance(pc, dict):
+            js = pc.get("js_divergence")
+            if isinstance(js, (int, float)):
+                metrics["probe_js_divergence"] = float(js)
+            overlap = pc.get("overlap_count")
+            if isinstance(overlap, int):
+                metrics["probe_overlap_count"] = int(overlap)
+            movers = pc.get("mover_count")
+            if isinstance(movers, int):
+                metrics["probe_mover_count"] = int(movers)
+            if isinstance(pc.get("top1_changed"), bool):
+                metrics["probe_top1_changed"] = bool(pc.get("top1_changed"))
+        pcs = extras.get("probe_compare_stages")
+        if isinstance(pcs, list):
+            stage_js: List[float] = []
+            for item in pcs:
+                if not isinstance(item, dict):
+                    continue
+                comp = item.get("compare_from_base")
+                if not isinstance(comp, dict):
+                    continue
+                js2 = comp.get("js_divergence")
+                if isinstance(js2, (int, float)):
+                    stage_js.append(float(js2))
+            metrics["probe_stage_count"] = int(len(stage_js))
+            if stage_js:
+                metrics["probe_stage_max_js"] = float(max(stage_js))
+                metrics["probe_stage_last_js"] = float(stage_js[-1])
     return metrics
 
 
@@ -3379,6 +3408,9 @@ class RunConfig:
     prompt_jitter_temperature: float = 0.6
 
     probe_top_n: int = 0
+    probe_compare: bool = False
+    probe_compare_stages: bool = False
+    probe_compare_top_n: int = 32
     print_probe: bool = False
     interactive: bool = False
     interactive_candidates: int = 48
@@ -3455,6 +3487,310 @@ def _print_probe_table(title: str, items: Sequence[Dict[str, Any]], *, limit: in
         p = x.get("prob", None)
         p_s = f"{p:.4f}" if isinstance(p, float) else "?"
         print(f"{i:>2}. {tok!r} id={tid} rank={rk} p={p_s}")
+
+
+def _compact_probe_item(item: Dict[str, Any]) -> Dict[str, Any]:
+    out: Dict[str, Any] = {}
+    for key in ("token", "token_id", "rank", "prob", "logprob"):
+        if key in item and item.get(key) is not None:
+            out[key] = item.get(key)
+    return out
+
+
+def _probe_item_key(item: Dict[str, Any]) -> str:
+    tid = item.get("token_id")
+    if isinstance(tid, int):
+        return f"id:{tid}"
+    return f"tok:{str(item.get('token', '') or '')}"
+
+
+def _probe_item_prob(item: Dict[str, Any]) -> float:
+    p = item.get("prob")
+    if isinstance(p, (int, float)):
+        p2 = float(p)
+        if math.isfinite(p2) and p2 >= 0.0:
+            return p2
+    lp = item.get("logprob")
+    if isinstance(lp, (int, float)):
+        lp2 = float(lp)
+        if math.isfinite(lp2):
+            if lp2 <= -1e9:
+                return 0.0
+            try:
+                return float(math.exp(lp2))
+            except Exception:
+                return 0.0
+    return 0.0
+
+
+def _top_tokens_from_logits(hf: Any, logits: torch.Tensor, *, top_n: int) -> List[Dict[str, Any]]:
+    n = max(0, int(top_n))
+    if n <= 0:
+        return []
+    vocab_n = int(logits.numel())
+    if vocab_n <= 0:
+        return []
+    n = min(n, vocab_n)
+    sorted_ids = torch.argsort(logits, descending=True)
+    log_z = torch.logsumexp(logits, dim=0)
+    out: List[Dict[str, Any]] = []
+    for rank, tid in enumerate(sorted_ids[:n].tolist()):
+        out.append(
+            {
+                "token_id": int(tid),
+                "token": _token_text(hf.tokenizer, tid),
+                "rank": int(rank),
+                "prob": _token_prob(logits, tid, log_z),
+            }
+        )
+    return out
+
+
+def _js_divergence_from_sparse_prob_maps(before: Dict[str, float], after: Dict[str, float]) -> float:
+    keys = set(before.keys()) | set(after.keys())
+    if not keys:
+        return 0.0
+
+    sum_before = float(sum(max(0.0, float(v)) for v in before.values()))
+    sum_after = float(sum(max(0.0, float(v)) for v in after.values()))
+    if sum_before <= 0.0 and sum_after <= 0.0:
+        return 0.0
+
+    js = 0.0
+    for key in keys:
+        p = max(0.0, float(before.get(key, 0.0)))
+        q = max(0.0, float(after.get(key, 0.0)))
+        if sum_before > 0.0:
+            p /= sum_before
+        else:
+            p = 0.0
+        if sum_after > 0.0:
+            q /= sum_after
+        else:
+            q = 0.0
+        m = 0.5 * (p + q)
+        if p > 0.0 and m > 0.0:
+            js += 0.5 * p * math.log(p / m)
+        if q > 0.0 and m > 0.0:
+            js += 0.5 * q * math.log(q / m)
+    return float(js)
+
+
+def _js_divergence_from_logits(before_logits: torch.Tensor, after_logits: torch.Tensor) -> float:
+    log_p = torch.log_softmax(before_logits.float(), dim=0)
+    log_q = torch.log_softmax(after_logits.float(), dim=0)
+    p = torch.exp(log_p)
+    q = torch.exp(log_q)
+    m = 0.5 * (p + q)
+    log_m = torch.log(m.clamp_min(1e-30))
+    kl_pm = torch.sum(p * (log_p - log_m))
+    kl_qm = torch.sum(q * (log_q - log_m))
+    return float((0.5 * (kl_pm + kl_qm)).item())
+
+
+def build_probe_compare(
+    before_items: Sequence[Dict[str, Any]],
+    after_items: Sequence[Dict[str, Any]],
+    *,
+    top_n: int,
+    js_divergence: Optional[float] = None,
+    js_divergence_mode: str = "topn_union_renorm",
+) -> Dict[str, Any]:
+    n = max(1, int(top_n))
+    before = [_compact_probe_item(x) for x in list(before_items)[:n] if isinstance(x, dict)]
+    after = [_compact_probe_item(x) for x in list(after_items)[:n] if isinstance(x, dict)]
+
+    before_lookup = {_probe_item_key(x): x for x in before}
+    after_lookup = {_probe_item_key(x): x for x in after}
+    before_keys = set(before_lookup.keys())
+    after_keys = set(after_lookup.keys())
+    overlap_keys = before_keys & after_keys
+    union_keys = before_keys | after_keys
+
+    before_prob_map = {k: _probe_item_prob(v) for k, v in before_lookup.items()}
+    after_prob_map = {k: _probe_item_prob(v) for k, v in after_lookup.items()}
+
+    entered: List[Dict[str, Any]] = []
+    for key in sorted(after_keys - before_keys, key=lambda k: int(after_lookup[k].get("rank", 10**9))):
+        item = after_lookup[key]
+        entered.append(
+            {
+                "token": item.get("token"),
+                "token_id": item.get("token_id"),
+                "rank_after": item.get("rank"),
+                "prob_after": _probe_item_prob(item),
+            }
+        )
+
+    exited: List[Dict[str, Any]] = []
+    for key in sorted(before_keys - after_keys, key=lambda k: int(before_lookup[k].get("rank", 10**9))):
+        item = before_lookup[key]
+        exited.append(
+            {
+                "token": item.get("token"),
+                "token_id": item.get("token_id"),
+                "rank_before": item.get("rank"),
+                "prob_before": _probe_item_prob(item),
+            }
+        )
+
+    movers: List[Dict[str, Any]] = []
+    for key in overlap_keys:
+        before_item = before_lookup[key]
+        after_item = after_lookup[key]
+        try:
+            rank_before = int(before_item.get("rank", 0))
+            rank_after = int(after_item.get("rank", 0))
+        except Exception:
+            continue
+        rank_shift = int(rank_before - rank_after)
+        if rank_shift == 0:
+            continue
+        movers.append(
+            {
+                "token": after_item.get("token", before_item.get("token")),
+                "token_id": after_item.get("token_id", before_item.get("token_id")),
+                "rank_before": rank_before,
+                "rank_after": rank_after,
+                "rank_shift": rank_shift,
+                "prob_before": _probe_item_prob(before_item),
+                "prob_after": _probe_item_prob(after_item),
+            }
+        )
+    movers.sort(key=lambda x: (-abs(int(x.get("rank_shift", 0))), int(x.get("rank_after", 10**9)), str(x.get("token", ""))))
+
+    if js_divergence is None:
+        js_divergence = _js_divergence_from_sparse_prob_maps(before_prob_map, after_prob_map)
+
+    top1_before = before[0] if before else None
+    top1_after = after[0] if after else None
+    denom = max(1, min(len(before), len(after)))
+    jaccard = float(len(overlap_keys) / len(union_keys)) if union_keys else 1.0
+
+    return {
+        "top_n": int(n),
+        "before_count": int(len(before)),
+        "after_count": int(len(after)),
+        "js_divergence": float(js_divergence),
+        "js_divergence_mode": str(js_divergence_mode),
+        "before_observed_mass": float(sum(before_prob_map.values())),
+        "after_observed_mass": float(sum(after_prob_map.values())),
+        "overlap_count": int(len(overlap_keys)),
+        "overlap_ratio": float(len(overlap_keys) / denom),
+        "jaccard": jaccard,
+        "top1_changed": bool(_probe_item_key(top1_before) != _probe_item_key(top1_after)) if top1_before and top1_after else False,
+        "top1_before": top1_before,
+        "top1_after": top1_after,
+        "mover_count": int(len(movers)),
+        "entered_count": int(len(entered)),
+        "exited_count": int(len(exited)),
+        "movers": movers,
+        "entered": entered,
+        "exited": exited,
+        "top_before": before,
+        "top_after": after,
+    }
+
+
+def make_probe_compare_timeline_entry(
+    *,
+    source: str,
+    point: str,
+    record: Optional[Dict[str, Any]] = None,
+    compare_from_base: Optional[Dict[str, Any]] = None,
+    compare_from_prev: Optional[Dict[str, Any]] = None,
+    memory_chars: int = 0,
+    prompt_chars: int = 0,
+    status: str = "ok",
+    reason: str = "",
+) -> Dict[str, Any]:
+    entry: Dict[str, Any] = {
+        "point": str(point or "stage"),
+        "source": str(source or "current_records"),
+        "status": str(status or "ok"),
+        "memory_chars": int(memory_chars),
+        "prompt_chars": int(prompt_chars),
+    }
+    if reason:
+        entry["reason"] = str(reason)
+    if isinstance(record, dict):
+        for key in ("ponder_ix", "band_label", "band_ponder_ix", "hop_ix", "pipeline_stage_ix", "ponder_mode"):
+            if key in record:
+                entry[key] = record.get(key)
+    if compare_from_base is not None:
+        entry["compare_from_base"] = compare_from_base
+    if compare_from_prev is not None:
+        entry["compare_from_prev"] = compare_from_prev
+    return entry
+
+
+def _probe_compare_trace_fields(comp: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "top_n": int(comp.get("top_n", 0) or 0),
+        "js_divergence": float(comp.get("js_divergence", 0.0) or 0.0),
+        "js_divergence_mode": str(comp.get("js_divergence_mode", "") or ""),
+        "overlap_count": int(comp.get("overlap_count", 0) or 0),
+        "jaccard": float(comp.get("jaccard", 0.0) or 0.0),
+        "mover_count": int(comp.get("mover_count", 0) or 0),
+        "entered_count": int(comp.get("entered_count", 0) or 0),
+        "exited_count": int(comp.get("exited_count", 0) or 0),
+        "top1_before": comp.get("top1_before"),
+        "top1_after": comp.get("top1_after"),
+    }
+
+
+def _print_probe_compare_summary(title: str, comp: Dict[str, Any], *, limit: int = 8) -> None:
+    js = comp.get("js_divergence")
+    js_s = f"{float(js):.6f}" if isinstance(js, (int, float)) else "?"
+    overlap = int(comp.get("overlap_count", 0) or 0)
+    before_count = int(comp.get("before_count", 0) or 0)
+    after_count = int(comp.get("after_count", 0) or 0)
+    jaccard = comp.get("jaccard")
+    jaccard_s = f"{float(jaccard):.3f}" if isinstance(jaccard, (int, float)) else "?"
+    print(f"\n=== {title} ===\n")
+    print(
+        "js_divergence="
+        f"{js_s} mode={comp.get('js_divergence_mode', '?')} "
+        f"overlap={overlap} before={before_count} after={after_count} jaccard={jaccard_s} "
+        f"top1_changed={bool(comp.get('top1_changed'))}"
+    )
+
+    movers = comp.get("movers") or []
+    if isinstance(movers, list) and movers:
+        print("\n[movers]")
+        for item in movers[:limit]:
+            tok = item.get("token", "")
+            tid = item.get("token_id", "?")
+            rb = item.get("rank_before", "?")
+            ra = item.get("rank_after", "?")
+            rs = item.get("rank_shift", 0)
+            pb = item.get("prob_before")
+            pa = item.get("prob_after")
+            pb_s = f"{float(pb):.4f}" if isinstance(pb, (int, float)) else "?"
+            pa_s = f"{float(pa):.4f}" if isinstance(pa, (int, float)) else "?"
+            print(f"- {tok!r} id={tid} rank {rb}->{ra} shift={rs:+d} p {pb_s}->{pa_s}")
+
+    entered = comp.get("entered") or []
+    if isinstance(entered, list) and entered:
+        print("\n[entered]")
+        for item in entered[:limit]:
+            tok = item.get("token", "")
+            tid = item.get("token_id", "?")
+            ra = item.get("rank_after", "?")
+            pa = item.get("prob_after")
+            pa_s = f"{float(pa):.4f}" if isinstance(pa, (int, float)) else "?"
+            print(f"- {tok!r} id={tid} rank_after={ra} p={pa_s}")
+
+    exited = comp.get("exited") or []
+    if isinstance(exited, list) and exited:
+        print("\n[exited]")
+        for item in exited[:limit]:
+            tok = item.get("token", "")
+            tid = item.get("token_id", "?")
+            rb = item.get("rank_before", "?")
+            pb = item.get("prob_before")
+            pb_s = f"{float(pb):.4f}" if isinstance(pb, (int, float)) else "?"
+            print(f"- {tok!r} id={tid} rank_before={rb} p={pb_s}")
 
 
 def _parse_band_spec(spec: str) -> Dict[str, Any]:
@@ -3583,12 +3919,22 @@ def run_ponder(
     ranks[sorted_ids] = torch.arange(sorted_ids.numel(), device=sorted_ids.device, dtype=sorted_ids.dtype)
     log_z = torch.logsumexp(logits, dim=0)
 
-    top_tokens: List[Dict[str, Any]] = []
-    if cfg.probe_top_n > 0 or cfg.print_probe:
-        top_n = int(cfg.probe_top_n) if cfg.probe_top_n > 0 else 20
-        top_n = max(1, min(top_n, int(sorted_ids.numel())))
-        for tid in sorted_ids[:top_n].tolist():
-            top_tokens.append(
+    vocab_size = int(sorted_ids.numel())
+    probe_compare: Optional[Dict[str, Any]] = None
+    probe_compare_stages: List[Dict[str, Any]] = []
+    probe_capture_n = 0
+    if cfg.probe_top_n > 0:
+        probe_capture_n = max(probe_capture_n, int(cfg.probe_top_n))
+    if cfg.print_probe:
+        probe_capture_n = max(probe_capture_n, 20)
+    if cfg.probe_compare or cfg.probe_compare_stages:
+        probe_capture_n = max(probe_capture_n, int(cfg.probe_compare_top_n))
+
+    probe_top_all: List[Dict[str, Any]] = []
+    if probe_capture_n > 0:
+        capture_n = max(1, min(probe_capture_n, vocab_size))
+        for tid in sorted_ids[:capture_n].tolist():
+            probe_top_all.append(
                 {
                     "token_id": int(tid),
                     "token": _token_text(hf.tokenizer, tid),
@@ -3596,10 +3942,22 @@ def run_ponder(
                     "prob": _token_prob(logits, tid, log_z),
                 }
             )
+
+    top_tokens: List[Dict[str, Any]] = []
+    if cfg.probe_top_n > 0 or cfg.print_probe:
+        top_n = int(cfg.probe_top_n) if cfg.probe_top_n > 0 else 20
+        top_n = max(1, min(top_n, vocab_size))
+        top_tokens = probe_top_all[:top_n] if probe_top_all else []
         if cfg.print_probe:
             _print_probe_table("PROBE TOP TOKENS", top_tokens, limit=top_n)
 
-    vocab_size = int(sorted_ids.numel())
+    probe_compare_before = (
+        probe_top_all[: max(1, int(cfg.probe_compare_top_n))]
+        if (cfg.probe_compare or cfg.probe_compare_stages) and probe_top_all
+        else []
+    )
+    probe_compare_prev_items = list(probe_compare_before)
+    probe_compare_prev_logits = logits if cfg.probe_compare_stages else None
     bands = cfg.bands or _default_bands_from_profile(cfg.band_profile)
     if not bands:
         bands = [_single_band_from_rejected_cfg(cfg, vocab_size=vocab_size)]
@@ -3943,6 +4301,66 @@ def run_ponder(
                     if cfg.write_memory:
                         append_jsonl(cfg.memory_path, record)
                     records.append(record)
+                    if cfg.probe_compare_stages and probe_compare_before:
+                        compare_top_n = max(1, int(cfg.probe_compare_top_n))
+                        stage_memory_block = build_memory_block(records, max_chars_per_log=700) if records else None
+                        stage_prompt = hf._apply_chat(
+                            build_prompt_for_answer(query, memory_block=stage_memory_block, lang=lang, style=cfg.answer_style),
+                            system_text=None,
+                        )
+                        stage_logits = hf.next_token_logits(stage_prompt)
+                        stage_items = _top_tokens_from_logits(hf, stage_logits, top_n=compare_top_n)
+                        comp_base = build_probe_compare(
+                            probe_compare_before,
+                            stage_items,
+                            top_n=compare_top_n,
+                            js_divergence=_js_divergence_from_logits(logits, stage_logits),
+                            js_divergence_mode="full_vocab",
+                        )
+                        comp_prev = None
+                        if probe_compare_prev_items and probe_compare_prev_logits is not None:
+                            comp_prev = build_probe_compare(
+                                probe_compare_prev_items,
+                                stage_items,
+                                top_n=compare_top_n,
+                                js_divergence=_js_divergence_from_logits(probe_compare_prev_logits, stage_logits),
+                                js_divergence_mode="full_vocab",
+                            )
+                        stage_entry = make_probe_compare_timeline_entry(
+                            source="current_records",
+                            point="stage",
+                            record=record,
+                            compare_from_base=comp_base,
+                            compare_from_prev=comp_prev,
+                            memory_chars=len(stage_memory_block or ""),
+                            prompt_chars=len(stage_prompt or ""),
+                        )
+                        probe_compare_stages.append(stage_entry)
+                        if trace:
+                            trace.event(
+                                "probe_compare_stage",
+                                run_id=run_id,
+                                pack_item=pack_item,
+                                source="current_records",
+                                band_label=band_label,
+                                band_ponder_ix=int(band_ponder_ix),
+                                hop_ix=int(hop_ix),
+                                stage_ix=int(stage_ix),
+                                ponder_ix=int(record.get("ponder_ix", 0) or 0),
+                                ponder_mode=stage_mode,
+                                memory_chars=len(stage_memory_block or ""),
+                                prompt_chars=len(stage_prompt or ""),
+                                prev_js_divergence=float(comp_prev.get("js_divergence", 0.0)) if isinstance(comp_prev, dict) else None,
+                                **_probe_compare_trace_fields(comp_base),
+                            )
+                        if cfg.print_probe:
+                            _print_probe_compare_summary(
+                                f"PROBE STAGE (band={band_label} hop={hop_ix} stage={stage_mode} ix={log_ix})",
+                                comp_base,
+                                limit=min(8, compare_top_n),
+                            )
+                        probe_compare_prev_items = stage_items
+                        probe_compare_prev_logits = stage_logits
                     log_ix += 1
 
                 prev_hop_log = "\n\n".join(stage_logs).strip() if stage_logs else prev_hop_log
@@ -4097,14 +4515,40 @@ def run_ponder(
     final_answer_block = memory_block
     if control == "no_inject":
         final_answer_block = None
+    final_prompt = hf._apply_chat(
+        build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang, style=cfg.answer_style),
+        system_text=None,
+    )
+
+    if cfg.probe_compare:
+        compare_top_n = max(1, int(cfg.probe_compare_top_n))
+        final_logits = hf.next_token_logits(final_prompt)
+        probe_compare_after = _top_tokens_from_logits(hf, final_logits, top_n=compare_top_n)
+        probe_compare = build_probe_compare(
+            probe_compare_before,
+            probe_compare_after,
+            top_n=compare_top_n,
+            js_divergence=_js_divergence_from_logits(logits, final_logits),
+            js_divergence_mode="full_vocab",
+        )
+        if trace:
+            trace.event(
+                "probe_compare",
+                run_id=run_id,
+                pack_item=pack_item,
+                **_probe_compare_trace_fields(probe_compare),
+                movers=(probe_compare.get("movers") or [])[:8],
+                entered=(probe_compare.get("entered") or [])[:8],
+                exited=(probe_compare.get("exited") or [])[:8],
+            )
+        if cfg.print_probe:
+            _print_probe_table("PROBE TOP TOKENS (FINAL)", probe_compare_after, limit=compare_top_n)
+            _print_probe_compare_summary("PROBE COMPARE", probe_compare, limit=min(8, compare_top_n))
+
     answer_s = 0.0
     if cfg.answer_ensemble and ensemble_final:
         answer = ensemble_final.strip()
     else:
-        final_prompt = hf._apply_chat(
-            build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang, style=cfg.answer_style),
-            system_text=None,
-        )
         t_answer0 = time.perf_counter()
         answer = hf.generate_text(
             final_prompt,
@@ -4148,6 +4592,8 @@ def run_ponder(
         }
         if ensemble_raw
         else None,
+        "probe_compare": probe_compare,
+        "probe_compare_stages": probe_compare_stages if probe_compare_stages else None,
         "random_log": random_log_text,
         "prompt_jitter_queries": jitter_queries if jitter_queries else None,
         "timings": {"total_s": total_s, "probe_s": float(probe_s), "memory_remix_s": float(remix_s), "answer_s": float(answer_s)},
@@ -4213,9 +4659,17 @@ def run_ponder_api(
     if seed_method == "logprobs" and top_n <= 0:
         top_n = 128
 
+    probe_compare: Optional[Dict[str, Any]] = None
+    probe_compare_stages: List[Dict[str, Any]] = []
+    probe_compare_n = max(1, int(cfg.probe_compare_top_n)) if (cfg.probe_compare or cfg.probe_compare_stages) else 0
     probe_top: List[Dict[str, Any]] = []
-    if use_logprobs or cfg.print_probe or cfg.probe_top_n > 0:
-        probe_n = top_n if use_logprobs and top_n > 0 else max(20, int(cfg.probe_top_n) or 0, top_n)
+    probe_n = max(
+        top_n if use_logprobs and top_n > 0 else 0,
+        int(cfg.probe_top_n) if cfg.probe_top_n > 0 else 0,
+        probe_compare_n,
+        20 if cfg.print_probe else 0,
+    )
+    if use_logprobs or cfg.print_probe or cfg.probe_top_n > 0 or cfg.probe_compare or cfg.probe_compare_stages:
         try:
             probe_top = hf.probe_top_logprobs(base_prompt, top_n=probe_n)
         except Exception:
@@ -4239,6 +4693,9 @@ def run_ponder_api(
             for x in probe_top
         ]
         _print_probe_table("PROBE TOP TOKENS (API)", items, limit=min(len(items), 50))
+
+    probe_compare_before = probe_top[:probe_compare_n] if (cfg.probe_compare or cfg.probe_compare_stages) and probe_top else []
+    probe_compare_prev_items = list(probe_compare_before)
 
     # Unstable objective (logprobs-only): compute per-token stddev across prompt jitters.
     jitter_queries: List[str] = []
@@ -4289,9 +4746,25 @@ def run_ponder_api(
 
     api_warnings: List[str] = []
     warned_probe_short = set()
+    warned_stage_probe_failure = False
     probe_depth = len(probe_top)
     if use_logprobs and probe_depth <= 0:
         api_warnings.append("API logprobs probing returned no usable tokens; keyword seeding will fall back to self-generation.")
+    stage_probe_active = bool(cfg.probe_compare_stages and probe_compare_before)
+    if cfg.probe_compare_stages and not stage_probe_active:
+        msg = "Stage probe compare requested, but the API did not return a usable base prompt top-logprobs distribution."
+        api_warnings.append(msg)
+        print(f"[sr_ponder] WARN: {msg}", file=sys.stderr)
+        probe_compare_stages.append(
+            make_probe_compare_timeline_entry(
+                source="current_records",
+                point="stage",
+                status="unavailable",
+                reason=msg,
+            )
+        )
+        if trace:
+            trace.event("probe_compare_stage", run_id=run_id, pack_item=pack_item, status="unavailable", reason=msg)
 
     for band_ix, band in enumerate(bands):
         band_label = str(band.get("label", f"band{band_ix}"))
@@ -4637,6 +5110,102 @@ def run_ponder_api(
                     if cfg.write_memory:
                         append_jsonl(cfg.memory_path, record)
                     records.append(record)
+                    if stage_probe_active:
+                        stage_memory_block = build_memory_block(records, max_chars_per_log=700) if records else None
+                        stage_prompt = hf._apply_chat(
+                            build_prompt_for_answer(query, memory_block=stage_memory_block, lang=lang, style=cfg.answer_style),
+                            system_text=None,
+                        )
+                        stage_items: List[Dict[str, Any]] = []
+                        stage_reason = ""
+                        try:
+                            stage_items = hf.probe_top_logprobs(stage_prompt, top_n=probe_compare_n)
+                        except Exception as e:
+                            stage_reason = str(e)
+                            stage_items = []
+
+                        if stage_items:
+                            comp_base = build_probe_compare(
+                                probe_compare_before,
+                                stage_items,
+                                top_n=probe_compare_n,
+                                js_divergence_mode="topn_union_renorm",
+                            )
+                            comp_prev = None
+                            if probe_compare_prev_items:
+                                comp_prev = build_probe_compare(
+                                    probe_compare_prev_items,
+                                    stage_items,
+                                    top_n=probe_compare_n,
+                                    js_divergence_mode="topn_union_renorm",
+                                )
+                            stage_entry = make_probe_compare_timeline_entry(
+                                source="current_records",
+                                point="stage",
+                                record=record,
+                                compare_from_base=comp_base,
+                                compare_from_prev=comp_prev,
+                                memory_chars=len(stage_memory_block or ""),
+                                prompt_chars=len(stage_prompt or ""),
+                            )
+                            probe_compare_stages.append(stage_entry)
+                            if trace:
+                                trace.event(
+                                    "probe_compare_stage",
+                                    run_id=run_id,
+                                    pack_item=pack_item,
+                                    source="current_records",
+                                    band_label=band_label,
+                                    band_ponder_ix=int(band_ponder_ix),
+                                    hop_ix=int(hop_ix),
+                                    stage_ix=int(stage_ix),
+                                    ponder_ix=int(record.get("ponder_ix", 0) or 0),
+                                    ponder_mode=stage_mode,
+                                    memory_chars=len(stage_memory_block or ""),
+                                    prompt_chars=len(stage_prompt or ""),
+                                    prev_js_divergence=float(comp_prev.get("js_divergence", 0.0)) if isinstance(comp_prev, dict) else None,
+                                    **_probe_compare_trace_fields(comp_base),
+                                )
+                            if cfg.print_probe:
+                                _print_probe_compare_summary(
+                                    f"PROBE STAGE (API band={band_label} hop={hop_ix} stage={stage_mode} ix={log_ix})",
+                                    comp_base,
+                                    limit=min(8, probe_compare_n),
+                                )
+                            probe_compare_prev_items = list(stage_items)
+                        else:
+                            msg = "Stage probe compare requested, but the API did not return a usable stage top-logprobs distribution."
+                            if stage_reason:
+                                msg = f"{msg} ({stage_reason})"
+                            if not warned_stage_probe_failure:
+                                warned_stage_probe_failure = True
+                                api_warnings.append(msg)
+                                print(f"[sr_ponder] WARN: {msg}", file=sys.stderr)
+                            stage_entry = make_probe_compare_timeline_entry(
+                                source="current_records",
+                                point="stage",
+                                record=record,
+                                memory_chars=len(stage_memory_block or ""),
+                                prompt_chars=len(stage_prompt or ""),
+                                status="unavailable",
+                                reason=msg,
+                            )
+                            probe_compare_stages.append(stage_entry)
+                            if trace:
+                                trace.event(
+                                    "probe_compare_stage",
+                                    run_id=run_id,
+                                    pack_item=pack_item,
+                                    source="current_records",
+                                    band_label=band_label,
+                                    band_ponder_ix=int(band_ponder_ix),
+                                    hop_ix=int(hop_ix),
+                                    stage_ix=int(stage_ix),
+                                    ponder_ix=int(record.get("ponder_ix", 0) or 0),
+                                    ponder_mode=stage_mode,
+                                    status="unavailable",
+                                    reason=msg,
+                                )
                     log_ix += 1
 
                 prev_hop_log = "\n\n".join(stage_logs).strip() if stage_logs else prev_hop_log
@@ -4792,14 +5361,70 @@ def run_ponder_api(
     final_answer_block = memory_block
     if control == "no_inject":
         final_answer_block = None
+    final_prompt = hf._apply_chat(
+        build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang, style=cfg.answer_style),
+        system_text=None,
+    )
+
+    if cfg.probe_compare:
+        if not probe_compare_before:
+            msg = "Probe compare requested, but the API did not return a usable base prompt top-logprobs distribution."
+            api_warnings.append(msg)
+            print(f"[sr_ponder] WARN: {msg}", file=sys.stderr)
+            probe_compare = {"top_n": int(probe_compare_n), "status": "unavailable", "reason": msg}
+            if trace:
+                trace.event("probe_compare", run_id=run_id, pack_item=pack_item, status="unavailable", reason=msg)
+        else:
+            probe_compare_after: List[Dict[str, Any]] = []
+            compare_error: Optional[str] = None
+            try:
+                probe_compare_after = hf.probe_top_logprobs(final_prompt, top_n=probe_compare_n)
+            except Exception as e:
+                compare_error = str(e)
+            if probe_compare_after:
+                if cfg.print_probe:
+                    items = [
+                        {
+                            "token_id": None,
+                            "token": x.get("token", ""),
+                            "rank": int(x.get("rank", 0)),
+                            "prob": float(x.get("prob", 0.0)),
+                        }
+                        for x in probe_compare_after
+                    ]
+                    _print_probe_table("PROBE TOP TOKENS (API FINAL)", items, limit=min(len(items), probe_compare_n))
+                probe_compare = build_probe_compare(
+                    probe_compare_before,
+                    probe_compare_after,
+                    top_n=probe_compare_n,
+                    js_divergence_mode="topn_union_renorm",
+                )
+                if trace:
+                    trace.event(
+                        "probe_compare",
+                        run_id=run_id,
+                        pack_item=pack_item,
+                        **_probe_compare_trace_fields(probe_compare),
+                        movers=(probe_compare.get("movers") or [])[:8],
+                        entered=(probe_compare.get("entered") or [])[:8],
+                        exited=(probe_compare.get("exited") or [])[:8],
+                    )
+                if cfg.print_probe:
+                    _print_probe_compare_summary("PROBE COMPARE (API)", probe_compare, limit=min(8, probe_compare_n))
+            else:
+                msg = "Probe compare requested, but the API did not return a usable final prompt top-logprobs distribution."
+                if compare_error:
+                    msg = f"{msg} ({compare_error})"
+                api_warnings.append(msg)
+                print(f"[sr_ponder] WARN: {msg}", file=sys.stderr)
+                probe_compare = {"top_n": int(probe_compare_n), "status": "unavailable", "reason": msg}
+                if trace:
+                    trace.event("probe_compare", run_id=run_id, pack_item=pack_item, status="unavailable", reason=msg)
+
     answer_s = 0.0
     if cfg.answer_ensemble and ensemble_final:
         answer = ensemble_final.strip()
     else:
-        final_prompt = hf._apply_chat(
-            build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang, style=cfg.answer_style),
-            system_text=None,
-        )
         t_answer0 = time.perf_counter()
         answer = hf.generate_text(
             final_prompt,
@@ -4843,6 +5468,8 @@ def run_ponder_api(
         }
         if ensemble_raw
         else None,
+        "probe_compare": probe_compare,
+        "probe_compare_stages": probe_compare_stages if probe_compare_stages else None,
         "random_log": random_log_text,
         "prompt_jitter_queries": jitter_queries if jitter_queries else None,
         "api_probe_top": probe_top[:50] if probe_top else None,
@@ -5101,6 +5728,22 @@ def main() -> None:
     g_runtime.add_argument("--no_chat_template", action="store_true")
     g_runtime.add_argument("--no_gemma_format", action="store_true", help="Disable Gemma-native turn formatting")
     g_runtime.add_argument("--probe_top_n", type=int, default=0, help="Store probe top-N tokens in record (0=off)")
+    g_runtime.add_argument(
+        "--probe_compare",
+        action="store_true",
+        help="Compare pre/post-ponder next-token distributions and save rank/JS deltas",
+    )
+    g_runtime.add_argument(
+        "--probe_compare_stages",
+        action="store_true",
+        help="Capture a base->stage->final probe timeline (extra forward/API calls)",
+    )
+    g_runtime.add_argument(
+        "--probe_compare_top_n",
+        type=int,
+        default=32,
+        help="Top-N tokens used by --probe_compare / --probe_compare_stages",
+    )
     g_runtime.add_argument("--print_probe", action="store_true", help="Print probe tables to stdout")
 
     g_api.add_argument("--api_base_url", default="https://api.openai.com/v1", help="API base URL")
@@ -5287,6 +5930,9 @@ def main() -> None:
         prompt_jitter_max_new_tokens=args.prompt_jitter_max_new_tokens,
         prompt_jitter_temperature=args.prompt_jitter_temperature,
         probe_top_n=args.probe_top_n,
+        probe_compare=bool(args.probe_compare),
+        probe_compare_stages=bool(args.probe_compare_stages),
+        probe_compare_top_n=int(args.probe_compare_top_n),
         print_probe=args.print_probe,
         interactive=bool(args.interactive),
         interactive_candidates=args.interactive_candidates,
