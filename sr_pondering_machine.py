@@ -37,6 +37,7 @@ from collections import deque
 import dataclasses
 import datetime as dt
 import difflib
+from email.utils import parsedate_to_datetime
 import hashlib
 import json
 import math
@@ -808,6 +809,18 @@ def apply_provider_defaults_inplace(args: argparse.Namespace, *, explicit_dests:
             setattr(args, key, value)
     args.provider = requested
     return requested
+
+
+def apply_provider_generation_defaults_inplace(args: argparse.Namespace, *, explicit_dests: Sequence[str]) -> None:
+    explicit = set(str(x) for x in explicit_dests)
+    provider = str(getattr(args, "provider", "auto") or "auto").strip().lower()
+    model = str(getattr(args, "model", "") or "").strip()
+    if provider == "openai" and _is_gpt5_family_model(model):
+        if "ponder_max_new_tokens" not in explicit:
+            try:
+                args.ponder_max_new_tokens = max(384, int(getattr(args, "ponder_max_new_tokens", 0) or 0))
+            except Exception:
+                args.ponder_max_new_tokens = 384
 
 
 def _suggest_model_dirs(missing_path: Path, *, limit: int = 4) -> List[Path]:
@@ -3073,6 +3086,41 @@ def _parse_header_kv(s: str) -> Tuple[str, str]:
     return k, v
 
 
+class APIHTTPError(RuntimeError):
+    def __init__(self, *, status: Optional[int], body: str = "", retry_after_s: Optional[float] = None) -> None:
+        self.status = int(status) if isinstance(status, int) else None
+        self.body = str(body or "")
+        self.retry_after_s = float(retry_after_s) if isinstance(retry_after_s, (int, float)) else None
+        msg = f"HTTP {self.status}: {self.body}" if self.status is not None else f"HTTP error: {self.body}"
+        if self.retry_after_s is not None:
+            msg += f" (retry_after={self.retry_after_s:.3f}s)"
+        super().__init__(msg)
+
+
+def _parse_retry_after_seconds(value: Any) -> Optional[float]:
+    if value is None:
+        return None
+    s = str(value).strip()
+    if not s:
+        return None
+    try:
+        secs = float(s)
+        if math.isfinite(secs) and secs >= 0.0:
+            return secs
+    except Exception:
+        pass
+    try:
+        dt_value = parsedate_to_datetime(s)
+        if dt_value is None:
+            return None
+        if dt_value.tzinfo is None:
+            dt_value = dt_value.replace(tzinfo=dt.timezone.utc)
+        delta = (dt_value - dt.datetime.now(dt.timezone.utc)).total_seconds()
+        return max(0.0, float(delta))
+    except Exception:
+        return None
+
+
 def _http_post_json(
     url: str,
     *,
@@ -3085,7 +3133,7 @@ def _http_post_json(
     req_headers = {"Content-Type": "application/json", "Accept": "application/json"}
     req_headers.update(headers or {})
 
-    last_err: Optional[str] = None
+    last_err: Optional[Exception] = None
     tries = max(0, int(max_retries)) + 1
 
     for attempt in range(tries):
@@ -3107,23 +3155,29 @@ def _http_post_json(
             err_text = (err_text or "").strip().replace("\n", " ")
             if len(err_text) > 600:
                 err_text = err_text[:600] + "…"
-            last_err = f"HTTP {status}: {err_text}" if status is not None else f"HTTPError: {err_text}"
+            retry_after_s = _parse_retry_after_seconds(getattr(e, "headers", {}).get("Retry-After"))
+            last_err = APIHTTPError(status=status, body=err_text, retry_after_s=retry_after_s)
 
             retryable = status in (408, 409, 429, 500, 502, 503, 504)
             if attempt < tries - 1 and retryable:
-                delay = min(8.0, 0.6 * (2**attempt) + random.random() * 0.2)
+                if retry_after_s is not None:
+                    delay = min(30.0, max(0.0, float(retry_after_s)))
+                else:
+                    delay = min(8.0, 0.6 * (2**attempt) + random.random() * 0.2)
                 time.sleep(delay)
                 continue
             break
         except urlerror.URLError as e:
-            last_err = f"URLError: {e}"
+            last_err = RuntimeError(f"URLError: {e}")
             if attempt < tries - 1:
                 delay = min(8.0, 0.6 * (2**attempt) + random.random() * 0.2)
                 time.sleep(delay)
                 continue
             break
 
-    raise RuntimeError(last_err or "Unknown HTTP error")
+    if last_err is not None:
+        raise last_err
+    raise RuntimeError("Unknown HTTP error")
 
 
 _GPT5_VERSIONED_RE = re.compile(r"^gpt-5\.(\d+)(?:[.\-].*)?$")
@@ -3143,6 +3197,11 @@ def _default_reasoning_effort_for_model(model: str) -> str:
     if _GPT5_VERSIONED_RE.match(m):
         return "none"
     return ""
+
+
+def _is_gpt5_family_model(model: str) -> bool:
+    m = (model or "").strip().lower()
+    return bool(m) and m.startswith("gpt-5")
 
 
 def _extract_reasoning_tokens(usage: Any) -> int:
@@ -3815,7 +3874,127 @@ def summarize_api_generation_meta(meta: Any) -> Dict[str, Any]:
         out["refusal"] = refusal.strip()
     if isinstance(meta.get("empty_output"), bool):
         out["empty_output"] = bool(meta.get("empty_output"))
+    retry = meta.get("auto_retry")
+    if isinstance(retry, dict) and retry:
+        out["auto_retry"] = _jsonable(retry)
     return out
+
+
+def _api_reasoning_starved_empty_output(text: str, meta: Dict[str, Any]) -> bool:
+    if str(text or "").strip():
+        return False
+    if not isinstance(meta, dict):
+        return False
+    finish_reason = str(meta.get("finish_reason") or "").strip().lower()
+    completion_tokens = meta.get("completion_tokens")
+    reasoning_tokens = meta.get("reasoning_tokens")
+    if not isinstance(completion_tokens, int) or not isinstance(reasoning_tokens, int):
+        return False
+    if completion_tokens <= 0 or reasoning_tokens < completion_tokens:
+        return False
+    return finish_reason in ("", "length")
+
+
+def _api_retry_budget_for_reasoning_starvation(*, provider: str, model: str, phase: str, current_max_new_tokens: int) -> int:
+    if str(provider or "").strip().lower() != "openai":
+        return 0
+    if not _is_gpt5_family_model(model):
+        return 0
+    base = 384 if phase.startswith("ponder") else 512
+    return max(int(current_max_new_tokens) * 2, base)
+
+
+def _generate_api_text_with_reasoning_retry(
+    hf: OpenAICompatModel,
+    *,
+    provider: str,
+    phase: str,
+    prompt: str,
+    max_new_tokens: int,
+    temperature: float,
+    top_p: float,
+    top_k: int,
+    repetition_penalty: float,
+    no_repeat_ngram_size: int,
+    seed: Optional[int],
+    api_warnings: Optional[List[str]] = None,
+) -> Tuple[str, Dict[str, Any]]:
+    text = hf.generate_text(
+        prompt,
+        max_new_tokens=max_new_tokens,
+        temperature=temperature,
+        top_p=top_p,
+        top_k=top_k,
+        repetition_penalty=repetition_penalty,
+        no_repeat_ngram_size=no_repeat_ngram_size,
+        seed=seed,
+    )
+    meta = summarize_api_generation_meta(getattr(hf, "last_response_meta", {}))
+    if not _api_reasoning_starved_empty_output(text, meta):
+        return text, meta
+
+    retry_max_new_tokens = _api_retry_budget_for_reasoning_starvation(
+        provider=provider,
+        model=hf.model,
+        phase=phase,
+        current_max_new_tokens=max_new_tokens,
+    )
+    if retry_max_new_tokens <= int(max_new_tokens):
+        return text, meta
+
+    msg = (
+        f"API {phase} exhausted visible output budget on reasoning "
+        f"(finish_reason={meta.get('finish_reason')!r}, completion_tokens={meta.get('completion_tokens')!r}, "
+        f"reasoning_tokens={meta.get('reasoning_tokens')!r}); retrying once with max_tokens={retry_max_new_tokens}."
+    )
+    if api_warnings is not None and msg not in api_warnings:
+        api_warnings.append(msg)
+    print(f"[sr_ponder] WARN: {msg}", file=sys.stderr)
+
+    text = hf.generate_text(
+        prompt,
+        max_new_tokens=retry_max_new_tokens,
+        temperature=temperature,
+        top_p=top_p,
+        top_k=top_k,
+        repetition_penalty=repetition_penalty,
+        no_repeat_ngram_size=no_repeat_ngram_size,
+        seed=None if seed is None else int(seed) + 1,
+    )
+    meta = summarize_api_generation_meta(getattr(hf, "last_response_meta", {}))
+    meta["auto_retry"] = {
+        "reason": "reasoning_tokens_exhausted_visible_budget",
+        "phase": str(phase),
+        "from_max_tokens": int(max_new_tokens),
+        "to_max_tokens": int(retry_max_new_tokens),
+    }
+    return text, meta
+
+
+def format_api_http_error(exc: APIHTTPError, *, provider: str, model: str, phase: str) -> str:
+    provider_s = str(provider or "api").strip()
+    model_s = str(model or "").strip()
+    phase_s = str(phase or "request").strip()
+    detail = f" detail={exc.body}" if str(exc.body or "").strip() else ""
+    if exc.status == 429:
+        retry = ""
+        if exc.retry_after_s is not None:
+            retry = f" Retry-After={exc.retry_after_s:.1f}s."
+        return (
+            f"[sr_ponder] ERROR: {provider_s} rate limit during {phase_s} (model={model_s!r})."
+            f"{retry} Wait and retry, or reduce call volume.{detail}"
+        )
+    return (
+        f"[sr_ponder] ERROR: {provider_s} API request failed during {phase_s} "
+        f"(model={model_s!r}, status={exc.status!r}).{detail}"
+    )
+
+
+def call_with_api_error_context(cfg: RunConfig, *, phase: str, fn: Any) -> Any:
+    try:
+        return fn()
+    except APIHTTPError as exc:
+        raise SystemExit(format_api_http_error(exc, provider=cfg.provider, model=cfg.model_path, phase=phase)) from None
 
 
 def run_baseline(
@@ -3831,16 +4010,31 @@ def run_baseline(
         build_prompt_for_answer(query, memory_block=None, lang=cfg.prompt_lang, style=cfg.answer_style),
         system_text=None,
     )
-    ans = hf.generate_text(
-        prompt,
-        max_new_tokens=cfg.answer_max_new_tokens,
-        temperature=cfg.temperature,
-        top_p=cfg.top_p,
-        top_k=cfg.top_k,
-        repetition_penalty=cfg.repetition_penalty,
-        no_repeat_ngram_size=cfg.no_repeat_ngram_size,
-        seed=cfg.seed,
-    )
+    if isinstance(hf, OpenAICompatModel):
+        ans, _baseline_meta = _generate_api_text_with_reasoning_retry(
+            hf,
+            provider=cfg.provider,
+            phase="baseline_answer",
+            prompt=prompt,
+            max_new_tokens=cfg.answer_max_new_tokens,
+            temperature=cfg.temperature,
+            top_p=cfg.top_p,
+            top_k=cfg.top_k,
+            repetition_penalty=cfg.repetition_penalty,
+            no_repeat_ngram_size=cfg.no_repeat_ngram_size,
+            seed=cfg.seed,
+        )
+    else:
+        ans = hf.generate_text(
+            prompt,
+            max_new_tokens=cfg.answer_max_new_tokens,
+            temperature=cfg.temperature,
+            top_p=cfg.top_p,
+            top_k=cfg.top_k,
+            repetition_penalty=cfg.repetition_penalty,
+            no_repeat_ngram_size=cfg.no_repeat_ngram_size,
+            seed=cfg.seed,
+        )
     if trace:
         trace.event(
             "baseline_answer",
@@ -5411,8 +5605,11 @@ def run_ponder_api(
                         system_text=None,
                     )
                     t_gen0 = time.perf_counter()
-                    ponder_log = hf.generate_text(
-                        ponder_prompt,
+                    ponder_log, ponder_meta = _generate_api_text_with_reasoning_retry(
+                        hf,
+                        provider=cfg.provider,
+                        phase="ponder_stage",
+                        prompt=ponder_prompt,
                         max_new_tokens=cfg.ponder_max_new_tokens,
                         temperature=max(0.4, cfg.temperature),
                         top_p=cfg.top_p,
@@ -5420,8 +5617,8 @@ def run_ponder_api(
                         repetition_penalty=1.0,
                         no_repeat_ngram_size=0,
                         seed=int(cfg.seed) + 1 + log_ix,
+                        api_warnings=api_warnings,
                     )
-                    ponder_meta = summarize_api_generation_meta(getattr(hf, "last_response_meta", {}))
                     gen_s = float(time.perf_counter() - t_gen0)
                     stage_logs.append(ponder_log)
                     if trace:
@@ -5686,8 +5883,11 @@ def run_ponder_api(
         q_rng = random.Random(int(cfg.seed) + 424243)
         rand_q = make_unrelated_question(rand_kw, lang=lang, rng=q_rng)
         rp = hf._apply_chat(build_prompt_for_pondering(rand_q, mode="assoc", lang=lang), system_text=None)
-        random_log_text = hf.generate_text(
-            rp,
+        random_log_text, _random_meta = _generate_api_text_with_reasoning_retry(
+            hf,
+            provider=cfg.provider,
+            phase="random_log",
+            prompt=rp,
             max_new_tokens=int(cfg.ponder_max_new_tokens),
             temperature=max(0.6, float(cfg.temperature)),
             top_p=float(cfg.top_p),
@@ -5695,6 +5895,7 @@ def run_ponder_api(
             repetition_penalty=1.0,
             no_repeat_ngram_size=0,
             seed=int(cfg.seed) + 424244,
+            api_warnings=api_warnings,
         )
         memory_block = random_log_text
 
@@ -5721,8 +5922,11 @@ def run_ponder_api(
                 build_prompt_for_answer(query, memory_block=band_mem, lang=lang, style=cfg.answer_style),
                 system_text=None,
             )
-            band_ans = hf.generate_text(
-                fp,
+            band_ans, _band_meta = _generate_api_text_with_reasoning_retry(
+                hf,
+                provider=cfg.provider,
+                phase=f"band_answer:{bl}",
+                prompt=fp,
                 max_new_tokens=cfg.answer_max_new_tokens,
                 temperature=cfg.temperature,
                 top_p=cfg.top_p,
@@ -5730,6 +5934,7 @@ def run_ponder_api(
                 repetition_penalty=1.0,
                 no_repeat_ngram_size=0,
                 seed=int(cfg.seed) + 10101,
+                api_warnings=api_warnings,
             )
             band_answers[bl] = band_ans
 
@@ -5739,8 +5944,11 @@ def run_ponder_api(
     ensemble_divergence: Optional[str] = None
     if cfg.answer_ensemble and len(band_answers) >= 2:
         ep = hf._apply_chat(build_prompt_for_ensemble_summary(query, band_answers, lang=lang), system_text=None)
-        ensemble_raw = hf.generate_text(
-            ep,
+        ensemble_raw, _ensemble_meta = _generate_api_text_with_reasoning_retry(
+            hf,
+            provider=cfg.provider,
+            phase="ensemble_summary",
+            prompt=ep,
             max_new_tokens=int(cfg.answer_ensemble_max_new_tokens),
             temperature=float(cfg.answer_ensemble_temperature),
             top_p=0.95,
@@ -5748,6 +5956,7 @@ def run_ponder_api(
             repetition_penalty=1.0,
             no_repeat_ngram_size=0,
             seed=int(cfg.seed) + 20202,
+            api_warnings=api_warnings,
         )
         ensemble_consensus = extract_tag(ensemble_raw, "consensus")
         ensemble_divergence = extract_tag(ensemble_raw, "divergence")
@@ -5817,12 +6026,16 @@ def run_ponder_api(
                     trace.event("probe_compare", run_id=run_id, pack_item=pack_item, status="unavailable", reason=msg)
 
     answer_s = 0.0
+    final_answer_meta: Dict[str, Any] = {}
     if cfg.answer_ensemble and ensemble_final:
         answer = ensemble_final.strip()
     else:
         t_answer0 = time.perf_counter()
-        answer = hf.generate_text(
-            final_prompt,
+        answer, final_answer_meta = _generate_api_text_with_reasoning_retry(
+            hf,
+            provider=cfg.provider,
+            phase="final_answer",
+            prompt=final_prompt,
             max_new_tokens=cfg.answer_max_new_tokens,
             temperature=cfg.temperature,
             top_p=cfg.top_p,
@@ -5830,8 +6043,8 @@ def run_ponder_api(
             repetition_penalty=1.0,
             no_repeat_ngram_size=0,
             seed=cfg.seed,
+            api_warnings=api_warnings,
         )
-        final_answer_meta = summarize_api_generation_meta(getattr(hf, "last_response_meta", {}))
         answer_s = float(time.perf_counter() - t_answer0)
         if not (answer or "").strip():
             finish_reason = final_answer_meta.get("finish_reason")
@@ -6210,7 +6423,12 @@ def main() -> None:
         help="Top-N logprobs to request (0=off; provider-capped, shallow probes warn and fall back to self-seeded keywords)",
     )
 
-    g_gen.add_argument("--ponder_max_new_tokens", type=int, default=160)
+    g_gen.add_argument(
+        "--ponder_max_new_tokens",
+        type=int,
+        default=160,
+        help="Max tokens for each ponder stage (provider=openai + gpt-5* auto-raises the default floor to 384)",
+    )
     g_gen.add_argument("--temperature", type=float, default=0.7)
     g_gen.add_argument("--top_p", type=float, default=0.95)
     g_gen.add_argument("--top_k", type=int, default=0)
@@ -6258,6 +6476,7 @@ def main() -> None:
 
     apply_preset_inplace(args, explicit_dests=explicit_dests)
     resolved_provider = apply_provider_defaults_inplace(args, explicit_dests=explicit_dests)
+    apply_provider_generation_defaults_inplace(args, explicit_dests=explicit_dests)
 
     # Convenience: write artifacts into a directory with stable filenames.
     out_dir_s = _expand_path_str(str(getattr(args, "out_dir", "") or ""))
@@ -6748,7 +6967,11 @@ def main() -> None:
                     cfg2 = dataclasses.replace(pack_cfg, **cfg_overrides) if cfg_overrides else pack_cfg
                 except TypeError as e:
                     raise SystemExit(f"[sr_ponder] ERROR: pack item {name!r} has invalid cfg overrides: {e}")
-                ans = run_baseline(hf, cfg2, item_query, trace=trace, pack_item=name)
+                ans = call_with_api_error_context(
+                    cfg2,
+                    phase=f"pack:{name}:baseline",
+                    fn=lambda: run_baseline(hf, cfg2, item_query, trace=trace, pack_item=name),
+                )
                 print(ans)
                 item: Dict[str, Any] = {"name": name, "kind": "baseline", "answer": ans}
                 if item_query != args.query:
@@ -6764,7 +6987,11 @@ def main() -> None:
                 cfg2 = dataclasses.replace(pack_cfg, control=str(spec.get("control", "none")), **cfg_overrides)
             except TypeError as e:
                 raise SystemExit(f"[sr_ponder] ERROR: pack item {name!r} has invalid cfg overrides: {e}")
-            ans, recs, extras = run_ponder_dispatch(hf, cfg2, item_query, trace=trace, pack_item=name)
+            ans, recs, extras = call_with_api_error_context(
+                cfg2,
+                phase=f"pack:{name}:ponder",
+                fn=lambda: run_ponder_dispatch(hf, cfg2, item_query, trace=trace, pack_item=name),
+            )
             print(ans)
             item = {"name": name, "kind": "ponder", "control": cfg2.control, "answer": ans, "extras": extras}
             if item_query != args.query:
@@ -6851,12 +7078,20 @@ def main() -> None:
     comparison: Dict[str, Any] = {}
 
     if args.mode in ("baseline", "both"):
-        baseline_ans = run_baseline(hf, cfg, args.query, trace=trace)
+        baseline_ans = call_with_api_error_context(
+            cfg,
+            phase="baseline",
+            fn=lambda: run_baseline(hf, cfg, args.query, trace=trace),
+        )
         print("\n=== BASELINE ===\n")
         print(baseline_ans)
 
     if args.mode in ("ponder", "both"):
-        ponder_ans, ponder_recs, ponder_extras = run_ponder_dispatch(hf, cfg, args.query, trace=trace)
+        ponder_ans, ponder_recs, ponder_extras = call_with_api_error_context(
+            cfg,
+            phase="ponder",
+            fn=lambda: run_ponder_dispatch(hf, cfg, args.query, trace=trace),
+        )
 
         _print_ponder_logs(ponder_recs, mode=str(getattr(args, "print_ponder", "auto") or "auto"))
 

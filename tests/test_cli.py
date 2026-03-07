@@ -245,10 +245,70 @@ class TestOpenAICompat(unittest.TestCase):
         cfg = obj.get("cfg") or {}
         self.assertEqual(cfg.get("api_reasoning_effort"), "none")
 
+    def test_generate_api_text_with_reasoning_retry_retries_once(self) -> None:
+        class _FakeHF:
+            def __init__(self) -> None:
+                self.model = "gpt-5.4"
+                self.calls: list[int] = []
+                self.last_response_meta: dict = {}
+
+            def generate_text(self, prompt: str, *, max_new_tokens: int, **kwargs) -> str:
+                _ = (prompt, kwargs)
+                self.calls.append(int(max_new_tokens))
+                if len(self.calls) == 1:
+                    self.last_response_meta = {
+                        "finish_reason": "length",
+                        "completion_tokens": 160,
+                        "reasoning_tokens": 160,
+                        "empty_output": True,
+                    }
+                    return ""
+                self.last_response_meta = {
+                    "finish_reason": "stop",
+                    "completion_tokens": 220,
+                    "reasoning_tokens": 120,
+                    "empty_output": False,
+                }
+                return "visible text"
+
+        hf = _FakeHF()
+        warnings: list[str] = []
+
+        text, meta = sp._generate_api_text_with_reasoning_retry(
+            hf,  # type: ignore[arg-type]
+            provider="openai",
+            phase="ponder_stage",
+            prompt="hello",
+            max_new_tokens=160,
+            temperature=0.7,
+            top_p=0.95,
+            top_k=0,
+            repetition_penalty=1.0,
+            no_repeat_ngram_size=0,
+            seed=123,
+            api_warnings=warnings,
+        )
+
+        self.assertEqual(text, "visible text")
+        self.assertEqual(hf.calls, [160, 384])
+        self.assertEqual(meta.get("auto_retry", {}).get("to_max_tokens"), 384)
+        self.assertEqual(len(warnings), 1)
+
+    def test_format_api_http_error_includes_retry_after(self) -> None:
+        msg = sp.format_api_http_error(
+            sp.APIHTTPError(status=429, body="rate limit exceeded", retry_after_s=3.5),
+            provider="mistral",
+            model="mistral-large-latest",
+            phase="baseline",
+        )
+        self.assertIn("rate limit", msg.lower())
+        self.assertIn("Retry-After=3.5s", msg)
+
 
 class TestTerminalUX(unittest.TestCase):
     def setUp(self) -> None:
         os.environ["OPENAI_API_KEY"] = "test"
+        os.environ["MISTRAL_API_KEY"] = "test"
 
     def test_provider_preset_resolves_openai_config(self) -> None:
         out, _err = _run_main(
@@ -268,6 +328,22 @@ class TestTerminalUX(unittest.TestCase):
         self.assertEqual(cfg.get("backend"), "openai_compat")
         self.assertEqual(cfg.get("api_base_url"), "https://api.openai.com/v1")
         self.assertEqual(cfg.get("api_key_env"), "OPENAI_API_KEY")
+
+    def test_provider_openai_gpt5_defaults_ponder_budget(self) -> None:
+        out, _err = _run_main(
+            [
+                "--provider",
+                "openai",
+                "--model",
+                "gpt-5.4",
+                "--query",
+                "q",
+                "--print_config_only",
+            ]
+        )
+        obj = json.loads(out)
+        cfg = obj.get("cfg") or {}
+        self.assertEqual(cfg.get("ponder_max_new_tokens"), 384)
 
     def test_main_prints_ponder_logs_and_comparison_summary(self) -> None:
         with _tempdir() as td:
@@ -332,6 +408,29 @@ class TestTerminalUX(unittest.TestCase):
             self.assertEqual(comp.get("answer_changed"), True)
             self.assertEqual(comp.get("memory_selected"), 1)
             self.assertAlmostEqual(comp.get("probe_js_divergence"), 0.12)
+
+    def test_main_reports_rate_limit_without_traceback(self) -> None:
+        with patch.object(
+            sp,
+            "run_baseline",
+            side_effect=sp.APIHTTPError(status=429, body="Rate limit exceeded", retry_after_s=2.0),
+        ):
+            with self.assertRaises(SystemExit) as ctx:
+                _run_main(
+                    [
+                        "--provider",
+                        "mistral",
+                        "--model",
+                        "mistral-large-latest",
+                        "--query",
+                        "q",
+                        "--mode",
+                        "baseline",
+                    ]
+                )
+        msg = str(ctx.exception)
+        self.assertIn("rate limit", msg.lower())
+        self.assertIn("Retry-After=2.0s", msg)
 
 
 class TestPackBehavior(unittest.TestCase):

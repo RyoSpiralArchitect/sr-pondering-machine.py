@@ -125,7 +125,9 @@ For `https://api.openai.com/v1`, newer GPT-5 variants can have stricter paramete
 
 - `gpt-5` may reject `max_tokens`, `temperature != 1`, or `top_p`; the client now retries with compatibility fallbacks.
 - Versioned models such as `gpt-5.2` / `gpt-5.4` can work better with `--api_reasoning_effort none`.
-- If the API returns an empty visible answer, the tool now records `finish_reason`, `completion_tokens`, and `reasoning_tokens` in `extras.api_final_generation` / `api_warnings` so you can tell whether the model stayed silent, refused, or spent the budget elsewhere.
+- With `--provider openai` and `gpt-5*`, the default `--ponder_max_new_tokens` floor is raised to `384`.
+- If a GPT-5 call returns empty visible text while spending the full completion budget on reasoning, the tool retries once with a larger token budget before giving up.
+- Empty visible answers still record `finish_reason`, `completion_tokens`, and `reasoning_tokens` in `extras.api_final_generation` / `api_warnings` so you can tell whether the model stayed silent, refused, or spent the budget elsewhere.
 
 Example:
 
@@ -625,6 +627,8 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.h
 - For API providers on macOS with aggressive user `sitecustomize` hooks, `PYTHONNOUSERSITE=1` can avoid unrelated import-time crashes.
 - For API providers, `--seed`, `--top_k`, `--repetition_penalty`, and `--no_repeat_ngram_size` are currently not forwarded; the script prints a warning so cross-backend comparisons stay honest.
 - For OpenAI GPT-5 family models, the client retries common compatibility errors (`max_tokens` ↔ `max_completion_tokens`, unsupported `temperature`, unsupported `top_p`, unsupported `logprobs`) automatically.
+- For OpenAI GPT-5 family models, the client also retries one time when visible output is empty and the entire completion budget appears to have been consumed by reasoning tokens.
+- For API providers, rate limits now surface as a short CLI error with any available `Retry-After` delay instead of a raw stack trace.
 - For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams + IDF weighting). It’s not as strong as real embedding retrieval, but better than raw tail.
 - For API backends, `--api_logprobs_top_n` is provider-capped. If the returned logprob depth is shallower than a requested band (for example `spectrum3` + `far`), that band degrades to self-seeded keywords and the script warns about it.
 - For `--probe_compare`, `--backend hf` computes JS divergence on the full vocab; `--backend openai_compat` computes an approximate JS divergence on the observed top-logprobs union and reports the observed mass.
