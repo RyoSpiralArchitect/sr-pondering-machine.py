@@ -80,7 +80,7 @@ python3 sr_pondering_machine.py \
 ```
 
 This runs both the **baseline** (direct answer) and the **ponder** (wander-then-answer) modes and prints both outputs, the ponder log, and a compact comparison summary.
-By default that comparison includes a semantic similarity view: local HF runs use mean token-embedding cosine, and API runs try a local encoder automatically (`./model/minilm`, `./models/minilm`, or similar MiniLM/e5/bge-style dirs) before falling back to hashed character n-gram TF-IDF cosine.
+By default that comparison includes a semantic similarity view: local HF runs use mean token-embedding cosine, and API runs try a local encoder automatically (`./model/minilm`, `./models/minilm`, or similar MiniLM/e5/bge-style dirs) on CPU before falling back to hashed character n-gram TF-IDF cosine.
 
 ## API Quick Start (Provider presets)
 
@@ -633,8 +633,9 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.h
 - For OpenAI GPT-5 family models, the client retries common compatibility errors (`max_tokens` ↔ `max_completion_tokens`, unsupported `temperature`, unsupported `top_p`, unsupported `logprobs`) automatically.
 - For OpenAI GPT-5 family models, the client also retries one time when visible output is empty and the entire completion budget appears to have been consumed by reasoning tokens.
 - For API providers, rate limits now surface as a short CLI error with any available `Retry-After` delay instead of a raw stack trace.
-- For `--compare_semantic auto`, local HF runs use cosine over mean token embeddings from the active model; API runs first try a local encoder auto-discovery pass (`model/minilm`, `models/minilm`, or similar MiniLM/e5/bge/gte/mpnet dirs) and only fall back to hashed char n-gram TF-IDF cosine if none is available.
+- For `--compare_semantic auto`, local HF runs use cosine over mean token embeddings from the active model; API runs first try a local encoder auto-discovery pass (`model/minilm`, `models/minilm`, or similar MiniLM/e5/bge/gte/mpnet dirs) on CPU and only fall back to hashed char n-gram TF-IDF cosine if none is available.
 - For `--compare_semantic embed`, you can set `--compare_embed_model` explicitly, or let the script auto-pick a local encoder from the same MiniLM/e5/bge/gte/mpnet search path. Set `SR_COMPARE_EMBED_MODEL` if you want to pin that default without passing the CLI flag each time.
+- External semantic encoder loading is quiet by default to avoid noisy `from_pretrained()` progress bars and local `sitecustomize` chatter; set `SR_COMPARE_EMBED_VERBOSE=1` if you want to see that load output.
 - For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams + IDF weighting). It’s not as strong as real embedding retrieval, but better than raw tail.
 - For API backends, `--api_logprobs_top_n` is provider-capped. If the returned logprob depth is shallower than a requested band (for example `spectrum3` + `far`), that band degrades to self-seeded keywords and the script warns about it.
 - For `--probe_compare`, `--backend hf` computes JS divergence on the full vocab; `--backend openai_compat` computes an approximate JS divergence on the observed top-logprobs union and reports the observed mass.

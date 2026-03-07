@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 from collections import deque
+import contextlib
 import dataclasses
 import datetime as dt
 import difflib
@@ -4097,18 +4098,22 @@ def _resolve_embed_device(device_hint: str) -> str:
     hint = str(device_hint or "auto").strip().lower()
     if hint and hint != "auto":
         return hint
-    if torch is not None:
-        try:
-            if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-                return "mps"
-        except Exception:
-            pass
-        try:
-            if torch.cuda.is_available():
-                return "cuda"
-        except Exception:
-            pass
     return "cpu"
+
+
+@contextlib.contextmanager
+def _quiet_external_embedder_load() -> Any:
+    verbose = str(os.getenv("SR_COMPARE_EMBED_VERBOSE", "") or "").strip().lower()
+    if verbose in ("1", "true", "yes", "on"):
+        yield
+        return
+    try:
+        with open(os.devnull, "w", encoding="utf-8") as sink:
+            with contextlib.redirect_stdout(sink), contextlib.redirect_stderr(sink):
+                yield
+            return
+    except Exception:
+        yield
 
 
 def _load_text_embedder(model_ref: str, *, device_hint: str) -> Tuple[Any, Any, str, str]:
@@ -4123,10 +4128,11 @@ def _load_text_embedder(model_ref: str, *, device_hint: str) -> Tuple[Any, Any, 
     cached = _TEXT_EMBEDDER_CACHE.get(cache_key)
     if cached is not None:
         return cached
-    tokenizer = AutoTokenizer.from_pretrained(resolved_model, local_files_only=True, trust_remote_code=False)
-    model = AutoModel.from_pretrained(resolved_model, local_files_only=True, trust_remote_code=False)
-    model.to(device)
-    model.eval()
+    with _quiet_external_embedder_load():
+        tokenizer = AutoTokenizer.from_pretrained(resolved_model, local_files_only=True, trust_remote_code=False)
+        model = AutoModel.from_pretrained(resolved_model, local_files_only=True, trust_remote_code=False)
+        model.to(device)
+        model.eval()
     _TEXT_EMBEDDER_CACHE[cache_key] = (tokenizer, model, device, resolved_model)
     return tokenizer, model, device, resolved_model
 

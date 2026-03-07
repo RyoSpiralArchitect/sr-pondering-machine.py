@@ -169,6 +169,9 @@ class TestProbeCompare(unittest.TestCase):
 
 
 class TestSemanticCompare(unittest.TestCase):
+    def test_external_embed_device_auto_prefers_cpu(self) -> None:
+        self.assertEqual(sp._resolve_embed_device("auto"), "cpu")
+
     def test_build_semantic_compare_hash(self) -> None:
         cfg = sp.RunConfig(model_path="dummy", memory_path=Path("ponder_logs.jsonl"), compare_semantic="hash")
         comp = sp.build_semantic_compare(
