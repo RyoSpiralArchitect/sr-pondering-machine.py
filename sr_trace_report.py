@@ -68,6 +68,29 @@ def _slug(s: str) -> str:
     return t or "unknown"
 
 
+def _as_float(x: Any) -> Optional[float]:
+    if isinstance(x, (int, float)):
+        try:
+            return float(x)
+        except Exception:
+            return None
+    return None
+
+
+def _token_label(x: Any) -> str:
+    if not isinstance(x, dict):
+        return ""
+    tok = str(x.get("token") or "").strip()
+    tid = x.get("token_id")
+    if tok and tid is not None:
+        return f"{tok} (id={tid})"
+    if tok:
+        return tok
+    if tid is not None:
+        return f"id={tid}"
+    return ""
+
+
 def analyze_trace(path: Path, *, max_records: int, session_id: str) -> Dict[str, Any]:
     sessions: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
     for ev in _iter_jsonl(path, max_records=max_records):
@@ -139,6 +162,69 @@ def analyze_trace(path: Path, *, max_records: int, session_id: str) -> Dict[str,
             except Exception:
                 pack_total_elapsed = None
 
+        probe_final: Optional[Dict[str, Any]] = None
+        probe_stages: List[Dict[str, Any]] = []
+        for ev in ordered:
+            name = str(ev.get("event") or "")
+            if name == "probe_compare":
+                probe_final = {
+                    "status": str(ev.get("status") or "ok"),
+                    "reason": str(ev.get("reason") or ""),
+                    "top_n": int(ev.get("top_n") or 0),
+                    "js_divergence": _as_float(ev.get("js_divergence")),
+                    "js_divergence_mode": str(ev.get("js_divergence_mode") or ""),
+                    "overlap_count": int(ev.get("overlap_count") or 0),
+                    "jaccard": _as_float(ev.get("jaccard")),
+                    "mover_count": int(ev.get("mover_count") or 0),
+                    "entered_count": int(ev.get("entered_count") or 0),
+                    "exited_count": int(ev.get("exited_count") or 0),
+                    "top1_before": _token_label(ev.get("top1_before")),
+                    "top1_after": _token_label(ev.get("top1_after")),
+                    "movers": ev.get("movers") if isinstance(ev.get("movers"), list) else [],
+                    "entered": ev.get("entered") if isinstance(ev.get("entered"), list) else [],
+                    "exited": ev.get("exited") if isinstance(ev.get("exited"), list) else [],
+                }
+            elif name == "probe_compare_stage":
+                probe_stages.append(
+                    {
+                        "status": str(ev.get("status") or "ok"),
+                        "reason": str(ev.get("reason") or ""),
+                        "source": str(ev.get("source") or ""),
+                        "band_label": str(ev.get("band_label") or ""),
+                        "band_ponder_ix": ev.get("band_ponder_ix"),
+                        "hop_ix": ev.get("hop_ix"),
+                        "stage_ix": ev.get("stage_ix"),
+                        "ponder_ix": ev.get("ponder_ix"),
+                        "ponder_mode": str(ev.get("ponder_mode") or ""),
+                        "memory_chars": int(ev.get("memory_chars") or 0),
+                        "prompt_chars": int(ev.get("prompt_chars") or 0),
+                        "top_n": int(ev.get("top_n") or 0),
+                        "js_divergence": _as_float(ev.get("js_divergence")),
+                        "prev_js_divergence": _as_float(ev.get("prev_js_divergence")),
+                        "js_divergence_mode": str(ev.get("js_divergence_mode") or ""),
+                        "overlap_count": int(ev.get("overlap_count") or 0),
+                        "jaccard": _as_float(ev.get("jaccard")),
+                        "mover_count": int(ev.get("mover_count") or 0),
+                        "entered_count": int(ev.get("entered_count") or 0),
+                        "exited_count": int(ev.get("exited_count") or 0),
+                        "top1_before": _token_label(ev.get("top1_before")),
+                        "top1_after": _token_label(ev.get("top1_after")),
+                    }
+                )
+
+        probe_summary: Optional[Dict[str, Any]] = None
+        if probe_final or probe_stages:
+            stage_js = [x for x in (_as_float(ev.get("js_divergence")) for ev in probe_stages) if x is not None]
+            prev_stage_js = [x for x in (_as_float(ev.get("prev_js_divergence")) for ev in probe_stages) if x is not None]
+            probe_summary = {
+                "final": probe_final,
+                "stages": probe_stages,
+                "stage_count": int(len(probe_stages)),
+                "stage_max_js": max(stage_js) if stage_js else None,
+                "stage_last_js": stage_js[-1] if stage_js else None,
+                "stage_max_prev_js": max(prev_stage_js) if prev_stage_js else None,
+            }
+
         out["sessions"].append(
             {
                 "session_id": sid,
@@ -155,6 +241,7 @@ def analyze_trace(path: Path, *, max_records: int, session_id: str) -> Dict[str,
                 }
                 if pack_id or ("pack_start" in counts)
                 else None,
+                "probe_compare": probe_summary,
                 "events": ordered,
             }
         )
@@ -175,6 +262,7 @@ def render_html(report: Dict[str, Any]) -> str:
         ".row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}"
         ".filters{margin:10px 0;padding:8px 10px;border:1px solid #eee;border-radius:10px;background:#fafafa}"
         ".filters label{margin-right:10px;white-space:nowrap}"
+        ".card{margin:12px 0;padding:10px 12px;border:1px solid #ddd;border-radius:10px;background:#fcfcfc}"
         "table{border-collapse:collapse;width:100%;margin:12px 0;}"
         "th,td{border:1px solid #ddd;padding:6px 8px;vertical-align:top;}"
         "th{background:#f6f6f6;text-align:left;position:sticky;top:0;z-index:2}"
@@ -261,6 +349,90 @@ def render_html(report: Dict[str, Any]) -> str:
                 parts.append("</ul>")
             parts.append("</ul>")
 
+        probe = sess.get("probe_compare")
+        if isinstance(probe, dict):
+            parts.append("<h3>probe compare</h3>")
+            parts.append("<div class='card'>")
+            final = probe.get("final")
+            if isinstance(final, dict):
+                js = final.get("js_divergence")
+                js_s = f"{float(js):.6f}" if isinstance(js, (int, float)) else "?"
+                jac = final.get("jaccard")
+                jac_s = f"{float(jac):.3f}" if isinstance(jac, (int, float)) else "?"
+                parts.append(
+                    "<div>"
+                    f"final: js={_esc(js_s)}"
+                    f" | mode={_esc(final.get('js_divergence_mode') or '')}"
+                    f" | overlap={_esc(final.get('overlap_count'))}"
+                    f" | jaccard={_esc(jac_s)}"
+                    f" | movers={_esc(final.get('mover_count'))}"
+                    "</div>"
+                )
+                t1b = str(final.get("top1_before") or "").strip()
+                t1a = str(final.get("top1_after") or "").strip()
+                if t1b or t1a:
+                    parts.append(f"<div>top1: <code>{_esc(t1b)}</code> → <code>{_esc(t1a)}</code></div>")
+                if str(final.get("status") or "ok") != "ok":
+                    parts.append(f"<div class='muted'>status: {_esc(final.get('status'))} {_esc(final.get('reason') or '')}</div>")
+
+            stage_count = int(probe.get("stage_count") or 0)
+            if stage_count > 0:
+                stage_max_js = probe.get("stage_max_js")
+                stage_last_js = probe.get("stage_last_js")
+                stage_max_prev_js = probe.get("stage_max_prev_js")
+                stage_max_js_s = f"{float(stage_max_js):.6f}" if isinstance(stage_max_js, (int, float)) else "?"
+                stage_last_js_s = f"{float(stage_last_js):.6f}" if isinstance(stage_last_js, (int, float)) else "?"
+                stage_max_prev_js_s = f"{float(stage_max_prev_js):.6f}" if isinstance(stage_max_prev_js, (int, float)) else "?"
+                parts.append(
+                    "<div>"
+                    f"stages: {_esc(stage_count)}"
+                    f" | max js(base): {_esc(stage_max_js_s)}"
+                    f" | last js(base): {_esc(stage_last_js_s)}"
+                    f" | max js(prev): {_esc(stage_max_prev_js_s)}"
+                    "</div>"
+                )
+            parts.append("</div>")
+
+            stages = probe.get("stages") or []
+            if isinstance(stages, list) and stages:
+                parts.append("<table>")
+                parts.append(
+                    "<thead><tr>"
+                    "<th>band</th><th>hop</th><th>stage</th><th>mode</th><th>js(base)</th><th>js(prev)</th>"
+                    "<th>top1</th><th>movers</th><th>chars</th><th>status</th>"
+                    "</tr></thead>"
+                )
+                parts.append("<tbody>")
+                for ev in stages:
+                    if not isinstance(ev, dict):
+                        continue
+                    js = ev.get("js_divergence")
+                    js_s = f"{float(js):.6f}" if isinstance(js, (int, float)) else ""
+                    pjs = ev.get("prev_js_divergence")
+                    pjs_s = f"{float(pjs):.6f}" if isinstance(pjs, (int, float)) else ""
+                    top1b = str(ev.get("top1_before") or "").strip()
+                    top1a = str(ev.get("top1_after") or "").strip()
+                    top1_s = f"{top1b} → {top1a}".strip(" →")
+                    chars_s = f"mem={int(ev.get('memory_chars') or 0)} prompt={int(ev.get('prompt_chars') or 0)}"
+                    status_s = str(ev.get("status") or "ok")
+                    if str(ev.get("reason") or "").strip():
+                        status_s += f" | {str(ev.get('reason') or '').strip()}"
+                    parts.append(
+                        "<tr>"
+                        f"<td><code>{_esc(ev.get('band_label') or '')}</code></td>"
+                        f"<td><code>{_esc(ev.get('hop_ix'))}</code></td>"
+                        f"<td><code>{_esc(ev.get('stage_ix'))}</code></td>"
+                        f"<td><code>{_esc(ev.get('ponder_mode') or '')}</code></td>"
+                        f"<td><code>{_esc(js_s)}</code></td>"
+                        f"<td><code>{_esc(pjs_s)}</code></td>"
+                        f"<td><code>{_esc(top1_s)}</code></td>"
+                        f"<td><code>{_esc(ev.get('mover_count'))}</code></td>"
+                        f"<td><code>{_esc(chars_s)}</code></td>"
+                        f"<td><code>{_esc(status_s)}</code></td>"
+                        "</tr>"
+                    )
+                parts.append("</tbody></table>")
+
         parts.append("<h3>events</h3>")
         parts.append("<table>")
         parts.append("<thead><tr><th>ts</th><th>event</th><th>item</th><th>elapsed_s</th><th>details</th></tr></thead>")
@@ -334,7 +506,17 @@ def main() -> None:
         rng = f"{s.get('ts_min') or ''} .. {s.get('ts_max') or ''}".strip()
         counts = s.get("counts") or {}
         top = ", ".join(f"{k}:{v}" for k, v in sorted(counts.items(), key=lambda kv: (-int(kv[1]), kv[0]))[:8])
-        print(f"- {sid}  {rng}  {top}")
+        probe = s.get("probe_compare") or {}
+        probe_s = ""
+        if isinstance(probe, dict):
+            final = probe.get("final") or {}
+            js = final.get("js_divergence") if isinstance(final, dict) else None
+            stage_count = probe.get("stage_count")
+            if isinstance(js, (int, float)) or isinstance(stage_count, int):
+                js_s = f"{float(js):.4f}" if isinstance(js, (int, float)) else "?"
+                sc_s = str(int(stage_count)) if isinstance(stage_count, int) else "0"
+                probe_s = f"  probe(js={js_s}, stages={sc_s})"
+        print(f"- {sid}  {rng}  {top}{probe_s}")
 
 
 if __name__ == "__main__":

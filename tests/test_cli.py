@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 
 import sr_pondering_machine as sp
+import sr_trace_report as tr
 
 
 class _Chdir:
@@ -327,6 +328,63 @@ class TestPackBehavior(unittest.TestCase):
                             "mem.jsonl",
                         ]
                     )
+
+
+class TestTraceReportProbeCompare(unittest.TestCase):
+    def test_trace_report_summarizes_probe_compare(self) -> None:
+        with _tempdir() as td:
+            td_path = Path(td)
+            trace_path = td_path / "trace.jsonl"
+            rows = [
+                {"ts": "2026-03-07T00:00:00Z", "session_id": "s1", "event": "session_start"},
+                {
+                    "ts": "2026-03-07T00:00:01Z",
+                    "session_id": "s1",
+                    "event": "probe_compare_stage",
+                    "band_label": "mid",
+                    "hop_ix": 0,
+                    "stage_ix": 0,
+                    "ponder_mode": "counterexample",
+                    "memory_chars": 120,
+                    "prompt_chars": 240,
+                    "top_n": 32,
+                    "js_divergence": 0.21,
+                    "prev_js_divergence": 0.09,
+                    "mover_count": 3,
+                    "top1_before": {"token": "alpha", "token_id": 1},
+                    "top1_after": {"token": "beta", "token_id": 2},
+                },
+                {
+                    "ts": "2026-03-07T00:00:02Z",
+                    "session_id": "s1",
+                    "event": "probe_compare",
+                    "top_n": 32,
+                    "js_divergence": 0.42,
+                    "js_divergence_mode": "full_vocab",
+                    "overlap_count": 11,
+                    "jaccard": 0.55,
+                    "mover_count": 4,
+                    "entered_count": 2,
+                    "exited_count": 1,
+                    "top1_before": {"token": "alpha", "token_id": 1},
+                    "top1_after": {"token": "gamma", "token_id": 3},
+                },
+                {"ts": "2026-03-07T00:00:03Z", "session_id": "s1", "event": "session_end"},
+            ]
+            trace_path.write_text("\n".join(json.dumps(x) for x in rows) + "\n", encoding="utf-8")
+
+            report = tr.analyze_trace(trace_path, max_records=0, session_id="")
+            sessions = report.get("sessions") or []
+            self.assertEqual(len(sessions), 1)
+            probe = sessions[0].get("probe_compare") or {}
+            self.assertEqual(probe.get("stage_count"), 1)
+            self.assertEqual(probe.get("final", {}).get("mover_count"), 4)
+            self.assertAlmostEqual(probe.get("stage_max_js"), 0.21)
+
+            html = tr.render_html(report)
+            self.assertIn("probe compare", html.lower())
+            self.assertIn("counterexample", html)
+            self.assertIn("0.420000", html)
 
 
 if __name__ == "__main__":

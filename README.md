@@ -329,6 +329,7 @@ python3 sr_pondering_machine.py \
 ```
 
 This stores a run-level `extras.probe_compare` block, a per-stage `extras.probe_compare_stages` timeline, and `probe_compare` / `probe_compare_stage` trace events.
+`sr_trace_report.py` now summarizes those events into a final probe card plus a stage timeline table.
 For `--backend hf`, JS divergence is computed over the full vocabulary. For `--backend openai_compat`, it is an approximation over the returned top-logprobs union.
 `--probe_compare_stages` probes the answer prompt after every ponder stage, so it adds one extra forward pass (HF) or one extra logprobs API call per stage.
 
