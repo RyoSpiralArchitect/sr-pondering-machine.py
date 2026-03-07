@@ -629,8 +629,18 @@ def _print_run_comparison(comp: Dict[str, Any], *, mode: str) -> None:
         status = str(semantic.get("status") or "").strip()
         method = str(semantic.get("method") or "").strip()
         if status == "ok":
+            semantic_prefix = f"semantic[{method}]"
+            model_ref = str(semantic.get("model") or "").strip()
+            source = str(semantic.get("source") or "").strip()
+            extra_parts: List[str] = []
+            if model_ref and method == "external_encoder":
+                extra_parts.append(f"model={Path(model_ref).name if _looks_like_local_path(model_ref) else model_ref}")
+            if source:
+                extra_parts.append(f"source={source}")
+            if extra_parts:
+                semantic_prefix += " " + " ".join(extra_parts)
             print(
-                f"semantic[{method}] "
+                f"{semantic_prefix} "
                 f"answer_cosine={_fmt_metric(semantic.get('answer_cosine'), digits=6)} "
                 f"query_base={_fmt_metric(semantic.get('query_baseline_cosine'), digits=6)} "
                 f"query_ponder={_fmt_metric(semantic.get('query_ponder_cosine'), digits=6)} "
@@ -924,6 +934,102 @@ def resolve_model_ref(model_ref: str) -> str:
         raise SystemExit("\n".join(lines))
 
     return model_ref
+
+
+_COMPARE_EMBED_SEARCH_DIRS = ("model", "models")
+_COMPARE_EMBED_PREFERRED_NAMES = (
+    "minilm",
+    "all-MiniLM-L6-v2",
+    "all-mpnet-base-v2",
+    "multilingual-e5-small",
+    "multilingual-e5-base",
+    "bge-small-en-v1.5",
+    "bge-base-en-v1.5",
+    "gte-small",
+    "gte-base",
+)
+_COMPARE_EMBED_HINTS = ("minilm", "e5", "bge", "gte", "mpnet", "embed")
+
+
+def _iter_unique_paths(paths: Sequence[Path]) -> List[Path]:
+    out: List[Path] = []
+    seen: set[str] = set()
+    for raw in paths:
+        try:
+            p = raw.resolve()
+        except Exception:
+            p = raw
+        key = str(p)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(p)
+    return out
+
+
+def _compare_embed_search_roots() -> List[Path]:
+    roots: List[Path] = []
+    try:
+        cwd = Path.cwd().resolve()
+        roots.append(cwd)
+        roots.extend(list(cwd.parents)[:4])
+    except Exception:
+        pass
+    try:
+        script_dir = Path(__file__).resolve().parent
+        roots.append(script_dir)
+        roots.extend(list(script_dir.parents)[:4])
+    except Exception:
+        pass
+    return _iter_unique_paths(roots)
+
+
+def _score_compare_embed_candidate(path: Path) -> Tuple[int, int, int, str]:
+    name_norm = _normalize_model_name(path.name)
+    preferred_ix = len(_COMPARE_EMBED_PREFERRED_NAMES)
+    for ix, preferred in enumerate(_COMPARE_EMBED_PREFERRED_NAMES):
+        if name_norm == _normalize_model_name(preferred):
+            preferred_ix = ix
+            break
+    hint_ix = len(_COMPARE_EMBED_HINTS)
+    for ix, hint in enumerate(_COMPARE_EMBED_HINTS):
+        if hint in name_norm:
+            hint_ix = ix
+            break
+    sentence_transformer_bonus = 0 if ((path / "modules.json").exists() or (path / "config_sentence_transformers.json").exists()) else 1
+    tokenizer_bonus = 0 if ((path / "tokenizer.json").exists() or (path / "tokenizer_config.json").exists()) else 1
+    return (preferred_ix, hint_ix, sentence_transformer_bonus + tokenizer_bonus, str(path))
+
+
+def resolve_default_compare_embed_model() -> Tuple[str, str]:
+    env_model = _expand_path_str(str(os.getenv("SR_COMPARE_EMBED_MODEL", "") or ""))
+    if env_model:
+        resolved_env = resolve_model_ref(env_model) if _looks_like_local_path(env_model) else env_model
+        return resolved_env, "env:SR_COMPARE_EMBED_MODEL"
+
+    candidates: List[Path] = []
+    for root in _compare_embed_search_roots():
+        for dirname in _COMPARE_EMBED_SEARCH_DIRS:
+            base = root / dirname
+            if not base.is_dir():
+                continue
+            for preferred in _COMPARE_EMBED_PREFERRED_NAMES:
+                preferred_path = base / preferred
+                if preferred_path.is_dir() and (preferred_path / "config.json").exists():
+                    candidates.append(preferred_path)
+            try:
+                for child in base.iterdir():
+                    if child.is_dir() and (child / "config.json").exists():
+                        candidates.append(child)
+            except Exception:
+                continue
+
+    ranked = sorted(_iter_unique_paths(candidates), key=_score_compare_embed_candidate)
+    if ranked:
+        return resolve_model_ref(str(ranked[0])), "auto_local"
+    raise RuntimeError(
+        "no default compare embedding model found (set --compare_embed_model or SR_COMPARE_EMBED_MODEL)"
+    )
 
 
 def configure_transformers_allocator_warmup(mode: str) -> None:
@@ -3984,7 +4090,7 @@ def _token_ids_for_text(tokenizer: Any, text: str) -> List[int]:
         return []
 
 
-_TEXT_EMBEDDER_CACHE: Dict[Tuple[str, str], Tuple[Any, Any, str]] = {}
+_TEXT_EMBEDDER_CACHE: Dict[Tuple[str, str], Tuple[Any, Any, str, str]] = {}
 
 
 def _resolve_embed_device(device_hint: str) -> str:
@@ -4005,7 +4111,7 @@ def _resolve_embed_device(device_hint: str) -> str:
     return "cpu"
 
 
-def _load_text_embedder(model_ref: str, *, device_hint: str) -> Tuple[Any, Any, str]:
+def _load_text_embedder(model_ref: str, *, device_hint: str) -> Tuple[Any, Any, str, str]:
     if torch is None or AutoTokenizer is None or AutoModel is None:
         raise RuntimeError("torch + transformers are required for external embedding comparison")
     model_s = str(model_ref or "").strip()
@@ -4021,8 +4127,8 @@ def _load_text_embedder(model_ref: str, *, device_hint: str) -> Tuple[Any, Any, 
     model = AutoModel.from_pretrained(resolved_model, local_files_only=True, trust_remote_code=False)
     model.to(device)
     model.eval()
-    _TEXT_EMBEDDER_CACHE[cache_key] = (tokenizer, model, device)
-    return tokenizer, model, device
+    _TEXT_EMBEDDER_CACHE[cache_key] = (tokenizer, model, device, resolved_model)
+    return tokenizer, model, device, resolved_model
 
 
 def _external_embedding_compare(
@@ -4032,8 +4138,9 @@ def _external_embedding_compare(
     query: str,
     baseline_answer: str,
     ponder_answer: str,
+    source: str = "",
 ) -> Dict[str, Any]:
-    tokenizer, model, device = _load_text_embedder(model_ref, device_hint=device_hint)
+    tokenizer, model, device, resolved_model = _load_text_embedder(model_ref, device_hint=device_hint)
     texts = [str(query or ""), str(baseline_answer or ""), str(ponder_answer or "")]
     batch = tokenizer(
         texts,
@@ -4060,16 +4167,22 @@ def _external_embedding_compare(
     qb = _cosine_sim(qv, bv)
     qp = _cosine_sim(qv, pv)
     bp = _cosine_sim(bv, pv)
-    return {
+    out = {
         "status": "ok",
         "method": "external_encoder",
-        "model": str(model_ref),
+        "model": str(resolved_model),
         "device": str(device),
         "answer_cosine": float(bp),
         "query_baseline_cosine": float(qb),
         "query_ponder_cosine": float(qp),
         "query_alignment_delta": float(qp - qb),
     }
+    requested = str(model_ref or "").strip()
+    if requested and requested != str(resolved_model):
+        out["model_requested"] = requested
+    if source:
+        out["source"] = str(source)
+    return out
 
 
 def _local_hf_embedding_compare(hf: Any, *, query: str, baseline_answer: str, ponder_answer: str) -> Dict[str, Any]:
@@ -4111,6 +4224,7 @@ def build_semantic_compare(
     if mode == "off":
         return None
     embed_model = str(getattr(cfg, "compare_embed_model", "") or "").strip()
+    auto_embed_reason = ""
 
     def _fallback_hash(reason: str = "") -> Dict[str, Any]:
         out = _hashed_semantic_compare(query, baseline_answer, ponder_answer)
@@ -4127,10 +4241,18 @@ def build_semantic_compare(
                     query=query,
                     baseline_answer=baseline_answer,
                     ponder_answer=ponder_answer,
+                    source="compare_embed_model",
                 )
             except Exception as e:
                 if mode == "embed":
-                    return {"status": "unavailable", "method": "external_encoder", "model": embed_model, "reason": str(e)}
+                    out = {
+                        "status": "unavailable",
+                        "method": "external_encoder",
+                        "model": embed_model,
+                        "reason": str(e),
+                    }
+                    out["source"] = "compare_embed_model"
+                    return out
                 return _fallback_hash(str(e))
         if isinstance(hf, LocalHFModel):
             try:
@@ -4144,9 +4266,34 @@ def build_semantic_compare(
                 if mode == "embed":
                     return {"status": "unavailable", "method": "hf_input_embeddings", "reason": str(e)}
                 return _fallback_hash(str(e))
+        try:
+            auto_embed_model, auto_embed_source = resolve_default_compare_embed_model()
+        except Exception as e:
+            auto_embed_reason = str(e)
+        else:
+            try:
+                return _external_embedding_compare(
+                    model_ref=auto_embed_model,
+                    device_hint=str(getattr(cfg, "device", "auto") or "auto"),
+                    query=query,
+                    baseline_answer=baseline_answer,
+                    ponder_answer=ponder_answer,
+                    source=auto_embed_source,
+                )
+            except Exception as e:
+                if mode == "embed":
+                    return {
+                        "status": "unavailable",
+                        "method": "external_encoder",
+                        "model": auto_embed_model,
+                        "source": auto_embed_source,
+                        "reason": str(e),
+                    }
+                return _fallback_hash(str(e))
         if mode == "embed":
-            return {"status": "unavailable", "method": "embed", "reason": "no local embedding source is available"}
-    return _fallback_hash()
+            reason = auto_embed_reason or "no local embedding source is available"
+            return {"status": "unavailable", "method": "embed", "reason": reason}
+    return _fallback_hash(auto_embed_reason)
 
 
 def _api_retry_budget_for_reasoning_starvation(*, provider: str, model: str, phase: str, current_max_new_tokens: int) -> int:
@@ -6628,7 +6775,7 @@ def main() -> None:
     g_observe.add_argument(
         "--compare_embed_model",
         default="",
-        help="Optional local/cached encoder model for true embedding cosine in --compare_semantic embed/auto",
+        help="Optional local/cached encoder model for true embedding cosine (otherwise auto-tries local MiniLM/e5/bge-style dirs)",
     )
 
     g_runtime.add_argument("--device", default="auto", help="auto|mps|cpu|cuda|cuda:0 ...")

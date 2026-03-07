@@ -185,6 +185,31 @@ class TestSemanticCompare(unittest.TestCase):
         self.assertIn("answer_cosine", comp)
         self.assertIn("query_alignment_delta", comp)
 
+    def test_build_semantic_compare_auto_uses_local_default_encoder_for_api_runs(self) -> None:
+        with _tempdir() as td:
+            td_path = Path(td)
+            model_dir = td_path / "model" / "minilm"
+            model_dir.mkdir(parents=True, exist_ok=True)
+            (model_dir / "config.json").write_text("{}", encoding="utf-8")
+            cfg = sp.RunConfig(model_path="dummy", memory_path=Path("ponder_logs.jsonl"), compare_semantic="auto")
+            with _Chdir(td_path), patch.object(
+                sp,
+                "_external_embedding_compare",
+                return_value={"status": "ok", "method": "external_encoder", "model": str(model_dir)},
+            ) as external_compare:
+                comp = sp.build_semantic_compare(
+                    hf=None,
+                    cfg=cfg,
+                    query="accuracy versus speed in llm systems",
+                    baseline_answer="Optimize for speed when the task is low risk.",
+                    ponder_answer="Optimize for trust and constraint satisfaction under the task budget.",
+                )
+        self.assertIsNotNone(comp)
+        assert comp is not None
+        self.assertEqual(comp.get("method"), "external_encoder")
+        self.assertEqual(external_compare.call_args.kwargs.get("source"), "auto_local")
+        self.assertTrue(str(external_compare.call_args.kwargs.get("model_ref") or "").endswith("model/minilm"))
+
     def test_print_config_only_includes_compare_semantic(self) -> None:
         out, _err = _run_main(
             [
@@ -431,6 +456,8 @@ class TestTerminalUX(unittest.TestCase):
                             "q",
                             "--mode",
                             "both",
+                            "--compare_semantic",
+                            "hash",
                             "--json_out",
                             str(out_path),
                         ]
