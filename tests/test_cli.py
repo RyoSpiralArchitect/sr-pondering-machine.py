@@ -168,6 +168,84 @@ class TestProbeCompare(unittest.TestCase):
         self.assertEqual(cfg.get("probe_compare_top_n"), 17)
 
 
+class TestOpenAICompat(unittest.TestCase):
+    def test_extract_text_and_meta_handles_nested_text_value(self) -> None:
+        hf = sp.OpenAICompatModel(
+            model="gpt-5.4",
+            api_base_url="https://api.openai.com/v1",
+            api_key="test",
+            api_reasoning_effort="auto",
+        )
+        text, meta = hf._extract_text_and_meta(
+            {
+                "id": "resp_123",
+                "model": "gpt-5.4",
+                "usage": {"completion_tokens": 12, "completion_tokens_details": {"reasoning_tokens": 5}},
+                "choices": [
+                    {
+                        "finish_reason": "stop",
+                        "message": {
+                            "content": [
+                                {"type": "output_text", "text": {"value": "hello world"}},
+                            ]
+                        },
+                    }
+                ],
+            }
+        )
+        self.assertEqual(text, "hello world")
+        self.assertEqual(meta.get("finish_reason"), "stop")
+        self.assertEqual(meta.get("completion_tokens"), 12)
+        self.assertEqual(meta.get("reasoning_tokens"), 5)
+        self.assertEqual(meta.get("empty_output"), False)
+
+    def test_chat_retries_with_openai_gpt5_compat_fallbacks(self) -> None:
+        hf = sp.OpenAICompatModel(
+            model="gpt-5",
+            api_base_url="https://api.openai.com/v1",
+            api_key="test",
+            api_reasoning_effort="auto",
+        )
+        seen_payloads: list[dict] = []
+
+        def _fake_post(_url, *, headers, payload, timeout, max_retries):
+            seen_payloads.append(dict(payload))
+            if len(seen_payloads) == 1:
+                raise RuntimeError("HTTP 400: Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead.")
+            if len(seen_payloads) == 2:
+                raise RuntimeError("HTTP 400: Unsupported value: 'temperature' does not support 0.7 with this model. Only the default (1) value is supported.")
+            if len(seen_payloads) == 3:
+                raise RuntimeError("HTTP 400: Unsupported parameter: 'top_p' is not supported with this model.")
+            return {"choices": [{"finish_reason": "stop", "message": {"content": "ok"}}]}
+
+        with patch.object(sp, "_http_post_json", side_effect=_fake_post):
+            text = hf.generate_text("hi", max_new_tokens=32, temperature=0.7, top_p=0.95)
+
+        self.assertEqual(text, "ok")
+        self.assertEqual(seen_payloads[0].get("max_tokens"), 32)
+        self.assertEqual(seen_payloads[1].get("max_completion_tokens"), 32)
+        self.assertEqual(seen_payloads[2].get("temperature"), 1.0)
+        self.assertNotIn("top_p", seen_payloads[3])
+
+    def test_print_config_only_includes_api_reasoning_effort(self) -> None:
+        out, _err = _run_main(
+            [
+                "--backend",
+                "openai_compat",
+                "--model",
+                "dummy",
+                "--query",
+                "q",
+                "--api_reasoning_effort",
+                "none",
+                "--print_config_only",
+            ]
+        )
+        obj = json.loads(out)
+        cfg = obj.get("cfg") or {}
+        self.assertEqual(cfg.get("api_reasoning_effort"), "none")
+
+
 class TestPackBehavior(unittest.TestCase):
     def setUp(self) -> None:
         os.environ["OPENAI_API_KEY"] = "test"

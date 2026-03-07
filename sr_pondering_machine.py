@@ -2874,6 +2874,37 @@ def _http_post_json(
     raise RuntimeError(last_err or "Unknown HTTP error")
 
 
+_GPT5_VERSIONED_RE = re.compile(r"^gpt-5\.(\d+)(?:[.\-].*)?$")
+
+
+def _is_openai_official_base(base_url: str) -> bool:
+    s = (base_url or "").strip().lower()
+    return s.startswith("https://api.openai.com/") or s == "https://api.openai.com"
+
+
+def _default_reasoning_effort_for_model(model: str) -> str:
+    m = (model or "").strip().lower()
+    if not m:
+        return ""
+    if m.startswith("gpt-5-pro"):
+        return "high"
+    if _GPT5_VERSIONED_RE.match(m):
+        return "none"
+    return ""
+
+
+def _extract_reasoning_tokens(usage: Any) -> int:
+    if not isinstance(usage, dict):
+        return 0
+    details = usage.get("completion_tokens_details")
+    if not isinstance(details, dict):
+        return 0
+    try:
+        return int(details.get("reasoning_tokens") or 0)
+    except Exception:
+        return 0
+
+
 class OpenAICompatModel:
     """OpenAI-compatible Chat Completions client (stdlib only).
 
@@ -2890,12 +2921,15 @@ class OpenAICompatModel:
         api_headers: Optional[Sequence[str]] = None,
         timeout: float = 60.0,
         max_retries: int = 2,
+        api_reasoning_effort: str = "auto",
     ) -> None:
         self.model = (model or "").strip()
         self.api_base_url = (api_base_url or "").strip()
         self.api_chat_path = api_chat_path or "/chat/completions"
         self.timeout = float(timeout)
         self.max_retries = int(max_retries)
+        self.api_reasoning_effort = (api_reasoning_effort or "auto").strip().lower()
+        self.last_response_meta: Dict[str, Any] = {}
 
         headers: Dict[str, str] = {}
         if api_key:
@@ -2911,6 +2945,117 @@ class OpenAICompatModel:
 
         self.url = _join_url(self.api_base_url, self.api_chat_path)
 
+    def _apply_openai_compat_defaults(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        if not _is_openai_official_base(self.api_base_url):
+            return payload
+        effort = self.api_reasoning_effort
+        if effort == "auto":
+            effort = _default_reasoning_effort_for_model(self.model)
+        if effort and "reasoning_effort" not in payload:
+            payload["reasoning_effort"] = effort
+        return payload
+
+    def _maybe_adjust_payload_for_error(self, payload: Dict[str, Any], msg: str) -> Optional[Dict[str, Any]]:
+        msg_l = (msg or "").lower()
+        payload2 = dict(payload)
+        changed = False
+
+        if "max_tokens" in payload2 and ("max_tokens" in msg_l and "max_completion_tokens" in msg_l):
+            v = payload2.pop("max_tokens", None)
+            if v is not None and "max_completion_tokens" not in payload2:
+                payload2["max_completion_tokens"] = v
+                changed = True
+        elif "max_completion_tokens" in payload2 and ("max_completion_tokens" in msg_l and "max_tokens" in msg_l):
+            v = payload2.pop("max_completion_tokens", None)
+            if v is not None and "max_tokens" not in payload2:
+                payload2["max_tokens"] = v
+                changed = True
+
+        if "temperature" in payload2 and ("temperature" in msg_l) and ("unsupported" in msg_l or "default (1)" in msg_l):
+            if "default (1)" in msg_l:
+                if float(payload2.get("temperature", 1.0) or 1.0) != 1.0:
+                    payload2["temperature"] = 1.0
+                    changed = True
+            else:
+                payload2.pop("temperature", None)
+                changed = True
+
+        if "top_p" in payload2 and ("top_p" in msg_l) and ("unsupported" in msg_l or "not supported" in msg_l):
+            payload2.pop("top_p", None)
+            changed = True
+
+        if ("logprobs" in payload2 or "top_logprobs" in payload2) and (
+            ("logprobs" in msg_l or "top_logprobs" in msg_l) and ("unsupported" in msg_l or "not supported" in msg_l)
+        ):
+            payload2.pop("logprobs", None)
+            payload2.pop("top_logprobs", None)
+            changed = True
+
+        if "reasoning_effort" in payload2 and ("reasoning_effort" in msg_l) and ("unsupported" in msg_l or "not supported" in msg_l):
+            payload2.pop("reasoning_effort", None)
+            changed = True
+
+        if not changed:
+            return None
+        return payload2
+
+    def _extract_text_and_meta(self, resp: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
+        choices = resp.get("choices") or []
+        if not choices:
+            raise RuntimeError("No choices in API response")
+        c0 = choices[0] or {}
+        msg = c0.get("message") or {}
+        usage = resp.get("usage") or {}
+        meta: Dict[str, Any] = {
+            "response_id": resp.get("id"),
+            "model": resp.get("model"),
+            "finish_reason": c0.get("finish_reason"),
+            "refusal": msg.get("refusal"),
+            "usage": usage if isinstance(usage, dict) else None,
+            "completion_tokens": int(usage.get("completion_tokens") or 0) if isinstance(usage, dict) else 0,
+            "reasoning_tokens": _extract_reasoning_tokens(usage),
+        }
+
+        def _extract_parts(obj: Any) -> List[str]:
+            parts: List[str] = []
+            if isinstance(obj, str):
+                s = obj.strip()
+                if s:
+                    parts.append(s)
+                return parts
+            if isinstance(obj, list):
+                for item in obj:
+                    parts.extend(_extract_parts(item))
+                return parts
+            if not isinstance(obj, dict):
+                return parts
+
+            text_val = obj.get("text")
+            if isinstance(text_val, str) and text_val.strip():
+                parts.append(text_val.strip())
+            elif isinstance(text_val, dict):
+                value = text_val.get("value")
+                if isinstance(value, str) and value.strip():
+                    parts.append(value.strip())
+
+            for key in ("value", "output_text", "content"):
+                val = obj.get(key)
+                if isinstance(val, (str, list, dict)):
+                    parts.extend(_extract_parts(val))
+            return parts
+
+        content = msg.get("content")
+        parts = _extract_parts(content)
+        if not parts:
+            parts = _extract_parts(c0.get("text"))
+        if not parts and isinstance(msg.get("refusal"), str) and str(msg.get("refusal")).strip():
+            parts = [str(msg.get("refusal")).strip()]
+            meta["used_refusal_text"] = True
+
+        text = "\n".join(parts).strip() if parts else ""
+        meta["empty_output"] = not bool(text)
+        return text, meta
+
     def _apply_chat(self, prompt: str, *, system_text: Optional[str]) -> str:
         # Keep interface parity with LocalHFModel; API backends usually support system roles,
         # but we keep it as plain text to avoid provider differences.
@@ -2921,43 +3066,29 @@ class OpenAICompatModel:
     def _chat(self, *, messages: List[Dict[str, str]], **kwargs: Any) -> Dict[str, Any]:
         payload: Dict[str, Any] = {"model": self.model, "messages": messages}
         payload.update(kwargs)
-        try:
-            return _http_post_json(
-                self.url,
-                headers=self.headers,
-                payload=payload,
-                timeout=self.timeout,
-                max_retries=self.max_retries,
-            )
-        except RuntimeError as e:
-            # Compatibility: some providers/models moved from max_tokens -> max_completion_tokens.
-            # If we see that error, retry once with the alternative name.
-            msg = str(e)
-            if "max_tokens" in payload and ("max_tokens" in msg and "max_completion_tokens" in msg):
-                payload2 = dict(payload)
-                v = payload2.pop("max_tokens", None)
-                if v is not None and "max_completion_tokens" not in payload2:
-                    payload2["max_completion_tokens"] = v
+        payload = self._apply_openai_compat_defaults(payload)
+
+        attempts = 0
+        last_err: Optional[Exception] = None
+        while attempts < 5:
+            try:
                 return _http_post_json(
                     self.url,
                     headers=self.headers,
-                    payload=payload2,
+                    payload=payload,
                     timeout=self.timeout,
                     max_retries=self.max_retries,
                 )
-            if "max_completion_tokens" in payload and ("max_completion_tokens" in msg and "max_tokens" in msg):
-                payload2 = dict(payload)
-                v = payload2.pop("max_completion_tokens", None)
-                if v is not None and "max_tokens" not in payload2:
-                    payload2["max_tokens"] = v
-                return _http_post_json(
-                    self.url,
-                    headers=self.headers,
-                    payload=payload2,
-                    timeout=self.timeout,
-                    max_retries=self.max_retries,
-                )
-            raise
+            except RuntimeError as e:
+                last_err = e
+                payload2 = self._maybe_adjust_payload_for_error(payload, str(e))
+                if payload2 is None or payload2 == payload:
+                    raise
+                payload = payload2
+                attempts += 1
+        if last_err is not None:
+            raise last_err
+        raise RuntimeError("Unknown API compatibility error")
 
     def generate_text(
         self,
@@ -2980,38 +3111,9 @@ class OpenAICompatModel:
             temperature=max(0.0, float(temperature)),
             top_p=float(top_p),
         )
-        choices = resp.get("choices") or []
-        if not choices:
-            raise RuntimeError("No choices in API response")
-        c0 = choices[0] or {}
-        msg = c0.get("message") or {}
-        content = msg.get("content")
-        if isinstance(content, str):
-            return content.strip()
-        if isinstance(content, list):
-            parts: List[str] = []
-            for item in content:
-                if isinstance(item, str):
-                    s = item.strip()
-                    if s:
-                        parts.append(s)
-                    continue
-                if not isinstance(item, dict):
-                    continue
-                text_part = item.get("text")
-                if isinstance(text_part, str) and text_part.strip():
-                    parts.append(text_part.strip())
-                    continue
-                if item.get("type") == "output_text":
-                    nested = item.get("text")
-                    if isinstance(nested, str) and nested.strip():
-                        parts.append(nested.strip())
-            if parts:
-                return "\n".join(parts).strip()
-        text = c0.get("text")
-        if isinstance(text, str):
-            return text.strip()
-        raise RuntimeError("Unrecognized API response shape (missing content/text)")
+        text, meta = self._extract_text_and_meta(resp)
+        self.last_response_meta = meta
+        return text
 
     def probe_top_logprobs(self, prompt: str, *, top_n: int) -> List[Dict[str, Any]]:
         """Return a list of {token, logprob, prob} for the next token distribution (top-N only)."""
@@ -3353,6 +3455,7 @@ class RunConfig:
     api_headers: List[str] = dataclasses.field(default_factory=list)  # repeatable "Key: Value"
     api_timeout: float = 60.0
     api_max_retries: int = 2
+    api_reasoning_effort: str = "auto"  # auto|none|minimal|low|medium|high|xhigh
     api_seed_method: str = "auto"  # auto|self|logprobs
     api_logprobs_top_n: int = 0  # 0 disables logprobs probing
 
@@ -3441,6 +3544,25 @@ def api_ignored_generation_args(cfg: RunConfig) -> List[str]:
     if int(cfg.no_repeat_ngram_size) > 0:
         ignored.append("--no_repeat_ngram_size")
     return ignored
+
+
+def summarize_api_generation_meta(meta: Any) -> Dict[str, Any]:
+    if not isinstance(meta, dict):
+        return {}
+    out: Dict[str, Any] = {}
+    for key in ("finish_reason", "response_id", "model"):
+        if meta.get(key):
+            out[key] = meta.get(key)
+    for key in ("completion_tokens", "reasoning_tokens"):
+        val = meta.get(key)
+        if isinstance(val, int):
+            out[key] = int(val)
+    refusal = meta.get("refusal")
+    if isinstance(refusal, str) and refusal.strip():
+        out["refusal"] = refusal.strip()
+    if isinstance(meta.get("empty_output"), bool):
+        out["empty_output"] = bool(meta.get("empty_output"))
+    return out
 
 
 def run_baseline(
@@ -4240,6 +4362,7 @@ def run_ponder(
                         no_repeat_ngram_size=cfg.no_repeat_ngram_size,
                         seed=int(cfg.seed) + 1 + log_ix,
                     )
+                    ponder_meta = summarize_api_generation_meta(getattr(hf, "last_response_meta", {}))
                     gen_s = float(time.perf_counter() - t_gen0)
                     stage_logs.append(ponder_log)
                     if trace:
@@ -4255,6 +4378,7 @@ def run_ponder(
                             elapsed_s=gen_s,
                             text_chars=len(ponder_log or ""),
                             text_preview=trace.preview(ponder_log),
+                            api_meta=ponder_meta if ponder_meta else None,
                         )
 
                     if cfg.print_probe and hop_selected_tokens:
@@ -4546,6 +4670,7 @@ def run_ponder(
             _print_probe_compare_summary("PROBE COMPARE", probe_compare, limit=min(8, compare_top_n))
 
     answer_s = 0.0
+    final_answer_meta: Dict[str, Any] = {}
     if cfg.answer_ensemble and ensemble_final:
         answer = ensemble_final.strip()
     else:
@@ -5043,6 +5168,7 @@ def run_ponder_api(
                         no_repeat_ngram_size=0,
                         seed=int(cfg.seed) + 1 + log_ix,
                     )
+                    ponder_meta = summarize_api_generation_meta(getattr(hf, "last_response_meta", {}))
                     gen_s = float(time.perf_counter() - t_gen0)
                     stage_logs.append(ponder_log)
                     if trace:
@@ -5058,6 +5184,7 @@ def run_ponder_api(
                             elapsed_s=gen_s,
                             text_chars=len(ponder_log or ""),
                             text_preview=trace.preview(ponder_log),
+                            api_meta=ponder_meta if ponder_meta else None,
                         )
 
                     if cfg.print_probe:
@@ -5098,6 +5225,7 @@ def run_ponder_api(
                         "api_probe_depth": probe_depth,
                         "api_band_probe_truncated": api_band_probe_truncated,
                         "api_seed_fallback_reason": seed_fallback_reason,
+                        "api_generation": ponder_meta if ponder_meta else None,
                         "ponder_question": ponder_q,
                         "ponder_log": ponder_log,
                         "gen_elapsed_s": gen_s,
@@ -5110,6 +5238,20 @@ def run_ponder_api(
                     if cfg.write_memory:
                         append_jsonl(cfg.memory_path, record)
                     records.append(record)
+                    if not (ponder_log or "").strip():
+                        finish_reason = ponder_meta.get("finish_reason")
+                        reasoning_tokens = ponder_meta.get("reasoning_tokens")
+                        completion_tokens = ponder_meta.get("completion_tokens")
+                        refusal = ponder_meta.get("refusal")
+                        msg = (
+                            f"API ponder stage returned empty text (band={band_label}, hop={hop_ix}, stage={stage_mode}, "
+                            f"finish_reason={finish_reason!r}, completion_tokens={completion_tokens!r}, reasoning_tokens={reasoning_tokens!r})."
+                        )
+                        if refusal:
+                            msg += " refusal text was present."
+                        if msg not in api_warnings:
+                            api_warnings.append(msg)
+                            print(f"[sr_ponder] WARN: {msg}", file=sys.stderr)
                     if stage_probe_active:
                         stage_memory_block = build_memory_block(records, max_chars_per_log=700) if records else None
                         stage_prompt = hf._apply_chat(
@@ -5436,7 +5578,22 @@ def run_ponder_api(
             no_repeat_ngram_size=0,
             seed=cfg.seed,
         )
+        final_answer_meta = summarize_api_generation_meta(getattr(hf, "last_response_meta", {}))
         answer_s = float(time.perf_counter() - t_answer0)
+        if not (answer or "").strip():
+            finish_reason = final_answer_meta.get("finish_reason")
+            reasoning_tokens = final_answer_meta.get("reasoning_tokens")
+            completion_tokens = final_answer_meta.get("completion_tokens")
+            refusal = final_answer_meta.get("refusal")
+            msg = (
+                f"API final answer returned empty text (finish_reason={finish_reason!r}, "
+                f"completion_tokens={completion_tokens!r}, reasoning_tokens={reasoning_tokens!r})."
+            )
+            if refusal:
+                msg += " refusal text was present."
+            if msg not in api_warnings:
+                api_warnings.append(msg)
+                print(f"[sr_ponder] WARN: {msg}", file=sys.stderr)
 
     if trace:
         trace.event(
@@ -5446,6 +5603,7 @@ def run_ponder_api(
             elapsed_s=float(answer_s),
             answer_chars=len(answer or ""),
             answer_preview=trace.preview(answer),
+            api_meta=final_answer_meta if final_answer_meta else None,
         )
 
     total_s = float(time.perf_counter() - t_total0)
@@ -5473,6 +5631,7 @@ def run_ponder_api(
         "random_log": random_log_text,
         "prompt_jitter_queries": jitter_queries if jitter_queries else None,
         "api_probe_top": probe_top[:50] if probe_top else None,
+        "api_final_generation": final_answer_meta if final_answer_meta else None,
         "timings": {"total_s": total_s, "probe_s": float(probe_s), "memory_remix_s": float(remix_s), "answer_s": float(answer_s)},
         "api_warnings": api_warnings if api_warnings else None,
     }
@@ -5754,6 +5913,12 @@ def main() -> None:
     g_api.add_argument("--api_timeout", type=float, default=60.0, help="HTTP timeout (seconds)")
     g_api.add_argument("--api_max_retries", type=int, default=2, help="Retry count for 429/5xx")
     g_api.add_argument(
+        "--api_reasoning_effort",
+        choices=["auto", "none", "minimal", "low", "medium", "high", "xhigh"],
+        default="auto",
+        help="OpenAI GPT-5 reasoning effort hint (auto applies compatibility defaults where supported)",
+    )
+    g_api.add_argument(
         "--api_seed_method",
         choices=["auto", "self", "logprobs"],
         default="auto",
@@ -5876,6 +6041,7 @@ def main() -> None:
         api_headers=list(args.api_header or []),
         api_timeout=float(args.api_timeout),
         api_max_retries=int(args.api_max_retries),
+        api_reasoning_effort=args.api_reasoning_effort,
         api_seed_method=args.api_seed_method,
         api_logprobs_top_n=int(args.api_logprobs_top_n),
         n_memory=args.n_memory,
@@ -6048,10 +6214,11 @@ def main() -> None:
             api_headers=cfg.api_headers,
             timeout=cfg.api_timeout,
             max_retries=cfg.api_max_retries,
+            api_reasoning_effort=cfg.api_reasoning_effort,
         )
         print(
             f"[sr_ponder] backend=openai_compat model={cfg.model_path!r} base_url={cfg.api_base_url} "
-            f"seed_method={cfg.api_seed_method} logprobs_top_n={cfg.api_logprobs_top_n} "
+            f"reasoning_effort={cfg.api_reasoning_effort} seed_method={cfg.api_seed_method} logprobs_top_n={cfg.api_logprobs_top_n} "
             f"lang={cfg.prompt_lang} band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
             f"objective={cfg.keyword_objective} diversity={cfg.keyword_diversity} hops={cfg.ponder_hops} answer_style={cfg.answer_style} control={cfg.control} "
             f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "

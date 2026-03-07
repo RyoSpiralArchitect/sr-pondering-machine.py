@@ -112,6 +112,32 @@ python3 sr_pondering_machine.py \
 Note: some providers/models use `max_completion_tokens` instead of `max_tokens`. This tool retries automatically when it detects that mismatch.
 Start with a small value like `32`: providers often cap `top_logprobs`, and if the returned depth is shallower than your requested band range, that band falls back to self-seeded keywords with a warning.
 
+### OpenAI GPT-5 family notes
+
+For `https://api.openai.com/v1`, newer GPT-5 variants can have stricter parameter compatibility than generic OpenAI-compatible providers.
+
+- `gpt-5` may reject `max_tokens`, `temperature != 1`, or `top_p`; the client now retries with compatibility fallbacks.
+- Versioned models such as `gpt-5.2` / `gpt-5.4` can work better with `--api_reasoning_effort none`.
+- If the API returns an empty visible answer, the tool now records `finish_reason`, `completion_tokens`, and `reasoning_tokens` in `extras.api_final_generation` / `api_warnings` so you can tell whether the model stayed silent, refused, or spent the budget elsewhere.
+
+Example:
+
+```bash
+PYTHONNOUSERSITE=1 python3 sr_pondering_machine.py \
+  --backend openai_compat \
+  --api_base_url https://api.openai.com/v1 \
+  --api_key_env OPENAI_API_KEY \
+  --api_reasoning_effort none \
+  --model gpt-5.4 \
+  --query "Should we optimize for accuracy or speed in LLM systems?" \
+  --mode ponder \
+  --api_seed_method self \
+  --memory_policy current_only \
+  --json_out ./artifacts/gpt-5.4.json \
+  --trace_out ./artifacts/gpt-5.4.trace.jsonl \
+  --trace_report_out ./artifacts/gpt-5.4.trace.html
+```
+
 ## Experimental Recipes
 
 ### Lens: counterexamples + multi-ponder
@@ -521,6 +547,7 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | `--backend` | `hf` | `hf` · `openai_compat` |
 | `--api_seed_method` | `auto` | `auto` · `self` · `logprobs` |
 | `--api_logprobs_top_n` | `0` | Top-logprobs depth requested from the API |
+| `--api_reasoning_effort` | `auto` | `auto` · `none` · `minimal` · `low` · `medium` · `high` · `xhigh` |
 
 ## Rejected-Token Selection Strategies
 
@@ -586,7 +613,9 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.h
 - **Use the `-it` (instruction-tuned) variant** of Gemma for best results. The base model does not reliably follow instructions.
 - For `--backend hf`, the model must already be **downloaded locally**. Network access is disabled at inference time (`local_files_only=True`).
 - For `--backend openai_compat`, set an API key (default env: `OPENAI_API_KEY`) and point `--api_base_url` at an OpenAI-style provider.
+- For `--backend openai_compat` on macOS with aggressive user `sitecustomize` hooks, `PYTHONNOUSERSITE=1` can avoid unrelated import-time crashes.
 - For `--backend openai_compat`, `--seed`, `--top_k`, `--repetition_penalty`, and `--no_repeat_ngram_size` are currently not forwarded; the script now prints a warning so cross-backend comparisons stay honest.
+- For OpenAI GPT-5 family models, the client retries common compatibility errors (`max_tokens` ↔ `max_completion_tokens`, unsupported `temperature`, unsupported `top_p`, unsupported `logprobs`) automatically.
 - For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams + IDF weighting). It’s not as strong as real embedding retrieval, but better than raw tail.
 - For API backends, `--api_logprobs_top_n` is provider-capped. If the returned logprob depth is shallower than a requested band (for example `spectrum3` + `far`), that band degrades to self-seeded keywords and the script warns about it.
 - For `--probe_compare`, `--backend hf` computes JS divergence on the full vocab; `--backend openai_compat` computes an approximate JS divergence on the observed top-logprobs union and reports the observed mass.
