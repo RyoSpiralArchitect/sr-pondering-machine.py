@@ -17,11 +17,12 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 
 ## Features
 
-- **API backend** — `--backend openai_compat` supports OpenAI-style `POST /chat/completions` providers.
+- **Provider presets** — run API models with `--provider openai|mistral|groq|openrouter|deepseek --model ...` instead of wiring base URLs by hand.
 - **MPS-first** — resolves Apple Silicon device-mismatch errors automatically.
 - **Gemma-aware** — natively applies the `<start_of_turn>` / `<end_of_turn>` prompt format expected by Gemma IT models and stops generation cleanly at `<end_of_turn>`.
 - **Persistent memory** — ponder logs are stored in a JSONL file and the most recent entries are reused in subsequent runs.
-- **Baseline mode** — run without pondering for easy A/B comparison.
+- **Baseline comparison** — `--mode both` prints baseline, pondered answer, and a compact comparison summary by default.
+- **Terminal ponder logs** — human-readable ponder logs now print to the terminal by default; raw JSON records stay opt-in.
 - **Ponder lenses** — switch between association / assumptions / counterexamples / questions-only / metaphor via `--ponder_mode`.
 - **Lens pipeline** — chain multiple lenses via `--ponder_pipeline` (with `--pipeline_context prev|all|none`).
 - **Multi-ponder** — generate multiple ponder logs per band with `--n_ponder`.
@@ -50,11 +51,11 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 ## Requirements
 
 - Python 3.9+
-- For `--backend hf`:
+- For `--backend hf` / `--provider hf`:
   - [PyTorch](https://pytorch.org/) (with MPS, CUDA, or CPU support)
   - [Transformers](https://github.com/huggingface/transformers)
   - A locally downloaded Hugging Face causal LM (e.g. `gemma-3-270m-it`) — or use `--hf_online` to allow Hub downloads.
-- For `--backend openai_compat`:
+- For API providers (`--provider openai|mistral|groq|openrouter|deepseek|custom`):
   - Python stdlib only (no `torch`/`transformers` required)
 
 ```
@@ -70,39 +71,45 @@ pip install torch transformers
 
 ```bash
 python3 sr_pondering_machine.py \
-  --backend hf \
+  --provider hf \
   --model ./model/gemma-3-270m-it \
   --query "Explain quantum entanglement to a high school student" \
   --mode both \
   --memory ./ponder_logs.jsonl
 ```
 
-This runs both the **baseline** (direct answer) and the **ponder** (wander-then-answer) modes and prints both outputs for comparison.
+This runs both the **baseline** (direct answer) and the **ponder** (wander-then-answer) modes and prints both outputs, the ponder log, and a compact comparison summary.
 
-## API Quick Start (OpenAI-compatible)
+## API Quick Start (Provider presets)
 
-Use `--backend openai_compat` to call an OpenAI-style API endpoint.
-This backend can run without installing `torch`/`transformers`.
+Use `--provider ...` to auto-fill the API base URL and key env for common OpenAI-style providers.
+This path can run without installing `torch`/`transformers`.
 
 ```bash
 export OPENAI_API_KEY="..."
 
 python3 sr_pondering_machine.py \
-  --backend openai_compat \
-  --api_base_url https://api.openai.com/v1 \
-  --model "your-model-name" \
+  --provider openai \
+  --model gpt-5.4 \
   --query "Should we optimize for accuracy or speed in LLM systems?" \
   --mode ponder \
   --api_seed_method self
 ```
 
+Other built-in provider presets:
+
+- `--provider mistral` → `MISTRAL_API_KEY`
+- `--provider groq` → `GROQ_API_KEY`
+- `--provider openrouter` → `OPENROUTER_API_KEY`
+- `--provider deepseek` → `DEEPSEEK_API_KEY`
+- `--provider custom` → keep using your explicit `--api_base_url`
+
 If your provider supports Chat Completions logprobs, you can try the more “rejected-token-ish” seeding:
 
 ```bash
 python3 sr_pondering_machine.py \
-  --backend openai_compat \
-  --api_base_url https://api.openai.com/v1 \
-  --model "your-model-name" \
+  --provider openai \
+  --model gpt-5.4 \
   --query "Why do we overfit narratives to randomness?" \
   --mode ponder \
   --api_seed_method logprobs \
@@ -124,9 +131,7 @@ Example:
 
 ```bash
 PYTHONNOUSERSITE=1 python3 sr_pondering_machine.py \
-  --backend openai_compat \
-  --api_base_url https://api.openai.com/v1 \
-  --api_key_env OPENAI_API_KEY \
+  --provider openai \
   --api_reasoning_effort none \
   --model gpt-5.4 \
   --query "Should we optimize for accuracy or speed in LLM systems?" \
@@ -454,7 +459,9 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 
 | Argument | Default | Description |
 |---|---|---|
-| `--model` | *(required)* | `hf`: local model directory · `openai_compat`: model name |
+| `--provider` | `auto` | `auto` · `hf` · `openai` · `mistral` · `groq` · `openrouter` · `deepseek` · `custom` |
+| `--backend` | `hf` | Low-level backend override; usually you just set `--provider` |
+| `--model` | *(required)* | `provider=hf`: local model directory · API providers: model name |
 | `--query` | *(required)* | The question to answer. |
 | `--memory` | `ponder_logs.jsonl` | Path to the JSONL memory log. |
 | `--mode` | `both` | `baseline` · `ponder` · `both` |
@@ -533,6 +540,9 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 
 | Argument | Default | Description |
 |---|---|---|
+| `--print_compare` | `auto` | Print a compact baseline vs ponder summary |
+| `--print_ponder` | `auto` | Print human-readable ponder logs to stdout |
+| `--print_records` | `none` | Debug: print raw ponder-record JSON |
 | `--json_out` | *(empty)* | Write full run/pack results to JSON |
 | `--trace_out` | *(empty)* | Write step-level trace JSONL |
 | `--trace_report_out` | *(empty)* | Write HTML trace report |
@@ -544,7 +554,6 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | `--device` | `auto` | `auto` · `mps` · `cpu` · `cuda[:N]` |
 | `--dtype` | `auto` | `auto` · `float16` · `bfloat16` · `float32` |
 | `--allocator_warmup` | `auto` | `auto` · `on` · `off` |
-| `--backend` | `hf` | `hf` · `openai_compat` |
 | `--api_seed_method` | `auto` | `auto` · `self` · `logprobs` |
 | `--api_logprobs_top_n` | `0` | Top-logprobs depth requested from the API |
 | `--api_reasoning_effort` | `auto` | `auto` · `none` · `minimal` · `low` · `medium` · `high` · `xhigh` |
@@ -611,10 +620,10 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.h
 ## Notes
 
 - **Use the `-it` (instruction-tuned) variant** of Gemma for best results. The base model does not reliably follow instructions.
-- For `--backend hf`, the model must already be **downloaded locally**. Network access is disabled at inference time (`local_files_only=True`).
-- For `--backend openai_compat`, set an API key (default env: `OPENAI_API_KEY`) and point `--api_base_url` at an OpenAI-style provider.
-- For `--backend openai_compat` on macOS with aggressive user `sitecustomize` hooks, `PYTHONNOUSERSITE=1` can avoid unrelated import-time crashes.
-- For `--backend openai_compat`, `--seed`, `--top_k`, `--repetition_penalty`, and `--no_repeat_ngram_size` are currently not forwarded; the script now prints a warning so cross-backend comparisons stay honest.
+- For `--provider hf` / `--backend hf`, the model must already be **downloaded locally**. Network access is disabled at inference time (`local_files_only=True`).
+- For API providers, start with `--provider ... --model ...`; only drop down to `--backend openai_compat --api_base_url ...` when you need a custom endpoint.
+- For API providers on macOS with aggressive user `sitecustomize` hooks, `PYTHONNOUSERSITE=1` can avoid unrelated import-time crashes.
+- For API providers, `--seed`, `--top_k`, `--repetition_penalty`, and `--no_repeat_ngram_size` are currently not forwarded; the script prints a warning so cross-backend comparisons stay honest.
 - For OpenAI GPT-5 family models, the client retries common compatibility errors (`max_tokens` ↔ `max_completion_tokens`, unsupported `temperature`, unsupported `top_p`, unsupported `logprobs`) automatically.
 - For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams + IDF weighting). It’s not as strong as real embedding retrieval, but better than raw tail.
 - For API backends, `--api_logprobs_top_n` is provider-capped. If the returned logprob depth is shallower than a requested band (for example `spectrum3` + `far`), that band degrades to self-seeded keywords and the script warns about it.

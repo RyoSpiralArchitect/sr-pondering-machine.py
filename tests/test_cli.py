@@ -246,6 +246,94 @@ class TestOpenAICompat(unittest.TestCase):
         self.assertEqual(cfg.get("api_reasoning_effort"), "none")
 
 
+class TestTerminalUX(unittest.TestCase):
+    def setUp(self) -> None:
+        os.environ["OPENAI_API_KEY"] = "test"
+
+    def test_provider_preset_resolves_openai_config(self) -> None:
+        out, _err = _run_main(
+            [
+                "--provider",
+                "openai",
+                "--model",
+                "gpt-5.4",
+                "--query",
+                "q",
+                "--print_config_only",
+            ]
+        )
+        obj = json.loads(out)
+        cfg = obj.get("cfg") or {}
+        self.assertEqual(cfg.get("provider"), "openai")
+        self.assertEqual(cfg.get("backend"), "openai_compat")
+        self.assertEqual(cfg.get("api_base_url"), "https://api.openai.com/v1")
+        self.assertEqual(cfg.get("api_key_env"), "OPENAI_API_KEY")
+
+    def test_main_prints_ponder_logs_and_comparison_summary(self) -> None:
+        with _tempdir() as td:
+            td_path = Path(td)
+            out_path = td_path / "run.json"
+
+            def _baseline(_hf, _cfg, _q, **_kw):
+                return "Baseline answer."
+
+            def _ponder(_hf, _cfg, _q, **_kw):
+                return (
+                    "Pondered answer with a different tradeoff.",
+                    [
+                        {
+                            "band_label": "single",
+                            "hop_ix": 0,
+                            "pipeline_stage_ix": 0,
+                            "ponder_mode": "assoc",
+                            "keywords": ["latency budget", "trust"],
+                            "ponder_question": "What tension appears between latency and trust?",
+                            "ponder_log": "Latency wants velocity. Trust wants a braking distance.",
+                        }
+                    ],
+                    {
+                        "memory_selected": [{"query": "earlier"}],
+                        "probe_compare": {
+                            "js_divergence": 0.12,
+                            "overlap_count": 4,
+                            "mover_count": 2,
+                            "top1_changed": True,
+                        },
+                    },
+                )
+
+            with _Chdir(td_path):
+                with patch.object(sp, "run_baseline", side_effect=_baseline), patch.object(
+                    sp, "run_ponder_dispatch", side_effect=_ponder
+                ):
+                    out, _err = _run_main(
+                        [
+                            "--provider",
+                            "openai",
+                            "--model",
+                            "gpt-5.4",
+                            "--query",
+                            "q",
+                            "--mode",
+                            "both",
+                            "--json_out",
+                            str(out_path),
+                        ]
+                    )
+
+            self.assertIn("=== PONDER LOGS ===", out)
+            self.assertIn("Latency wants velocity. Trust wants a braking distance.", out)
+            self.assertIn("=== COMPARISON ===", out)
+            self.assertIn("answers_changed=yes", out)
+            self.assertNotIn("=== PONDER RECORD(S)", out)
+
+            obj = json.loads(out_path.read_text(encoding="utf-8"))
+            comp = obj.get("comparison") or {}
+            self.assertEqual(comp.get("answer_changed"), True)
+            self.assertEqual(comp.get("memory_selected"), 1)
+            self.assertAlmostEqual(comp.get("probe_js_divergence"), 0.12)
+
+
 class TestPackBehavior(unittest.TestCase):
     def setUp(self) -> None:
         os.environ["OPENAI_API_KEY"] = "test"

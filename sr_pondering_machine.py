@@ -509,6 +509,178 @@ def compute_run_metrics(
     return metrics
 
 
+def build_run_comparison(
+    *,
+    query: str,
+    baseline_answer: Optional[str],
+    ponder_answer: Optional[str],
+    records: Sequence[Dict[str, Any]],
+    extras: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    metrics = compute_run_metrics(
+        query=query,
+        baseline_answer=baseline_answer,
+        ponder_answer=ponder_answer,
+        records=records,
+        extras=extras,
+    )
+    out: Dict[str, Any] = {}
+    if baseline_answer is not None:
+        out["baseline_chars"] = len(baseline_answer or "")
+    if ponder_answer is not None:
+        out["ponder_chars"] = len(ponder_answer or "")
+    if baseline_answer is not None and ponder_answer is not None:
+        out["answer_changed"] = bool((baseline_answer or "") != (ponder_answer or ""))
+        out["char_delta"] = int(len(ponder_answer or "") - len(baseline_answer or ""))
+        diff_ratio = metrics.get("baseline_ponder_diff")
+        if isinstance(diff_ratio, (int, float)):
+            out["diff_ratio"] = float(diff_ratio)
+
+    for key in (
+        "records",
+        "unique_keywords",
+        "max_hop_ix",
+        "memory_selected",
+        "probe_js_divergence",
+        "probe_overlap_count",
+        "probe_mover_count",
+        "probe_top1_changed",
+        "probe_stage_count",
+        "probe_stage_max_js",
+        "probe_stage_last_js",
+    ):
+        val = metrics.get(key)
+        if val is not None:
+            out[key] = val
+
+    if isinstance(extras, dict):
+        api_warnings = extras.get("api_warnings")
+        if isinstance(api_warnings, list):
+            out["api_warnings_count"] = int(len(api_warnings))
+    return out
+
+
+def _fmt_metric(value: Any, *, digits: int = 3) -> str:
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        return f"{value:.{digits}f}"
+    return str(value)
+
+
+def _print_run_comparison(comp: Dict[str, Any], *, mode: str) -> None:
+    if not comp or mode == "none":
+        return
+    if mode == "json":
+        print("\n=== COMPARISON ===\n")
+        print(json.dumps(comp, ensure_ascii=False, indent=2))
+        return
+
+    print("\n=== COMPARISON ===\n")
+    if "baseline_chars" in comp and "ponder_chars" in comp:
+        diff_ratio = comp.get("diff_ratio")
+        diff_s = _fmt_metric(diff_ratio, digits=4) if isinstance(diff_ratio, (int, float)) else "?"
+        print(
+            f"answers_changed={_fmt_metric(comp.get('answer_changed'))} "
+            f"chars={int(comp.get('baseline_chars', 0))}->{int(comp.get('ponder_chars', 0))} "
+            f"delta={int(comp.get('char_delta', 0)):+d} diff_ratio={diff_s}"
+        )
+
+    detail_parts: List[str] = []
+    for key in ("records", "unique_keywords", "max_hop_ix", "memory_selected"):
+        if key in comp:
+            detail_parts.append(f"{key}={_fmt_metric(comp.get(key))}")
+    if detail_parts:
+        print(" ".join(detail_parts))
+
+    probe_parts: List[str] = []
+    for key in ("probe_js_divergence", "probe_overlap_count", "probe_mover_count", "probe_top1_changed"):
+        if key in comp:
+            probe_parts.append(f"{key}={_fmt_metric(comp.get(key), digits=6)}")
+    for key in ("probe_stage_count", "probe_stage_max_js", "probe_stage_last_js"):
+        if key in comp:
+            probe_parts.append(f"{key}={_fmt_metric(comp.get(key), digits=6)}")
+    if probe_parts:
+        print(" ".join(probe_parts))
+
+    if "api_warnings_count" in comp:
+        print(f"api_warnings={_fmt_metric(comp.get('api_warnings_count'))}")
+
+
+def _ponder_record_label(record: Dict[str, Any]) -> str:
+    parts: List[str] = []
+    band = str(record.get("band_label") or "").strip()
+    if band:
+        parts.append(f"band={band}")
+    hop_ix = record.get("hop_ix")
+    if isinstance(hop_ix, int):
+        parts.append(f"hop={hop_ix}")
+    stage_ix = record.get("pipeline_stage_ix")
+    if isinstance(stage_ix, int):
+        parts.append(f"stage={stage_ix}")
+    mode = str(record.get("ponder_mode") or "").strip()
+    if mode:
+        parts.append(f"mode={mode}")
+    return " ".join(parts) if parts else "ponder"
+
+
+def _empty_ponder_log_reason(record: Dict[str, Any]) -> str:
+    meta = record.get("api_generation")
+    if not isinstance(meta, dict):
+        return "[empty ponder log]"
+    parts: List[str] = []
+    finish = str(meta.get("finish_reason") or "").strip()
+    if finish:
+        parts.append(f"finish_reason={finish}")
+    completion_tokens = meta.get("completion_tokens")
+    if isinstance(completion_tokens, int):
+        parts.append(f"completion_tokens={completion_tokens}")
+    reasoning_tokens = meta.get("reasoning_tokens")
+    if isinstance(reasoning_tokens, int):
+        parts.append(f"reasoning_tokens={reasoning_tokens}")
+    refusal = str(meta.get("refusal") or "").strip()
+    if refusal:
+        parts.append(f"refusal={refusal}")
+    if not parts:
+        return "[empty ponder log]"
+    return "[empty ponder log] " + " ".join(parts)
+
+
+def _print_ponder_logs(records: Sequence[Dict[str, Any]], *, mode: str) -> None:
+    if mode == "none":
+        return
+    items = [x for x in records if isinstance(x, dict)]
+    if not items:
+        return
+    limit = len(items) if mode == "full" else min(len(items), 2)
+    print("\n=== PONDER LOGS ===\n")
+    for ix, record in enumerate(items[:limit], start=1):
+        print(f"--- {ix}. {_ponder_record_label(record)} ---")
+        kws = record.get("keywords")
+        if isinstance(kws, list) and kws:
+            kws_s = ", ".join(str(x).strip() for x in kws if str(x).strip())
+            if kws_s:
+                print(f"keywords: {kws_s}")
+        question = str(record.get("ponder_question") or "").strip()
+        if question:
+            print(f"question: {question}")
+        log = str(record.get("ponder_log") or "").strip()
+        if log:
+            if mode == "auto" and len(log) > 1600:
+                print(log[:1600].rstrip() + "…")
+                print("[truncated; use --print_ponder full for full logs]")
+            else:
+                print(log)
+        else:
+            print(_empty_ponder_log_reason(record))
+        if ix < limit:
+            print("")
+    if mode == "auto" and len(items) > limit:
+        print(f"\n[info] showing {limit}/{len(items)} ponder logs (use --print_ponder full to expand)")
+
+
 def append_jsonl(path: Path, record: Dict[str, Any]) -> None:
     safe_mkdir(path)
     with path.open("a", encoding="utf-8") as f:
@@ -556,6 +728,86 @@ def _looks_like_local_path(s: str) -> bool:
 
 def _normalize_model_name(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", (name or "").lower())
+
+
+_PROVIDER_PRESETS: Dict[str, Dict[str, str]] = {
+    "hf": {"backend": "hf"},
+    "openai": {
+        "backend": "openai_compat",
+        "api_base_url": "https://api.openai.com/v1",
+        "api_chat_path": "/chat/completions",
+        "api_key_env": "OPENAI_API_KEY",
+    },
+    "mistral": {
+        "backend": "openai_compat",
+        "api_base_url": "https://api.mistral.ai/v1",
+        "api_chat_path": "/chat/completions",
+        "api_key_env": "MISTRAL_API_KEY",
+    },
+    "groq": {
+        "backend": "openai_compat",
+        "api_base_url": "https://api.groq.com/openai/v1",
+        "api_chat_path": "/chat/completions",
+        "api_key_env": "GROQ_API_KEY",
+    },
+    "openrouter": {
+        "backend": "openai_compat",
+        "api_base_url": "https://openrouter.ai/api/v1",
+        "api_chat_path": "/chat/completions",
+        "api_key_env": "OPENROUTER_API_KEY",
+    },
+    "deepseek": {
+        "backend": "openai_compat",
+        "api_base_url": "https://api.deepseek.com",
+        "api_chat_path": "/chat/completions",
+        "api_key_env": "DEEPSEEK_API_KEY",
+    },
+    "custom": {"backend": "openai_compat"},
+}
+
+
+def infer_provider_name(*, backend: str, base_url: str) -> str:
+    backend_s = str(backend or "hf").strip().lower()
+    if backend_s == "hf":
+        return "hf"
+    s = (base_url or "").strip().lower()
+    if "api.openai.com" in s:
+        return "openai"
+    if "api.mistral.ai" in s:
+        return "mistral"
+    if "api.groq.com" in s:
+        return "groq"
+    if "openrouter.ai" in s:
+        return "openrouter"
+    if "api.deepseek.com" in s:
+        return "deepseek"
+    return "custom"
+
+
+def apply_provider_defaults_inplace(args: argparse.Namespace, *, explicit_dests: Sequence[str]) -> str:
+    explicit = set(str(x) for x in explicit_dests)
+    requested = str(getattr(args, "provider", "auto") or "auto").strip().lower()
+    if requested in ("", "auto"):
+        resolved = infer_provider_name(
+            backend=str(getattr(args, "backend", "hf") or "hf"),
+            base_url=str(getattr(args, "api_base_url", "") or ""),
+        )
+        args.provider = resolved
+        return resolved
+
+    preset = _PROVIDER_PRESETS.get(requested)
+    if not isinstance(preset, dict):
+        raise SystemExit(f"[sr_ponder] ERROR: unknown provider preset: {requested!r}")
+
+    backend = str(preset.get("backend", getattr(args, "backend", "hf")) or "hf")
+    args.backend = backend
+    for key, value in preset.items():
+        if key == "backend":
+            continue
+        if key not in explicit:
+            setattr(args, key, value)
+    args.provider = requested
+    return requested
 
 
 def _suggest_model_dirs(missing_path: Path, *, limit: int = 4) -> List[Path]:
@@ -3446,6 +3698,7 @@ class RunConfig:
     model_path: str
     memory_path: Path
     backend: str = "hf"  # hf|openai_compat
+    provider: str = "hf"  # hf|openai|mistral|groq|openrouter|deepseek|custom
 
     # API backend (OpenAI-compatible)
     api_base_url: str = "https://api.openai.com/v1"
@@ -5694,7 +5947,7 @@ def main() -> None:
             )
 
     ap = argparse.ArgumentParser(
-        description="Pondering machine (local HF + API) - rejected-token + lens + bands + memory.",
+        description="Pondering machine (local HF + provider presets) - rejected-token + lens + bands + memory.",
         formatter_class=_Fmt,
     )
 
@@ -5713,11 +5966,26 @@ def main() -> None:
     g_api = ap.add_argument_group("API (OpenAI-compatible)")
     g_gen = ap.add_argument_group("Generation")
 
-    g_core.add_argument("--backend", choices=["hf", "openai_compat"], default="hf", help="Model backend")
-    g_core.add_argument("--model", required=True, help="hf: local model dir (cache roots auto-resolve latest snapshot); openai_compat: model name")
+    g_core.add_argument(
+        "--provider",
+        choices=["auto", "hf", "openai", "mistral", "groq", "openrouter", "deepseek", "custom"],
+        default="auto",
+        help="High-level provider preset; API presets auto-fill base URL and key env",
+    )
+    g_core.add_argument(
+        "--backend",
+        choices=["hf", "openai_compat"],
+        default="hf",
+        help="Low-level backend override (usually unnecessary when --provider is set)",
+    )
+    g_core.add_argument(
+        "--model",
+        required=True,
+        help="hf/provider=hf: local model dir (cache roots auto-resolve latest snapshot); API providers: model name",
+    )
     g_core.add_argument("--query", required=True, help="User query (main question)")
     g_core.add_argument("--memory", default="ponder_logs.jsonl", help="Path to JSONL memory log")
-    g_core.add_argument("--mode", choices=["baseline", "ponder", "both"], default="both")
+    g_core.add_argument("--mode", choices=["baseline", "ponder", "both"], default="both", help="Run baseline, ponder, or both (comparison prints in both)")
     g_core.add_argument("--prompt_lang", choices=["auto", "en", "ja"], default="auto", help="Prompt language")
     g_core.add_argument("--preset", choices=["none", "surreal"], default="none", help="Apply curated settings")
     g_core.add_argument("--config", default=config_path, help="Optional JSON config file (sets defaults)")
@@ -5851,15 +6119,26 @@ def main() -> None:
         help="If the pack output JSON already exists, reuse completed items and skip re-running them",
     )
     g_controls.add_argument("--pack_write_memory", action="store_true", help="Allow pack runs to write to memory JSONL")
-    g_controls.add_argument(
-        "--print_records",
-        choices=["auto", "none", "all"],
-        default="auto",
-        help="Print ponder records JSON",
-    )
-
     g_observe.add_argument("--print_config", action="store_true", help="Print resolved RunConfig JSON")
     g_observe.add_argument("--print_config_only", action="store_true", help="Print resolved RunConfig JSON and exit")
+    g_observe.add_argument(
+        "--print_compare",
+        choices=["auto", "none", "json"],
+        default="auto",
+        help="Print baseline vs ponder comparison summary",
+    )
+    g_observe.add_argument(
+        "--print_ponder",
+        choices=["auto", "none", "full"],
+        default="auto",
+        help="Print human-readable ponder logs to stdout",
+    )
+    g_observe.add_argument(
+        "--print_records",
+        choices=["auto", "none", "all"],
+        default="none",
+        help="Debug: print raw ponder record JSON",
+    )
     g_observe.add_argument("--json_out", default="", help="Write full run (or pack) results to JSON")
     g_observe.add_argument("--trace_out", default="", help="Write JSONL trace events")
     g_observe.add_argument("--trace_preview_chars", type=int, default=180, help="Trace preview length (0 disables)")
@@ -5905,9 +6184,9 @@ def main() -> None:
     )
     g_runtime.add_argument("--print_probe", action="store_true", help="Print probe tables to stdout")
 
-    g_api.add_argument("--api_base_url", default="https://api.openai.com/v1", help="API base URL")
+    g_api.add_argument("--api_base_url", default="https://api.openai.com/v1", help="API base URL (usually auto-filled by --provider)")
     g_api.add_argument("--api_chat_path", default="/chat/completions", help="Chat Completions path")
-    g_api.add_argument("--api_key_env", default="OPENAI_API_KEY", help="Env var for API key")
+    g_api.add_argument("--api_key_env", default="OPENAI_API_KEY", help="Env var for API key (usually auto-filled by --provider)")
     g_api.add_argument("--api_key", default="", help="API key (discouraged; prefer env)")
     g_api.add_argument("--api_header", action="append", default=[], help='Extra header "Key: Value" (repeatable)')
     g_api.add_argument("--api_timeout", type=float, default=60.0, help="HTTP timeout (seconds)")
@@ -5978,6 +6257,7 @@ def main() -> None:
         raise SystemExit("[sr_ponder] ERROR: use either --pack or --pack_file (not both)")
 
     apply_preset_inplace(args, explicit_dests=explicit_dests)
+    resolved_provider = apply_provider_defaults_inplace(args, explicit_dests=explicit_dests)
 
     # Convenience: write artifacts into a directory with stable filenames.
     out_dir_s = _expand_path_str(str(getattr(args, "out_dir", "") or ""))
@@ -6034,6 +6314,7 @@ def main() -> None:
         model_path=args.model,
         memory_path=Path(args.memory),
         backend=args.backend,
+        provider=resolved_provider,
         api_base_url=args.api_base_url,
         api_chat_path=args.api_chat_path,
         api_key_env=args.api_key_env,
@@ -6140,6 +6421,7 @@ def main() -> None:
             query=args.query,
             model=cfg.model_path,
             backend=cfg.backend,
+            provider=cfg.provider,
             pack=args.pack,
             pack_file=pack_file_s,
             preset=args.preset,
@@ -6191,7 +6473,8 @@ def main() -> None:
         except ValueError as e:
             raise SystemExit(f"[sr_ponder] ERROR: {e}") from e
         print(
-            f"[sr_ponder] backend=hf device={hf.device_str} input_device={hf.input_device} dtype={hf.torch_dtype} "
+            f"[sr_ponder] backend=hf provider={cfg.provider} model={cfg.model_path!r} "
+            f"device={hf.device_str} input_device={hf.input_device} dtype={hf.torch_dtype} "
             f"alloc_warmup={cfg.allocator_warmup} "
             f"gemma_turn_tokens={hf._has_gemma_turn_tokens()} lang={cfg.prompt_lang} "
             f"band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
@@ -6217,7 +6500,7 @@ def main() -> None:
             api_reasoning_effort=cfg.api_reasoning_effort,
         )
         print(
-            f"[sr_ponder] backend=openai_compat model={cfg.model_path!r} base_url={cfg.api_base_url} "
+            f"[sr_ponder] backend=openai_compat provider={cfg.provider} model={cfg.model_path!r} base_url={cfg.api_base_url} "
             f"reasoning_effort={cfg.api_reasoning_effort} seed_method={cfg.api_seed_method} logprobs_top_n={cfg.api_logprobs_top_n} "
             f"lang={cfg.prompt_lang} band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
             f"objective={cfg.keyword_objective} diversity={cfg.keyword_diversity} hops={cfg.ponder_hops} answer_style={cfg.answer_style} control={cfg.control} "
@@ -6255,6 +6538,7 @@ def main() -> None:
         results: Dict[str, Any] = {
             "ts": now_iso(),
             "kind": "pack",
+            "provider": cfg.provider,
             "model": cfg.model_path,
             "query": args.query,
             "pack": pack_id,
@@ -6564,6 +6848,7 @@ def main() -> None:
     ponder_ans: Optional[str] = None
     ponder_recs: List[Dict[str, Any]] = []
     ponder_extras: Dict[str, Any] = {}
+    comparison: Dict[str, Any] = {}
 
     if args.mode in ("baseline", "both"):
         baseline_ans = run_baseline(hf, cfg, args.query, trace=trace)
@@ -6572,6 +6857,8 @@ def main() -> None:
 
     if args.mode in ("ponder", "both"):
         ponder_ans, ponder_recs, ponder_extras = run_ponder_dispatch(hf, cfg, args.query, trace=trace)
+
+        _print_ponder_logs(ponder_recs, mode=str(getattr(args, "print_ponder", "auto") or "auto"))
 
         if args.print_records != "none":
             if args.print_records == "all" or (args.print_records == "auto" and len(ponder_recs) <= 3):
@@ -6606,11 +6893,22 @@ def main() -> None:
         print("\n=== PONDERED ANSWER ===\n")
         print(ponder_ans)
 
+    comparison = build_run_comparison(
+        query=args.query,
+        baseline_answer=baseline_ans,
+        ponder_answer=ponder_ans,
+        records=ponder_recs,
+        extras=ponder_extras if ponder_extras else None,
+    )
+    if baseline_ans is not None and ponder_ans is not None:
+        _print_run_comparison(comparison, mode=str(getattr(args, "print_compare", "auto") or "auto"))
+
     out_s = str(getattr(args, "json_out", "") or "").strip()
     if out_s:
         payload = {
             "ts": now_iso(),
             "kind": "run",
+            "provider": cfg.provider,
             "query": args.query,
             "preset": args.preset,
             "config": str(getattr(args, "config", "") or ""),
@@ -6631,6 +6929,7 @@ def main() -> None:
             "ponder": ponder_ans,
             "records": ponder_recs,
             "extras": ponder_extras if ponder_extras else None,
+            "comparison": comparison if comparison else None,
             "metrics": compute_run_metrics(
                 query=args.query,
                 baseline_answer=baseline_ans,
