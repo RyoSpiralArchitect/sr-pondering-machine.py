@@ -22,6 +22,7 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Gemma-aware** — natively applies the `<start_of_turn>` / `<end_of_turn>` prompt format expected by Gemma IT models and stops generation cleanly at `<end_of_turn>`.
 - **Persistent memory** — ponder logs are stored in a JSONL file and the most recent entries are reused in subsequent runs.
 - **Baseline comparison** — `--mode both` prints baseline, pondered answer, and a compact comparison summary by default.
+- **Semantic comparison** — comparison output now includes a semantic similarity/alignment block (`--compare_semantic auto|hash|embed`).
 - **Terminal ponder logs** — human-readable ponder logs now print to the terminal by default; raw JSON records stay opt-in.
 - **Ponder lenses** — switch between association / assumptions / counterexamples / questions-only / metaphor via `--ponder_mode`.
 - **Lens pipeline** — chain multiple lenses via `--ponder_pipeline` (with `--pipeline_context prev|all|none`).
@@ -79,6 +80,7 @@ python3 sr_pondering_machine.py \
 ```
 
 This runs both the **baseline** (direct answer) and the **ponder** (wander-then-answer) modes and prints both outputs, the ponder log, and a compact comparison summary.
+By default that comparison includes a semantic similarity view: local HF runs use mean token-embedding cosine, and API runs fall back to hashed character n-gram TF-IDF cosine unless you provide `--compare_embed_model`.
 
 ## API Quick Start (Provider presets)
 
@@ -545,6 +547,8 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | `--print_compare` | `auto` | Print a compact baseline vs ponder summary |
 | `--print_ponder` | `auto` | Print human-readable ponder logs to stdout |
 | `--print_records` | `none` | Debug: print raw ponder-record JSON |
+| `--compare_semantic` | `auto` | `off` · `auto` · `hash` · `embed` |
+| `--compare_embed_model` | *(empty)* | Optional local/cached encoder for true embedding cosine |
 | `--json_out` | *(empty)* | Write full run/pack results to JSON |
 | `--trace_out` | *(empty)* | Write step-level trace JSONL |
 | `--trace_report_out` | *(empty)* | Write HTML trace report |
@@ -629,6 +633,8 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.h
 - For OpenAI GPT-5 family models, the client retries common compatibility errors (`max_tokens` ↔ `max_completion_tokens`, unsupported `temperature`, unsupported `top_p`, unsupported `logprobs`) automatically.
 - For OpenAI GPT-5 family models, the client also retries one time when visible output is empty and the entire completion budget appears to have been consumed by reasoning tokens.
 - For API providers, rate limits now surface as a short CLI error with any available `Retry-After` delay instead of a raw stack trace.
+- For `--compare_semantic auto`, local HF runs use cosine over mean token embeddings from the active model; API runs use hashed char n-gram TF-IDF cosine unless you provide `--compare_embed_model`.
+- For `--compare_semantic embed`, set `--compare_embed_model` to a local/cached encoder model if you want true embedding cosine on API runs.
 - For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams + IDF weighting). It’s not as strong as real embedding retrieval, but better than raw tail.
 - For API backends, `--api_logprobs_top_n` is provider-capped. If the returned logprob depth is shallower than a requested band (for example `spectrum3` + `far`), that band degrades to self-seeded keywords and the script warns about it.
 - For `--probe_compare`, `--backend hf` computes JS divergence on the full vocab; `--backend openai_compat` computes an approximate JS divergence on the observed top-logprobs union and reports the observed mass.

@@ -168,6 +168,45 @@ class TestProbeCompare(unittest.TestCase):
         self.assertEqual(cfg.get("probe_compare_top_n"), 17)
 
 
+class TestSemanticCompare(unittest.TestCase):
+    def test_build_semantic_compare_hash(self) -> None:
+        cfg = sp.RunConfig(model_path="dummy", memory_path=Path("ponder_logs.jsonl"), compare_semantic="hash")
+        comp = sp.build_semantic_compare(
+            hf=None,
+            cfg=cfg,
+            query="accuracy versus speed in llm systems",
+            baseline_answer="Optimize for speed when the task is low risk.",
+            ponder_answer="Optimize for trust and constraint satisfaction under the task budget.",
+        )
+        self.assertIsNotNone(comp)
+        assert comp is not None
+        self.assertEqual(comp.get("status"), "ok")
+        self.assertEqual(comp.get("method"), "hashed_char_ngrams_tfidf")
+        self.assertIn("answer_cosine", comp)
+        self.assertIn("query_alignment_delta", comp)
+
+    def test_print_config_only_includes_compare_semantic(self) -> None:
+        out, _err = _run_main(
+            [
+                "--provider",
+                "openai",
+                "--model",
+                "gpt-5.4",
+                "--query",
+                "q",
+                "--compare_semantic",
+                "embed",
+                "--compare_embed_model",
+                "./emb-model",
+                "--print_config_only",
+            ]
+        )
+        obj = json.loads(out)
+        cfg = obj.get("cfg") or {}
+        self.assertEqual(cfg.get("compare_semantic"), "embed")
+        self.assertTrue(str(cfg.get("compare_embed_model") or "").endswith("emb-model"))
+
+
 class TestOpenAICompat(unittest.TestCase):
     def test_extract_text_and_meta_handles_nested_text_value(self) -> None:
         hf = sp.OpenAICompatModel(
@@ -401,6 +440,7 @@ class TestTerminalUX(unittest.TestCase):
             self.assertIn("Latency wants velocity. Trust wants a braking distance.", out)
             self.assertIn("=== COMPARISON ===", out)
             self.assertIn("answers_changed=yes", out)
+            self.assertIn("semantic[hashed_char_ngrams_tfidf]", out)
             self.assertNotIn("=== PONDER RECORD(S)", out)
 
             obj = json.loads(out_path.read_text(encoding="utf-8"))
@@ -408,6 +448,7 @@ class TestTerminalUX(unittest.TestCase):
             self.assertEqual(comp.get("answer_changed"), True)
             self.assertEqual(comp.get("memory_selected"), 1)
             self.assertAlmostEqual(comp.get("probe_js_divergence"), 0.12)
+            self.assertEqual((comp.get("semantic") or {}).get("method"), "hashed_char_ngrams_tfidf")
 
     def test_main_reports_rate_limit_without_traceback(self) -> None:
         with patch.object(

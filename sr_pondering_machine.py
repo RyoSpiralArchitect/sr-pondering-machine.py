@@ -58,9 +58,10 @@ except Exception:  # pragma: no cover - environment dependent
 
 try:  # pragma: no cover - environment dependent
     import transformers  # type: ignore
-    from transformers import AutoModelForCausalLM, AutoTokenizer  # type: ignore
+    from transformers import AutoModel, AutoModelForCausalLM, AutoTokenizer  # type: ignore
 except Exception:  # pragma: no cover - environment dependent
     transformers = None  # type: ignore
+    AutoModel = None  # type: ignore
     AutoModelForCausalLM = None  # type: ignore
     AutoTokenizer = None  # type: ignore
 
@@ -444,6 +445,7 @@ def compute_run_metrics(
     ponder_answer: Optional[str],
     records: Sequence[Dict[str, Any]],
     extras: Optional[Dict[str, Any]],
+    semantic_compare: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     metrics: Dict[str, Any] = {}
     metrics["query_chars"] = len(query or "")
@@ -507,6 +509,16 @@ def compute_run_metrics(
             if stage_js:
                 metrics["probe_stage_max_js"] = float(max(stage_js))
                 metrics["probe_stage_last_js"] = float(stage_js[-1])
+    if isinstance(semantic_compare, dict) and str(semantic_compare.get("status") or "") == "ok":
+        for src_key, dst_key in (
+            ("answer_cosine", "semantic_answer_cosine"),
+            ("query_baseline_cosine", "semantic_query_baseline_cosine"),
+            ("query_ponder_cosine", "semantic_query_ponder_cosine"),
+            ("query_alignment_delta", "semantic_query_alignment_delta"),
+        ):
+            val = semantic_compare.get(src_key)
+            if isinstance(val, (int, float)):
+                metrics[dst_key] = float(val)
     return metrics
 
 
@@ -517,6 +529,7 @@ def build_run_comparison(
     ponder_answer: Optional[str],
     records: Sequence[Dict[str, Any]],
     extras: Optional[Dict[str, Any]],
+    semantic_compare: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     metrics = compute_run_metrics(
         query=query,
@@ -524,6 +537,7 @@ def build_run_comparison(
         ponder_answer=ponder_answer,
         records=records,
         extras=extras,
+        semantic_compare=semantic_compare,
     )
     out: Dict[str, Any] = {}
     if baseline_answer is not None:
@@ -558,6 +572,8 @@ def build_run_comparison(
         api_warnings = extras.get("api_warnings")
         if isinstance(api_warnings, list):
             out["api_warnings_count"] = int(len(api_warnings))
+    if isinstance(semantic_compare, dict):
+        out["semantic"] = semantic_compare
     return out
 
 
@@ -608,6 +624,22 @@ def _print_run_comparison(comp: Dict[str, Any], *, mode: str) -> None:
 
     if "api_warnings_count" in comp:
         print(f"api_warnings={_fmt_metric(comp.get('api_warnings_count'))}")
+    semantic = comp.get("semantic")
+    if isinstance(semantic, dict):
+        status = str(semantic.get("status") or "").strip()
+        method = str(semantic.get("method") or "").strip()
+        if status == "ok":
+            print(
+                f"semantic[{method}] "
+                f"answer_cosine={_fmt_metric(semantic.get('answer_cosine'), digits=6)} "
+                f"query_base={_fmt_metric(semantic.get('query_baseline_cosine'), digits=6)} "
+                f"query_ponder={_fmt_metric(semantic.get('query_ponder_cosine'), digits=6)} "
+                f"align_delta={_fmt_metric(semantic.get('query_alignment_delta'), digits=6)}"
+            )
+        elif status:
+            reason = str(semantic.get("reason") or "").strip()
+            if reason:
+                print(f"semantic[{method or status}] {status}: {reason}")
 
 
 def _ponder_record_label(record: Dict[str, Any]) -> str:
@@ -2533,6 +2565,50 @@ def _cosine_with_norm(a: Dict[int, float], na: float, b: Dict[int, float], nb: f
     return float(_sparse_dot(a, b) / denom)
 
 
+def _hashed_semantic_tf(text: str, *, dim: int = 4096, max_chars: int = 4000) -> Dict[int, float]:
+    vec: Dict[int, float] = {}
+    _add_hashed_char_ngrams_multi(
+        vec,
+        text,
+        ns=(2, 3, 4),
+        dim=int(dim),
+        max_chars=int(max_chars),
+        scale=1.0,
+        n_weights={2: 0.85, 3: 1.0, 4: 1.15},
+    )
+    return vec
+
+
+def _hashed_semantic_compare(query: str, baseline_answer: str, ponder_answer: str) -> Dict[str, Any]:
+    q_tf = _hashed_semantic_tf(query)
+    b_tf = _hashed_semantic_tf(baseline_answer)
+    p_tf = _hashed_semantic_tf(ponder_answer)
+
+    docs = [q_tf, b_tf, p_tf]
+    df: Dict[int, int] = {}
+    for vec in docs:
+        for key in vec.keys():
+            df[key] = int(df.get(key, 0)) + 1
+    doc_n = len(docs)
+    idf = {key: float(math.log((1.0 + doc_n) / (1.0 + freq)) + 1.0) for key, freq in df.items()}
+
+    q_vec, q_norm = _tfidf_vec(q_tf, idf)
+    b_vec, b_norm = _tfidf_vec(b_tf, idf)
+    p_vec, p_norm = _tfidf_vec(p_tf, idf)
+
+    qb = _cosine_with_norm(q_vec, q_norm, b_vec, b_norm)
+    qp = _cosine_with_norm(q_vec, q_norm, p_vec, p_norm)
+    bp = _cosine_with_norm(b_vec, b_norm, p_vec, p_norm)
+    return {
+        "status": "ok",
+        "method": "hashed_char_ngrams_tfidf",
+        "answer_cosine": float(bp),
+        "query_baseline_cosine": float(qb),
+        "query_ponder_cosine": float(qp),
+        "query_alignment_delta": float(qp - qb),
+    }
+
+
 def _tfidf_vec(tf: Dict[int, float], idf: Dict[int, float]) -> Tuple[Dict[int, float], float]:
     """Return (tfidf_vec, norm)."""
     vec: Dict[int, float] = {}
@@ -3826,6 +3902,8 @@ class RunConfig:
     probe_compare: bool = False
     probe_compare_stages: bool = False
     probe_compare_top_n: int = 32
+    compare_semantic: str = "auto"  # off|auto|hash|embed
+    compare_embed_model: str = ""
     print_probe: bool = False
     interactive: bool = False
     interactive_candidates: int = 48
@@ -3893,6 +3971,182 @@ def _api_reasoning_starved_empty_output(text: str, meta: Dict[str, Any]) -> bool
     if completion_tokens <= 0 or reasoning_tokens < completion_tokens:
         return False
     return finish_reason in ("", "length")
+
+
+def _token_ids_for_text(tokenizer: Any, text: str) -> List[int]:
+    try:
+        enc = tokenizer(str(text or ""), return_tensors="pt", add_special_tokens=False)
+        input_ids = enc.get("input_ids")
+        if input_ids is None:
+            return []
+        return [int(x) for x in input_ids[0].tolist()]
+    except Exception:
+        return []
+
+
+_TEXT_EMBEDDER_CACHE: Dict[Tuple[str, str], Tuple[Any, Any, str]] = {}
+
+
+def _resolve_embed_device(device_hint: str) -> str:
+    hint = str(device_hint or "auto").strip().lower()
+    if hint and hint != "auto":
+        return hint
+    if torch is not None:
+        try:
+            if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                return "mps"
+        except Exception:
+            pass
+        try:
+            if torch.cuda.is_available():
+                return "cuda"
+        except Exception:
+            pass
+    return "cpu"
+
+
+def _load_text_embedder(model_ref: str, *, device_hint: str) -> Tuple[Any, Any, str]:
+    if torch is None or AutoTokenizer is None or AutoModel is None:
+        raise RuntimeError("torch + transformers are required for external embedding comparison")
+    model_s = str(model_ref or "").strip()
+    if not model_s:
+        raise RuntimeError("missing compare_embed_model")
+    resolved_model = resolve_model_ref(model_s) if _looks_like_local_path(model_s) else model_s
+    device = _resolve_embed_device(device_hint)
+    cache_key = (resolved_model, device)
+    cached = _TEXT_EMBEDDER_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+    tokenizer = AutoTokenizer.from_pretrained(resolved_model, local_files_only=True, trust_remote_code=False)
+    model = AutoModel.from_pretrained(resolved_model, local_files_only=True, trust_remote_code=False)
+    model.to(device)
+    model.eval()
+    _TEXT_EMBEDDER_CACHE[cache_key] = (tokenizer, model, device)
+    return tokenizer, model, device
+
+
+def _external_embedding_compare(
+    *,
+    model_ref: str,
+    device_hint: str,
+    query: str,
+    baseline_answer: str,
+    ponder_answer: str,
+) -> Dict[str, Any]:
+    tokenizer, model, device = _load_text_embedder(model_ref, device_hint=device_hint)
+    texts = [str(query or ""), str(baseline_answer or ""), str(ponder_answer or "")]
+    batch = tokenizer(
+        texts,
+        return_tensors="pt",
+        padding=True,
+        truncation=True,
+        max_length=512,
+    )
+    batch = {k: v.to(device) for k, v in batch.items()}
+    with torch.inference_mode():
+        outputs = model(**batch)
+    hidden = getattr(outputs, "last_hidden_state", None)
+    if hidden is None:
+        raise RuntimeError("embedding model returned no last_hidden_state")
+    attn = batch.get("attention_mask")
+    if attn is None:
+        attn = torch.ones(hidden.shape[:2], device=hidden.device, dtype=hidden.dtype)
+    else:
+        attn = attn.to(hidden.device)
+    attn_f = attn.unsqueeze(-1).float()
+    pooled = (hidden.float() * attn_f).sum(dim=1) / attn_f.sum(dim=1).clamp_min(1.0)
+    pooled = _l2_normalize(pooled).detach().cpu()
+    qv, bv, pv = pooled[0], pooled[1], pooled[2]
+    qb = _cosine_sim(qv, bv)
+    qp = _cosine_sim(qv, pv)
+    bp = _cosine_sim(bv, pv)
+    return {
+        "status": "ok",
+        "method": "external_encoder",
+        "model": str(model_ref),
+        "device": str(device),
+        "answer_cosine": float(bp),
+        "query_baseline_cosine": float(qb),
+        "query_ponder_cosine": float(qp),
+        "query_alignment_delta": float(qp - qb),
+    }
+
+
+def _local_hf_embedding_compare(hf: Any, *, query: str, baseline_answer: str, ponder_answer: str) -> Dict[str, Any]:
+    if not isinstance(hf, LocalHFModel):
+        raise RuntimeError("current backend is not a local HF model")
+    q_ids = _token_ids_for_text(hf.tokenizer, query)
+    b_ids = _token_ids_for_text(hf.tokenizer, baseline_answer)
+    p_ids = _token_ids_for_text(hf.tokenizer, ponder_answer)
+    q_vec = mean_embedding_for_token_ids(hf, q_ids)
+    b_vec = mean_embedding_for_token_ids(hf, b_ids)
+    p_vec = mean_embedding_for_token_ids(hf, p_ids)
+    if q_vec is None or b_vec is None or p_vec is None:
+        raise RuntimeError("failed to derive token-embedding means")
+    qb = _cosine_sim(q_vec, b_vec)
+    qp = _cosine_sim(q_vec, p_vec)
+    bp = _cosine_sim(b_vec, p_vec)
+    return {
+        "status": "ok",
+        "method": "hf_input_embeddings",
+        "model": str(getattr(hf, "model_name", "") or ""),
+        "answer_cosine": float(bp),
+        "query_baseline_cosine": float(qb),
+        "query_ponder_cosine": float(qp),
+        "query_alignment_delta": float(qp - qb),
+    }
+
+
+def build_semantic_compare(
+    *,
+    hf: Any,
+    cfg: "RunConfig",
+    query: str,
+    baseline_answer: Optional[str],
+    ponder_answer: Optional[str],
+) -> Optional[Dict[str, Any]]:
+    if not baseline_answer or not ponder_answer:
+        return None
+    mode = str(getattr(cfg, "compare_semantic", "auto") or "auto").strip().lower()
+    if mode == "off":
+        return None
+    embed_model = str(getattr(cfg, "compare_embed_model", "") or "").strip()
+
+    def _fallback_hash(reason: str = "") -> Dict[str, Any]:
+        out = _hashed_semantic_compare(query, baseline_answer, ponder_answer)
+        if reason:
+            out["fallback_reason"] = str(reason)
+        return out
+
+    if mode in ("auto", "embed"):
+        if embed_model:
+            try:
+                return _external_embedding_compare(
+                    model_ref=embed_model,
+                    device_hint=str(getattr(cfg, "device", "auto") or "auto"),
+                    query=query,
+                    baseline_answer=baseline_answer,
+                    ponder_answer=ponder_answer,
+                )
+            except Exception as e:
+                if mode == "embed":
+                    return {"status": "unavailable", "method": "external_encoder", "model": embed_model, "reason": str(e)}
+                return _fallback_hash(str(e))
+        if isinstance(hf, LocalHFModel):
+            try:
+                return _local_hf_embedding_compare(
+                    hf,
+                    query=query,
+                    baseline_answer=baseline_answer,
+                    ponder_answer=ponder_answer,
+                )
+            except Exception as e:
+                if mode == "embed":
+                    return {"status": "unavailable", "method": "hf_input_embeddings", "reason": str(e)}
+                return _fallback_hash(str(e))
+        if mode == "embed":
+            return {"status": "unavailable", "method": "embed", "reason": "no local embedding source is available"}
+    return _fallback_hash()
 
 
 def _api_retry_budget_for_reasoning_starvation(*, provider: str, model: str, phase: str, current_max_new_tokens: int) -> int:
@@ -6365,6 +6619,17 @@ def main() -> None:
     g_observe.add_argument("--trace_report_session_id", default="", help="Filter trace report to a session_id (default: current run)")
     g_observe.add_argument("--out_dir", default="", help="If set, auto-fill --json_out/--trace_out/--trace_report_out into this dir")
     g_observe.add_argument("--run_name", default="", help="Optional label used in artifact filenames")
+    g_observe.add_argument(
+        "--compare_semantic",
+        choices=["off", "auto", "hash", "embed"],
+        default="auto",
+        help="Add semantic answer comparison: auto=HF token embeddings or hashed n-grams, embed=force embedding mode",
+    )
+    g_observe.add_argument(
+        "--compare_embed_model",
+        default="",
+        help="Optional local/cached encoder model for true embedding cosine in --compare_semantic embed/auto",
+    )
 
     g_runtime.add_argument("--device", default="auto", help="auto|mps|cpu|cuda|cuda:0 ...")
     g_runtime.add_argument("--dtype", default="auto", help="auto|float16|bfloat16|float32")
@@ -6518,6 +6783,7 @@ def main() -> None:
         args.trace_report_out = _expand_path_str(str(getattr(args, "trace_report_out", "") or ""))
         args.pack_out = _expand_path_str(str(getattr(args, "pack_out", "") or ""))
         args.pack_file = _expand_path_str(str(getattr(args, "pack_file", "") or ""))
+        args.compare_embed_model = _expand_path_str(str(getattr(args, "compare_embed_model", "") or ""))
     except Exception:
         pass
 
@@ -6599,6 +6865,8 @@ def main() -> None:
         probe_compare=bool(args.probe_compare),
         probe_compare_stages=bool(args.probe_compare_stages),
         probe_compare_top_n=int(args.probe_compare_top_n),
+        compare_semantic=str(args.compare_semantic),
+        compare_embed_model=str(args.compare_embed_model or ""),
         print_probe=args.print_probe,
         interactive=bool(args.interactive),
         interactive_candidates=args.interactive_candidates,
@@ -7076,6 +7344,7 @@ def main() -> None:
     ponder_recs: List[Dict[str, Any]] = []
     ponder_extras: Dict[str, Any] = {}
     comparison: Dict[str, Any] = {}
+    semantic_compare: Optional[Dict[str, Any]] = None
 
     if args.mode in ("baseline", "both"):
         baseline_ans = call_with_api_error_context(
@@ -7128,12 +7397,21 @@ def main() -> None:
         print("\n=== PONDERED ANSWER ===\n")
         print(ponder_ans)
 
+    if baseline_ans is not None and ponder_ans is not None:
+        semantic_compare = build_semantic_compare(
+            hf=hf,
+            cfg=cfg,
+            query=args.query,
+            baseline_answer=baseline_ans,
+            ponder_answer=ponder_ans,
+        )
     comparison = build_run_comparison(
         query=args.query,
         baseline_answer=baseline_ans,
         ponder_answer=ponder_ans,
         records=ponder_recs,
         extras=ponder_extras if ponder_extras else None,
+        semantic_compare=semantic_compare,
     )
     if baseline_ans is not None and ponder_ans is not None:
         _print_run_comparison(comparison, mode=str(getattr(args, "print_compare", "auto") or "auto"))
@@ -7171,6 +7449,7 @@ def main() -> None:
                 ponder_answer=ponder_ans,
                 records=ponder_recs,
                 extras=ponder_extras if ponder_extras else None,
+                semantic_compare=semantic_compare,
             ),
         }
         out_path = write_json_dest(out_s, payload)
