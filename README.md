@@ -26,6 +26,8 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Stance shift** — comparison output can profile `definition / framing / conditionalization / example expansion / resolution` drift with `--compare_stance auto`.
 - **Spatial metaphor density** — comparison output can track spatial-metaphor density in answers and ponder logs with `--compare_spatial_metaphor auto`.
 - **Token budget comparison** — comparison output can now separate visible scaffold size from API `reasoning_tokens` / `completion_tokens` with `--compare_token_budget auto`.
+- **Scaffold controls** — `--scaffold_condition` and `--scaffold_token_target` let you hold scaffold size roughly fixed while swapping associative, random, factual, or structurally isomorphic content.
+- **Lab matrix** — `--lab_matrix scaffold_abcd` runs the baseline plus a controlled scaffold-condition sweep.
 - **Terminal ponder logs** — human-readable ponder logs now print to the terminal by default; raw JSON records stay opt-in.
 - **Ponder lenses** — switch between association / assumptions / counterexamples / questions-only / metaphor via `--ponder_mode`.
 - **Lens pipeline** — chain multiple lenses via `--ponder_pipeline` (with `--pipeline_context prev|all|none`).
@@ -84,6 +86,20 @@ python3 sr_pondering_machine.py \
 
 This runs both the **baseline** (direct answer) and the **ponder** (wander-then-answer) modes and prints both outputs, the ponder log, and a compact comparison summary.
 By default that comparison includes a semantic similarity view: local HF runs use mean token-embedding cosine, and API runs try a local encoder automatically (`./model/minilm`, `./models/minilm`, or similar MiniLM/e5/bge-style dirs) on CPU before falling back to hashed character n-gram TF-IDF cosine.
+
+For controlled scaffold experiments:
+
+```bash
+python3 sr_pondering_machine.py \
+  --provider openai \
+  --model gpt-5.4 \
+  --query "非相対的ではあるが絶対的ではない状態とは？" \
+  --mode both \
+  --memory_policy current_only \
+  --scaffold_condition facts \
+  --scaffold_token_target 400 \
+  --compare_token_budget auto
+```
 
 ## API Quick Start (Provider presets)
 
@@ -526,6 +542,8 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | `--memory_mix_ratio` | `0.5` | similar/(similar+anti) in mix |
 | `--memory_include_current_run` | `False` | Allow selecting current run from tail |
 | `--memory_remix` | `off` | `off` · `shuffle` · `compress` · `dream` |
+| `--scaffold_condition` | `assoc` | `assoc` · `random` · `facts` · `isomorphic` |
+| `--scaffold_token_target` | `0` | Approx target token budget for the final injected scaffold |
 
 ### Answers
 
@@ -541,6 +559,7 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | `--interactive` | `False` | Pick keywords interactively |
 | `--pack` | `none` | `none` · `controls` · `surreal` |
 | `--pack_file` | *(empty)* | Run a custom pack from a JSON file |
+| `--lab_matrix` | *(empty)* | Run a built-in or JSON-defined experiment matrix |
 | `--pack_out` | *(empty)* | Optional JSON results |
 
 ### Observability / Runtime / API
@@ -645,6 +664,9 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.h
 - `--compare_stance auto` uses a built-in heuristic lexicon to estimate answer-policy drift across `definition`, `framing`, `conditionalization`, `example_expansion`, and `resolution`.
 - `--compare_spatial_metaphor auto` measures spatial-metaphor density per 1k chars for the baseline answer, pondered answer, ponder questions, and ponder logs, then reports dominant groups like `path`, `stage`, `container`, and `geometry`.
 - `--compare_token_budget auto` reports visible scaffold size (keywords, ponder questions/logs, injected memory) alongside API-side prompt / completion / reasoning token totals, so you can test “more scaffold” against “more internal reasoning” instead of conflating them.
+- `--scaffold_condition` only changes the final injected scaffold block; the upstream ponder logs are still generated and logged, which makes A/B/C/D style comparisons possible without hiding the original run trace.
+- `--scaffold_token_target` normalizes the final scaffold block to an approximate token budget using the active tokenizer when available, otherwise a mixed-script heuristic estimator.
+- `--lab_matrix scaffold_abcd` runs `baseline + assoc + random + facts + isomorphic` with the current CLI defaults; combine it with `--scaffold_token_target 400` to approximate a fixed-budget scaffold sweep.
 - External semantic encoder loading is quiet by default to avoid noisy `from_pretrained()` progress bars and local `sitecustomize` chatter; set `SR_COMPARE_EMBED_VERBOSE=1` if you want to see that load output.
 - For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams + IDF weighting). It’s not as strong as real embedding retrieval, but better than raw tail.
 - For API backends, `--api_logprobs_top_n` is provider-capped. If the returned logprob depth is shallower than a requested band (for example `spectrum3` + `far`), that band degrades to self-seeded keywords and the script warns about it.

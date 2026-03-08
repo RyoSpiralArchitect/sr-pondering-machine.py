@@ -257,6 +257,30 @@ class TestSemanticCompare(unittest.TestCase):
 
 
 class TestReasoningCompare(unittest.TestCase):
+    def test_fit_scaffold_to_token_target_respects_limit(self) -> None:
+        hf = SimpleNamespace(tokenizer=None)
+        text = "\n".join([f"- line {ix} with some extra words for counting" for ix in range(12)])
+        fitted, meta = sp.fit_scaffold_to_token_target(
+            hf,
+            text,
+            target_tokens=18,
+            condition="random",
+            query="q",
+            lang="en",
+            seed=123,
+        )
+        self.assertTrue(fitted)
+        self.assertEqual(meta.get("target_tokens"), 18)
+        self.assertLessEqual(int(meta.get("final_tokens_est") or 0), 18)
+
+    def test_load_lab_matrix_builtin_scaffold_abcd(self) -> None:
+        name, base_cfg, items = sp.load_lab_matrix("scaffold_abcd", default_scaffold_token_target=400)
+        self.assertEqual(name, "scaffold_abcd")
+        self.assertEqual(base_cfg, {})
+        self.assertEqual([name for name, _spec in items], ["baseline", "assoc", "random", "facts", "isomorphic"])
+        facts_spec = dict(items[3][1])
+        self.assertEqual((((facts_spec.get("cfg") or {}).get("scaffold_token_target"))), 400)
+
     def test_build_token_budget_compare_tracks_scaffold_and_reasoning(self) -> None:
         hf = SimpleNamespace(tokenizer=None)
         records = [
@@ -584,6 +608,58 @@ class TestTerminalUX(unittest.TestCase):
             self.assertEqual((comp.get("stance") or {}).get("method"), "heuristic_lexicon")
             self.assertEqual((comp.get("spatial_metaphor") or {}).get("method"), "heuristic_lexicon")
             self.assertEqual((comp.get("token_budget") or {}).get("status"), "ok")
+
+    def test_lab_matrix_builtin_runs_scaffold_conditions(self) -> None:
+        with _tempdir() as td:
+            td_path = Path(td)
+            out_path = td_path / "lab.json"
+            seen_conditions: list[tuple[str, int]] = []
+
+            def _baseline(_hf, _cfg, _q, **_kw):
+                return "Baseline answer."
+
+            def _ponder(_hf, _cfg, _q, **_kw):
+                seen_conditions.append((str(_cfg.scaffold_condition), int(_cfg.scaffold_token_target)))
+                extras = {
+                    "memory_selected": [{"query": "earlier"}],
+                    "memory_block_chars": 120,
+                    "memory_block_est_tokens": int(_cfg.scaffold_token_target),
+                }
+                return (f"Answer::{_cfg.scaffold_condition}", [{"ponder_log": "x", "ponder_question": "y", "keywords": ["k"]}], extras)
+
+            with _Chdir(td_path):
+                with patch.object(sp, "run_baseline", side_effect=_baseline), patch.object(
+                    sp, "run_ponder_dispatch", side_effect=_ponder
+                ):
+                    out, _err = _run_main(
+                        [
+                            "--provider",
+                            "openai",
+                            "--model",
+                            "gpt-5.4",
+                            "--query",
+                            "q",
+                            "--lab_matrix",
+                            "scaffold_abcd",
+                            "--scaffold_token_target",
+                            "128",
+                            "--pack_out",
+                            str(out_path),
+                            "--memory",
+                            "mem.jsonl",
+                        ]
+                    )
+
+            self.assertIn("=== PACK: assoc ===", out)
+            self.assertIn("=== PACK: isomorphic ===", out)
+            self.assertEqual(seen_conditions, [("assoc", 128), ("random", 128), ("facts", 128), ("isomorphic", 128)])
+            obj = json.loads(out_path.read_text(encoding="utf-8"))
+            self.assertEqual(obj.get("kind"), "lab_matrix")
+            self.assertEqual(obj.get("lab_matrix"), "scaffold_abcd")
+            item_names = [str(it.get("name") or "") for it in (obj.get("items") or [])]
+            self.assertEqual(item_names, ["baseline", "assoc", "random", "facts", "isomorphic"])
+            assoc_item = next(it for it in (obj.get("items") or []) if it.get("name") == "assoc")
+            self.assertEqual((((assoc_item.get("comparison") or {}).get("token_budget") or {}).get("status")), "ok")
 
     def test_main_reports_rate_limit_without_traceback(self) -> None:
         with patch.object(

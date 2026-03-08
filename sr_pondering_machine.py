@@ -41,6 +41,7 @@ import datetime as dt
 import difflib
 from email.utils import parsedate_to_datetime
 import hashlib
+import itertools
 import json
 import math
 import os
@@ -309,6 +310,7 @@ def sanitize_cfg_dict(d: Dict[str, Any]) -> Dict[str, Any]:
 
 
 _CONTROL_VARIANTS = ("none", "no_inject", "random_log", "random_keywords", "lens_only")
+_SCAFFOLD_CONDITIONS = ("assoc", "random", "facts", "isomorphic")
 
 
 def load_pack_file(path: Path) -> Tuple[str, List[Tuple[str, Dict[str, Any]]]]:
@@ -378,6 +380,146 @@ def load_pack_file(path: Path) -> Tuple[str, List[Tuple[str, Dict[str, Any]]]]:
         items.append((item_name, spec))
 
     return name, items
+
+
+def _slugify_lab_value(value: Any) -> str:
+    return slugify_filename(str(value or "")) or "x"
+
+
+def _parse_matrix_items_with_base_cfg(data: Dict[str, Any], *, source_label: str) -> Tuple[str, Dict[str, Any], List[Tuple[str, Dict[str, Any]]]]:
+    name = str(data.get("name") or "").strip() or source_label
+    base_cfg = data.get("base_cfg") or {}
+    if base_cfg and not isinstance(base_cfg, dict):
+        raise SystemExit(
+            f"[sr_ponder] ERROR: {source_label} base_cfg must be an object (dict), got {type(base_cfg).__name__}"
+        )
+
+    include_baseline = bool(data.get("include_baseline", True))
+    items: List[Tuple[str, Dict[str, Any]]] = []
+    if include_baseline:
+        items.append(("baseline", {"kind": "baseline"}))
+
+    item_base_cfg = data.get("item_base_cfg") or {}
+    if item_base_cfg and not isinstance(item_base_cfg, dict):
+        raise SystemExit(
+            f"[sr_ponder] ERROR: {source_label} item_base_cfg must be an object (dict), got {type(item_base_cfg).__name__}"
+        )
+
+    items_raw = data.get("items")
+    if isinstance(items_raw, list) and items_raw:
+        allowed_controls = set(_CONTROL_VARIANTS)
+        for ix, it in enumerate(items_raw):
+            if not isinstance(it, dict):
+                raise SystemExit(
+                    f"[sr_ponder] ERROR: {source_label} items[{ix}] must be an object (dict), got {type(it).__name__}"
+                )
+            item_name = str(it.get("name") or "").strip()
+            if not item_name:
+                raise SystemExit(f"[sr_ponder] ERROR: {source_label} items[{ix}].name is required")
+            kind = str(it.get("kind") or "ponder").strip().lower()
+            if kind not in ("baseline", "ponder"):
+                raise SystemExit(
+                    f"[sr_ponder] ERROR: {source_label} items[{ix}].kind must be 'baseline'|'ponder', got {kind!r}"
+                )
+            control = str(it.get("control") or "none").strip()
+            if kind == "ponder" and control not in allowed_controls:
+                raise SystemExit(
+                    f"[sr_ponder] ERROR: {source_label} items[{ix}].control must be one of {sorted(list(allowed_controls))}, got {control!r}"
+                )
+            cfg = it.get("cfg") or {}
+            if cfg and not isinstance(cfg, dict):
+                raise SystemExit(
+                    f"[sr_ponder] ERROR: {source_label} items[{ix}].cfg must be an object (dict), got {type(cfg).__name__}"
+                )
+            cfg_merged: Dict[str, Any] = dict(item_base_cfg or {})
+            cfg_merged.update(dict(cfg or {}))
+            spec: Dict[str, Any] = {"kind": kind}
+            if kind == "ponder":
+                spec["control"] = control
+            if cfg_merged:
+                spec["cfg"] = cfg_merged
+            qv = it.get("query")
+            if qv is not None:
+                spec["query"] = str(qv)
+            items.append((item_name, spec))
+
+    matrix = data.get("matrix") or data.get("dimensions") or {}
+    if matrix:
+        if not isinstance(matrix, dict):
+            raise SystemExit(
+                f"[sr_ponder] ERROR: {source_label} matrix must be an object (dict), got {type(matrix).__name__}"
+            )
+        dim_keys = list(matrix.keys())
+        dim_values: List[List[Any]] = []
+        for key in dim_keys:
+            vals = matrix.get(key)
+            if not isinstance(vals, list) or not vals:
+                raise SystemExit(f"[sr_ponder] ERROR: {source_label} matrix[{key!r}] must be a non-empty array")
+            dim_values.append(list(vals))
+        control = str(data.get("control") or "none").strip()
+        if control not in set(_CONTROL_VARIANTS):
+            raise SystemExit(
+                f"[sr_ponder] ERROR: {source_label} control must be one of {sorted(list(set(_CONTROL_VARIANTS)))}, got {control!r}"
+            )
+        kind = str(data.get("kind") or "ponder").strip().lower()
+        if kind not in ("baseline", "ponder"):
+            raise SystemExit(f"[sr_ponder] ERROR: {source_label} kind must be 'baseline'|'ponder', got {kind!r}")
+        query_override = data.get("query")
+        for combo in itertools.product(*dim_values):
+            cfg_merged = dict(item_base_cfg or {})
+            label_bits: List[str] = []
+            for key, value in zip(dim_keys, combo):
+                cfg_merged[str(key)] = value
+                label_bits.append(f"{key}-{_slugify_lab_value(value)}")
+            name_bits = data.get("name_prefix") or ""
+            item_name = "_".join(([str(name_bits)] if str(name_bits).strip() else []) + label_bits) or "item"
+            spec = {"kind": kind}
+            if kind == "ponder":
+                spec["control"] = control
+            if cfg_merged:
+                spec["cfg"] = cfg_merged
+            if query_override is not None:
+                spec["query"] = str(query_override)
+            items.append((item_name, spec))
+
+    if not items:
+        raise SystemExit(f"[sr_ponder] ERROR: {source_label} must define items or matrix dimensions")
+    return name, dict(base_cfg or {}), items
+
+
+def load_lab_matrix(path_or_name: str, *, default_scaffold_token_target: int) -> Tuple[str, Dict[str, Any], List[Tuple[str, Dict[str, Any]]]]:
+    spec = str(path_or_name or "").strip()
+    if not spec:
+        raise SystemExit("[sr_ponder] ERROR: --lab_matrix requires a preset name or JSON file")
+    if spec in ("scaffold_abcd", "scaffold_conditions"):
+        target = int(default_scaffold_token_target) if int(default_scaffold_token_target) > 0 else 400
+        items: List[Tuple[str, Dict[str, Any]]] = [("baseline", {"kind": "baseline"})]
+        for cond in _SCAFFOLD_CONDITIONS:
+            items.append(
+                (
+                    cond,
+                    {
+                        "kind": "ponder",
+                        "control": "none",
+                        "cfg": {
+                            "memory_policy": "current_only",
+                            "scaffold_condition": cond,
+                            "scaffold_token_target": int(target),
+                        },
+                    },
+                )
+            )
+        return spec, {}, items
+
+    path = Path(spec)
+    try:
+        raw = path.read_text(encoding="utf-8-sig")
+        data = json.loads(raw)
+    except Exception as e:
+        raise SystemExit(f"[sr_ponder] ERROR: failed to read --lab_matrix {spec!r}: {e}")
+    if not isinstance(data, dict):
+        raise SystemExit(f"[sr_ponder] ERROR: --lab_matrix must be a JSON object (dict), got {type(data).__name__}")
+    return _parse_matrix_items_with_base_cfg(data, source_label=f"--lab_matrix {str(path)!r}")
 
 
 class TraceWriter:
@@ -1485,6 +1627,418 @@ def build_memory_block(records: Sequence[Dict[str, Any]], *, max_chars_per_log: 
             f"ponder_log:\n{plog}\n"
         )
     return "\n".join(chunks).strip()
+
+
+_RANDOM_SCAFFOLD_SCENES_EN = [
+    ("tram stop", "receipt", "rain gutter"),
+    ("museum foyer", "paper cup", "elevator chime"),
+    ("grocery aisle", "orange crate", "freezer light"),
+    ("laundromat", "coin tray", "plastic chair"),
+    ("parking lot", "ticket stub", "windshield glare"),
+    ("harbor bench", "thermos lid", "rope knot"),
+]
+
+_RANDOM_SCAFFOLD_SCENES_JA = [
+    ("駅前", "レシート", "雨どい"),
+    ("美術館のロビー", "紙コップ", "エレベーターの音"),
+    ("スーパーの通路", "みかん箱", "冷凍庫の灯り"),
+    ("コインランドリー", "小銭皿", "プラスチックの椅子"),
+    ("駐車場", "半券", "フロントガラスの反射"),
+    ("港のベンチ", "水筒のふた", "結び目"),
+]
+
+
+def _normalize_scaffold_condition_name(condition: str) -> str:
+    c = str(condition or "assoc").strip().lower()
+    if c in ("", "none", "default", "current", "natural"):
+        return "assoc"
+    if c not in _SCAFFOLD_CONDITIONS:
+        raise ValueError(f"Unknown scaffold_condition: {condition!r}")
+    return c
+
+
+def _build_random_scaffold_local(*, lang: str, seed: int, n_lines: int = 12) -> str:
+    rng = random.Random(int(seed) + 17017)
+    out: List[str] = []
+    if lang == "ja":
+        scenes = list(_RANDOM_SCAFFOLD_SCENES_JA)
+        for ix in range(max(4, int(n_lines))):
+            place, obj, cue = rng.choice(scenes)
+            variant = ix % 4
+            if variant == 0:
+                out.append(f"- {place}で、{obj}の端だけが妙に丁寧に折られている。{cue}だけが規則正しい。")
+            elif variant == 1:
+                out.append(f"- 誰も急いでいないのに、{place}の空気だけが少し先へ進んでいる。{obj}は置き去りのままだ。")
+            elif variant == 2:
+                out.append(f"- {cue}を合図にしても何も始まらず、代わりに{obj}の位置だけが静かにずれていく。")
+            else:
+                out.append(f"- {place}の隅では、説明にならない小さな手順だけが増えていき、{obj}はそのたびに別の役を持つ。")
+        return "\n".join(out)
+
+    scenes = list(_RANDOM_SCAFFOLD_SCENES_EN)
+    for ix in range(max(4, int(n_lines))):
+        place, obj, cue = rng.choice(scenes)
+        variant = ix % 4
+        if variant == 0:
+            out.append(f"- At the {place}, the {obj} is folded too carefully, while the {cue} keeps the only steady rhythm.")
+        elif variant == 1:
+            out.append(f"- Nobody is rushing, but the air near the {place} seems one step ahead of the {obj}.")
+        elif variant == 2:
+            out.append(f"- The {cue} sounds like a signal, yet nothing starts; only the {obj} drifts into a new role.")
+        else:
+            out.append(f"- In the corner of the {place}, tiny procedures multiply and the {obj} becomes part prop, part witness.")
+    return "\n".join(out)
+
+
+def _build_literal_scaffold_fallback(query: str, *, lang: str) -> str:
+    q = str(query or "").strip()
+    if lang == "ja":
+        lines = [
+            f"- 問いの主題は「{q}」であり、まず用語の意味を固定する必要がある。",
+            "- 似ている語を分け、どの条件で成り立つかを先に整理すると誤解が減る。",
+            "- 定義、適用条件、境界事例、反例の順で確認すると議論が安定しやすい。",
+            "- 問いが逆説的なら、何を前提しているかを分解することが有効である。",
+            "- 最終回答では、結論だけでなく成立条件も示すと説明力が上がる。",
+        ]
+        return "\n".join(lines)
+    lines = [
+        f"- The question is {q!r}, so the first step is to pin down the key terms.",
+        "- Separate definition, applicability, boundary cases, and counterexamples before concluding.",
+        "- If the prompt is paradoxical, identify which assumption creates the tension.",
+        "- A useful answer should state not only a conclusion but the conditions under which it holds.",
+        "- Distinguishing local validity from absolute validity often resolves apparent contradictions.",
+    ]
+    return "\n".join(lines)
+
+
+def _build_isomorphic_scaffold_fallback(source_scaffold: str, *, lang: str, seed: int) -> str:
+    rng = random.Random(int(seed) + 19019)
+    src_lines = [ln.strip() for ln in str(source_scaffold or "").splitlines() if ln.strip()]
+    target_n = max(6, len(src_lines))
+    out: List[str] = []
+    if lang == "ja":
+        domains = ["温室", "灯台", "水槽", "劇場の袖", "時計塔", "製本所"]
+        for ix in range(target_n):
+            place = domains[ix % len(domains)]
+            tone = ["光が少し遅れて届く", "手順だけが先に残る", "境界が柔らかく見える", "配置だけが妙に正確だ"][ix % 4]
+            if ix < len(src_lines):
+                src = src_lines[ix].lstrip("- ").strip()
+                out.append(f"- {place}では、{tone}。元の話題の代わりに、{src[:24] or '別の手つき'}が道具の並びとして現れる。")
+            else:
+                out.append(f"- {place}では、{tone}。意味ではなく配置だけが反復されている。")
+        return "\n".join(out)
+
+    domains = ["greenhouse", "lighthouse", "aquarium", "stage wing", "clock tower", "bindery"]
+    for ix in range(target_n):
+        place = domains[ix % len(domains)]
+        tone = ["light arrives a beat late", "procedure remains after purpose", "the boundary turns soft", "the arrangement is too precise"][ix % 4]
+        if ix < len(src_lines):
+            src = src_lines[ix].lstrip("- ").strip()
+            out.append(f"- In the {place}, {tone}; instead of the original topic, {src[:28] or 'another gesture'} survives as arrangement.")
+        else:
+            out.append(f"- In the {place}, {tone}; only the structure repeats, not the subject.")
+    return "\n".join(out)
+
+
+def build_prompt_for_scaffold_condition(query: str, source_scaffold: str, *, condition: str, lang: str, target_tokens: int) -> str:
+    target_note = ""
+    if int(target_tokens) > 0:
+        if lang == "ja":
+            target_note = f"\n目安: 最終的におよそ {int(target_tokens)} トークン相当の長さ。"
+        else:
+            target_note = f"\nTarget roughly {int(target_tokens)} tokens."
+    if lang == "ja":
+        if condition == "facts":
+            return (
+                "次の質問に対して、最終回答の前段に入れるための literal scaffold を作ってください。\n"
+                "条件:\n"
+                "- 10〜16行、各行は - で始める\n"
+                "- 比喩や象徴ではなく、定義・区別・成立条件・境界事例・反例候補を書く\n"
+                "- 最終結論や要約は書かない\n"
+                "- 問いに直接関係する内容だけにする"
+                + target_note
+                + "\n\n"
+                f"質問: {query}\n"
+            )
+        if condition == "isomorphic":
+            return (
+                "次の scaffold を、構造はできるだけ保ちつつ意味的には遠い領域へずらして書き換えてください。\n"
+                "条件:\n"
+                "- 10〜16行、各行は - で始める\n"
+                "- 元の bullet の並び方・密度・リズムはできるだけ保つ\n"
+                "- 質問そのものへの直接回答は禁止\n"
+                "- 質問の主要語を繰り返さない"
+                + target_note
+                + "\n\n"
+                f"質問: {query}\n\n"
+                "<source_scaffold>\n"
+                f"{source_scaffold}\n"
+                "</source_scaffold>\n"
+            )
+    else:
+        if condition == "facts":
+            return (
+                "Create a literal scaffold that could sit before the final answer to this question.\n"
+                "Constraints:\n"
+                "- 10-16 lines, each starting with -\n"
+                "- Use definitions, distinctions, conditions, boundary cases, and counterexamples\n"
+                "- Avoid metaphor and avoid giving the final answer\n"
+                "- Stay directly relevant to the query"
+                + target_note
+                + "\n\n"
+                f"Question: {query}\n"
+            )
+        if condition == "isomorphic":
+            return (
+                "Rewrite the following scaffold into a semantically distant domain while preserving as much of the structure and rhetorical motion as possible.\n"
+                "Constraints:\n"
+                "- 10-16 lines, each starting with -\n"
+                "- Keep the rough order, density, and cadence of the bullets\n"
+                "- Do not answer the question directly\n"
+                "- Avoid repeating the main query terms"
+                + target_note
+                + "\n\n"
+                f"Question: {query}\n\n"
+                "<source_scaffold>\n"
+                f"{source_scaffold}\n"
+                "</source_scaffold>\n"
+            )
+    raise ValueError(f"Unsupported scaffold_condition prompt: {condition!r}")
+
+
+def _pad_scaffold_line(*, condition: str, query: str, lang: str, seed: int, ix: int) -> str:
+    cond = _normalize_scaffold_condition_name(condition)
+    rng = random.Random(int(seed) + 13031 + int(ix))
+    if cond == "random":
+        return _build_random_scaffold_local(lang=lang, seed=int(seed) + int(ix), n_lines=1).splitlines()[0]
+    if cond == "facts":
+        if lang == "ja":
+            templates = [
+                "- 問いを成立条件と不成立条件に分けると、射程が見えやすくなる。",
+                "- 用語の意味が揺れる場合は、どの水準の主張かを分けて記述する必要がある。",
+                f"- 「{str(query or '').strip()[:20]}」という主題では、定義と適用範囲を混同しないことが重要である。",
+            ]
+        else:
+            templates = [
+                "- Separate applicability from definition before drawing a conclusion.",
+                "- Clarify which level of claim is being made: local, contextual, or absolute.",
+                f"- For {str(query or '').strip()[:24]!r}, the scope of the claim matters as much as the claim itself.",
+            ]
+        return rng.choice(templates)
+    if cond == "isomorphic":
+        return _build_isomorphic_scaffold_fallback("", lang=lang, seed=int(seed) + int(ix)).splitlines()[0]
+    if lang == "ja":
+        templates = [
+            "- 言い切る直前に、まだ別の枠組みが残っていないかを見る。",
+            "- 断片どうしの距離が、そのまま前提の距離になっている気がする。",
+            "- 条件が変わると、同じ語でも別の手触りを持ち始める。",
+        ]
+    else:
+        templates = [
+            "- Just before the claim hardens, another frame still seems available.",
+            "- The distance between fragments starts to look like the distance between assumptions.",
+            "- When the conditions shift, the same words acquire a different grip.",
+        ]
+    return rng.choice(templates)
+
+
+def fit_scaffold_to_token_target(
+    hf: Any,
+    text: str,
+    *,
+    target_tokens: int,
+    condition: str,
+    query: str,
+    lang: str,
+    seed: int,
+) -> Tuple[str, Dict[str, Any]]:
+    source = str(text or "").strip()
+    source_tokens, method = estimate_text_token_count(hf, source)
+    target = int(target_tokens)
+    if target <= 0 or not source:
+        return source, {
+            "status": "ok",
+            "condition": _normalize_scaffold_condition_name(condition),
+            "method": method,
+            "target_tokens": int(target),
+            "source_tokens_est": int(source_tokens),
+            "final_tokens_est": int(source_tokens),
+            "normalized": False,
+        }
+
+    result = source
+    final_tokens = int(source_tokens)
+    if final_tokens > target:
+        trimmed = result
+        for _ in range(12):
+            cur, _ = estimate_text_token_count(hf, trimmed)
+            final_tokens = int(cur)
+            if final_tokens <= target:
+                result = trimmed.strip()
+                break
+            ratio = max(0.05, float(target) / max(1.0, float(final_tokens)))
+            cut_chars = max(32, int(len(trimmed) * min(0.98, ratio * 1.08)))
+            candidate = trimmed[:cut_chars].rstrip()
+            if "\n" in candidate:
+                candidate2 = candidate.rsplit("\n", 1)[0].rstrip()
+                if candidate2:
+                    candidate = candidate2
+            if candidate == trimmed:
+                candidate = candidate[: max(1, len(candidate) - 16)].rstrip()
+            trimmed = candidate or trimmed[: max(1, min(len(trimmed), cut_chars))].rstrip()
+        result = trimmed.strip()
+        final_tokens, _ = estimate_text_token_count(hf, result)
+
+    pad_ix = 0
+    while result and final_tokens < target and pad_ix < 64:
+        line = _pad_scaffold_line(condition=condition, query=query, lang=lang, seed=seed, ix=pad_ix)
+        candidate = (result + "\n" + line).strip()
+        cand_tokens, _ = estimate_text_token_count(hf, candidate)
+        result = candidate
+        final_tokens = int(cand_tokens)
+        pad_ix += 1
+
+    if result and final_tokens > target:
+        trimmed = result
+        for _ in range(8):
+            cur, _ = estimate_text_token_count(hf, trimmed)
+            final_tokens = int(cur)
+            if final_tokens <= target:
+                result = trimmed.strip()
+                break
+            if "\n" in trimmed:
+                trimmed = trimmed.rsplit("\n", 1)[0].rstrip()
+            else:
+                ratio = max(0.05, float(target) / max(1.0, float(final_tokens)))
+                trimmed = trimmed[: max(1, int(len(trimmed) * ratio))].rstrip()
+        result = trimmed.strip()
+        final_tokens, _ = estimate_text_token_count(hf, result)
+
+    return result, {
+        "status": "ok",
+        "condition": _normalize_scaffold_condition_name(condition),
+        "method": method,
+        "target_tokens": int(target),
+        "source_tokens_est": int(source_tokens),
+        "final_tokens_est": int(final_tokens),
+        "normalized": bool(int(target) > 0 and int(final_tokens) != int(source_tokens)),
+    }
+
+
+def synthesize_scaffold_block(
+    hf: Any,
+    *,
+    query: str,
+    source_scaffold: Optional[str],
+    lang: str,
+    condition: str,
+    token_target: int,
+    seed: int,
+    provider: str = "hf",
+    api_warnings: Optional[List[str]] = None,
+) -> Tuple[Optional[str], Dict[str, Any]]:
+    cond = _normalize_scaffold_condition_name(condition)
+    source = str(source_scaffold or "").strip()
+    source_tokens, source_method = estimate_text_token_count(hf, source)
+    meta: Dict[str, Any] = {
+        "status": "ok",
+        "condition": cond,
+        "target_tokens": int(token_target),
+        "source_tokens_est": int(source_tokens),
+        "source_method": source_method,
+        "used_model": False,
+    }
+
+    if cond == "assoc":
+        fitted, fit_meta = fit_scaffold_to_token_target(
+            hf,
+            source,
+            target_tokens=int(token_target),
+            condition=cond,
+            query=query,
+            lang=lang,
+            seed=seed,
+        )
+        meta.update(fit_meta)
+        meta["strategy"] = "direct_memory_block"
+        return (fitted or None), meta
+
+    if cond == "random":
+        candidate = _build_random_scaffold_local(lang=lang, seed=seed, n_lines=12)
+        fitted, fit_meta = fit_scaffold_to_token_target(
+            hf,
+            candidate,
+            target_tokens=int(token_target),
+            condition=cond,
+            query=query,
+            lang=lang,
+            seed=seed,
+        )
+        meta.update(fit_meta)
+        meta["strategy"] = "local_random_sentences"
+        return (fitted or None), meta
+
+    prompt = build_prompt_for_scaffold_condition(query, source, condition=cond, lang=lang, target_tokens=int(token_target))
+    prompt_chat = hf._apply_chat(prompt, system_text=None)
+    gen_meta: Dict[str, Any] = {}
+    max_new_tokens = max(160, int(token_target) * 2 if int(token_target) > 0 else 320)
+    temperature = 0.2 if cond == "facts" else 0.6
+    try:
+        if isinstance(hf, OpenAICompatModel):
+            candidate, gen_meta = _generate_api_text_with_reasoning_retry(
+                hf,
+                provider=provider,
+                phase=f"scaffold_condition:{cond}",
+                prompt=prompt_chat,
+                max_new_tokens=max_new_tokens,
+                temperature=temperature,
+                top_p=0.95,
+                top_k=0,
+                repetition_penalty=1.0,
+                no_repeat_ngram_size=0,
+                seed=int(seed),
+                api_warnings=api_warnings,
+            )
+        else:
+            candidate = hf.generate_text(
+                prompt_chat,
+                max_new_tokens=max_new_tokens,
+                temperature=float(temperature),
+                top_p=0.95,
+                top_k=0,
+                repetition_penalty=1.0,
+                no_repeat_ngram_size=0,
+                seed=int(seed),
+            )
+    except Exception as e:
+        meta["warning"] = str(e)
+        candidate = ""
+
+    candidate = str(candidate or "").strip()
+    if not candidate:
+        if cond == "facts":
+            candidate = _build_literal_scaffold_fallback(query, lang=lang)
+            meta["strategy"] = "literal_fallback"
+        else:
+            candidate = _build_isomorphic_scaffold_fallback(source, lang=lang, seed=seed)
+            meta["strategy"] = "isomorphic_fallback"
+    else:
+        meta["strategy"] = "model_rewrite"
+        meta["used_model"] = True
+    if gen_meta:
+        meta["api_generation"] = summarize_api_generation_meta(gen_meta)
+
+    fitted, fit_meta = fit_scaffold_to_token_target(
+        hf,
+        candidate,
+        target_tokens=int(token_target),
+        condition=cond,
+        query=query,
+        lang=lang,
+        seed=seed,
+    )
+    meta.update(fit_meta)
+    return (fitted or None), meta
 
 
 def default_system_text(lang: str) -> str:
@@ -3279,7 +3833,7 @@ def build_token_budget_compare(
     if isinstance(extras, dict):
         api_budget = extras.get("api_token_budget")
         if isinstance(api_budget, dict):
-            for key in ("seed", "refine", "hop_keywords", "memory_remix", "random_log", "band_answers", "ensemble"):
+            for key in ("seed", "refine", "hop_keywords", "memory_remix", "scaffold_condition", "random_log", "band_answers", "ensemble"):
                 bucket = api_budget.get(key)
                 if isinstance(bucket, dict):
                     _accumulate_api_token_bucket(aux_api_totals, bucket)
@@ -4648,6 +5202,8 @@ class RunConfig:
     compare_spatial_metaphor: str = "auto"  # off|auto
     compare_token_budget: str = "auto"  # off|auto
     compare_embed_model: str = ""
+    scaffold_condition: str = "assoc"  # assoc|random|facts|isomorphic
+    scaffold_token_target: int = 0
     print_probe: bool = False
     interactive: bool = False
     interactive_candidates: int = 48
@@ -6246,6 +6802,31 @@ def run_ponder(
     final_answer_block = memory_block
     if control == "no_inject":
         final_answer_block = None
+    scaffold_meta: Optional[Dict[str, Any]] = None
+    if final_answer_block and (
+        _normalize_scaffold_condition_name(cfg.scaffold_condition) != "assoc" or int(cfg.scaffold_token_target) > 0
+    ):
+        final_answer_block, scaffold_meta = synthesize_scaffold_block(
+            hf,
+            query=query,
+            source_scaffold=final_answer_block,
+            lang=lang,
+            condition=cfg.scaffold_condition,
+            token_target=int(cfg.scaffold_token_target),
+            seed=int(cfg.seed) + 30303,
+            provider=cfg.provider,
+        )
+        if trace:
+            trace.event(
+                "scaffold_conditioned",
+                run_id=run_id,
+                pack_item=pack_item,
+                condition=str((scaffold_meta or {}).get("condition") or cfg.scaffold_condition),
+                target_tokens=int((scaffold_meta or {}).get("target_tokens") or int(cfg.scaffold_token_target)),
+                final_tokens_est=int((scaffold_meta or {}).get("final_tokens_est") or 0),
+                text_chars=len(final_answer_block or ""),
+                text_preview=trace.preview(final_answer_block),
+            )
     final_prompt = hf._apply_chat(
         build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang, style=cfg.answer_style),
         system_text=None,
@@ -6329,6 +6910,7 @@ def run_ponder(
         "probe_compare": probe_compare,
         "probe_compare_stages": probe_compare_stages if probe_compare_stages else None,
         "random_log": random_log_text,
+        "scaffold": scaffold_meta,
         "prompt_jitter_queries": jitter_queries if jitter_queries else None,
         "memory_block_chars": memory_block_chars,
         "memory_block_est_tokens": int(memory_block_est_tokens),
@@ -6486,6 +7068,7 @@ def run_ponder_api(
         "refine": _empty_api_token_bucket(),
         "hop_keywords": _empty_api_token_bucket(),
         "memory_remix": _empty_api_token_bucket(),
+        "scaffold_condition": _empty_api_token_bucket(),
         "random_log": _empty_api_token_bucket(),
         "band_answers": _empty_api_token_bucket(),
         "ensemble": _empty_api_token_bucket(),
@@ -7157,6 +7740,35 @@ def run_ponder_api(
     final_answer_block = memory_block
     if control == "no_inject":
         final_answer_block = None
+    scaffold_meta: Optional[Dict[str, Any]] = None
+    if final_answer_block and (
+        _normalize_scaffold_condition_name(cfg.scaffold_condition) != "assoc" or int(cfg.scaffold_token_target) > 0
+    ):
+        final_answer_block, scaffold_meta = synthesize_scaffold_block(
+            hf,
+            query=query,
+            source_scaffold=final_answer_block,
+            lang=lang,
+            condition=cfg.scaffold_condition,
+            token_target=int(cfg.scaffold_token_target),
+            seed=int(cfg.seed) + 30303,
+            provider=cfg.provider,
+            api_warnings=api_warnings,
+        )
+        if isinstance(scaffold_meta, dict) and isinstance(scaffold_meta.get("api_generation"), dict):
+            _record_api_budget("scaffold_condition", scaffold_meta.get("api_generation"))
+        if trace:
+            trace.event(
+                "scaffold_conditioned",
+                run_id=run_id,
+                pack_item=pack_item,
+                condition=str((scaffold_meta or {}).get("condition") or cfg.scaffold_condition),
+                target_tokens=int((scaffold_meta or {}).get("target_tokens") or int(cfg.scaffold_token_target)),
+                final_tokens_est=int((scaffold_meta or {}).get("final_tokens_est") or 0),
+                text_chars=len(final_answer_block or ""),
+                text_preview=trace.preview(final_answer_block),
+                api_meta=(scaffold_meta or {}).get("api_generation") if isinstance(scaffold_meta, dict) else None,
+            )
     final_prompt = hf._apply_chat(
         build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang, style=cfg.answer_style),
         system_text=None,
@@ -7289,6 +7901,7 @@ def run_ponder_api(
         "probe_compare": probe_compare,
         "probe_compare_stages": probe_compare_stages if probe_compare_stages else None,
         "random_log": random_log_text,
+        "scaffold": scaffold_meta,
         "prompt_jitter_queries": jitter_queries if jitter_queries else None,
         "memory_block_chars": memory_block_chars,
         "memory_block_est_tokens": int(memory_block_est_tokens),
@@ -7499,6 +8112,18 @@ def main() -> None:
     g_memory.add_argument("--memory_remix_keep_original", action="store_true")
     g_memory.add_argument("--memory_remix_max_new_tokens", type=int, default=240)
     g_memory.add_argument("--memory_remix_temperature", type=float, default=0.9)
+    g_memory.add_argument(
+        "--scaffold_condition",
+        choices=list(_SCAFFOLD_CONDITIONS),
+        default="assoc",
+        help="Condition the final injected scaffold: current assoc log, random filler, literal facts, or structural isomorph",
+    )
+    g_memory.add_argument(
+        "--scaffold_token_target",
+        type=int,
+        default=0,
+        help="Approx target token budget for the final injected scaffold block (0 keeps source length)",
+    )
 
     g_answer.add_argument(
         "--answer_style",
@@ -7529,6 +8154,11 @@ def main() -> None:
         help="If the pack output JSON already exists, reuse completed items and skip re-running them",
     )
     g_controls.add_argument("--pack_write_memory", action="store_true", help="Allow pack runs to write to memory JSONL")
+    g_controls.add_argument(
+        "--lab_matrix",
+        default="",
+        help="Run a scaffold-control matrix preset (e.g. scaffold_abcd) or a JSON matrix spec",
+    )
     g_observe.add_argument("--print_config", action="store_true", help="Print resolved RunConfig JSON")
     g_observe.add_argument("--print_config_only", action="store_true", help="Print resolved RunConfig JSON and exit")
     g_observe.add_argument(
@@ -7697,8 +8327,24 @@ def main() -> None:
 
     pack_file_s = _expand_path_str(str(getattr(args, "pack_file", "") or ""))
     args.pack_file = pack_file_s
-    if pack_file_s and str(getattr(args, "pack", "none") or "none") != "none":
-        raise SystemExit("[sr_ponder] ERROR: use either --pack or --pack_file (not both)")
+    lab_matrix_raw = str(getattr(args, "lab_matrix", "") or "").strip()
+    lab_matrix_s = ""
+    if lab_matrix_raw:
+        try:
+            lab_matrix_s = _expand_path_str(lab_matrix_raw)
+        except Exception:
+            lab_matrix_s = lab_matrix_raw
+        args.lab_matrix = lab_matrix_s
+    if sum(
+        1
+        for enabled in (
+            str(getattr(args, "pack", "none") or "none") != "none",
+            bool(pack_file_s),
+            bool(lab_matrix_s),
+        )
+        if enabled
+    ) > 1:
+        raise SystemExit("[sr_ponder] ERROR: use only one of --pack, --pack_file, or --lab_matrix")
 
     apply_preset_inplace(args, explicit_dests=explicit_dests)
     resolved_provider = apply_provider_defaults_inplace(args, explicit_dests=explicit_dests)
@@ -7723,6 +8369,8 @@ def main() -> None:
             kind = f"pack_{str(getattr(args, 'pack', 'pack')).strip()}"
         elif pack_file_s:
             kind = f"pack_{slugify_filename(Path(pack_file_s).stem)}"
+        elif lab_matrix_s:
+            kind = f"lab_{slugify_filename(Path(lab_matrix_s).stem if Path(lab_matrix_s).suffix else lab_matrix_s)}"
         else:
             kind = "run"
         base = f"{kind}_{stamp}{suffix}"
@@ -7753,7 +8401,7 @@ def main() -> None:
     pipeline = parse_ponder_pipeline(args.ponder_pipeline, fallback_mode=args.ponder_mode)
 
     write_memory = not bool(args.no_write_memory)
-    if (args.pack != "none" or pack_file_s) and not bool(args.pack_write_memory):
+    if (args.pack != "none" or pack_file_s or lab_matrix_s) and not bool(args.pack_write_memory):
         write_memory = False
 
     cfg = RunConfig(
@@ -7831,6 +8479,8 @@ def main() -> None:
         compare_spatial_metaphor=str(args.compare_spatial_metaphor),
         compare_token_budget=str(args.compare_token_budget),
         compare_embed_model=str(args.compare_embed_model or ""),
+        scaffold_condition=_normalize_scaffold_condition_name(str(args.scaffold_condition)),
+        scaffold_token_target=max(0, int(args.scaffold_token_target)),
         print_probe=args.print_probe,
         interactive=bool(args.interactive),
         interactive_candidates=args.interactive_candidates,
@@ -7875,6 +8525,7 @@ def main() -> None:
             provider=cfg.provider,
             pack=args.pack,
             pack_file=pack_file_s,
+            lab_matrix=lab_matrix_s,
             preset=args.preset,
             config=str(getattr(args, "config", "") or ""),
             pid=os.getpid(),
@@ -7932,7 +8583,9 @@ def main() -> None:
             f"objective={cfg.keyword_objective} diversity={cfg.keyword_diversity} hops={cfg.ponder_hops} answer_style={cfg.answer_style} "
             f"hf_local_only={cfg.hf_local_files_only} control={cfg.control} "
             f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
-            f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} write_memory={cfg.write_memory}"
+            f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} "
+            f"scaffold={cfg.scaffold_condition}/{cfg.scaffold_token_target or 'source'} "
+            f"write_memory={cfg.write_memory}"
         )
     elif cfg.backend == "openai_compat":
         api_key = (cfg.api_key or os.environ.get(cfg.api_key_env, "") or "").strip()
@@ -7956,7 +8609,9 @@ def main() -> None:
             f"lang={cfg.prompt_lang} band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
             f"objective={cfg.keyword_objective} diversity={cfg.keyword_diversity} hops={cfg.ponder_hops} answer_style={cfg.answer_style} control={cfg.control} "
             f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
-            f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} write_memory={cfg.write_memory}"
+            f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} "
+            f"scaffold={cfg.scaffold_condition}/{cfg.scaffold_token_target or 'source'} "
+            f"write_memory={cfg.write_memory}"
         )
         ignored_args = api_ignored_generation_args(cfg)
         if ignored_args:
@@ -7979,23 +8634,39 @@ def main() -> None:
 
     maybe_prewarm_semantic_compare_embedder(hf, cfg)
 
-    if args.pack != "none" or pack_file_s:
+    if args.pack != "none" or pack_file_s or lab_matrix_s:
         pack_cfg = dataclasses.replace(cfg, interactive=False, answer_per_band=False, answer_ensemble=False)
         pack_id = str(getattr(args, "pack", "none") or "none")
         pack_file_path: Optional[Path] = None
+        lab_matrix_id = ""
+        pack_base_cfg_overrides: Dict[str, Any] = {}
         items: List[Tuple[str, Dict[str, Any]]] = []
         if pack_file_s:
             pack_file_path = Path(pack_file_s)
             pack_id, items = load_pack_file(pack_file_path)
+        elif lab_matrix_s:
+            lab_matrix_id, pack_base_cfg_overrides, items = load_lab_matrix(
+                lab_matrix_s,
+                default_scaffold_token_target=int(getattr(cfg, "scaffold_token_target", 0) or 0),
+            )
+            pack_id = f"lab_{lab_matrix_id}"
+        if pack_base_cfg_overrides:
+            try:
+                pack_cfg = dataclasses.replace(pack_cfg, **pack_base_cfg_overrides)
+            except TypeError as e:
+                raise SystemExit(f"[sr_ponder] ERROR: invalid --lab_matrix base_cfg overrides: {e}")
+
+        result_kind = "lab_matrix" if lab_matrix_s else "pack"
 
         results: Dict[str, Any] = {
             "ts": now_iso(),
-            "kind": "pack",
+            "kind": result_kind,
             "provider": cfg.provider,
             "model": cfg.model_path,
             "query": args.query,
             "pack": pack_id,
             "pack_file": str(pack_file_path) if pack_file_path else "",
+            "lab_matrix": lab_matrix_id,
             "preset": args.preset,
             "config": str(getattr(args, "config", "") or ""),
             "env": {
@@ -8112,8 +8783,8 @@ def main() -> None:
                     prev = json.loads(resume_path.read_text(encoding="utf-8"))
                 except Exception as e:
                     raise SystemExit(f"[sr_ponder] ERROR: failed to read --pack_resume file {str(resume_path)!r}: {e}")
-                if not isinstance(prev, dict) or str(prev.get("kind") or "").strip() != "pack":
-                    raise SystemExit(f"[sr_ponder] ERROR: --pack_resume expects a pack results JSON (kind=pack): {str(resume_path)!r}")
+                if not isinstance(prev, dict) or str(prev.get("kind") or "").strip() not in ("pack", "lab_matrix"):
+                    raise SystemExit(f"[sr_ponder] ERROR: --pack_resume expects a pack/lab-matrix results JSON: {str(resume_path)!r}")
                 if str(prev.get("pack") or "") != str(pack_id):
                     raise SystemExit(
                         f"[sr_ponder] ERROR: --pack_resume pack mismatch: file has pack={prev.get('pack')!r}, current pack={pack_id!r}"
@@ -8144,6 +8815,7 @@ def main() -> None:
                 "pack_start",
                 pack=pack_id,
                 pack_file=str(pack_file_path) if pack_file_path else "",
+                lab_matrix=lab_matrix_id,
                 items=int(len(items)),
                 out_path=out_s,
                 out_label=out_label if out_s else "",
@@ -8151,6 +8823,9 @@ def main() -> None:
                 trace_report_out=str(getattr(args, "trace_report_out", "") or "").strip(),
                 resume_from=str(resume_path) if resume_path and resume_path.exists() else "",
             )
+
+        baseline_reference_answer: Optional[str] = None
+        baseline_reference_meta: Optional[Dict[str, Any]] = None
 
         for name, spec in items:
             print(f"\n=== PACK: {name} ===\n")
@@ -8214,6 +8889,10 @@ def main() -> None:
                     item["cfg_overrides"] = cfg_overrides_safe
                 item["metrics"] = {"answer_chars": len(ans or ""), "elapsed_s": float(time.perf_counter() - t0)}
                 results["items"].append(item)
+                baseline_reference_answer = ans
+                baseline_reference_meta = (
+                    summarize_api_generation_meta(getattr(hf, "last_response_meta", {})) if isinstance(hf, OpenAICompatModel) else None
+                )
                 if trace:
                     trace.event("pack_item_end", pack=pack_id, item=name, elapsed_s=float(time.perf_counter() - t0))
                 continue
@@ -8233,6 +8912,49 @@ def main() -> None:
             if cfg_overrides:
                 item["cfg_overrides"] = cfg_overrides_safe
             item["metrics"] = {"answer_chars": len(ans or ""), "records": int(len(recs)), "elapsed_s": float(time.perf_counter() - t0)}
+            if baseline_reference_answer is not None:
+                semantic_compare = None
+                stance_compare = None
+                spatial_metaphor_compare = None
+                token_budget_compare = None
+                if str(getattr(cfg2, "compare_semantic", "auto") or "auto").strip().lower() != "off":
+                    semantic_compare = build_semantic_compare(
+                        hf=hf,
+                        cfg=cfg2,
+                        query=item_query,
+                        baseline_answer=baseline_reference_answer,
+                        ponder_answer=ans,
+                    )
+                if str(getattr(cfg2, "compare_stance", "auto") or "auto").strip().lower() != "off":
+                    stance_compare = build_stance_compare(baseline_reference_answer, ans)
+                if str(getattr(cfg2, "compare_spatial_metaphor", "auto") or "auto").strip().lower() != "off":
+                    spatial_metaphor_compare = build_spatial_metaphor_compare(
+                        baseline_answer=baseline_reference_answer,
+                        ponder_answer=ans,
+                        records=recs,
+                    )
+                if str(getattr(cfg2, "compare_token_budget", "auto") or "auto").strip().lower() != "off":
+                    token_budget_compare = build_token_budget_compare(
+                        hf=hf,
+                        baseline_answer=baseline_reference_answer,
+                        ponder_answer=ans,
+                        records=recs,
+                        extras=extras,
+                        baseline_generation_meta=baseline_reference_meta,
+                    )
+                comparison = build_run_comparison(
+                    query=item_query,
+                    baseline_answer=baseline_reference_answer,
+                    ponder_answer=ans,
+                    records=recs,
+                    extras=extras,
+                    semantic_compare=semantic_compare,
+                    stance_compare=stance_compare,
+                    spatial_metaphor_compare=spatial_metaphor_compare,
+                    token_budget_compare=token_budget_compare,
+                )
+                item["comparison"] = comparison
+                _print_run_comparison(comparison, mode="auto")
             results["items"].append(item)
             if trace:
                 trace.event("pack_item_end", pack=pack_id, item=name, elapsed_s=float(time.perf_counter() - t0))
