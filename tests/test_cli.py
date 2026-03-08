@@ -252,6 +252,33 @@ class TestSemanticCompare(unittest.TestCase):
         self.assertTrue(str(cfg.get("compare_embed_model") or "").endswith("emb-model"))
 
 
+class TestReasoningCompare(unittest.TestCase):
+    def test_build_stance_compare_detects_definition_to_example_shift(self) -> None:
+        comp = sp.build_stance_compare(
+            "これは定義であり、平たく言うと制度内で固定された意味です。",
+            "これは条件付きの状態です。たとえば法律やゲームの中では固定されます。",
+        )
+        self.assertEqual(comp.get("status"), "ok")
+        self.assertEqual(comp.get("dominant_baseline"), "definition")
+        self.assertIn(comp.get("dominant_ponder"), {"conditionalization", "example_expansion"})
+        self.assertGreater(float(comp.get("shift_score") or 0.0), 0.0)
+
+    def test_build_spatial_metaphor_compare_detects_log_density(self) -> None:
+        comp = sp.build_spatial_metaphor_compare(
+            baseline_answer="これは定義の説明です。",
+            ponder_answer="廊下と舞台の比喩で条件空間を説明する。",
+            records=[
+                {
+                    "ponder_question": "夢はどう展開する？",
+                    "ponder_log": "長い廊下、舞台、棚、駅のホーム、螺旋階段。",
+                }
+            ],
+        )
+        self.assertEqual(comp.get("status"), "ok")
+        self.assertGreater(float((comp.get("logs") or {}).get("density_per_1k_chars") or 0.0), 0.0)
+        self.assertGreater(float(comp.get("answer_density_delta") or 0.0), 0.0)
+
+
 class TestOpenAICompat(unittest.TestCase):
     def test_extract_text_and_meta_handles_nested_text_value(self) -> None:
         hf = sp.OpenAICompatModel(
@@ -488,6 +515,8 @@ class TestTerminalUX(unittest.TestCase):
             self.assertIn("=== COMPARISON ===", out)
             self.assertIn("answers_changed=yes", out)
             self.assertIn("semantic[hashed_char_ngrams_tfidf]", out)
+            self.assertIn("stance[heuristic_lexicon]", out)
+            self.assertIn("spatial[heuristic_lexicon]", out)
             self.assertNotIn("=== PONDER RECORD(S)", out)
 
             obj = json.loads(out_path.read_text(encoding="utf-8"))
@@ -496,6 +525,8 @@ class TestTerminalUX(unittest.TestCase):
             self.assertEqual(comp.get("memory_selected"), 1)
             self.assertAlmostEqual(comp.get("probe_js_divergence"), 0.12)
             self.assertEqual((comp.get("semantic") or {}).get("method"), "hashed_char_ngrams_tfidf")
+            self.assertEqual((comp.get("stance") or {}).get("method"), "heuristic_lexicon")
+            self.assertEqual((comp.get("spatial_metaphor") or {}).get("method"), "heuristic_lexicon")
 
     def test_main_reports_rate_limit_without_traceback(self) -> None:
         with patch.object(
@@ -722,6 +753,34 @@ class TestTraceReportProbeCompare(unittest.TestCase):
                     "top1_before": {"token": "alpha", "token_id": 1},
                     "top1_after": {"token": "gamma", "token_id": 3},
                 },
+                {
+                    "ts": "2026-03-07T00:00:02Z",
+                    "session_id": "s1",
+                    "event": "run_comparison",
+                    "comparison": {
+                        "answer_changed": True,
+                        "baseline_chars": 100,
+                        "ponder_chars": 140,
+                        "diff_ratio": 0.22,
+                        "stance": {
+                            "status": "ok",
+                            "method": "heuristic_lexicon",
+                            "dominant_baseline": "definition",
+                            "dominant_ponder": "conditionalization",
+                            "shift_score": 0.31,
+                            "top_gain": "example_expansion",
+                            "top_drop": "definition",
+                        },
+                        "spatial_metaphor": {
+                            "status": "ok",
+                            "method": "heuristic_lexicon",
+                            "baseline": {"density_per_1k_chars": 0.0, "dominant_group": ""},
+                            "ponder": {"density_per_1k_chars": 2.5, "dominant_group": "path"},
+                            "questions": {"density_per_1k_chars": 0.0, "dominant_group": ""},
+                            "logs": {"density_per_1k_chars": 8.0, "dominant_group": "path"},
+                        },
+                    },
+                },
                 {"ts": "2026-03-07T00:00:03Z", "session_id": "s1", "event": "session_end"},
             ]
             trace_path.write_text("\n".join(json.dumps(x) for x in rows) + "\n", encoding="utf-8")
@@ -733,9 +792,14 @@ class TestTraceReportProbeCompare(unittest.TestCase):
             self.assertEqual(probe.get("stage_count"), 1)
             self.assertEqual(probe.get("final", {}).get("mover_count"), 4)
             self.assertAlmostEqual(probe.get("stage_max_js"), 0.21)
+            comparison = sessions[0].get("comparison") or {}
+            self.assertEqual((comparison.get("stance") or {}).get("dominant_ponder"), "conditionalization")
 
             html = tr.render_html(report)
             self.assertIn("probe compare", html.lower())
+            self.assertIn("comparison", html.lower())
+            self.assertIn("conditionalization", html)
+            self.assertIn("spatial[heuristic_lexicon]", html)
             self.assertIn("counterexample", html)
             self.assertIn("0.420000", html)
 

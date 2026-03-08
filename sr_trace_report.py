@@ -77,6 +77,15 @@ def _as_float(x: Any) -> Optional[float]:
     return None
 
 
+def _fmt_float(x: Any, digits: int = 6) -> str:
+    if isinstance(x, (int, float)):
+        try:
+            return f"{float(x):.{int(digits)}f}"
+        except Exception:
+            return "?"
+    return "?"
+
+
 def _token_label(x: Any) -> str:
     if not isinstance(x, dict):
         return ""
@@ -164,6 +173,7 @@ def analyze_trace(path: Path, *, max_records: int, session_id: str) -> Dict[str,
 
         probe_final: Optional[Dict[str, Any]] = None
         probe_stages: List[Dict[str, Any]] = []
+        comparison_summary: Optional[Dict[str, Any]] = None
         for ev in ordered:
             name = str(ev.get("event") or "")
             if name == "probe_compare":
@@ -211,6 +221,10 @@ def analyze_trace(path: Path, *, max_records: int, session_id: str) -> Dict[str,
                         "top1_after": _token_label(ev.get("top1_after")),
                     }
                 )
+            elif name == "run_comparison":
+                comp = ev.get("comparison")
+                if isinstance(comp, dict):
+                    comparison_summary = comp
 
         probe_summary: Optional[Dict[str, Any]] = None
         if probe_final or probe_stages:
@@ -241,6 +255,7 @@ def analyze_trace(path: Path, *, max_records: int, session_id: str) -> Dict[str,
                 }
                 if pack_id or ("pack_start" in counts)
                 else None,
+                "comparison": comparison_summary,
                 "probe_compare": probe_summary,
                 "events": ordered,
             }
@@ -348,6 +363,69 @@ def render_html(report: Dict[str, Any]) -> str:
                     parts.append(f"<li><code>{_esc(k)}</code>: {_esc(v)}</li>")
                 parts.append("</ul>")
             parts.append("</ul>")
+
+        comparison = sess.get("comparison")
+        if isinstance(comparison, dict):
+            parts.append("<h3>comparison</h3>")
+            parts.append("<div class='card'>")
+            diff_ratio = comparison.get("diff_ratio")
+            diff_ratio_s = f"{float(diff_ratio):.4f}" if isinstance(diff_ratio, (int, float)) else "?"
+            parts.append(
+                "<div>"
+                f"answers_changed={_esc(comparison.get('answer_changed'))}"
+                f" | chars={_esc(comparison.get('baseline_chars'))}→{_esc(comparison.get('ponder_chars'))}"
+                f" | diff={_esc(diff_ratio_s)}"
+                "</div>"
+            )
+            semantic = comparison.get("semantic")
+            if isinstance(semantic, dict) and str(semantic.get("status") or "") == "ok":
+                answer_cos_s = _fmt_float(semantic.get("answer_cosine"), 6)
+                query_base_s = _fmt_float(semantic.get("query_baseline_cosine"), 6)
+                query_ponder_s = _fmt_float(semantic.get("query_ponder_cosine"), 6)
+                align_delta_s = _fmt_float(semantic.get("query_alignment_delta"), 6)
+                parts.append(
+                    "<div>"
+                    f"semantic[{_esc(semantic.get('method') or '')}]"
+                    f" answer_cos={_esc(answer_cos_s)}"
+                    f" | query_base={_esc(query_base_s)}"
+                    f" | query_ponder={_esc(query_ponder_s)}"
+                    f" | align_delta={_esc(align_delta_s)}"
+                    "</div>"
+                )
+            stance = comparison.get("stance")
+            if isinstance(stance, dict) and str(stance.get("status") or "") == "ok":
+                shift_score = stance.get("shift_score")
+                shift_score_s = f"{float(shift_score):.6f}" if isinstance(shift_score, (int, float)) else "?"
+                parts.append(
+                    "<div>"
+                    f"stance[{_esc(stance.get('method') or '')}]"
+                    f" { _esc(stance.get('dominant_baseline') or '') } → { _esc(stance.get('dominant_ponder') or '') }"
+                    f" | shift={_esc(shift_score_s)}"
+                    f" | gain={_esc(stance.get('top_gain') or '')}"
+                    f" | drop={_esc(stance.get('top_drop') or '')}"
+                    "</div>"
+                )
+            spatial = comparison.get("spatial_metaphor")
+            if isinstance(spatial, dict) and str(spatial.get("status") or "") == "ok":
+                baseline = spatial.get("baseline") if isinstance(spatial.get("baseline"), dict) else {}
+                ponder = spatial.get("ponder") if isinstance(spatial.get("ponder"), dict) else {}
+                questions = spatial.get("questions") if isinstance(spatial.get("questions"), dict) else {}
+                logs = spatial.get("logs") if isinstance(spatial.get("logs"), dict) else {}
+                baseline_density_s = _fmt_float(baseline.get("density_per_1k_chars"), 3)
+                ponder_density_s = _fmt_float(ponder.get("density_per_1k_chars"), 3)
+                log_density_s = _fmt_float(logs.get("density_per_1k_chars"), 3)
+                question_density_s = _fmt_float(questions.get("density_per_1k_chars"), 3)
+                parts.append(
+                    "<div>"
+                    f"spatial[{_esc(spatial.get('method') or '')}]"
+                    f" ans={_esc(baseline_density_s)}→{_esc(ponder_density_s)}"
+                    f" | logs={_esc(log_density_s)}"
+                    f" | questions={_esc(question_density_s)}"
+                    f" | groups={_esc(baseline.get('dominant_group') or 'none')}→{_esc(ponder.get('dominant_group') or 'none')}"
+                    f" log={_esc(logs.get('dominant_group') or 'none')}"
+                    "</div>"
+                )
+            parts.append("</div>")
 
         probe = sess.get("probe_compare")
         if isinstance(probe, dict):
@@ -516,7 +594,21 @@ def main() -> None:
                 js_s = f"{float(js):.4f}" if isinstance(js, (int, float)) else "?"
                 sc_s = str(int(stage_count)) if isinstance(stage_count, int) else "0"
                 probe_s = f"  probe(js={js_s}, stages={sc_s})"
-        print(f"- {sid}  {rng}  {top}{probe_s}")
+        comp = s.get("comparison") or {}
+        comp_s = ""
+        if isinstance(comp, dict):
+            stance = comp.get("stance") or {}
+            spatial = comp.get("spatial_metaphor") or {}
+            stance_bits: List[str] = []
+            if isinstance(stance, dict) and str(stance.get("status") or "") == "ok":
+                stance_bits.append(f"stance={stance.get('dominant_baseline') or ''}->{stance.get('dominant_ponder') or ''}")
+            if isinstance(spatial, dict) and str(spatial.get("status") or "") == "ok":
+                log_density = ((spatial.get("logs") or {}).get("density_per_1k_chars") if isinstance(spatial.get("logs"), dict) else None)
+                if isinstance(log_density, (int, float)):
+                    stance_bits.append(f"spatial_log={float(log_density):.3f}")
+            if stance_bits:
+                comp_s = "  " + " ".join(stance_bits)
+        print(f"- {sid}  {rng}  {top}{probe_s}{comp_s}")
 
 
 if __name__ == "__main__":

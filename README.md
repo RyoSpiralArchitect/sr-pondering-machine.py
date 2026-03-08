@@ -23,6 +23,8 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Persistent memory** — ponder logs are stored in a JSONL file and the most recent entries are reused in subsequent runs.
 - **Baseline comparison** — `--mode both` prints baseline, pondered answer, and a compact comparison summary by default.
 - **Semantic comparison** — comparison output now includes a semantic similarity/alignment block (`--compare_semantic auto|hash|embed`).
+- **Stance shift** — comparison output can profile `definition / framing / conditionalization / example expansion / resolution` drift with `--compare_stance auto`.
+- **Spatial metaphor density** — comparison output can track spatial-metaphor density in answers and ponder logs with `--compare_spatial_metaphor auto`.
 - **Terminal ponder logs** — human-readable ponder logs now print to the terminal by default; raw JSON records stay opt-in.
 - **Ponder lenses** — switch between association / assumptions / counterexamples / questions-only / metaphor via `--ponder_mode`.
 - **Lens pipeline** — chain multiple lenses via `--ponder_pipeline` (with `--pipeline_context prev|all|none`).
@@ -548,6 +550,8 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | `--print_ponder` | `auto` | Print human-readable ponder logs to stdout |
 | `--print_records` | `none` | Debug: print raw ponder-record JSON |
 | `--compare_semantic` | `auto` | `off` · `auto` · `hash` · `embed` |
+| `--compare_stance` | `auto` | `off` · `auto` |
+| `--compare_spatial_metaphor` | `auto` | `off` · `auto` |
 | `--compare_embed_model` | *(empty)* | Optional local/cached encoder for true embedding cosine; otherwise auto-discovers local MiniLM/e5/bge/gte/mpnet dirs |
 | `--json_out` | *(empty)* | Write full run/pack results to JSON |
 | `--trace_out` | *(empty)* | Write step-level trace JSONL |
@@ -636,6 +640,8 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.h
 - For `--compare_semantic auto`, local HF runs use cosine over mean token embeddings from the active model; API runs first try a local encoder auto-discovery pass (`model/minilm`, `models/minilm`, or similar MiniLM/e5/bge/gte/mpnet dirs) on CPU and only fall back to hashed char n-gram TF-IDF cosine if none is available.
 - When that API-side local encoder exists, the script prewarms it in the background while the main API generations are running, so the semantic block is less likely to become the last visible bottleneck.
 - For `--compare_semantic embed`, you can set `--compare_embed_model` explicitly, or let the script auto-pick a local encoder from the same MiniLM/e5/bge/gte/mpnet search path. Set `SR_COMPARE_EMBED_MODEL` if you want to pin that default without passing the CLI flag each time.
+- `--compare_stance auto` uses a built-in heuristic lexicon to estimate answer-policy drift across `definition`, `framing`, `conditionalization`, `example_expansion`, and `resolution`.
+- `--compare_spatial_metaphor auto` measures spatial-metaphor density per 1k chars for the baseline answer, pondered answer, ponder questions, and ponder logs, then reports dominant groups like `path`, `stage`, `container`, and `geometry`.
 - External semantic encoder loading is quiet by default to avoid noisy `from_pretrained()` progress bars and local `sitecustomize` chatter; set `SR_COMPARE_EMBED_VERBOSE=1` if you want to see that load output.
 - For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams + IDF weighting). It’s not as strong as real embedding retrieval, but better than raw tail.
 - For API backends, `--api_logprobs_top_n` is provider-capped. If the returned logprob depth is shallower than a requested band (for example `spectrum3` + `far`), that band degrades to self-seeded keywords and the script warns about it.

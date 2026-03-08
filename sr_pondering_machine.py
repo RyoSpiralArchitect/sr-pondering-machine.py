@@ -33,7 +33,7 @@ Notes:
 from __future__ import annotations
 
 import argparse
-from collections import deque
+from collections import Counter, deque
 import concurrent.futures
 import contextlib
 import dataclasses
@@ -449,6 +449,8 @@ def compute_run_metrics(
     records: Sequence[Dict[str, Any]],
     extras: Optional[Dict[str, Any]],
     semantic_compare: Optional[Dict[str, Any]] = None,
+    stance_compare: Optional[Dict[str, Any]] = None,
+    spatial_metaphor_compare: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     metrics: Dict[str, Any] = {}
     metrics["query_chars"] = len(query or "")
@@ -522,6 +524,44 @@ def compute_run_metrics(
             val = semantic_compare.get(src_key)
             if isinstance(val, (int, float)):
                 metrics[dst_key] = float(val)
+    if isinstance(stance_compare, dict) and str(stance_compare.get("status") or "") == "ok":
+        for src_key, dst_key in (
+            ("shift_score", "stance_shift_score"),
+            ("top_gain_delta", "stance_top_gain_delta"),
+            ("top_drop_delta", "stance_top_drop_delta"),
+        ):
+            val = stance_compare.get(src_key)
+            if isinstance(val, (int, float)):
+                metrics[dst_key] = float(val)
+        for src_key, dst_key in (
+            ("dominant_baseline", "stance_baseline_dominant"),
+            ("dominant_ponder", "stance_ponder_dominant"),
+            ("top_gain", "stance_top_gain"),
+            ("top_drop", "stance_top_drop"),
+        ):
+            val = str(stance_compare.get(src_key) or "").strip()
+            if val:
+                metrics[dst_key] = val
+    if isinstance(spatial_metaphor_compare, dict) and str(spatial_metaphor_compare.get("status") or "") == "ok":
+        for src_key, dst_key in (
+            ("answer_density_delta", "spatial_answer_density_delta"),
+            ("log_question_density_delta", "spatial_log_question_density_delta"),
+        ):
+            val = spatial_metaphor_compare.get(src_key)
+            if isinstance(val, (int, float)):
+                metrics[dst_key] = float(val)
+        for src_key, dst_key in (
+            (("baseline", "density_per_1k_chars"), "spatial_baseline_density"),
+            (("ponder", "density_per_1k_chars"), "spatial_ponder_density"),
+            (("questions", "density_per_1k_chars"), "spatial_question_density"),
+            (("logs", "density_per_1k_chars"), "spatial_log_density"),
+        ):
+            parent_key, child_key = src_key
+            parent = spatial_metaphor_compare.get(parent_key)
+            if isinstance(parent, dict):
+                val = parent.get(child_key)
+                if isinstance(val, (int, float)):
+                    metrics[dst_key] = float(val)
     return metrics
 
 
@@ -533,6 +573,8 @@ def build_run_comparison(
     records: Sequence[Dict[str, Any]],
     extras: Optional[Dict[str, Any]],
     semantic_compare: Optional[Dict[str, Any]] = None,
+    stance_compare: Optional[Dict[str, Any]] = None,
+    spatial_metaphor_compare: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     metrics = compute_run_metrics(
         query=query,
@@ -541,6 +583,8 @@ def build_run_comparison(
         records=records,
         extras=extras,
         semantic_compare=semantic_compare,
+        stance_compare=stance_compare,
+        spatial_metaphor_compare=spatial_metaphor_compare,
     )
     out: Dict[str, Any] = {}
     if baseline_answer is not None:
@@ -566,6 +610,17 @@ def build_run_comparison(
         "probe_stage_count",
         "probe_stage_max_js",
         "probe_stage_last_js",
+        "stance_shift_score",
+        "stance_baseline_dominant",
+        "stance_ponder_dominant",
+        "stance_top_gain",
+        "stance_top_drop",
+        "spatial_answer_density_delta",
+        "spatial_baseline_density",
+        "spatial_ponder_density",
+        "spatial_question_density",
+        "spatial_log_density",
+        "spatial_log_question_density_delta",
     ):
         val = metrics.get(key)
         if val is not None:
@@ -577,6 +632,10 @@ def build_run_comparison(
             out["api_warnings_count"] = int(len(api_warnings))
     if isinstance(semantic_compare, dict):
         out["semantic"] = semantic_compare
+    if isinstance(stance_compare, dict):
+        out["stance"] = stance_compare
+    if isinstance(spatial_metaphor_compare, dict):
+        out["spatial_metaphor"] = spatial_metaphor_compare
     return out
 
 
@@ -653,6 +712,38 @@ def _print_run_comparison(comp: Dict[str, Any], *, mode: str) -> None:
             reason = str(semantic.get("reason") or "").strip()
             if reason:
                 print(f"semantic[{method or status}] {status}: {reason}")
+    stance = comp.get("stance")
+    if isinstance(stance, dict):
+        status = str(stance.get("status") or "").strip()
+        method = str(stance.get("method") or "").strip()
+        if status == "ok":
+            print(
+                f"stance[{method}] "
+                f"base={_fmt_metric(stance.get('dominant_baseline'))} "
+                f"ponder={_fmt_metric(stance.get('dominant_ponder'))} "
+                f"shift={_fmt_metric(stance.get('shift_score'), digits=6)} "
+                f"gain={_fmt_metric(stance.get('top_gain'))} "
+                f"drop={_fmt_metric(stance.get('top_drop'))}"
+            )
+    spatial = comp.get("spatial_metaphor")
+    if isinstance(spatial, dict):
+        status = str(spatial.get("status") or "").strip()
+        method = str(spatial.get("method") or "").strip()
+        if status == "ok":
+            baseline = spatial.get("baseline") if isinstance(spatial.get("baseline"), dict) else {}
+            ponder = spatial.get("ponder") if isinstance(spatial.get("ponder"), dict) else {}
+            questions = spatial.get("questions") if isinstance(spatial.get("questions"), dict) else {}
+            logs = spatial.get("logs") if isinstance(spatial.get("logs"), dict) else {}
+            print(
+                f"spatial[{method}] "
+                f"ans_density={_fmt_metric(baseline.get('density_per_1k_chars'), digits=3)}"
+                f"->{_fmt_metric(ponder.get('density_per_1k_chars'), digits=3)} "
+                f"log_density={_fmt_metric(logs.get('density_per_1k_chars'), digits=3)} "
+                f"q_density={_fmt_metric(questions.get('density_per_1k_chars'), digits=3)} "
+                f"groups={_fmt_metric(baseline.get('dominant_group') or 'none')}"
+                f"->{_fmt_metric(ponder.get('dominant_group') or 'none')}"
+                f" log={_fmt_metric(logs.get('dominant_group') or 'none')}"
+            )
 
 
 def _ponder_record_label(record: Dict[str, Any]) -> str:
@@ -2718,6 +2809,345 @@ def _hashed_semantic_compare(query: str, baseline_answer: str, ponder_answer: st
     }
 
 
+_STANCE_LEXICON: Dict[str, Tuple[str, ...]] = {
+    "definition": (
+        "とは",
+        "という意味",
+        "を意味",
+        "定義",
+        "平たく言うと",
+        "言い換えると",
+        "refers to",
+        "means that",
+        "can be understood as",
+        "can be summarized as",
+        "put simply",
+        "in other words",
+    ),
+    "framing": (
+        "枠組み",
+        "観点",
+        "見方",
+        "捉える",
+        "問い",
+        "問題",
+        "解釈",
+        "概念",
+        "フレーム",
+        "framing",
+        "reframe",
+        "lens",
+        "constraint",
+        "objective",
+        "problem space",
+        "solution space",
+        "conceptual",
+    ),
+    "conditionalization": (
+        "場合",
+        "なら",
+        "であれば",
+        "依存",
+        "条件",
+        "条件付き",
+        "範囲",
+        "文脈",
+        "ただし",
+        "一方",
+        "within",
+        "under",
+        "depends on",
+        "depending on",
+        "if ",
+        "when ",
+        "in that case",
+        "context",
+        "conditional",
+        "locally",
+        "globally",
+    ),
+    "example_expansion": (
+        "たとえば",
+        "例えば",
+        "具体例",
+        "例として",
+        "のように",
+        "for example",
+        "for instance",
+        "such as",
+        "e.g.",
+        "consider ",
+    ),
+    "resolution": (
+        "要するに",
+        "つまり",
+        "端的にいえば",
+        "短く言えば",
+        "結局",
+        "したがって",
+        "だから",
+        "言える",
+        "べき",
+        "最も自然",
+        "要点",
+        "in practice",
+        "therefore",
+        "the answer is",
+        "rule of thumb",
+        "best answer",
+        "should",
+        "must",
+    ),
+}
+
+_SPATIAL_METAPHOR_GROUPS: Dict[str, Tuple[str, ...]] = {
+    "path": (
+        "廊下",
+        "通路",
+        "道筋",
+        "経路",
+        "階段",
+        "駅",
+        "ホーム",
+        "入口",
+        "出口",
+        "橋",
+        "トンネル",
+        "扉",
+        "door",
+        "doorway",
+        "entrance",
+        "exit",
+        "path",
+        "pathway",
+        "route",
+        "corridor",
+        "hallway",
+        "stair",
+        "stairs",
+        "station",
+        "platform",
+        "bridge",
+        "tunnel",
+    ),
+    "stage": (
+        "舞台",
+        "劇場",
+        "観客席",
+        "照明",
+        "幕",
+        "stage",
+        "theater",
+        "theatre",
+        "audience",
+        "spotlight",
+        "scene",
+    ),
+    "container": (
+        "棚",
+        "部屋",
+        "箱",
+        "枠",
+        "器",
+        "shelf",
+        "room",
+        "box",
+        "frame",
+        "container",
+    ),
+    "geometry": (
+        "螺旋",
+        "中心",
+        "周縁",
+        "境界",
+        "距離",
+        "空間",
+        "場所",
+        "地図",
+        "terrain",
+        "landscape",
+        "field",
+        "map",
+        "space",
+        "distance",
+        "boundary",
+        "edge",
+        "center",
+        "centre",
+        "place",
+    ),
+}
+
+_ASCII_PHRASE_RE = re.compile(r"^[a-z0-9 ._-]+$")
+_BULLET_LINE_RE = re.compile(r"(?m)^\s*(?:[-*•]|\d+[.)])\s+")
+
+
+def _count_phrase_occurrences(text_cf: str, phrase: str) -> int:
+    phrase_cf = str(phrase or "").casefold().strip()
+    if not phrase_cf:
+        return 0
+    if _ASCII_PHRASE_RE.fullmatch(phrase_cf):
+        pattern = r"(?<![a-z0-9_])" + re.escape(phrase_cf) + r"(?![a-z0-9_])"
+        try:
+            return len(re.findall(pattern, text_cf))
+        except Exception:
+            return text_cf.count(phrase_cf)
+    return text_cf.count(phrase_cf)
+
+
+def _top_counter_items(counter: Counter[str], *, limit: int = 6) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    for term, count in counter.most_common(max(0, int(limit))):
+        out.append({"term": str(term), "count": int(count)})
+    return out
+
+
+def _normalize_score_dict(raw_scores: Dict[str, float]) -> Tuple[Dict[str, float], float]:
+    total = float(sum(max(0.0, float(v)) for v in raw_scores.values()))
+    if total <= 0:
+        return {k: 0.0 for k in raw_scores.keys()}, 0.0
+    return {k: float(max(0.0, float(v)) / total) for k, v in raw_scores.items()}, total
+
+
+def _dominant_label(scores: Dict[str, float]) -> str:
+    best_label = ""
+    best_score = 0.0
+    for key, value in scores.items():
+        fv = float(value)
+        if fv > best_score:
+            best_label = str(key)
+            best_score = fv
+    return best_label if best_score > 0 else ""
+
+
+def _build_stance_profile(text: str) -> Dict[str, Any]:
+    src = str(text or "")
+    text_cf = src.casefold()
+    bullet_lines = len(_BULLET_LINE_RE.findall(src))
+    raw_counts: Dict[str, int] = {}
+    raw_scores: Dict[str, float] = {}
+    term_hits: Dict[str, Counter[str]] = {}
+    for label, phrases in _STANCE_LEXICON.items():
+        hits = Counter()
+        total = 0
+        for phrase in phrases:
+            count = _count_phrase_occurrences(text_cf, phrase)
+            if count > 0:
+                hits[str(phrase)] += int(count)
+                total += int(count)
+        raw_counts[label] = int(total)
+        raw_scores[label] = float(total)
+        term_hits[label] = hits
+
+    if bullet_lines > 0:
+        raw_scores["example_expansion"] = float(raw_scores.get("example_expansion", 0.0) + bullet_lines * 1.5)
+    if "\n" in src and ("たとえば" in src or "例えば" in src or "for example" in text_cf or "for instance" in text_cf):
+        raw_scores["example_expansion"] = float(raw_scores.get("example_expansion", 0.0) + 1.0)
+
+    scores, signal_mass = _normalize_score_dict(raw_scores)
+    dominant = _dominant_label(scores)
+    status = "ok" if signal_mass > 0 else "weak"
+    return {
+        "status": status,
+        "method": "heuristic_lexicon",
+        "signal_mass": float(signal_mass),
+        "dominant": dominant,
+        "scores": {k: float(v) for k, v in scores.items()},
+        "raw_counts": {k: int(v) for k, v in raw_counts.items()},
+        "bullet_lines": int(bullet_lines),
+        "top_terms": {k: _top_counter_items(v, limit=4) for k, v in term_hits.items() if v},
+    }
+
+
+def build_stance_compare(baseline_answer: str, ponder_answer: str) -> Dict[str, Any]:
+    baseline = _build_stance_profile(baseline_answer)
+    ponder = _build_stance_profile(ponder_answer)
+    base_scores = dict(baseline.get("scores") or {})
+    ponder_scores = dict(ponder.get("scores") or {})
+    categories = list(_STANCE_LEXICON.keys())
+    deltas = {label: float(ponder_scores.get(label, 0.0) - base_scores.get(label, 0.0)) for label in categories}
+    shift_score = float(sum(abs(v) for v in deltas.values()) / 2.0)
+    top_gain = max(categories, key=lambda label: deltas.get(label, float("-inf"))) if categories else ""
+    top_drop = min(categories, key=lambda label: deltas.get(label, float("inf"))) if categories else ""
+    top_gain_value = float(deltas.get(top_gain, 0.0)) if top_gain else 0.0
+    top_drop_value = float(deltas.get(top_drop, 0.0)) if top_drop else 0.0
+    base_dom = str(baseline.get("dominant") or "")
+    ponder_dom = str(ponder.get("dominant") or "")
+    dominant_shift = f"{base_dom}->{ponder_dom}" if base_dom or ponder_dom else ""
+    return {
+        "status": "ok",
+        "method": "heuristic_lexicon",
+        "baseline": baseline,
+        "ponder": ponder,
+        "shift_score": shift_score,
+        "dominant_baseline": base_dom,
+        "dominant_ponder": ponder_dom,
+        "dominant_shift": dominant_shift,
+        "top_gain": top_gain if top_gain_value > 0 else "",
+        "top_gain_delta": top_gain_value if top_gain_value > 0 else 0.0,
+        "top_drop": top_drop if top_drop_value < 0 else "",
+        "top_drop_delta": top_drop_value if top_drop_value < 0 else 0.0,
+        "deltas": {k: float(v) for k, v in deltas.items()},
+    }
+
+
+def _analyze_spatial_metaphor_text(text: str) -> Dict[str, Any]:
+    src = str(text or "")
+    text_cf = src.casefold()
+    chars = len(src)
+    group_counts: Dict[str, int] = {}
+    term_counter: Counter[str] = Counter()
+    total = 0
+    for group, phrases in _SPATIAL_METAPHOR_GROUPS.items():
+        group_total = 0
+        for phrase in phrases:
+            count = _count_phrase_occurrences(text_cf, phrase)
+            if count > 0:
+                term_counter[str(phrase)] += int(count)
+                group_total += int(count)
+                total += int(count)
+        group_counts[group] = int(group_total)
+    dominant_group = ""
+    dominant_count = 0
+    for group, count in group_counts.items():
+        if int(count) > dominant_count:
+            dominant_group = str(group)
+            dominant_count = int(count)
+    density = float((float(total) * 1000.0) / max(1, chars))
+    return {
+        "chars": int(chars),
+        "count": int(total),
+        "density_per_1k_chars": density,
+        "dominant_group": dominant_group if dominant_count > 0 else "",
+        "group_counts": {k: int(v) for k, v in group_counts.items()},
+        "top_terms": _top_counter_items(term_counter, limit=6),
+    }
+
+
+def build_spatial_metaphor_compare(
+    *,
+    baseline_answer: str,
+    ponder_answer: str,
+    records: Sequence[Dict[str, Any]],
+) -> Dict[str, Any]:
+    question_text = "\n".join(str(r.get("ponder_question", "") or "") for r in (records or []) if str(r.get("ponder_question", "") or "").strip())
+    log_text = "\n".join(str(r.get("ponder_log", "") or "") for r in (records or []) if str(r.get("ponder_log", "") or "").strip())
+    baseline = _analyze_spatial_metaphor_text(baseline_answer)
+    ponder = _analyze_spatial_metaphor_text(ponder_answer)
+    questions = _analyze_spatial_metaphor_text(question_text)
+    logs = _analyze_spatial_metaphor_text(log_text)
+    return {
+        "status": "ok",
+        "method": "heuristic_lexicon",
+        "baseline": baseline,
+        "ponder": ponder,
+        "questions": questions,
+        "logs": logs,
+        "answer_density_delta": float(ponder.get("density_per_1k_chars", 0.0) - baseline.get("density_per_1k_chars", 0.0)),
+        "log_question_density_delta": float(logs.get("density_per_1k_chars", 0.0) - questions.get("density_per_1k_chars", 0.0)),
+    }
+
+
 def _tfidf_vec(tf: Dict[int, float], idf: Dict[int, float]) -> Tuple[Dict[int, float], float]:
     """Return (tfidf_vec, norm)."""
     vec: Dict[int, float] = {}
@@ -4012,6 +4442,8 @@ class RunConfig:
     probe_compare_stages: bool = False
     probe_compare_top_n: int = 32
     compare_semantic: str = "auto"  # off|auto|hash|embed
+    compare_stance: str = "auto"  # off|auto
+    compare_spatial_metaphor: str = "auto"  # off|auto
     compare_embed_model: str = ""
     print_probe: bool = False
     interactive: bool = False
@@ -6818,6 +7250,18 @@ def main() -> None:
         help="Add semantic answer comparison: auto=HF token embeddings or hashed n-grams, embed=force embedding mode",
     )
     g_observe.add_argument(
+        "--compare_stance",
+        choices=["off", "auto"],
+        default="auto",
+        help="Add heuristic stance-shift analysis (definition/framing/conditionalization/example expansion/resolution)",
+    )
+    g_observe.add_argument(
+        "--compare_spatial_metaphor",
+        choices=["off", "auto"],
+        default="auto",
+        help="Add heuristic spatial-metaphor density analysis over answers and ponder logs",
+    )
+    g_observe.add_argument(
         "--compare_embed_model",
         default="",
         help="Optional local/cached encoder model for true embedding cosine (otherwise auto-tries local MiniLM/e5/bge-style dirs)",
@@ -7058,6 +7502,8 @@ def main() -> None:
         probe_compare_stages=bool(args.probe_compare_stages),
         probe_compare_top_n=int(args.probe_compare_top_n),
         compare_semantic=str(args.compare_semantic),
+        compare_stance=str(args.compare_stance),
+        compare_spatial_metaphor=str(args.compare_spatial_metaphor),
         compare_embed_model=str(args.compare_embed_model or ""),
         print_probe=args.print_probe,
         interactive=bool(args.interactive),
@@ -7539,6 +7985,8 @@ def main() -> None:
     ponder_extras: Dict[str, Any] = {}
     comparison: Dict[str, Any] = {}
     semantic_compare: Optional[Dict[str, Any]] = None
+    stance_compare: Optional[Dict[str, Any]] = None
+    spatial_metaphor_compare: Optional[Dict[str, Any]] = None
 
     if args.mode in ("baseline", "both"):
         baseline_ans = call_with_api_error_context(
@@ -7592,13 +8040,22 @@ def main() -> None:
         print(ponder_ans)
 
     if baseline_ans is not None and ponder_ans is not None:
-        semantic_compare = build_semantic_compare(
-            hf=hf,
-            cfg=cfg,
-            query=args.query,
-            baseline_answer=baseline_ans,
-            ponder_answer=ponder_ans,
-        )
+        if str(getattr(cfg, "compare_semantic", "auto") or "auto").strip().lower() != "off":
+            semantic_compare = build_semantic_compare(
+                hf=hf,
+                cfg=cfg,
+                query=args.query,
+                baseline_answer=baseline_ans,
+                ponder_answer=ponder_ans,
+            )
+        if str(getattr(cfg, "compare_stance", "auto") or "auto").strip().lower() != "off":
+            stance_compare = build_stance_compare(baseline_ans, ponder_ans)
+        if str(getattr(cfg, "compare_spatial_metaphor", "auto") or "auto").strip().lower() != "off":
+            spatial_metaphor_compare = build_spatial_metaphor_compare(
+                baseline_answer=baseline_ans,
+                ponder_answer=ponder_ans,
+                records=ponder_recs,
+            )
     comparison = build_run_comparison(
         query=args.query,
         baseline_answer=baseline_ans,
@@ -7606,7 +8063,11 @@ def main() -> None:
         records=ponder_recs,
         extras=ponder_extras if ponder_extras else None,
         semantic_compare=semantic_compare,
+        stance_compare=stance_compare,
+        spatial_metaphor_compare=spatial_metaphor_compare,
     )
+    if trace and comparison:
+        trace.event("run_comparison", comparison=comparison)
     if baseline_ans is not None and ponder_ans is not None:
         _print_run_comparison(comparison, mode=str(getattr(args, "print_compare", "auto") or "auto"))
 
@@ -7644,6 +8105,8 @@ def main() -> None:
                 records=ponder_recs,
                 extras=ponder_extras if ponder_extras else None,
                 semantic_compare=semantic_compare,
+                stance_compare=stance_compare,
+                spatial_metaphor_compare=spatial_metaphor_compare,
             ),
         }
         out_path = write_json_dest(out_s, payload)
