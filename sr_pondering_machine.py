@@ -451,6 +451,7 @@ def compute_run_metrics(
     semantic_compare: Optional[Dict[str, Any]] = None,
     stance_compare: Optional[Dict[str, Any]] = None,
     spatial_metaphor_compare: Optional[Dict[str, Any]] = None,
+    token_budget_compare: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     metrics: Dict[str, Any] = {}
     metrics["query_chars"] = len(query or "")
@@ -562,6 +563,59 @@ def compute_run_metrics(
                 val = parent.get(child_key)
                 if isinstance(val, (int, float)):
                     metrics[dst_key] = float(val)
+    if isinstance(token_budget_compare, dict) and str(token_budget_compare.get("status") or "") == "ok":
+        baseline_bucket = token_budget_compare.get("baseline")
+        ponder_bucket = token_budget_compare.get("ponder")
+        if isinstance(baseline_bucket, dict):
+            for src_key, dst_key in (
+                ("answer_tokens_est", "budget_baseline_answer_tokens_est"),
+            ):
+                val = baseline_bucket.get(src_key)
+                if isinstance(val, (int, float)):
+                    metrics[dst_key] = float(val)
+            api_usage = baseline_bucket.get("api_usage")
+            if isinstance(api_usage, dict):
+                for src_key, dst_key in (
+                    ("prompt_tokens", "budget_baseline_prompt_tokens"),
+                    ("completion_tokens", "budget_baseline_completion_tokens"),
+                    ("reasoning_tokens", "budget_baseline_reasoning_tokens"),
+                    ("total_tokens", "budget_baseline_total_tokens"),
+                ):
+                    val = api_usage.get(src_key)
+                    if isinstance(val, (int, float)):
+                        metrics[dst_key] = float(val)
+        if isinstance(ponder_bucket, dict):
+            for src_key, dst_key in (
+                ("answer_tokens_est", "budget_ponder_answer_tokens_est"),
+                ("ponder_question_tokens_est", "budget_ponder_question_tokens_est"),
+                ("ponder_log_tokens_est", "budget_ponder_log_tokens_est"),
+                ("keyword_tokens_est", "budget_keyword_tokens_est"),
+                ("memory_block_tokens_est", "budget_memory_block_tokens_est"),
+            ):
+                val = ponder_bucket.get(src_key)
+                if isinstance(val, (int, float)):
+                    metrics[dst_key] = float(val)
+            api_usage = ponder_bucket.get("api_usage")
+            if isinstance(api_usage, dict):
+                for src_key, dst_key in (
+                    ("prompt_tokens", "budget_ponder_prompt_tokens"),
+                    ("completion_tokens", "budget_ponder_completion_tokens"),
+                    ("reasoning_tokens", "budget_ponder_reasoning_tokens"),
+                    ("total_tokens", "budget_ponder_total_tokens"),
+                ):
+                    val = api_usage.get(src_key)
+                    if isinstance(val, (int, float)):
+                        metrics[dst_key] = float(val)
+        delta_bucket = token_budget_compare.get("delta")
+        if isinstance(delta_bucket, dict):
+            for src_key, dst_key in (
+                ("answer_tokens_est", "budget_delta_answer_tokens_est"),
+                ("external_scaffold_tokens_est", "budget_external_scaffold_tokens_est"),
+                ("api_reasoning_tokens", "budget_delta_reasoning_tokens"),
+            ):
+                val = delta_bucket.get(src_key)
+                if isinstance(val, (int, float)):
+                    metrics[dst_key] = float(val)
     return metrics
 
 
@@ -575,6 +629,7 @@ def build_run_comparison(
     semantic_compare: Optional[Dict[str, Any]] = None,
     stance_compare: Optional[Dict[str, Any]] = None,
     spatial_metaphor_compare: Optional[Dict[str, Any]] = None,
+    token_budget_compare: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     metrics = compute_run_metrics(
         query=query,
@@ -585,6 +640,7 @@ def build_run_comparison(
         semantic_compare=semantic_compare,
         stance_compare=stance_compare,
         spatial_metaphor_compare=spatial_metaphor_compare,
+        token_budget_compare=token_budget_compare,
     )
     out: Dict[str, Any] = {}
     if baseline_answer is not None:
@@ -621,6 +677,10 @@ def build_run_comparison(
         "spatial_question_density",
         "spatial_log_density",
         "spatial_log_question_density_delta",
+        "budget_baseline_answer_tokens_est",
+        "budget_ponder_answer_tokens_est",
+        "budget_external_scaffold_tokens_est",
+        "budget_delta_reasoning_tokens",
     ):
         val = metrics.get(key)
         if val is not None:
@@ -636,6 +696,8 @@ def build_run_comparison(
         out["stance"] = stance_compare
     if isinstance(spatial_metaphor_compare, dict):
         out["spatial_metaphor"] = spatial_metaphor_compare
+    if isinstance(token_budget_compare, dict):
+        out["token_budget"] = token_budget_compare
     return out
 
 
@@ -744,6 +806,29 @@ def _print_run_comparison(comp: Dict[str, Any], *, mode: str) -> None:
                 f"->{_fmt_metric(ponder.get('dominant_group') or 'none')}"
                 f" log={_fmt_metric(logs.get('dominant_group') or 'none')}"
             )
+    token_budget = comp.get("token_budget")
+    if isinstance(token_budget, dict) and str(token_budget.get("status") or "") == "ok":
+        method = str(token_budget.get("method") or "").strip()
+        baseline = token_budget.get("baseline") if isinstance(token_budget.get("baseline"), dict) else {}
+        ponder = token_budget.get("ponder") if isinstance(token_budget.get("ponder"), dict) else {}
+        delta = token_budget.get("delta") if isinstance(token_budget.get("delta"), dict) else {}
+        base_api = baseline.get("api_usage") if isinstance(baseline.get("api_usage"), dict) else {}
+        ponder_api = ponder.get("api_usage") if isinstance(ponder.get("api_usage"), dict) else {}
+        parts = [
+            f"budget[{method}]",
+            f"ans={_fmt_metric(baseline.get('answer_tokens_est'))}->{_fmt_metric(ponder.get('answer_tokens_est'))}",
+            f"scaffold={_fmt_metric(delta.get('external_scaffold_tokens_est'))}",
+        ]
+        if base_api or ponder_api:
+            parts.append(
+                "reason="
+                f"{_fmt_metric(base_api.get('reasoning_tokens', 0))}->{_fmt_metric(ponder_api.get('reasoning_tokens', 0))}"
+            )
+            parts.append(
+                "completion="
+                f"{_fmt_metric(base_api.get('completion_tokens', 0))}->{_fmt_metric(ponder_api.get('completion_tokens', 0))}"
+            )
+        print(" ".join(parts))
 
 
 def _ponder_record_label(record: Dict[str, Any]) -> str:
@@ -3148,6 +3233,109 @@ def build_spatial_metaphor_compare(
     }
 
 
+def build_token_budget_compare(
+    *,
+    hf: Any,
+    baseline_answer: str,
+    ponder_answer: str,
+    records: Sequence[Dict[str, Any]],
+    extras: Optional[Dict[str, Any]],
+    baseline_generation_meta: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    base_answer_tokens, est_method = estimate_text_token_count(hf, baseline_answer)
+    ponder_answer_tokens, _ = estimate_text_token_count(hf, ponder_answer)
+    question_tokens, _ = _sum_text_token_count(hf, [str(r.get("ponder_question", "") or "") for r in (records or [])])
+    log_tokens, _ = _sum_text_token_count(hf, [str(r.get("ponder_log", "") or "") for r in (records or [])])
+    keyword_tokens, _ = _sum_text_token_count(
+        hf,
+        [
+            " ".join(str(x) for x in (r.get("keywords") or r.get("keywords_raw") or []) if x is not None)
+            if isinstance((r.get("keywords") or r.get("keywords_raw") or []), list)
+            else str(r.get("keywords") or r.get("keywords_raw") or "")
+            for r in (records or [])
+        ],
+    )
+    memory_block_est_tokens = 0
+    memory_block_chars = 0
+    if isinstance(extras, dict):
+        mb_chars = extras.get("memory_block_chars")
+        if isinstance(mb_chars, int):
+            memory_block_chars = int(mb_chars)
+        mb_est = extras.get("memory_block_est_tokens")
+        if isinstance(mb_est, int):
+            memory_block_est_tokens = int(mb_est)
+
+    stage_api_items = [
+        summarize_api_generation_meta(r.get("api_generation"))
+        for r in (records or [])
+        if isinstance(r, dict) and isinstance(r.get("api_generation"), dict)
+    ]
+    stage_api_totals = _merge_api_token_buckets(stage_api_items)
+    final_api_meta = summarize_api_generation_meta((extras or {}).get("api_final_generation")) if isinstance(extras, dict) else {}
+    final_api_totals = _merge_api_token_buckets([final_api_meta] if final_api_meta else [])
+    baseline_api_meta = summarize_api_generation_meta(baseline_generation_meta) if isinstance(baseline_generation_meta, dict) else {}
+    baseline_api_totals = _merge_api_token_buckets([baseline_api_meta] if baseline_api_meta else [])
+    aux_api_totals = _empty_api_token_bucket()
+    if isinstance(extras, dict):
+        api_budget = extras.get("api_token_budget")
+        if isinstance(api_budget, dict):
+            for key in ("seed", "refine", "hop_keywords", "memory_remix", "random_log", "band_answers", "ensemble"):
+                bucket = api_budget.get(key)
+                if isinstance(bucket, dict):
+                    _accumulate_api_token_bucket(aux_api_totals, bucket)
+    ponder_api_totals = _merge_api_token_buckets([stage_api_totals, final_api_totals, aux_api_totals])
+    all_api_totals = _merge_api_token_buckets([baseline_api_totals, ponder_api_totals])
+
+    out: Dict[str, Any] = {
+        "status": "ok",
+        "method": "visible_estimate_only",
+        "visible_estimate_method": est_method,
+        "baseline": {
+            "answer_tokens_est": int(base_answer_tokens),
+        },
+        "ponder": {
+            "answer_tokens_est": int(ponder_answer_tokens),
+            "ponder_question_tokens_est": int(question_tokens),
+            "ponder_log_tokens_est": int(log_tokens),
+            "keyword_tokens_est": int(keyword_tokens),
+            "memory_block_chars": int(memory_block_chars),
+            "memory_block_tokens_est": int(memory_block_est_tokens),
+            "record_count": int(len(list(records or []))),
+        },
+        "delta": {
+            "answer_tokens_est": int(ponder_answer_tokens - base_answer_tokens),
+            "external_scaffold_tokens_est": int(question_tokens + log_tokens + keyword_tokens + memory_block_est_tokens),
+        },
+    }
+    if any(int(all_api_totals.get(k) or 0) > 0 for k in ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens")):
+        out["method"] = "api_usage_plus_visible_estimate"
+        out["baseline"]["api_usage"] = baseline_api_totals
+        out["ponder"]["api_usage"] = ponder_api_totals
+        out["ponder"]["api_stage_usage"] = stage_api_totals
+        if isinstance(extras, dict):
+            api_budget = extras.get("api_token_budget")
+            if isinstance(api_budget, dict):
+                out["ponder"]["api_aux_usage_by_phase"] = {
+                    str(k): _jsonable(v)
+                    for k, v in api_budget.items()
+                    if isinstance(v, dict) and any(int(v.get(m) or 0) > 0 for m in ("calls", "prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens"))
+                }
+        if any(int(aux_api_totals.get(k) or 0) > 0 for k in ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens")):
+            out["ponder"]["api_aux_usage"] = aux_api_totals
+        if any(int(final_api_totals.get(k) or 0) > 0 for k in ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens")):
+            out["ponder"]["api_final_usage"] = final_api_totals
+        out["all_api_usage"] = all_api_totals
+        out["delta"].update(
+            {
+                "api_prompt_tokens": int(ponder_api_totals.get("prompt_tokens") or 0) - int(baseline_api_totals.get("prompt_tokens") or 0),
+                "api_completion_tokens": int(ponder_api_totals.get("completion_tokens") or 0) - int(baseline_api_totals.get("completion_tokens") or 0),
+                "api_reasoning_tokens": int(ponder_api_totals.get("reasoning_tokens") or 0) - int(baseline_api_totals.get("reasoning_tokens") or 0),
+                "api_total_tokens": int(ponder_api_totals.get("total_tokens") or 0) - int(baseline_api_totals.get("total_tokens") or 0),
+            }
+        )
+    return out
+
+
 def _tfidf_vec(tf: Dict[int, float], idf: Dict[int, float]) -> Tuple[Dict[int, float], float]:
     """Return (tfidf_vec, norm)."""
     vec: Dict[int, float] = {}
@@ -3823,10 +4011,22 @@ def _extract_reasoning_tokens(usage: Any) -> int:
     if not isinstance(usage, dict):
         return 0
     details = usage.get("completion_tokens_details")
-    if not isinstance(details, dict):
+    if isinstance(details, dict):
+        try:
+            return int(details.get("reasoning_tokens") or 0)
+        except Exception:
+            pass
+    try:
+        return int(usage.get("reasoning_tokens") or 0)
+    except Exception:
+        return 0
+
+
+def _extract_usage_int(usage: Any, key: str) -> int:
+    if not isinstance(usage, dict):
         return 0
     try:
-        return int(details.get("reasoning_tokens") or 0)
+        return int(usage.get(key) or 0)
     except Exception:
         return 0
 
@@ -3938,8 +4138,10 @@ class OpenAICompatModel:
             "finish_reason": c0.get("finish_reason"),
             "refusal": msg.get("refusal"),
             "usage": usage if isinstance(usage, dict) else None,
+            "prompt_tokens": _extract_usage_int(usage, "prompt_tokens"),
             "completion_tokens": int(usage.get("completion_tokens") or 0) if isinstance(usage, dict) else 0,
             "reasoning_tokens": _extract_reasoning_tokens(usage),
+            "total_tokens": _extract_usage_int(usage, "total_tokens"),
         }
 
         def _extract_parts(obj: Any) -> List[str]:
@@ -4444,6 +4646,7 @@ class RunConfig:
     compare_semantic: str = "auto"  # off|auto|hash|embed
     compare_stance: str = "auto"  # off|auto
     compare_spatial_metaphor: str = "auto"  # off|auto
+    compare_token_budget: str = "auto"  # off|auto
     compare_embed_model: str = ""
     print_probe: bool = False
     interactive: bool = False
@@ -4484,7 +4687,10 @@ def summarize_api_generation_meta(meta: Any) -> Dict[str, Any]:
     for key in ("finish_reason", "response_id", "model"):
         if meta.get(key):
             out[key] = meta.get(key)
-    for key in ("completion_tokens", "reasoning_tokens"):
+    api_calls = meta.get("api_calls")
+    if isinstance(api_calls, int):
+        out["api_calls"] = int(api_calls)
+    for key in ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens"):
         val = meta.get(key)
         if isinstance(val, int):
             out[key] = int(val)
@@ -4496,6 +4702,40 @@ def summarize_api_generation_meta(meta: Any) -> Dict[str, Any]:
     retry = meta.get("auto_retry")
     if isinstance(retry, dict) and retry:
         out["auto_retry"] = _jsonable(retry)
+    return out
+
+
+def _empty_api_token_bucket() -> Dict[str, Any]:
+    return {
+        "calls": 0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "reasoning_tokens": 0,
+        "total_tokens": 0,
+    }
+
+
+def _accumulate_api_token_bucket(bucket: Dict[str, Any], meta: Any) -> None:
+    if not isinstance(bucket, dict) or not isinstance(meta, dict):
+        return
+    calls = meta.get("api_calls")
+    if not isinstance(calls, int) or calls <= 0:
+        calls = meta.get("calls")
+    if not isinstance(calls, int) or calls <= 0:
+        calls = 1
+    bucket["calls"] = int(bucket.get("calls") or 0) + int(calls)
+    for key in ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens"):
+        try:
+            bucket[key] = int(bucket.get(key) or 0) + int(meta.get(key) or 0)
+        except Exception:
+            continue
+
+
+def _merge_api_token_buckets(items: Sequence[Any]) -> Dict[str, Any]:
+    out = _empty_api_token_bucket()
+    for item in items:
+        if isinstance(item, dict):
+            _accumulate_api_token_bucket(out, item)
     return out
 
 
@@ -4523,6 +4763,40 @@ def _token_ids_for_text(tokenizer: Any, text: str) -> List[int]:
         return [int(x) for x in input_ids[0].tolist()]
     except Exception:
         return []
+
+
+_HEURISTIC_TOKEN_RE = re.compile(r"[A-Za-z0-9_]+|[\u3040-\u30ff\u3400-\u9fff]|[^\s]", re.UNICODE)
+
+
+def _heuristic_token_count(text: str) -> int:
+    s = str(text or "")
+    if not s.strip():
+        return 0
+    try:
+        return int(len(_HEURISTIC_TOKEN_RE.findall(s)))
+    except Exception:
+        return int(len(s.split()))
+
+
+def estimate_text_token_count(hf: Any, text: str) -> Tuple[int, str]:
+    s = str(text or "")
+    if not s.strip():
+        return 0, "empty"
+    tokenizer = getattr(hf, "tokenizer", None)
+    if tokenizer is not None:
+        tids = _token_ids_for_text(tokenizer, s)
+        if tids:
+            return int(len(tids)), "active_tokenizer"
+    return _heuristic_token_count(s), "heuristic_mixed_script_v1"
+
+
+def _sum_text_token_count(hf: Any, texts: Sequence[str]) -> Tuple[int, str]:
+    total = 0
+    method = ""
+    for text in texts:
+        count, method = estimate_text_token_count(hf, str(text or ""))
+        total += int(count)
+    return int(total), (method or "empty")
 
 
 _TEXT_EMBEDDER_CACHE: Dict[Tuple[str, str], Tuple[Any, Any, str, str]] = {}
@@ -4808,7 +5082,9 @@ def _generate_api_text_with_reasoning_retry(
         seed=seed,
     )
     meta = summarize_api_generation_meta(getattr(hf, "last_response_meta", {}))
+    meta["api_calls"] = 1
     if not _api_reasoning_starved_empty_output(text, meta):
+        hf.last_response_meta = dict(meta)
         return text, meta
 
     retry_max_new_tokens = _api_retry_budget_for_reasoning_starvation(
@@ -4839,13 +5115,19 @@ def _generate_api_text_with_reasoning_retry(
         no_repeat_ngram_size=no_repeat_ngram_size,
         seed=None if seed is None else int(seed) + 1,
     )
-    meta = summarize_api_generation_meta(getattr(hf, "last_response_meta", {}))
+    retry_meta = summarize_api_generation_meta(getattr(hf, "last_response_meta", {}))
+    rollup = _merge_api_token_buckets([meta, retry_meta])
+    meta = dict(retry_meta)
+    meta["api_calls"] = int(rollup.get("calls") or 2)
+    for key in ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens"):
+        meta[key] = int(rollup.get(key) or 0)
     meta["auto_retry"] = {
         "reason": "reasoning_tokens_exhausted_visible_budget",
         "phase": str(phase),
         "from_max_tokens": int(max_new_tokens),
         "to_max_tokens": int(retry_max_new_tokens),
     }
+    hf.last_response_meta = dict(meta)
     return text, meta
 
 
@@ -6023,6 +6305,8 @@ def run_ponder(
         )
 
     total_s = float(time.perf_counter() - t_total0)
+    memory_block_chars = int(len(final_answer_block or ""))
+    memory_block_est_tokens, _memory_block_est_method = estimate_text_token_count(hf, final_answer_block or "")
 
     extras: Dict[str, Any] = {
         "run_id": run_id,
@@ -6046,6 +6330,8 @@ def run_ponder(
         "probe_compare_stages": probe_compare_stages if probe_compare_stages else None,
         "random_log": random_log_text,
         "prompt_jitter_queries": jitter_queries if jitter_queries else None,
+        "memory_block_chars": memory_block_chars,
+        "memory_block_est_tokens": int(memory_block_est_tokens),
         "timings": {"total_s": total_s, "probe_s": float(probe_s), "memory_remix_s": float(remix_s), "answer_s": float(answer_s)},
     }
 
@@ -6195,6 +6481,22 @@ def run_ponder_api(
         bands = [{"label": "single", "start_rank": 0, "end_rank": 0}]
 
     api_warnings: List[str] = []
+    api_token_budget: Dict[str, Dict[str, Any]] = {
+        "seed": _empty_api_token_bucket(),
+        "refine": _empty_api_token_bucket(),
+        "hop_keywords": _empty_api_token_bucket(),
+        "memory_remix": _empty_api_token_bucket(),
+        "random_log": _empty_api_token_bucket(),
+        "band_answers": _empty_api_token_bucket(),
+        "ensemble": _empty_api_token_bucket(),
+    }
+
+    def _record_api_budget(bucket_name: str, meta: Optional[Dict[str, Any]] = None) -> None:
+        if bucket_name not in api_token_budget:
+            return
+        src = meta if isinstance(meta, dict) else summarize_api_generation_meta(getattr(hf, "last_response_meta", {}))
+        _accumulate_api_token_bucket(api_token_budget[bucket_name], src)
+
     warned_probe_short = set()
     warned_stage_probe_failure = False
     probe_depth = len(probe_top)
@@ -6342,6 +6644,7 @@ def run_ponder_api(
                     temperature=max(0.2, float(cfg.temperature)),
                     seed=int(cfg.seed) + 5000 + log_ix,
                 )
+                _record_api_budget("seed")
                 keywords_source = "api_self"
                 api_seed_method_used = "self"
                 picked_items = [{"token_id": None, "token": t, "rank": None, "prob": None} for t in raw_keywords]
@@ -6359,6 +6662,7 @@ def run_ponder_api(
                     temperature=float(cfg.keyword_refine_temperature),
                     seed=int(cfg.seed) + 200 + log_ix,
                 )
+                _record_api_budget("refine")
                 if refined_keywords:
                     keywords = refined_keywords
                     keywords_source = "model_refine"
@@ -6404,6 +6708,7 @@ def run_ponder_api(
                                 lang=lang,
                                 seed=hk_seed,
                             )
+                            _record_api_budget("hop_keywords")
                         except Exception:
                             new_raw = []
 
@@ -6439,6 +6744,7 @@ def run_ponder_api(
                             temperature=float(cfg.keyword_refine_temperature),
                             seed=int(cfg.seed) + 220 + log_ix + hop_ix * 11,
                         )
+                        _record_api_budget("refine")
                         if refined:
                             hop_keywords = refined
                             hop_keywords_source = "model_refine"
@@ -6732,6 +7038,8 @@ def run_ponder_api(
         temperature=cfg.memory_remix_temperature,
         seed=int(cfg.seed) + 777,
     )
+    if str(cfg.memory_remix).strip() == "dream" and memory_block:
+        _record_api_budget("memory_remix")
     remix_s = float(time.perf_counter() - t_remix0)
     if trace:
         trace.event(
@@ -6758,6 +7066,7 @@ def run_ponder_api(
             temperature=0.8,
             seed=int(cfg.seed) + 424242,
         )
+        _record_api_budget("random_log")
         q_rng = random.Random(int(cfg.seed) + 424243)
         rand_q = make_unrelated_question(rand_kw, lang=lang, rng=q_rng)
         rp = hf._apply_chat(build_prompt_for_pondering(rand_q, mode="assoc", lang=lang), system_text=None)
@@ -6775,6 +7084,7 @@ def run_ponder_api(
             seed=int(cfg.seed) + 424244,
             api_warnings=api_warnings,
         )
+        _record_api_budget("random_log", _random_meta)
         memory_block = random_log_text
 
     # Band answers (sensitivity analysis)
@@ -6796,6 +7106,8 @@ def run_ponder_api(
                 temperature=cfg.memory_remix_temperature,
                 seed=int(cfg.seed) + 9000 + stable_hash_mod(bl, 1000),
             )
+            if str(cfg.memory_remix).strip() == "dream" and band_mem:
+                _record_api_budget("band_answers")
             fp = hf._apply_chat(
                 build_prompt_for_answer(query, memory_block=band_mem, lang=lang, style=cfg.answer_style),
                 system_text=None,
@@ -6814,6 +7126,7 @@ def run_ponder_api(
                 seed=int(cfg.seed) + 10101,
                 api_warnings=api_warnings,
             )
+            _record_api_budget("band_answers", _band_meta)
             band_answers[bl] = band_ans
 
     ensemble_raw: Optional[str] = None
@@ -6836,6 +7149,7 @@ def run_ponder_api(
             seed=int(cfg.seed) + 20202,
             api_warnings=api_warnings,
         )
+        _record_api_budget("ensemble", _ensemble_meta)
         ensemble_consensus = extract_tag(ensemble_raw, "consensus")
         ensemble_divergence = extract_tag(ensemble_raw, "divergence")
         ensemble_final = extract_tag(ensemble_raw, "final") or ensemble_raw.strip()
@@ -6951,6 +7265,8 @@ def run_ponder_api(
         )
 
     total_s = float(time.perf_counter() - t_total0)
+    memory_block_chars = int(len(final_answer_block or ""))
+    memory_block_est_tokens, _memory_block_est_method = estimate_text_token_count(hf, final_answer_block or "")
 
     extras: Dict[str, Any] = {
         "run_id": run_id,
@@ -6974,6 +7290,9 @@ def run_ponder_api(
         "probe_compare_stages": probe_compare_stages if probe_compare_stages else None,
         "random_log": random_log_text,
         "prompt_jitter_queries": jitter_queries if jitter_queries else None,
+        "memory_block_chars": memory_block_chars,
+        "memory_block_est_tokens": int(memory_block_est_tokens),
+        "api_token_budget": api_token_budget,
         "api_probe_top": probe_top[:50] if probe_top else None,
         "api_final_generation": final_answer_meta if final_answer_meta else None,
         "timings": {"total_s": total_s, "probe_s": float(probe_s), "memory_remix_s": float(remix_s), "answer_s": float(answer_s)},
@@ -7262,6 +7581,12 @@ def main() -> None:
         help="Add heuristic spatial-metaphor density analysis over answers and ponder logs",
     )
     g_observe.add_argument(
+        "--compare_token_budget",
+        choices=["off", "auto"],
+        default="auto",
+        help="Add visible-token and API usage budget comparison (tracks external scaffold vs internal reasoning tokens when available)",
+    )
+    g_observe.add_argument(
         "--compare_embed_model",
         default="",
         help="Optional local/cached encoder model for true embedding cosine (otherwise auto-tries local MiniLM/e5/bge-style dirs)",
@@ -7504,6 +7829,7 @@ def main() -> None:
         compare_semantic=str(args.compare_semantic),
         compare_stance=str(args.compare_stance),
         compare_spatial_metaphor=str(args.compare_spatial_metaphor),
+        compare_token_budget=str(args.compare_token_budget),
         compare_embed_model=str(args.compare_embed_model or ""),
         print_probe=args.print_probe,
         interactive=bool(args.interactive),
@@ -7987,6 +8313,8 @@ def main() -> None:
     semantic_compare: Optional[Dict[str, Any]] = None
     stance_compare: Optional[Dict[str, Any]] = None
     spatial_metaphor_compare: Optional[Dict[str, Any]] = None
+    token_budget_compare: Optional[Dict[str, Any]] = None
+    baseline_generation_meta: Optional[Dict[str, Any]] = None
 
     if args.mode in ("baseline", "both"):
         baseline_ans = call_with_api_error_context(
@@ -7994,6 +8322,7 @@ def main() -> None:
             phase="baseline",
             fn=lambda: run_baseline(hf, cfg, args.query, trace=trace),
         )
+        baseline_generation_meta = summarize_api_generation_meta(getattr(hf, "last_response_meta", {}))
         print("\n=== BASELINE ===\n")
         print(baseline_ans)
 
@@ -8056,6 +8385,15 @@ def main() -> None:
                 ponder_answer=ponder_ans,
                 records=ponder_recs,
             )
+        if str(getattr(cfg, "compare_token_budget", "auto") or "auto").strip().lower() != "off":
+            token_budget_compare = build_token_budget_compare(
+                hf=hf,
+                baseline_answer=baseline_ans,
+                ponder_answer=ponder_ans,
+                records=ponder_recs,
+                extras=ponder_extras if ponder_extras else None,
+                baseline_generation_meta=baseline_generation_meta,
+            )
     comparison = build_run_comparison(
         query=args.query,
         baseline_answer=baseline_ans,
@@ -8065,6 +8403,7 @@ def main() -> None:
         semantic_compare=semantic_compare,
         stance_compare=stance_compare,
         spatial_metaphor_compare=spatial_metaphor_compare,
+        token_budget_compare=token_budget_compare,
     )
     if trace and comparison:
         trace.event("run_comparison", comparison=comparison)
@@ -8107,6 +8446,7 @@ def main() -> None:
                 semantic_compare=semantic_compare,
                 stance_compare=stance_compare,
                 spatial_metaphor_compare=spatial_metaphor_compare,
+                token_budget_compare=token_budget_compare,
             ),
         }
         out_path = write_json_dest(out_s, payload)

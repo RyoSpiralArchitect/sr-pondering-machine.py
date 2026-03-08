@@ -425,6 +425,22 @@ def render_html(report: Dict[str, Any]) -> str:
                     f" log={_esc(logs.get('dominant_group') or 'none')}"
                     "</div>"
                 )
+            budget = comparison.get("token_budget")
+            if isinstance(budget, dict) and str(budget.get("status") or "") == "ok":
+                baseline = budget.get("baseline") if isinstance(budget.get("baseline"), dict) else {}
+                ponder = budget.get("ponder") if isinstance(budget.get("ponder"), dict) else {}
+                delta = budget.get("delta") if isinstance(budget.get("delta"), dict) else {}
+                base_api = baseline.get("api_usage") if isinstance(baseline.get("api_usage"), dict) else {}
+                ponder_api = ponder.get("api_usage") if isinstance(ponder.get("api_usage"), dict) else {}
+                parts.append(
+                    "<div>"
+                    f"budget[{_esc(budget.get('method') or '')}]"
+                    f" ans={_esc(baseline.get('answer_tokens_est'))}→{_esc(ponder.get('answer_tokens_est'))}"
+                    f" | scaffold={_esc(delta.get('external_scaffold_tokens_est'))}"
+                    f" | reason={_esc(base_api.get('reasoning_tokens', 0))}→{_esc(ponder_api.get('reasoning_tokens', 0))}"
+                    f" | completion={_esc(base_api.get('completion_tokens', 0))}→{_esc(ponder_api.get('completion_tokens', 0))}"
+                    "</div>"
+                )
             parts.append("</div>")
 
         probe = sess.get("probe_compare")
@@ -599,6 +615,7 @@ def main() -> None:
         if isinstance(comp, dict):
             stance = comp.get("stance") or {}
             spatial = comp.get("spatial_metaphor") or {}
+            budget = comp.get("token_budget") or {}
             stance_bits: List[str] = []
             if isinstance(stance, dict) and str(stance.get("status") or "") == "ok":
                 stance_bits.append(f"stance={stance.get('dominant_baseline') or ''}->{stance.get('dominant_ponder') or ''}")
@@ -606,6 +623,14 @@ def main() -> None:
                 log_density = ((spatial.get("logs") or {}).get("density_per_1k_chars") if isinstance(spatial.get("logs"), dict) else None)
                 if isinstance(log_density, (int, float)):
                     stance_bits.append(f"spatial_log={float(log_density):.3f}")
+            if isinstance(budget, dict) and str(budget.get("status") or "") == "ok":
+                delta = budget.get("delta") if isinstance(budget.get("delta"), dict) else {}
+                reasoning_delta = delta.get("api_reasoning_tokens")
+                scaffold = delta.get("external_scaffold_tokens_est")
+                if isinstance(reasoning_delta, (int, float)):
+                    stance_bits.append(f"reason_delta={int(reasoning_delta)}")
+                if isinstance(scaffold, (int, float)):
+                    stance_bits.append(f"scaffold={int(scaffold)}")
             if stance_bits:
                 comp_s = "  " + " ".join(stance_bits)
         print(f"- {sid}  {rng}  {top}{probe_s}{comp_s}")

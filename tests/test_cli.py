@@ -6,6 +6,7 @@ import unittest
 import uuid
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 
@@ -230,7 +231,7 @@ class TestSemanticCompare(unittest.TestCase):
         self.assertEqual(pool.submit.call_args.args[0], sp._load_text_embedder)
         self.assertTrue(str(pool.submit.call_args.args[1]).endswith("model/minilm"))
 
-    def test_print_config_only_includes_compare_semantic(self) -> None:
+    def test_print_config_only_includes_compare_options(self) -> None:
         out, _err = _run_main(
             [
                 "--provider",
@@ -243,16 +244,70 @@ class TestSemanticCompare(unittest.TestCase):
                 "embed",
                 "--compare_embed_model",
                 "./emb-model",
+                "--compare_token_budget",
+                "auto",
                 "--print_config_only",
             ]
         )
         obj = json.loads(out)
         cfg = obj.get("cfg") or {}
         self.assertEqual(cfg.get("compare_semantic"), "embed")
+        self.assertEqual(cfg.get("compare_token_budget"), "auto")
         self.assertTrue(str(cfg.get("compare_embed_model") or "").endswith("emb-model"))
 
 
 class TestReasoningCompare(unittest.TestCase):
+    def test_build_token_budget_compare_tracks_scaffold_and_reasoning(self) -> None:
+        hf = SimpleNamespace(tokenizer=None)
+        records = [
+            {
+                "ponder_question": "What conditions make this hold?",
+                "ponder_log": "The frame shifts from absolute to local validity.",
+                "keywords": ["local validity", "frame dependence"],
+                "api_generation": {
+                    "prompt_tokens": 110,
+                    "completion_tokens": 90,
+                    "reasoning_tokens": 40,
+                    "total_tokens": 200,
+                    "api_calls": 1,
+                },
+            }
+        ]
+        extras = {
+            "memory_block_chars": 42,
+            "memory_block_est_tokens": 11,
+            "api_final_generation": {
+                "prompt_tokens": 150,
+                "completion_tokens": 70,
+                "reasoning_tokens": 30,
+                "total_tokens": 220,
+                "api_calls": 1,
+            },
+            "api_token_budget": {
+                "seed": {"calls": 1, "prompt_tokens": 25, "completion_tokens": 20, "reasoning_tokens": 5, "total_tokens": 45},
+                "refine": {"calls": 1, "prompt_tokens": 20, "completion_tokens": 12, "reasoning_tokens": 3, "total_tokens": 32},
+            },
+        }
+        comp = sp.build_token_budget_compare(
+            hf=hf,
+            baseline_answer="Short answer.",
+            ponder_answer="Longer answer with more structure.",
+            records=records,
+            extras=extras,
+            baseline_generation_meta={
+                "prompt_tokens": 80,
+                "completion_tokens": 50,
+                "reasoning_tokens": 10,
+                "total_tokens": 130,
+                "api_calls": 1,
+            },
+        )
+        self.assertEqual(comp.get("status"), "ok")
+        self.assertEqual(comp.get("method"), "api_usage_plus_visible_estimate")
+        self.assertGreater(int(((comp.get("delta") or {}).get("external_scaffold_tokens_est") or 0)), 0)
+        self.assertEqual(((comp.get("delta") or {}).get("api_reasoning_tokens")), 68)
+        self.assertEqual((((comp.get("ponder") or {}).get("api_aux_usage_by_phase") or {}).get("seed") or {}).get("calls"), 1)
+
     def test_build_stance_compare_detects_definition_to_example_shift(self) -> None:
         comp = sp.build_stance_compare(
             "これは定義であり、平たく言うと制度内で固定された意味です。",
@@ -517,6 +572,7 @@ class TestTerminalUX(unittest.TestCase):
             self.assertIn("semantic[hashed_char_ngrams_tfidf]", out)
             self.assertIn("stance[heuristic_lexicon]", out)
             self.assertIn("spatial[heuristic_lexicon]", out)
+            self.assertIn("budget[", out)
             self.assertNotIn("=== PONDER RECORD(S)", out)
 
             obj = json.loads(out_path.read_text(encoding="utf-8"))
@@ -527,6 +583,7 @@ class TestTerminalUX(unittest.TestCase):
             self.assertEqual((comp.get("semantic") or {}).get("method"), "hashed_char_ngrams_tfidf")
             self.assertEqual((comp.get("stance") or {}).get("method"), "heuristic_lexicon")
             self.assertEqual((comp.get("spatial_metaphor") or {}).get("method"), "heuristic_lexicon")
+            self.assertEqual((comp.get("token_budget") or {}).get("status"), "ok")
 
     def test_main_reports_rate_limit_without_traceback(self) -> None:
         with patch.object(
@@ -779,6 +836,13 @@ class TestTraceReportProbeCompare(unittest.TestCase):
                             "questions": {"density_per_1k_chars": 0.0, "dominant_group": ""},
                             "logs": {"density_per_1k_chars": 8.0, "dominant_group": "path"},
                         },
+                        "token_budget": {
+                            "status": "ok",
+                            "method": "api_usage_plus_visible_estimate",
+                            "baseline": {"answer_tokens_est": 24, "api_usage": {"reasoning_tokens": 12, "completion_tokens": 40}},
+                            "ponder": {"answer_tokens_est": 33, "api_usage": {"reasoning_tokens": 31, "completion_tokens": 65}},
+                            "delta": {"external_scaffold_tokens_est": 88, "api_reasoning_tokens": 19},
+                        },
                     },
                 },
                 {"ts": "2026-03-07T00:00:03Z", "session_id": "s1", "event": "session_end"},
@@ -800,6 +864,7 @@ class TestTraceReportProbeCompare(unittest.TestCase):
             self.assertIn("comparison", html.lower())
             self.assertIn("conditionalization", html)
             self.assertIn("spatial[heuristic_lexicon]", html)
+            self.assertIn("budget[api_usage_plus_visible_estimate]", html)
             self.assertIn("counterexample", html)
             self.assertIn("0.420000", html)
 
