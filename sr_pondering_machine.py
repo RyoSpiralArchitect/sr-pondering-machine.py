@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 from collections import deque
+import concurrent.futures
 import contextlib
 import dataclasses
 import datetime as dt
@@ -47,6 +48,7 @@ import random
 import re
 import secrets
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -4092,6 +4094,9 @@ def _token_ids_for_text(tokenizer: Any, text: str) -> List[int]:
 
 
 _TEXT_EMBEDDER_CACHE: Dict[Tuple[str, str], Tuple[Any, Any, str, str]] = {}
+_TEXT_EMBEDDER_LOAD_LOCKS: Dict[Tuple[str, str], threading.Lock] = {}
+_TEXT_EMBEDDER_PREWARM_FUTURES: Dict[Tuple[str, str], concurrent.futures.Future[Any]] = {}
+_TEXT_EMBEDDER_PREWARM_POOL: Optional[concurrent.futures.ThreadPoolExecutor] = None
 
 
 def _resolve_embed_device(device_hint: str) -> str:
@@ -4099,6 +4104,24 @@ def _resolve_embed_device(device_hint: str) -> str:
     if hint and hint != "auto":
         return hint
     return "cpu"
+
+
+def _get_text_embedder_load_lock(cache_key: Tuple[str, str]) -> threading.Lock:
+    lock = _TEXT_EMBEDDER_LOAD_LOCKS.get(cache_key)
+    if lock is None:
+        lock = threading.Lock()
+        _TEXT_EMBEDDER_LOAD_LOCKS[cache_key] = lock
+    return lock
+
+
+def _get_text_embedder_prewarm_pool() -> concurrent.futures.ThreadPoolExecutor:
+    global _TEXT_EMBEDDER_PREWARM_POOL
+    if _TEXT_EMBEDDER_PREWARM_POOL is None:
+        _TEXT_EMBEDDER_PREWARM_POOL = concurrent.futures.ThreadPoolExecutor(
+            max_workers=1,
+            thread_name_prefix="sr_semantic_embed",
+        )
+    return _TEXT_EMBEDDER_PREWARM_POOL
 
 
 @contextlib.contextmanager
@@ -4128,13 +4151,18 @@ def _load_text_embedder(model_ref: str, *, device_hint: str) -> Tuple[Any, Any, 
     cached = _TEXT_EMBEDDER_CACHE.get(cache_key)
     if cached is not None:
         return cached
-    with _quiet_external_embedder_load():
-        tokenizer = AutoTokenizer.from_pretrained(resolved_model, local_files_only=True, trust_remote_code=False)
-        model = AutoModel.from_pretrained(resolved_model, local_files_only=True, trust_remote_code=False)
-        model.to(device)
-        model.eval()
-    _TEXT_EMBEDDER_CACHE[cache_key] = (tokenizer, model, device, resolved_model)
-    return tokenizer, model, device, resolved_model
+    with _get_text_embedder_load_lock(cache_key):
+        cached = _TEXT_EMBEDDER_CACHE.get(cache_key)
+        if cached is not None:
+            return cached
+        with _quiet_external_embedder_load():
+            tokenizer = AutoTokenizer.from_pretrained(resolved_model, local_files_only=True, trust_remote_code=False)
+            model = AutoModel.from_pretrained(resolved_model, local_files_only=True, trust_remote_code=False)
+            model.to(device)
+            model.eval()
+        loaded = (tokenizer, model, device, resolved_model)
+        _TEXT_EMBEDDER_CACHE[cache_key] = loaded
+        return loaded
 
 
 def _external_embedding_compare(
@@ -4216,6 +4244,41 @@ def _local_hf_embedding_compare(hf: Any, *, query: str, baseline_answer: str, po
     }
 
 
+def resolve_semantic_compare_external_choice(hf: Any, cfg: "RunConfig") -> Tuple[str, str, str]:
+    mode = str(getattr(cfg, "compare_semantic", "auto") or "auto").strip().lower()
+    if mode not in ("auto", "embed"):
+        return "", "", ""
+    embed_model = str(getattr(cfg, "compare_embed_model", "") or "").strip()
+    if embed_model:
+        return embed_model, "compare_embed_model", ""
+    if isinstance(hf, LocalHFModel):
+        return "", "", ""
+    try:
+        model_ref, source = resolve_default_compare_embed_model()
+        return model_ref, source, ""
+    except Exception as e:
+        return "", "", str(e)
+
+
+def maybe_prewarm_semantic_compare_embedder(hf: Any, cfg: "RunConfig") -> None:
+    model_ref, _source, _reason = resolve_semantic_compare_external_choice(hf, cfg)
+    if not model_ref:
+        return
+    resolved_model = resolve_model_ref(model_ref) if _looks_like_local_path(model_ref) else model_ref
+    device = _resolve_embed_device(str(getattr(cfg, "device", "auto") or "auto"))
+    cache_key = (resolved_model, device)
+    if cache_key in _TEXT_EMBEDDER_CACHE:
+        return
+    future = _TEXT_EMBEDDER_PREWARM_FUTURES.get(cache_key)
+    if future is not None and not future.done():
+        return
+    _TEXT_EMBEDDER_PREWARM_FUTURES[cache_key] = _get_text_embedder_prewarm_pool().submit(
+        _load_text_embedder,
+        model_ref,
+        device_hint=str(getattr(cfg, "device", "auto") or "auto"),
+    )
+
+
 def build_semantic_compare(
     *,
     hf: Any,
@@ -4229,8 +4292,7 @@ def build_semantic_compare(
     mode = str(getattr(cfg, "compare_semantic", "auto") or "auto").strip().lower()
     if mode == "off":
         return None
-    embed_model = str(getattr(cfg, "compare_embed_model", "") or "").strip()
-    auto_embed_reason = ""
+    embed_model, embed_source, auto_embed_reason = resolve_semantic_compare_external_choice(hf, cfg)
 
     def _fallback_hash(reason: str = "") -> Dict[str, Any]:
         out = _hashed_semantic_compare(query, baseline_answer, ponder_answer)
@@ -4247,7 +4309,7 @@ def build_semantic_compare(
                     query=query,
                     baseline_answer=baseline_answer,
                     ponder_answer=ponder_answer,
-                    source="compare_embed_model",
+                    source=embed_source,
                 )
             except Exception as e:
                 if mode == "embed":
@@ -4257,7 +4319,8 @@ def build_semantic_compare(
                         "model": embed_model,
                         "reason": str(e),
                     }
-                    out["source"] = "compare_embed_model"
+                    if embed_source:
+                        out["source"] = embed_source
                     return out
                 return _fallback_hash(str(e))
         if isinstance(hf, LocalHFModel):
@@ -4271,30 +4334,6 @@ def build_semantic_compare(
             except Exception as e:
                 if mode == "embed":
                     return {"status": "unavailable", "method": "hf_input_embeddings", "reason": str(e)}
-                return _fallback_hash(str(e))
-        try:
-            auto_embed_model, auto_embed_source = resolve_default_compare_embed_model()
-        except Exception as e:
-            auto_embed_reason = str(e)
-        else:
-            try:
-                return _external_embedding_compare(
-                    model_ref=auto_embed_model,
-                    device_hint=str(getattr(cfg, "device", "auto") or "auto"),
-                    query=query,
-                    baseline_answer=baseline_answer,
-                    ponder_answer=ponder_answer,
-                    source=auto_embed_source,
-                )
-            except Exception as e:
-                if mode == "embed":
-                    return {
-                        "status": "unavailable",
-                        "method": "external_encoder",
-                        "model": auto_embed_model,
-                        "source": auto_embed_source,
-                        "reason": str(e),
-                    }
                 return _fallback_hash(str(e))
         if mode == "embed":
             reason = auto_embed_reason or "no local embedding source is available"
@@ -7165,6 +7204,8 @@ def main() -> None:
                 )
     else:
         raise SystemExit(f"[sr_ponder] ERROR: unknown backend: {cfg.backend!r}")
+
+    maybe_prewarm_semantic_compare_embedder(hf, cfg)
 
     if args.pack != "none" or pack_file_s:
         pack_cfg = dataclasses.replace(cfg, interactive=False, answer_per_band=False, answer_ensemble=False)

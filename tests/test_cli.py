@@ -6,7 +6,7 @@ import unittest
 import uuid
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 
 import sr_pondering_machine as sp
@@ -212,6 +212,23 @@ class TestSemanticCompare(unittest.TestCase):
         self.assertEqual(comp.get("method"), "external_encoder")
         self.assertEqual(external_compare.call_args.kwargs.get("source"), "auto_local")
         self.assertTrue(str(external_compare.call_args.kwargs.get("model_ref") or "").endswith("model/minilm"))
+
+    def test_maybe_prewarm_semantic_compare_embedder_schedules_background_load(self) -> None:
+        with _tempdir() as td:
+            td_path = Path(td)
+            model_dir = td_path / "model" / "minilm"
+            model_dir.mkdir(parents=True, exist_ok=True)
+            (model_dir / "config.json").write_text("{}", encoding="utf-8")
+            cfg = sp.RunConfig(model_path="dummy", memory_path=Path("ponder_logs.jsonl"), compare_semantic="auto")
+            pool = Mock()
+            pool.submit.return_value = Mock()
+            with _Chdir(td_path), patch.object(sp, "_get_text_embedder_prewarm_pool", return_value=pool):
+                sp._TEXT_EMBEDDER_CACHE.clear()
+                sp._TEXT_EMBEDDER_PREWARM_FUTURES.clear()
+                sp.maybe_prewarm_semantic_compare_embedder(hf=None, cfg=cfg)
+        pool.submit.assert_called_once()
+        self.assertEqual(pool.submit.call_args.args[0], sp._load_text_embedder)
+        self.assertTrue(str(pool.submit.call_args.args[1]).endswith("model/minilm"))
 
     def test_print_config_only_includes_compare_semantic(self) -> None:
         out, _err = _run_main(
