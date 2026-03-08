@@ -261,6 +261,26 @@ def maybe_write_trace_report(
     return write_text_dest(d, html_s)
 
 
+def maybe_write_matrix_report(*, results: Optional[Dict[str, Any]], dest: str) -> Optional[Path]:
+    d = _expand_path_str(str(dest or ""))
+    if not d or d == "-":
+        return None
+    if not isinstance(results, dict):
+        return None
+    if str(results.get("kind") or "").strip() not in ("pack", "lab_matrix"):
+        return None
+    try:
+        import sr_matrix_report as mr
+    except Exception:
+        return None
+    try:
+        report = mr.analyze_results(results)
+        html_s = mr.render_html(report)
+    except Exception:
+        return None
+    return write_text_dest(d, html_s)
+
+
 _REDACTED = "***REDACTED***"
 _SENSITIVE_HEADER_KEYS = {
     "authorization",
@@ -8183,6 +8203,7 @@ def main() -> None:
     g_observe.add_argument("--trace_out", default="", help="Write JSONL trace events")
     g_observe.add_argument("--trace_preview_chars", type=int, default=180, help="Trace preview length (0 disables)")
     g_observe.add_argument("--trace_report_out", default="", help="Write an HTML trace report (requires --trace_out file)")
+    g_observe.add_argument("--matrix_report_out", default="", help="Write an HTML report for pack / lab-matrix result JSON")
     g_observe.add_argument(
         "--trace_report_max_records",
         type=int,
@@ -8363,6 +8384,7 @@ def main() -> None:
         json_out_is_explicit = "json_out" in explicit_dests
         trace_out_is_explicit = "trace_out" in explicit_dests
         trace_report_out_is_explicit = "trace_report_out" in explicit_dests
+        matrix_report_out_is_explicit = "matrix_report_out" in explicit_dests
         if bool(getattr(args, "print_config_only", False)):
             kind = "config"
         elif str(getattr(args, "pack", "none") or "none") != "none":
@@ -8384,12 +8406,19 @@ def main() -> None:
             out_dir_is_explicit or (not str(getattr(args, "trace_report_out", "") or "").strip())
         ):
             args.trace_report_out = str(od / f"{base}.trace.html")
+        if (
+            not matrix_report_out_is_explicit
+            and (str(getattr(args, "pack", "none") or "none") != "none" or pack_file_s or lab_matrix_s)
+            and (out_dir_is_explicit or (not str(getattr(args, "matrix_report_out", "") or "").strip()))
+        ):
+            args.matrix_report_out = str(od / f"{base}.matrix.html")
 
     # Normalize common path-like args (expand env vars / ~, keep '-' intact).
     try:
         args.json_out = _expand_path_str(str(getattr(args, "json_out", "") or ""))
         args.trace_out = _expand_path_str(str(getattr(args, "trace_out", "") or ""))
         args.trace_report_out = _expand_path_str(str(getattr(args, "trace_report_out", "") or ""))
+        args.matrix_report_out = _expand_path_str(str(getattr(args, "matrix_report_out", "") or ""))
         args.pack_out = _expand_path_str(str(getattr(args, "pack_out", "") or ""))
         args.pack_file = _expand_path_str(str(getattr(args, "pack_file", "") or ""))
         args.compare_embed_model = _expand_path_str(str(getattr(args, "compare_embed_model", "") or ""))
@@ -8806,6 +8835,7 @@ def main() -> None:
             "out": out_s,
             "trace_out": str(trace.path) if trace else "",
             "trace_report_out": str(getattr(args, "trace_report_out", "") or "").strip(),
+            "matrix_report_out": str(getattr(args, "matrix_report_out", "") or "").strip(),
             "out_dir": str(getattr(args, "out_dir", "") or ""),
             "resume_from": str(resume_path) if resume_path and resume_path.exists() else "",
         }
@@ -8821,6 +8851,7 @@ def main() -> None:
                 out_label=out_label if out_s else "",
                 trace_out=str(trace.path),
                 trace_report_out=str(getattr(args, "trace_report_out", "") or "").strip(),
+                matrix_report_out=str(getattr(args, "matrix_report_out", "") or "").strip(),
                 resume_from=str(resume_path) if resume_path and resume_path.exists() else "",
             )
 
@@ -9007,6 +9038,14 @@ def main() -> None:
                 print(f"\n[{out_label}] wrote {out_path}")
             else:
                 print(f"\n[{out_label}] wrote -")
+
+        matrix_report_s = str(getattr(args, "matrix_report_out", "") or "").strip()
+        if matrix_report_s:
+            rep_path = maybe_write_matrix_report(results=results, dest=matrix_report_s)
+            if rep_path is not None:
+                print(f"\n[matrix_report_out] wrote {rep_path}")
+                if trace:
+                    trace.event("matrix_report_out", path=str(rep_path))
 
         trace_report_s = str(getattr(args, "trace_report_out", "") or "").strip()
         if trace_report_s and trace:

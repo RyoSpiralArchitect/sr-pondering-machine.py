@@ -11,6 +11,7 @@ from unittest.mock import Mock, patch
 
 
 import sr_pondering_machine as sp
+import sr_matrix_report as mr
 import sr_trace_report as tr
 
 
@@ -788,6 +789,11 @@ class TestPackBehavior(unittest.TestCase):
                 html_txt = html_files[0].read_text(encoding="utf-8").lower()
                 self.assertIn("<html", html_txt)
 
+                matrix_files = list(out_dir.glob("*.matrix.html"))
+                self.assertEqual(len(matrix_files), 1)
+                matrix_txt = matrix_files[0].read_text(encoding="utf-8").lower()
+                self.assertIn("matrix report", matrix_txt)
+
     def test_pack_resume_skips_completed_items(self) -> None:
         with _tempdir() as td:
             td_path = Path(td)
@@ -943,6 +949,46 @@ class TestTraceReportProbeCompare(unittest.TestCase):
             self.assertIn("budget[api_usage_plus_visible_estimate]", html)
             self.assertIn("counterexample", html)
             self.assertIn("0.420000", html)
+
+
+class TestMatrixReport(unittest.TestCase):
+    def test_render_html_includes_budget_and_stance(self) -> None:
+        results = {
+            "kind": "lab_matrix",
+            "pack": "lab_scaffold_abcd",
+            "lab_matrix": "scaffold_abcd",
+            "provider": "openai",
+            "model": "gpt-5.4",
+            "query": "q",
+            "items": [
+                {"name": "baseline", "kind": "baseline", "answer": "BASE", "metrics": {"answer_chars": 4, "elapsed_s": 1.0}},
+                {
+                    "name": "facts",
+                    "kind": "ponder",
+                    "control": "none",
+                    "answer": "PONDER",
+                    "metrics": {"answer_chars": 6, "records": 1, "elapsed_s": 2.0},
+                    "extras": {"scaffold": {"condition": "facts", "target_tokens": 400}, "api_warnings": ["warn"]},
+                    "comparison": {
+                        "diff_ratio": 0.2,
+                        "answer_changed": True,
+                        "semantic": {"method": "hashed_char_ngrams_tfidf", "answer_cosine": 0.7, "query_alignment_delta": -0.04},
+                        "stance": {"dominant_baseline": "definition", "dominant_ponder": "conditionalization", "shift_score": 0.3},
+                        "spatial_metaphor": {"logs": {"density_per_1k_chars": 4.0}},
+                        "token_budget": {
+                            "method": "api_usage_plus_visible_estimate",
+                            "delta": {"external_scaffold_tokens_est": 400, "api_reasoning_tokens": 50, "api_completion_tokens": 20},
+                        },
+                    },
+                },
+            ],
+        }
+        report = mr.analyze_results(results)
+        html = mr.render_html(report)
+        self.assertIn("scaffold_abcd", html)
+        self.assertIn("facts/400", html)
+        self.assertIn("reasonΔ=50", html)
+        self.assertIn("conditionalization", html)
 
 
 if __name__ == "__main__":

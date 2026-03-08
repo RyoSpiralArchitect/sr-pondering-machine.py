@@ -28,6 +28,7 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Token budget comparison** — comparison output can now separate visible scaffold size from API `reasoning_tokens` / `completion_tokens` with `--compare_token_budget auto`.
 - **Scaffold controls** — `--scaffold_condition` and `--scaffold_token_target` let you hold scaffold size roughly fixed while swapping associative, random, factual, or structurally isomorphic content.
 - **Lab matrix** — `--lab_matrix scaffold_abcd` runs the baseline plus a controlled scaffold-condition sweep.
+- **Matrix HTML report** — pack / lab-matrix runs can now write an at-a-glance HTML comparison with `--matrix_report_out`.
 - **Terminal ponder logs** — human-readable ponder logs now print to the terminal by default; raw JSON records stay opt-in.
 - **Ponder lenses** — switch between association / assumptions / counterexamples / questions-only / metaphor via `--ponder_mode`.
 - **Lens pipeline** — chain multiple lenses via `--ponder_pipeline` (with `--pipeline_context prev|all|none`).
@@ -292,6 +293,7 @@ python3 sr_pondering_machine.py \
 ```
 
 This will auto-write a JSON result file, a JSONL trace, and an HTML trace report into `./artifacts`.
+For pack / lab-matrix runs, `--out_dir` also auto-writes a matrix comparison HTML.
 
 To view traces as a timeline, render an HTML report:
 
@@ -577,6 +579,7 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | `--json_out` | *(empty)* | Write full run/pack results to JSON |
 | `--trace_out` | *(empty)* | Write step-level trace JSONL |
 | `--trace_report_out` | *(empty)* | Write HTML trace report |
+| `--matrix_report_out` | *(empty)* | Write HTML report for pack / lab-matrix results |
 | `--probe_top_n` | `0` | Store base probe top-N tokens in the first record |
 | `--probe_compare` | `False` | Compare pre/post-ponder next-token distributions |
 | `--probe_compare_stages` | `False` | Capture a base→stage→final probe timeline |
@@ -648,6 +651,12 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl
 python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.html
 ```
 
+For scaffold sweeps / packs:
+
+```bash
+python3 sr_matrix_report.py --results ./artifacts/scaffold_abcd.json --out ./artifacts/scaffold_abcd.matrix.html
+```
+
 ## Notes
 
 - **Use the `-it` (instruction-tuned) variant** of Gemma for best results. The base model does not reliably follow instructions.
@@ -667,6 +676,7 @@ python3 sr_ponder_report.py --memory ./ponder_logs.jsonl --out ./ponder_report.h
 - `--scaffold_condition` only changes the final injected scaffold block; the upstream ponder logs are still generated and logged, which makes A/B/C/D style comparisons possible without hiding the original run trace.
 - `--scaffold_token_target` normalizes the final scaffold block to an approximate token budget using the active tokenizer when available, otherwise a mixed-script heuristic estimator.
 - `--lab_matrix scaffold_abcd` runs `baseline + assoc + random + facts + isomorphic` with the current CLI defaults; combine it with `--scaffold_token_target 400` to approximate a fixed-budget scaffold sweep.
+- `--matrix_report_out` renders the saved pack / lab-matrix JSON into a compact HTML table with semantic, stance, and token-budget columns. If you already use `--out_dir`, pack / lab-matrix runs auto-fill this path for you.
 - External semantic encoder loading is quiet by default to avoid noisy `from_pretrained()` progress bars and local `sitecustomize` chatter; set `SR_COMPARE_EMBED_VERBOSE=1` if you want to see that load output.
 - For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams + IDF weighting). It’s not as strong as real embedding retrieval, but better than raw tail.
 - For API backends, `--api_logprobs_top_n` is provider-capped. If the returned logprob depth is shallower than a requested band (for example `spectrum3` + `far`), that band degrades to self-seeded keywords and the script warns about it.
