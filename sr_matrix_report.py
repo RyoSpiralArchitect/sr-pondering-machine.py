@@ -167,6 +167,10 @@ def render_html(report: Dict[str, Any]) -> str:
         "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:24px;color:#111;background:#fafafa;}"
         "h1,h2,h3{margin:0 0 12px 0;} .muted{color:#666;} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0;}"
         ".card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}"
+        ".toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 14px 0;padding:10px 12px;background:#fff;border:1px solid #ddd;border-radius:10px;}"
+        ".toolbar label{font-size:13px;color:#333;display:flex;gap:6px;align-items:center;}"
+        ".toolbar select,.toolbar button{font:inherit;padding:6px 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111;}"
+        ".toolbar button{cursor:pointer;}"
         "table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #ddd;} th,td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:top;text-align:left;font-size:13px;}"
         "th{background:#f3f3f3;position:sticky;top:0;} code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}"
         "pre{white-space:pre-wrap;background:#fbfbfb;border:1px solid #eee;padding:12px;border-radius:8px;}"
@@ -195,6 +199,33 @@ def render_html(report: Dict[str, Any]) -> str:
     parts.append("</div>")
 
     parts.append("<h2>Comparison table</h2>")
+    parts.append(
+        "<div class='toolbar'>"
+        "<strong>Sort by baseline-relative metric</strong>"
+        "<label>Metric"
+        "<select id='matrix-sort-key'>"
+        "<option value='query_alignment_delta'>Query align Δ</option>"
+        "<option value='stance_shift'>Stance shift</option>"
+        "<option value='budget_reasoning_delta'>Reasoning token Δ</option>"
+        "<option value='budget_completion_delta'>Completion token Δ</option>"
+        "<option value='budget_total_delta'>Total token Δ</option>"
+        "<option value='answer_cosine'>Answer cosine</option>"
+        "<option value='diff_ratio'>Diff ratio</option>"
+        "<option value='answer_chars'>Answer chars</option>"
+        "<option value='elapsed_s'>Elapsed seconds</option>"
+        "<option value='name'>Name</option>"
+        "</select>"
+        "</label>"
+        "<label>Direction"
+        "<select id='matrix-sort-dir'>"
+        "<option value='desc'>Descending</option>"
+        "<option value='asc'>Ascending</option>"
+        "</select>"
+        "</label>"
+        "<button type='button' id='matrix-sort-apply'>Apply</button>"
+        "<span class='muted'>Baseline rows stay pinned to the top.</span>"
+        "</div>"
+    )
     parts.append("<table><thead><tr>")
     headers = [
         "Item",
@@ -209,7 +240,7 @@ def render_html(report: Dict[str, Any]) -> str:
     ]
     for h in headers:
         parts.append(f"<th>{_esc(h)}</th>")
-    parts.append("</tr></thead><tbody>")
+    parts.append("</tr></thead><tbody id='matrix-report-body'>")
     for row in items:
         scaffold = row.get("scaffold_condition") or "—"
         target = row.get("scaffold_target")
@@ -233,7 +264,22 @@ def render_html(report: Dict[str, Any]) -> str:
             budget_bits.append(f"compΔ={int(row.get('budget_completion_delta') or 0)}")
         warn_count = int(row.get("warnings_count") or 0)
         warn_cls = "warn" if warn_count else "ok"
-        parts.append("<tr>")
+        data_attrs = {
+            "name": str(row.get("name") or ""),
+            "kind": str(row.get("kind") or ""),
+            "answer_chars": row.get("answer_chars"),
+            "elapsed_s": row.get("elapsed_s"),
+            "diff_ratio": row.get("diff_ratio"),
+            "answer_cosine": row.get("answer_cosine"),
+            "query_alignment_delta": row.get("query_alignment_delta"),
+            "stance_shift": row.get("stance_shift"),
+            "budget_scaffold_tokens": row.get("budget_scaffold_tokens"),
+            "budget_reasoning_delta": row.get("budget_reasoning_delta"),
+            "budget_completion_delta": row.get("budget_completion_delta"),
+            "budget_total_delta": row.get("budget_total_delta"),
+        }
+        attr_s = " ".join(f"data-{k.replace('_', '-')}='{_esc(v)}'" for k, v in data_attrs.items())
+        parts.append(f"<tr {attr_s}>")
         parts.append(f"<td><strong>{_esc(row.get('name'))}</strong><br/><span class='muted'>{_esc(row.get('control') or '')}</span></td>")
         parts.append(f"<td>{_esc(row.get('kind'))}</td>")
         parts.append(f"<td>{_esc(scaffold_s)}</td>")
@@ -271,6 +317,54 @@ def render_html(report: Dict[str, Any]) -> str:
         parts.append("</div>")
         parts.append("</details>")
 
+    parts.append(
+        "<script>"
+        "(function(){"
+        "const body=document.getElementById('matrix-report-body');"
+        "const keySel=document.getElementById('matrix-sort-key');"
+        "const dirSel=document.getElementById('matrix-sort-dir');"
+        "const applyBtn=document.getElementById('matrix-sort-apply');"
+        "if(!body||!keySel||!dirSel||!applyBtn){return;}"
+        "function metricValue(row,key){"
+        "const attr='data-'+String(key||'').replace(/_/g,'-');"
+        "const raw=row.getAttribute(attr)||'';"
+        "if(key==='name'){return raw.toLowerCase();}"
+        "const num=Number(raw);"
+        "return Number.isFinite(num)?num:null;"
+        "}"
+        "function compareRows(a,b,key,dir){"
+        "const av=metricValue(a,key);"
+        "const bv=metricValue(b,key);"
+        "if(typeof av==='string'||typeof bv==='string'){"
+        "const as=String(av||'');"
+        "const bs=String(bv||'');"
+        "return dir==='asc'?as.localeCompare(bs):bs.localeCompare(as);"
+        "}"
+        "if(av===null&&bv===null){return 0;}"
+        "if(av===null){return 1;}"
+        "if(bv===null){return -1;}"
+        "return dir==='asc'?(av-bv):(bv-av);"
+        "}"
+        "function sortRows(){"
+        "const key=keySel.value||'query_alignment_delta';"
+        "const dir=dirSel.value||'desc';"
+        "const rows=Array.from(body.querySelectorAll('tr'));"
+        "const pinned=rows.filter((row)=>row.getAttribute('data-kind')==='baseline');"
+        "const sortable=rows.filter((row)=>row.getAttribute('data-kind')!=='baseline');"
+        "sortable.sort((a,b)=>{"
+        "const main=compareRows(a,b,key,dir);"
+        "if(main!==0){return main;}"
+        "return compareRows(a,b,'name','asc');"
+        "});"
+        "for(const row of pinned.concat(sortable)){body.appendChild(row);}"
+        "}"
+        "applyBtn.addEventListener('click',sortRows);"
+        "keySel.addEventListener('change',sortRows);"
+        "dirSel.addEventListener('change',sortRows);"
+        "sortRows();"
+        "})();"
+        "</script>"
+    )
     parts.append("</body></html>")
     return "\n".join(parts)
 

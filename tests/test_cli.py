@@ -989,6 +989,10 @@ class TestMatrixReport(unittest.TestCase):
         self.assertIn("facts/400", html)
         self.assertIn("reasonΔ=50", html)
         self.assertIn("conditionalization", html)
+        self.assertIn("Sort by baseline-relative metric", html)
+        self.assertIn("matrix-sort-key", html)
+        self.assertIn("data-query-alignment-delta='-0.04'", html)
+        self.assertIn("Baseline rows stay pinned to the top.", html)
 
 
 if __name__ == "__main__":
