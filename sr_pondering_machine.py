@@ -2137,6 +2137,27 @@ def build_prompt_for_answer(query: str, memory_block: Optional[str], *, lang: st
     )
 
 
+def build_prompt_for_visible_answer_rescue(query: str, memory_block: Optional[str], *, lang: str, style: str = "plain") -> str:
+    base = build_prompt_for_answer(query, memory_block, lang=lang, style=style).rstrip()
+    if lang == "ja":
+        return (
+            base
+            + "\n\n"
+            + "追加条件:\n"
+            + "- もう内部推論や下書きは出さず、可視の最終回答だけを書く\n"
+            + "- 1〜2段落、必要なら短い箇条書きのみ\n"
+            + "- 空文字や省略は禁止\n"
+        )
+    return (
+        base
+        + "\n\n"
+        + "Additional constraints:\n"
+        + "- Do not spend output on hidden reasoning or drafts; write only the visible final answer\n"
+        + "- Use 1-2 short paragraphs, or a short bullet list only if necessary\n"
+        + "- Do not return an empty answer\n"
+    )
+
+
 def build_prompt_for_pondering(ponder_q: str, *, mode: str, lang: str, context: Optional[str] = None) -> str:
     context = (context or "").strip()
     if lang == "ja":
@@ -5707,6 +5728,79 @@ def _generate_api_text_with_reasoning_retry(
     return text, meta
 
 
+def _maybe_rescue_empty_api_final_answer(
+    hf: OpenAICompatModel,
+    *,
+    cfg: "RunConfig",
+    query: str,
+    memory_block: str,
+    final_answer_meta: Dict[str, Any],
+    api_warnings: List[str],
+) -> Tuple[str, Dict[str, Any]]:
+    if not _api_reasoning_starved_empty_output("", final_answer_meta):
+        return "", final_answer_meta
+
+    rescue_block = str(memory_block or "")
+    rescue_target = max(256, min(512, int(getattr(cfg, "scaffold_token_target", 0) or 0) or 384))
+    rescue_meta_info: Dict[str, Any] = {}
+    if rescue_block:
+        rescue_block, rescue_meta_info = fit_scaffold_to_token_target(
+            hf,
+            rescue_block,
+            target_tokens=int(rescue_target),
+            condition=str(getattr(cfg, "scaffold_condition", "assoc") or "assoc"),
+            query=query,
+            lang=str(getattr(cfg, "prompt_lang", "en") or "en"),
+            seed=int(getattr(cfg, "seed", 0) or 0) + 40404,
+        )
+
+    rescue_prompt = hf._apply_chat(
+        build_prompt_for_visible_answer_rescue(
+            query,
+            memory_block=rescue_block or None,
+            lang=str(getattr(cfg, "prompt_lang", "en") or "en"),
+            style=str(getattr(cfg, "answer_style", "plain") or "plain"),
+        ),
+        system_text=None,
+    )
+    rescue_max_new_tokens = max(1024, int(getattr(cfg, "answer_max_new_tokens", 256) or 256) * 2)
+    msg = (
+        f"API final answer stayed empty after the normal retry; attempting visible-answer rescue "
+        f"(max_tokens={rescue_max_new_tokens}, scaffold_target={rescue_target})."
+    )
+    if msg not in api_warnings:
+        api_warnings.append(msg)
+        print(f"[sr_ponder] WARN: {msg}", file=sys.stderr)
+
+    answer, rescue_meta = _generate_api_text_with_reasoning_retry(
+        hf,
+        provider=cfg.provider,
+        phase="final_answer_visible_rescue",
+        prompt=rescue_prompt,
+        max_new_tokens=int(rescue_max_new_tokens),
+        temperature=1.0,
+        top_p=1.0,
+        top_k=0,
+        repetition_penalty=1.0,
+        no_repeat_ngram_size=0,
+        seed=None if getattr(cfg, "seed", None) is None else int(cfg.seed) + 2,
+        api_warnings=api_warnings,
+    )
+    merged = _merge_api_token_buckets([final_answer_meta, rescue_meta])
+    out_meta = dict(rescue_meta)
+    out_meta["api_calls"] = int(merged.get("calls") or 0)
+    for key in ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens"):
+        out_meta[key] = int(merged.get(key) or 0)
+    out_meta["visible_rescue"] = {
+        "used": True,
+        "scaffold_target_tokens": int(rescue_target),
+        "scaffold_source_tokens_est": int((rescue_meta_info or {}).get("source_tokens_est") or 0),
+        "scaffold_final_tokens_est": int((rescue_meta_info or {}).get("final_tokens_est") or 0),
+    }
+    hf.last_response_meta = dict(out_meta)
+    return answer, out_meta
+
+
 def format_api_http_error(exc: APIHTTPError, *, provider: str, model: str, phase: str) -> str:
     provider_s = str(provider or "api").strip()
     model_s = str(model or "").strip()
@@ -7871,19 +7965,34 @@ def run_ponder_api(
         )
         answer_s = float(time.perf_counter() - t_answer0)
         if not (answer or "").strip():
-            finish_reason = final_answer_meta.get("finish_reason")
-            reasoning_tokens = final_answer_meta.get("reasoning_tokens")
-            completion_tokens = final_answer_meta.get("completion_tokens")
-            refusal = final_answer_meta.get("refusal")
-            msg = (
-                f"API final answer returned empty text (finish_reason={finish_reason!r}, "
-                f"completion_tokens={completion_tokens!r}, reasoning_tokens={reasoning_tokens!r})."
+            rescue_t0 = time.perf_counter()
+            rescued_answer, rescued_meta = _maybe_rescue_empty_api_final_answer(
+                hf,
+                cfg=cfg,
+                query=query,
+                memory_block=final_answer_block,
+                final_answer_meta=final_answer_meta,
+                api_warnings=api_warnings,
             )
-            if refusal:
-                msg += " refusal text was present."
-            if msg not in api_warnings:
-                api_warnings.append(msg)
-                print(f"[sr_ponder] WARN: {msg}", file=sys.stderr)
+            if (rescued_answer or "").strip():
+                answer = rescued_answer
+                final_answer_meta = rescued_meta
+                answer_s += float(time.perf_counter() - rescue_t0)
+            else:
+                final_answer_meta = rescued_meta
+                finish_reason = final_answer_meta.get("finish_reason")
+                reasoning_tokens = final_answer_meta.get("reasoning_tokens")
+                completion_tokens = final_answer_meta.get("completion_tokens")
+                refusal = final_answer_meta.get("refusal")
+                msg = (
+                    f"API final answer returned empty text (finish_reason={finish_reason!r}, "
+                    f"completion_tokens={completion_tokens!r}, reasoning_tokens={reasoning_tokens!r})."
+                )
+                if refusal:
+                    msg += " refusal text was present."
+                if msg not in api_warnings:
+                    api_warnings.append(msg)
+                    print(f"[sr_ponder] WARN: {msg}", file=sys.stderr)
 
     if trace:
         trace.event(

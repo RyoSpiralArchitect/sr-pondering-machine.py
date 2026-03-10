@@ -418,6 +418,64 @@ class TestOpenAICompat(unittest.TestCase):
         self.assertEqual(seen_payloads[2].get("temperature"), 1.0)
         self.assertNotIn("top_p", seen_payloads[3])
 
+    def test_empty_final_answer_rescue_trims_scaffold_and_recovers_visible_text(self) -> None:
+        hf = sp.OpenAICompatModel(
+            model="gpt-5.4",
+            api_base_url="https://api.openai.com/v1",
+            api_key="test",
+            api_reasoning_effort="none",
+        )
+        cfg = sp.RunConfig(
+            backend="openai_compat",
+            provider="openai",
+            model_path="gpt-5.4",
+            memory_path=Path("ponder_logs.jsonl"),
+            prompt_lang="ja",
+            answer_style="plain",
+            answer_max_new_tokens=256,
+            scaffold_condition="assoc",
+        )
+        calls: list[dict] = []
+
+        def _fake_rescue(_hf, **kwargs):
+            calls.append(dict(kwargs))
+            return (
+                "可視の最終回答です。",
+                {
+                    "finish_reason": "stop",
+                    "prompt_tokens": 420,
+                    "completion_tokens": 120,
+                    "reasoning_tokens": 24,
+                    "total_tokens": 540,
+                    "api_calls": 1,
+                },
+            )
+
+        with patch.object(sp, "_generate_api_text_with_reasoning_retry", side_effect=_fake_rescue):
+            answer, meta = sp._maybe_rescue_empty_api_final_answer(
+                hf,
+                cfg=cfg,
+                query="オッカムの剃刀は、いつ刃こぼれを始めるのか？",
+                memory_block=("\n".join(["- 長い足場"] * 300)),
+                final_answer_meta={
+                    "finish_reason": "length",
+                    "prompt_tokens": 800,
+                    "completion_tokens": 768,
+                    "reasoning_tokens": 768,
+                    "total_tokens": 1568,
+                    "api_calls": 2,
+                },
+                api_warnings=[],
+            )
+
+        self.assertEqual(answer, "可視の最終回答です。")
+        self.assertEqual(calls[0].get("phase"), "final_answer_visible_rescue")
+        self.assertIn("可視の最終回答", str(calls[0].get("prompt") or ""))
+        self.assertEqual((meta.get("visible_rescue") or {}).get("used"), True)
+        self.assertLessEqual(int((meta.get("visible_rescue") or {}).get("scaffold_final_tokens_est") or 0), 384)
+        self.assertEqual(meta.get("api_calls"), 3)
+        self.assertEqual(meta.get("completion_tokens"), 888)
+
     def test_print_config_only_includes_api_reasoning_effort(self) -> None:
         out, _err = _run_main(
             [
