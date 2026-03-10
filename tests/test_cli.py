@@ -981,6 +981,25 @@ class TestMatrixReport(unittest.TestCase):
                         },
                     },
                 },
+                {
+                    "name": "random",
+                    "kind": "ponder",
+                    "control": "random_keywords",
+                    "answer": "ALT",
+                    "metrics": {"answer_chars": 3, "records": 1, "elapsed_s": 2.5},
+                    "extras": {"scaffold": {"condition": "random", "target_tokens": 400}, "api_warnings": []},
+                    "comparison": {
+                        "diff_ratio": 0.1,
+                        "answer_changed": True,
+                        "semantic": {"method": "hashed_char_ngrams_tfidf", "answer_cosine": 0.5, "query_alignment_delta": -0.09},
+                        "stance": {"dominant_baseline": "definition", "dominant_ponder": "framing", "shift_score": 0.2},
+                        "spatial_metaphor": {"logs": {"density_per_1k_chars": 1.0}},
+                        "token_budget": {
+                            "method": "api_usage_plus_visible_estimate",
+                            "delta": {"external_scaffold_tokens_est": 400, "api_reasoning_tokens": 70, "api_completion_tokens": 25},
+                        },
+                    },
+                },
             ],
         }
         report = mr.analyze_results(results)
@@ -993,6 +1012,12 @@ class TestMatrixReport(unittest.TestCase):
         self.assertIn("matrix-sort-key", html)
         self.assertIn("data-query-alignment-delta='-0.04'", html)
         self.assertIn("Baseline rows stay pinned to the top.", html)
+        self.assertIn("Pairwise heatmap", html)
+        self.assertIn("A/B/C/D win-loss heatmap", html)
+        self.assertIn("heatmap-metric-key", html)
+        self.assertIn("facts</th>", html)
+        self.assertIn("random</th>", html)
+        self.assertIn("0.0500", html)
 
 
 if __name__ == "__main__":

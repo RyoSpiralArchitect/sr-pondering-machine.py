@@ -100,6 +100,93 @@ def _row_from_item(item: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+HEATMAP_METRICS: List[Dict[str, Any]] = [
+    {"key": "query_alignment_delta", "label": "Query align Δ", "direction": "max", "digits": 4},
+    {"key": "stance_shift", "label": "Stance shift", "direction": "max", "digits": 4},
+    {"key": "budget_reasoning_delta", "label": "Reasoning token Δ", "direction": "min", "digits": 0},
+    {"key": "budget_total_delta", "label": "Total token Δ", "direction": "min", "digits": 0},
+]
+
+
+def _analyze_heatmaps(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    candidates = [row for row in rows if str(row.get("kind") or "") != "baseline"]
+    if len(candidates) < 2:
+        return []
+
+    heatmaps: List[Dict[str, Any]] = []
+    for spec in HEATMAP_METRICS:
+        key = str(spec.get("key") or "")
+        direction = str(spec.get("direction") or "max")
+        digits = int(spec.get("digits") or 4)
+        item_values: List[Optional[float]] = []
+        usable = 0
+        for row in candidates:
+            val = row.get(key)
+            if isinstance(val, (int, float)):
+                item_values.append(float(val))
+                usable += 1
+            else:
+                item_values.append(None)
+        if usable < 2:
+            continue
+
+        cells: List[List[Dict[str, Any]]] = []
+        row_wins: List[int] = []
+        for ix, aval in enumerate(item_values):
+            row_cells: List[Dict[str, Any]] = []
+            wins = 0
+            for jx, bval in enumerate(item_values):
+                if ix == jx:
+                    row_cells.append({"display": "—", "class": "heat-diag"})
+                    continue
+                if aval is None or bval is None:
+                    row_cells.append({"display": "?", "class": "heat-missing"})
+                    continue
+                if direction == "min":
+                    signed_delta = bval - aval
+                else:
+                    signed_delta = aval - bval
+                if signed_delta > 0:
+                    cell_class = "heat-win"
+                    wins += 1
+                elif signed_delta < 0:
+                    cell_class = "heat-loss"
+                else:
+                    cell_class = "heat-tie"
+                row_cells.append(
+                    {
+                        "display": _fmt_float(signed_delta, digits),
+                        "class": cell_class,
+                        "delta": signed_delta,
+                    }
+                )
+            row_wins.append(wins)
+            cells.append(row_cells)
+
+        items = []
+        for row, val, wins in zip(candidates, item_values, row_wins):
+            items.append(
+                {
+                    "name": str(row.get("name") or ""),
+                    "scaffold_condition": str(row.get("scaffold_condition") or ""),
+                    "value": val,
+                    "value_display": _fmt_float(val, digits) if val is not None else "?",
+                    "wins": wins,
+                }
+            )
+        heatmaps.append(
+            {
+                "key": key,
+                "label": str(spec.get("label") or key),
+                "direction": direction,
+                "digits": digits,
+                "items": items,
+                "cells": cells,
+            }
+        )
+    return heatmaps
+
+
 def analyze_results(results: Dict[str, Any]) -> Dict[str, Any]:
     kind = str(results.get("kind") or "").strip()
     if kind not in ("pack", "lab_matrix"):
@@ -142,6 +229,7 @@ def analyze_results(results: Dict[str, Any]) -> Dict[str, Any]:
         "query": str(results.get("query") or ""),
         "base_cfg": results.get("base_cfg") if isinstance(results.get("base_cfg"), dict) else {},
         "items": rows,
+        "heatmaps": _analyze_heatmaps(rows),
         "summary": {
             "baseline_name": baseline_name,
             "item_count": len(rows),
@@ -156,6 +244,7 @@ def analyze_results(results: Dict[str, Any]) -> Dict[str, Any]:
 
 def render_html(report: Dict[str, Any]) -> str:
     items = report.get("items") if isinstance(report.get("items"), list) else []
+    heatmaps = report.get("heatmaps") if isinstance(report.get("heatmaps"), list) else []
     summary = report.get("summary") if isinstance(report.get("summary"), dict) else {}
 
     parts: List[str] = []
@@ -171,6 +260,12 @@ def render_html(report: Dict[str, Any]) -> str:
         ".toolbar label{font-size:13px;color:#333;display:flex;gap:6px;align-items:center;}"
         ".toolbar select,.toolbar button{font:inherit;padding:6px 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111;}"
         ".toolbar button{cursor:pointer;}"
+        ".heatmap-wrap{margin:12px 0 20px 0;}"
+        ".heatmap-cell{min-width:74px;text-align:center;font-variant-numeric:tabular-nums;}"
+        ".heat-win{background:#e8f7ee;color:#0a5a2e;}"
+        ".heat-loss{background:#fdecec;color:#8b1d1d;}"
+        ".heat-tie,.heat-diag{background:#f3f3f3;color:#666;}"
+        ".heat-missing{background:#fff8e6;color:#8a6d1f;}"
         "table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #ddd;} th,td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:top;text-align:left;font-size:13px;}"
         "th{background:#f3f3f3;position:sticky;top:0;} code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}"
         "pre{white-space:pre-wrap;background:#fbfbfb;border:1px solid #eee;padding:12px;border-radius:8px;}"
@@ -197,6 +292,50 @@ def render_html(report: Dict[str, Any]) -> str:
     for title, value in cards:
         parts.append(f"<div class='card'><div class='muted'>{_esc(title)}</div><div><strong>{_esc(value)}</strong></div></div>")
     parts.append("</div>")
+
+    if heatmaps:
+        parts.append("<h2>Pairwise heatmap</h2>")
+        parts.append(
+            "<div class='toolbar'>"
+            "<strong>A/B/C/D win-loss heatmap</strong>"
+            "<label>Metric"
+            "<select id='heatmap-metric-key'>"
+        )
+        for ix, heatmap in enumerate(heatmaps):
+            selected = " selected" if ix == 0 else ""
+            parts.append(f"<option value='{_esc(heatmap.get('key'))}'{selected}>{_esc(heatmap.get('label'))}</option>")
+        parts.append(
+            "</select>"
+            "</label>"
+            "<span class='muted'>Green means the row beats the column on the selected metric. Cost metrics use lower-is-better.</span>"
+            "</div>"
+        )
+        for ix, heatmap in enumerate(heatmaps):
+            display = "" if ix == 0 else " style='display:none'"
+            direction_label = "higher wins" if heatmap.get("direction") == "max" else "lower wins"
+            parts.append(
+                f"<div class='heatmap-wrap' data-heatmap-key='{_esc(heatmap.get('key'))}'{display}>"
+                f"<div class='muted'>{_esc(heatmap.get('label'))} · {_esc(direction_label)}</div>"
+            )
+            parts.append("<table><thead><tr><th>Item</th>")
+            for item in heatmap.get("items") or []:
+                parts.append(f"<th>{_esc(item.get('name'))}</th>")
+            parts.append("</tr></thead><tbody>")
+            heatmap_items = heatmap.get("items") or []
+            cells = heatmap.get("cells") or []
+            for item, row_cells in zip(heatmap_items, cells):
+                row_meta = f"{item.get('value_display')} · {int(item.get('wins') or 0)}W"
+                parts.append("<tr>")
+                parts.append(
+                    f"<td><strong>{_esc(item.get('name'))}</strong>"
+                    f"<br/><span class='muted'>{_esc(row_meta)}</span></td>"
+                )
+                for cell in row_cells:
+                    parts.append(
+                        f"<td class='heatmap-cell {_esc(cell.get('class'))}'>{_esc(cell.get('display'))}</td>"
+                    )
+                parts.append("</tr>")
+            parts.append("</tbody></table></div>")
 
     parts.append("<h2>Comparison table</h2>")
     parts.append(
@@ -321,9 +460,21 @@ def render_html(report: Dict[str, Any]) -> str:
         "<script>"
         "(function(){"
         "const body=document.getElementById('matrix-report-body');"
+        "const heatSel=document.getElementById('heatmap-metric-key');"
         "const keySel=document.getElementById('matrix-sort-key');"
         "const dirSel=document.getElementById('matrix-sort-dir');"
         "const applyBtn=document.getElementById('matrix-sort-apply');"
+        "const heatmaps=Array.from(document.querySelectorAll('[data-heatmap-key]'));"
+        "if(heatSel&&heatmaps.length){"
+        "function syncHeatmap(){"
+        "const wanted=heatSel.value||'';"
+        "for(const node of heatmaps){"
+        "node.style.display=(node.getAttribute('data-heatmap-key')===wanted)?'':'none';"
+        "}"
+        "}"
+        "heatSel.addEventListener('change',syncHeatmap);"
+        "syncHeatmap();"
+        "}"
         "if(!body||!keySel||!dirSel||!applyBtn){return;}"
         "function metricValue(row,key){"
         "const attr='data-'+String(key||'').replace(/_/g,'-');"
