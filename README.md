@@ -33,7 +33,9 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Probe tracing** — print/store probe token info with `--print_probe` / `--probe_top_n`.
 - **Spectral bands** — run multiple rank-bands (near/mid/far) via `--band_profile spectrum3` or define custom bands with `--band`.
 - **Memory retrieval** — pick memory by similarity/anti-similarity via `--memory_retrieve similar|anti|mix`.
+- **Capsule-store memory** — read/write `sr_memory_capsule.py`-compatible `store + latest_capsule` files via `--memory_format capsule_store`.
 - **Memory remix** — shuffle/compress/dream the injected memory via `--memory_remix`.
+- **Memory benchmark** — compare `embed` vs `fuzzy` across `log` / `capsule` / `hybrid` corpora with `sr_ponder_memory_bench.py`.
 - **Answer ensemble** — generate per-band answers + merged answer with `--answer_per_band` / `--answer_ensemble`.
 - **Interactive pick** — choose keyword tokens yourself with `--interactive`.
 - **Controls pack** — run A/B packs via `--pack controls` (plus `--control ...` variants).
@@ -235,6 +237,35 @@ python3 sr_pondering_machine.py \
   --memory_remix dream
 ```
 
+### Capsule-store memory (compatible with `sr_memory_capsule.py`)
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "What hidden assumptions are we making?" \
+  --mode ponder \
+  --memory ./ponder_capsules/session_a.jsonl \
+  --memory_format capsule_store \
+  --memory_capsule ./ponder_capsules/session_a.latest_capsule.json \
+  --memory_slots task,angles,ponder,answer \
+  --memory_retrieve similar \
+  --memory_embed_backend charngram4096
+```
+
+### Memory benchmark: log vs capsule vs hybrid
+
+```bash
+python3 sr_ponder_memory_bench.py \
+  --model ./model/gemma-3-270m-it \
+  --queries ./bench_queries.jsonl \
+  --log_memory ./ponder_logs.jsonl \
+  --capsule_store ./ponder_capsules/session_a.jsonl \
+  --sources log,capsule,hybrid \
+  --memory_backends embed,fuzzy \
+  --memory_retrieve similar \
+  --seeds 1234,1235,1236
+```
+
 ### Interactive pick (human-in-the-loop keywords)
 
 ```bash
@@ -323,6 +354,7 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | Argument | Default | Description |
 |---|---|---|
 | `--n_memory` | `6` | Memory records to inject |
+| `--memory_format` | `ponder_jsonl` | `ponder_jsonl` · `capsule_store` |
 | `--memory_policy` | `tail` | `tail` · `current_only` · `off` |
 | `--memory_retrieve` | `tail` | `tail` · `similar` · `anti` · `mix` |
 | `--memory_backend` | `auto` | `auto` · `embed` · `fuzzy` |
@@ -330,6 +362,17 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | `--memory_mix_ratio` | `0.5` | similar/(similar+anti) in mix |
 | `--memory_include_current_run` | `False` | Allow selecting current run from tail |
 | `--memory_remix` | `off` | `off` · `shuffle` · `compress` · `dream` |
+
+### Capsule store memory
+
+| Argument | Default | Description |
+|---|---|---|
+| `--memory_capsule` | *(auto)* | Companion `*.latest_capsule.json` path |
+| `--memory_slots` | `task,ponder` | Slots used for capsule retrieval / writing |
+| `--memory_baton_dim` | `256` | Projected baton dimension |
+| `--memory_proj_seed` | `0` | Slot projection seed |
+| `--memory_embed_backend` | `charngram4096` | `hash4096` · `charngram4096` |
+| `--memory_capsule_max_chars` | `420` | Per-slot compression budget |
 
 ### Answers
 
@@ -398,6 +441,23 @@ With `--memory_policy tail`, you can choose retrieval:
   - `--backend openai_compat`: hashed char n-grams + IDF + MMR (always)
 
 And optionally remix the injected text with `--memory_remix`.
+
+If you switch to `--memory_format capsule_store`, `--memory` points at the capsule store JSONL and the script also writes/reads the companion latest capsule JSON (`--memory_capsule`, auto-derived if omitted). In capsule mode, retrieval currently supports:
+
+- `--memory_retrieve tail`
+- `--memory_retrieve similar`
+
+`anti` / `mix` stay available in the default `ponder_jsonl` format.
+
+## Memory Benchmark
+
+`sr_ponder_memory_bench.py` builds canonical `log`, `capsule`, and `hybrid` corpora, runs `sr_pondering_machine.py` through `run_ponder_dispatch()`, and writes:
+
+- raw JSONL rows (`--out_jsonl`)
+- aggregate summary JSON (`--out_summary_json`)
+- Markdown table (`--out_summary_md`)
+
+The wrapper is intended for fair A/B sweeps of `--memory_backend embed|fuzzy` on the same query / seed grid.
 
 ## Memory Report (Visualization)
 
