@@ -266,6 +266,28 @@ python3 sr_ponder_memory_bench.py \
   --seeds 1234,1235,1236
 ```
 
+### NeurIPS starter sweep
+
+Use the bundled `/Users/ryospiralarchitect/SpiralReality/bench_queries.jsonl` first, then widen the seed grid after the raw JSONL looks sane.
+
+```bash
+python3 sr_ponder_memory_bench.py \
+  --model ./model/llama-3.2-3b \
+  --queries ./bench_queries.jsonl \
+  --log_memory ./ponder_logs.jsonl \
+  --capsule_store ./ponder_capsules/session_a.jsonl \
+  --capsule_slots task,angles,ponder,answer \
+  --sources log,capsule,hybrid \
+  --memory_backends embed,fuzzy \
+  --memory_retrieve similar \
+  --n_memory 6 \
+  --memory_pool 200 \
+  --seeds 1234,1235,1236 \
+  --out_jsonl ./bench_runs/neurips_memory_bench.jsonl \
+  --out_summary_json ./bench_runs/neurips_memory_bench.summary.json \
+  --out_summary_md ./bench_runs/neurips_memory_bench.summary.md
+```
+
 ### Interactive pick (human-in-the-loop keywords)
 
 ```bash

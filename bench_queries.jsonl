@@ -1,0 +1,18 @@
+{"id":"q01_memory_eval","category":"memory","query":"What hidden assumptions usually contaminate evaluations of long-context memory systems?"}
+{"id":"q02_capsule_resolution","category":"memory","query":"How can we preserve compression rate while increasing the resolution of transferred memory?"}
+{"id":"q03_small_model_capsule","category":"memory","query":"What must a 3B-class model retain so that a compressed memory capsule still reconstructs the user's real task?"}
+{"id":"q04_retrieval_failure","category":"memory","query":"What are the most likely failure modes when similarity retrieval looks plausible but returns the wrong memory?"}
+{"id":"q05_benchmark_leakage","category":"eval","query":"How would you detect benchmark contamination if the model can paraphrase memorized answers instead of copying them verbatim?"}
+{"id":"q06_reward_hacking","category":"safety","query":"Why do reinforcement-style feedback loops often optimize for looking aligned instead of being aligned?"}
+{"id":"q07_uncertainty_reporting","category":"safety","query":"What is the best way for an LLM system to communicate uncertainty without sounding evasive?"}
+{"id":"q08_agent_tools","category":"agents","query":"How should an agent change its planning strategy when tool calls are cheap but unreliable?"}
+{"id":"q09_retrieval_poisoning","category":"safety","query":"What design choices make retrieval-augmented systems vulnerable to memory poisoning?"}
+{"id":"q10_small_vs_large","category":"systems","query":"When does a smaller model with better memory beat a larger model with weaker memory?"}
+{"id":"q11_dataset_shift","category":"systems","query":"How should we think about dataset shift when deploying multilingual models into narrow real-world workflows?"}
+{"id":"q12_experiment_design","category":"science","query":"Design an experiment that can distinguish genuine reasoning from cached pattern completion."}
+{"id":"q13_creative_analogy","category":"creativity","query":"Why do unusual analogies sometimes unlock better scientific hypotheses than direct analysis?"}
+{"id":"q14_research_novelty","category":"science","query":"How would you operationalize novelty in a way that is useful for ML research, not just text generation?"}
+{"id":"q15_model_editing","category":"alignment","query":"What is the difference between model editing, memory injection, and true belief revision?"}
+{"id":"q16_ja_capsule_task","category":"memory_ja","query":"3B級の小モデルでも記憶カプセルを壊さず引き継ぐには、どの情報を絶対に落としてはいけない？"}
+{"id":"q17_ja_compression_tradeoff","category":"memory_ja","query":"圧縮率を維持したまま記憶の解像度を上げる設計はありえる？ あるならどんな分解が必要？"}
+{"id":"q18_ja_eval_design","category":"eval_ja","query":"記憶リレーの評価を研究として通すなら、どんなアブレーションと失敗解析を最初に置くべき？"}
