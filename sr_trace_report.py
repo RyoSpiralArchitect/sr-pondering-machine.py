@@ -392,6 +392,22 @@ def render_html(report: Dict[str, Any]) -> str:
                     f" | align_delta={_esc(align_delta_s)}"
                     "</div>"
                 )
+            judge = comparison.get("judge")
+            if isinstance(judge, dict) and str(judge.get("status") or "") == "ok":
+                score_delta_s = _fmt_float(judge.get("score_delta"), 6)
+                conf_s = _fmt_float(judge.get("confidence"), 6)
+                res_delta_s = _fmt_float(judge.get("resolution_delta"), 6)
+                reason = str(judge.get("brief_reason") or "").strip()
+                parts.append(
+                    "<div>"
+                    f"judge[{_esc(judge.get('method') or '')}]"
+                    f" winner={_esc(judge.get('winner') or '')}"
+                    f" | score_delta={_esc(score_delta_s)}"
+                    f" | conf={_esc(conf_s)}"
+                    f" | resolution_delta={_esc(res_delta_s)}"
+                    + (f" | {_esc(reason)}" if reason else "")
+                    + "</div>"
+                )
             stance = comparison.get("stance")
             if isinstance(stance, dict) and str(stance.get("status") or "") == "ok":
                 shift_score = stance.get("shift_score")
@@ -613,10 +629,16 @@ def main() -> None:
         comp = s.get("comparison") or {}
         comp_s = ""
         if isinstance(comp, dict):
+            judge = comp.get("judge") or {}
             stance = comp.get("stance") or {}
             spatial = comp.get("spatial_metaphor") or {}
             budget = comp.get("token_budget") or {}
             stance_bits: List[str] = []
+            if isinstance(judge, dict) and str(judge.get("status") or "") == "ok":
+                winner = str(judge.get("winner") or "").strip()
+                score_delta = judge.get("score_delta")
+                score_delta_s = f"{float(score_delta):+.3f}" if isinstance(score_delta, (int, float)) else "?"
+                stance_bits.append(f"judge={winner}/{score_delta_s}")
             if isinstance(stance, dict) and str(stance.get("status") or "") == "ok":
                 stance_bits.append(f"stance={stance.get('dominant_baseline') or ''}->{stance.get('dominant_ponder') or ''}")
             if isinstance(spatial, dict) and str(spatial.get("status") or "") == "ok":

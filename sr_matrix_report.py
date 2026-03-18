@@ -53,6 +53,7 @@ def _row_from_item(item: Dict[str, Any]) -> Dict[str, Any]:
     extras = item.get("extras") if isinstance(item.get("extras"), dict) else {}
     comparison = item.get("comparison") if isinstance(item.get("comparison"), dict) else {}
     semantic = comparison.get("semantic") if isinstance(comparison.get("semantic"), dict) else {}
+    judge = comparison.get("judge") if isinstance(comparison.get("judge"), dict) else {}
     stance = comparison.get("stance") if isinstance(comparison.get("stance"), dict) else {}
     spatial = comparison.get("spatial_metaphor") if isinstance(comparison.get("spatial_metaphor"), dict) else {}
     budget = comparison.get("token_budget") if isinstance(comparison.get("token_budget"), dict) else {}
@@ -88,6 +89,11 @@ def _row_from_item(item: Dict[str, Any]) -> Dict[str, Any]:
         "semantic_method": str(semantic.get("method") or ""),
         "answer_cosine": semantic.get("answer_cosine"),
         "query_alignment_delta": semantic.get("query_alignment_delta"),
+        "judge_method": str(judge.get("method") or ""),
+        "judge_winner": str(judge.get("winner") or ""),
+        "judge_confidence": judge.get("confidence"),
+        "judge_score_delta": judge.get("score_delta"),
+        "judge_resolution_delta": judge.get("resolution_delta"),
         "stance_base": baseline_dom,
         "stance_ponder": ponder_dom,
         "stance_shift": stance.get("shift_score"),
@@ -101,6 +107,8 @@ def _row_from_item(item: Dict[str, Any]) -> Dict[str, Any]:
 
 
 HEATMAP_METRICS: List[Dict[str, Any]] = [
+    {"key": "judge_score_delta", "label": "Judge score Δ", "direction": "max", "digits": 4},
+    {"key": "judge_resolution_delta", "label": "Judge resolution Δ", "direction": "max", "digits": 4},
     {"key": "query_alignment_delta", "label": "Query align Δ", "direction": "max", "digits": 4},
     {"key": "stance_shift", "label": "Stance shift", "direction": "max", "digits": 4},
     {"key": "budget_reasoning_delta", "label": "Reasoning token Δ", "direction": "min", "digits": 0},
@@ -343,6 +351,8 @@ def render_html(report: Dict[str, Any]) -> str:
         "<strong>Sort by baseline-relative metric</strong>"
         "<label>Metric"
         "<select id='matrix-sort-key'>"
+        "<option value='judge_score_delta'>Judge score Δ</option>"
+        "<option value='judge_resolution_delta'>Judge resolution Δ</option>"
         "<option value='query_alignment_delta'>Query align Δ</option>"
         "<option value='stance_shift'>Stance shift</option>"
         "<option value='budget_reasoning_delta'>Reasoning token Δ</option>"
@@ -373,6 +383,7 @@ def render_html(report: Dict[str, Any]) -> str:
         "Chars",
         "Elapsed",
         "Semantic",
+        "Judge",
         "Stance",
         "Budget",
         "Warnings",
@@ -389,6 +400,15 @@ def render_html(report: Dict[str, Any]) -> str:
             semantic_bits.append(f"cos={_fmt_float(row.get('answer_cosine'), 4)}")
         if row.get("query_alignment_delta") is not None:
             semantic_bits.append(f"Δalign={_fmt_float(row.get('query_alignment_delta'), 4)}")
+        judge_bits = []
+        if row.get("judge_winner"):
+            judge_bits.append(f"winner={row.get('judge_winner')}")
+        if row.get("judge_score_delta") is not None:
+            judge_bits.append(f"scoreΔ={_fmt_float(row.get('judge_score_delta'), 4)}")
+        if row.get("judge_resolution_delta") is not None:
+            judge_bits.append(f"resΔ={_fmt_float(row.get('judge_resolution_delta'), 4)}")
+        if row.get("judge_confidence") is not None:
+            judge_bits.append(f"conf={_fmt_float(row.get('judge_confidence'), 3)}")
         stance_bits = []
         if row.get("stance_base") or row.get("stance_ponder"):
             stance_bits.append(f"{row.get('stance_base') or '—'}→{row.get('stance_ponder') or '—'}")
@@ -411,6 +431,9 @@ def render_html(report: Dict[str, Any]) -> str:
             "diff_ratio": row.get("diff_ratio"),
             "answer_cosine": row.get("answer_cosine"),
             "query_alignment_delta": row.get("query_alignment_delta"),
+            "judge_score_delta": row.get("judge_score_delta"),
+            "judge_resolution_delta": row.get("judge_resolution_delta"),
+            "judge_confidence": row.get("judge_confidence"),
             "stance_shift": row.get("stance_shift"),
             "budget_scaffold_tokens": row.get("budget_scaffold_tokens"),
             "budget_reasoning_delta": row.get("budget_reasoning_delta"),
@@ -425,6 +448,7 @@ def render_html(report: Dict[str, Any]) -> str:
         parts.append(f"<td class='num'>{_esc(row.get('answer_chars'))}</td>")
         parts.append(f"<td class='num'>{_esc(_fmt_float(row.get('elapsed_s'), 2) if row.get('elapsed_s') is not None else '—')}</td>")
         parts.append(f"<td>{_esc(' | '.join(semantic_bits) if semantic_bits else '—')}</td>")
+        parts.append(f"<td>{_esc(' | '.join(judge_bits) if judge_bits else '—')}</td>")
         parts.append(f"<td>{_esc(' | '.join(stance_bits) if stance_bits else '—')}</td>")
         parts.append(f"<td>{_esc(' | '.join(budget_bits) if budget_bits else '—')}</td>")
         parts.append(f"<td class='{warn_cls}'>{warn_count}</td>")

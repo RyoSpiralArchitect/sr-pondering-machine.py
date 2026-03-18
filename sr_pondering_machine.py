@@ -611,6 +611,7 @@ def compute_run_metrics(
     records: Sequence[Dict[str, Any]],
     extras: Optional[Dict[str, Any]],
     semantic_compare: Optional[Dict[str, Any]] = None,
+    judge_compare: Optional[Dict[str, Any]] = None,
     stance_compare: Optional[Dict[str, Any]] = None,
     spatial_metaphor_compare: Optional[Dict[str, Any]] = None,
     token_budget_compare: Optional[Dict[str, Any]] = None,
@@ -687,6 +688,20 @@ def compute_run_metrics(
             val = semantic_compare.get(src_key)
             if isinstance(val, (int, float)):
                 metrics[dst_key] = float(val)
+    if isinstance(judge_compare, dict) and str(judge_compare.get("status") or "") == "ok":
+        for src_key, dst_key in (
+            ("confidence", "judge_confidence"),
+            ("score_delta", "judge_score_delta"),
+            ("directness_delta", "judge_directness_delta"),
+            ("depth_delta", "judge_depth_delta"),
+            ("resolution_delta", "judge_resolution_delta"),
+        ):
+            val = judge_compare.get(src_key)
+            if isinstance(val, (int, float)):
+                metrics[dst_key] = float(val)
+        winner = str(judge_compare.get("winner") or "").strip()
+        if winner:
+            metrics["judge_winner"] = winner
     if isinstance(stance_compare, dict) and str(stance_compare.get("status") or "") == "ok":
         for src_key, dst_key in (
             ("shift_score", "stance_shift_score"),
@@ -789,6 +804,7 @@ def build_run_comparison(
     records: Sequence[Dict[str, Any]],
     extras: Optional[Dict[str, Any]],
     semantic_compare: Optional[Dict[str, Any]] = None,
+    judge_compare: Optional[Dict[str, Any]] = None,
     stance_compare: Optional[Dict[str, Any]] = None,
     spatial_metaphor_compare: Optional[Dict[str, Any]] = None,
     token_budget_compare: Optional[Dict[str, Any]] = None,
@@ -800,6 +816,7 @@ def build_run_comparison(
         records=records,
         extras=extras,
         semantic_compare=semantic_compare,
+        judge_compare=judge_compare,
         stance_compare=stance_compare,
         spatial_metaphor_compare=spatial_metaphor_compare,
         token_budget_compare=token_budget_compare,
@@ -828,6 +845,10 @@ def build_run_comparison(
         "probe_stage_count",
         "probe_stage_max_js",
         "probe_stage_last_js",
+        "judge_winner",
+        "judge_confidence",
+        "judge_score_delta",
+        "judge_resolution_delta",
         "stance_shift_score",
         "stance_baseline_dominant",
         "stance_ponder_dominant",
@@ -854,6 +875,8 @@ def build_run_comparison(
             out["api_warnings_count"] = int(len(api_warnings))
     if isinstance(semantic_compare, dict):
         out["semantic"] = semantic_compare
+    if isinstance(judge_compare, dict):
+        out["judge"] = judge_compare
     if isinstance(stance_compare, dict):
         out["stance"] = stance_compare
     if isinstance(spatial_metaphor_compare, dict):
@@ -936,6 +959,25 @@ def _print_run_comparison(comp: Dict[str, Any], *, mode: str) -> None:
             reason = str(semantic.get("reason") or "").strip()
             if reason:
                 print(f"semantic[{method or status}] {status}: {reason}")
+    judge = comp.get("judge")
+    if isinstance(judge, dict):
+        status = str(judge.get("status") or "").strip()
+        method = str(judge.get("method") or "").strip()
+        if status == "ok":
+            reason = str(judge.get("brief_reason") or "").strip()
+            reason_s = f" reason={reason}" if reason else ""
+            print(
+                f"judge[{method}] "
+                f"winner={_fmt_metric(judge.get('winner'))} "
+                f"score_delta={_fmt_metric(judge.get('score_delta'), digits=6)} "
+                f"conf={_fmt_metric(judge.get('confidence'), digits=6)} "
+                f"resolution_delta={_fmt_metric(judge.get('resolution_delta'), digits=6)}"
+                f"{reason_s}"
+            )
+        elif status:
+            reason = str(judge.get("reason") or "").strip()
+            if reason:
+                print(f"judge[{method or status}] {status}: {reason}")
     stance = comp.get("stance")
     if isinstance(stance, dict):
         status = str(stance.get("status") or "").strip()
@@ -2137,6 +2179,72 @@ def build_prompt_for_answer(query: str, memory_block: Optional[str], *, lang: st
     )
 
 
+def build_prompt_for_quality_judge(query: str, answer_a: str, answer_b: str, *, lang: str) -> str:
+    if lang == "ja":
+        return (
+            "あなたは厳密な回答評価者です。質問に対する回答Aと回答Bを比較し、どちらがより良いかを判定してください。\n"
+            "評価観点:\n"
+            "- directness: 質問へどれだけ正面から答えているか\n"
+            "- explanatory_depth: 説明の解像度と整理の良さ\n"
+            "- problem_resolution: 曖昧さ・逆説・条件分岐をどれだけ解いているか\n"
+            "注意:\n"
+            "- 長さや比喩の派手さだけでは加点しない\n"
+            "- 単なるトピック類似度より、問いの解像・解決を優先する\n"
+            "- 出力は JSON オブジェクトのみ。コードフェンス禁止\n\n"
+            "JSON schema:\n"
+            "{\n"
+            '  "winner": "A" | "B" | "tie",\n'
+            '  "confidence": 0.0,\n'
+            '  "score_A": 0.0,\n'
+            '  "score_B": 0.0,\n'
+            '  "directness_A": 0.0,\n'
+            '  "directness_B": 0.0,\n'
+            '  "depth_A": 0.0,\n'
+            '  "depth_B": 0.0,\n'
+            '  "resolution_A": 0.0,\n'
+            '  "resolution_B": 0.0,\n'
+            '  "brief_reason": "短く簡潔な理由"\n'
+            "}\n\n"
+            "質問:\n"
+            f"{query}\n\n"
+            "回答A:\n"
+            f"{answer_a}\n\n"
+            "回答B:\n"
+            f"{answer_b}\n"
+        )
+    return (
+        "You are a strict answer evaluator. Compare Answer A and Answer B for the question.\n"
+        "Criteria:\n"
+        "- directness: how directly the answer addresses the question\n"
+        "- explanatory_depth: how much useful structure or explanation it adds\n"
+        "- problem_resolution: how well it resolves ambiguity, paradox, or conditionality in the question\n"
+        "Notes:\n"
+        "- Do not reward mere length or decorative metaphors\n"
+        "- Prefer explanatory adequacy over surface similarity to the query\n"
+        "- Output JSON only. No markdown fences\n\n"
+        "JSON schema:\n"
+        "{\n"
+        '  "winner": "A" | "B" | "tie",\n'
+        '  "confidence": 0.0,\n'
+        '  "score_A": 0.0,\n'
+        '  "score_B": 0.0,\n'
+        '  "directness_A": 0.0,\n'
+        '  "directness_B": 0.0,\n'
+        '  "depth_A": 0.0,\n'
+        '  "depth_B": 0.0,\n'
+        '  "resolution_A": 0.0,\n'
+        '  "resolution_B": 0.0,\n'
+        '  "brief_reason": "brief plain-text reason"\n'
+        "}\n\n"
+        "Question:\n"
+        f"{query}\n\n"
+        "Answer A:\n"
+        f"{answer_a}\n\n"
+        "Answer B:\n"
+        f"{answer_b}\n"
+    )
+
+
 def build_prompt_for_visible_answer_rescue(query: str, memory_block: Optional[str], *, lang: str, style: str = "plain") -> str:
     base = build_prompt_for_answer(query, memory_block, lang=lang, style=style).rstrip()
     if lang == "ja":
@@ -2316,6 +2424,27 @@ def extract_json_array(text: str) -> List[str]:
         seen.add(w2)
         out.append(w2)
     return out
+
+
+def extract_json_object(text: str) -> Dict[str, Any]:
+    """
+    Tries hard to parse a JSON object from a model output.
+    Returns {} on failure.
+    """
+    if not text:
+        return {}
+
+    start = text.find("{")
+    end = text.rfind("}")
+    if 0 <= start < end:
+        snippet = text[start : end + 1].strip()
+        try:
+            obj = json.loads(snippet)
+            if isinstance(obj, dict):
+                return obj
+        except Exception:
+            pass
+    return {}
 
 
 def build_prompt_for_keyword_refine(query: str, seed_keywords: Sequence[str], *, n: int, lang: str) -> str:
@@ -3931,6 +4060,224 @@ def build_token_budget_compare(
     return out
 
 
+def _judge_lookup(obj: Dict[str, Any], *keys: str) -> Any:
+    if not isinstance(obj, dict):
+        return None
+    for key in keys:
+        if key in obj:
+            return obj.get(key)
+    folded = {str(k).casefold(): v for k, v in obj.items()}
+    for key in keys:
+        val = folded.get(str(key).casefold())
+        if val is not None:
+            return val
+    return None
+
+
+def _coerce_judge_float(obj: Dict[str, Any], *keys: str) -> Optional[float]:
+    if not isinstance(obj, dict):
+        return None
+    val = _judge_lookup(obj, *keys)
+    if isinstance(val, bool):
+        return None
+    if isinstance(val, (int, float)):
+        return float(val)
+    try:
+        s = str(val or "").strip()
+        if not s:
+            return None
+        return float(s)
+    except Exception:
+        return None
+
+
+def _clamp_unit_interval(x: Optional[float]) -> Optional[float]:
+    if x is None:
+        return None
+    try:
+        return max(0.0, min(1.0, float(x)))
+    except Exception:
+        return None
+
+
+def _normalize_judge_winner(raw: Any) -> str:
+    s = str(raw or "").strip().lower()
+    if s in ("a", "answer_a", "answer a", "baseline"):
+        return "a"
+    if s in ("b", "answer_b", "answer b", "ponder", "pondered"):
+        return "b"
+    if s in ("tie", "draw", "equal", "same"):
+        return "tie"
+    return ""
+
+
+def build_judge_compare(
+    *,
+    hf: Any,
+    cfg: "RunConfig",
+    query: str,
+    baseline_answer: Optional[str],
+    ponder_answer: Optional[str],
+) -> Optional[Dict[str, Any]]:
+    if not baseline_answer or not ponder_answer:
+        return None
+    mode = str(getattr(cfg, "compare_judge", "off") or "off").strip().lower()
+    if mode == "off":
+        return None
+
+    method = "same_model_json_judge"
+    lang = str(getattr(cfg, "prompt_lang", "en") or "en").strip().lower()
+    swap_ab = bool(stable_hash_mod(f"{query}\n<A>\n{baseline_answer}\n<B>\n{ponder_answer}", 2))
+    answer_a = str(ponder_answer if swap_ab else baseline_answer)
+    answer_b = str(baseline_answer if swap_ab else ponder_answer)
+    label_for_baseline = "B" if swap_ab else "A"
+    label_for_ponder = "A" if swap_ab else "B"
+    prompt = build_prompt_for_quality_judge(query, answer_a, answer_b, lang=lang)
+    prompt = hf._apply_chat(prompt, system_text=None) if hasattr(hf, "_apply_chat") else prompt
+
+    warnings: List[str] = []
+    api_meta: Dict[str, Any] = {}
+    raw_text = ""
+    try:
+        if isinstance(hf, OpenAICompatModel):
+            raw_text, api_meta = _generate_api_text_with_reasoning_retry(
+                hf,
+                provider=str(getattr(cfg, "provider", "custom") or "custom"),
+                phase="compare_judge",
+                prompt=prompt,
+                max_new_tokens=320,
+                temperature=0.0,
+                top_p=1.0,
+                top_k=0,
+                repetition_penalty=1.0,
+                no_repeat_ngram_size=0,
+                seed=int(getattr(cfg, "seed", 0) or 0) + 17041,
+                api_warnings=warnings,
+            )
+        else:
+            raw_text = hf.generate_text(
+                prompt,
+                max_new_tokens=320,
+                temperature=0.0,
+                top_p=1.0,
+                top_k=0,
+                repetition_penalty=1.0,
+                no_repeat_ngram_size=0,
+                seed=int(getattr(cfg, "seed", 0) or 0) + 17041,
+            )
+    except Exception as e:
+        out: Dict[str, Any] = {
+            "status": "unavailable",
+            "method": method,
+            "reason": str(e),
+        }
+        if warnings:
+            out["warnings"] = list(warnings)
+        if isinstance(hf, OpenAICompatModel):
+            out["provider"] = str(getattr(cfg, "provider", "") or "")
+            out["model"] = str(getattr(hf, "model", "") or "")
+        elif isinstance(hf, LocalHFModel):
+            out["model"] = str(getattr(hf, "model_path", "") or "")
+        return out
+
+    parsed = extract_json_object(raw_text)
+    if not parsed:
+        out = {
+            "status": "unavailable",
+            "method": method,
+            "reason": "failed to parse JSON judge output",
+            "raw_preview": str(raw_text or "")[:280],
+        }
+        if api_meta:
+            out["api_generation"] = api_meta
+        if warnings:
+            out["warnings"] = list(warnings)
+        if isinstance(hf, OpenAICompatModel):
+            out["provider"] = str(getattr(cfg, "provider", "") or "")
+            out["model"] = str(getattr(hf, "model", "") or "")
+        elif isinstance(hf, LocalHFModel):
+            out["model"] = str(getattr(hf, "model_path", "") or "")
+        return out
+
+    winner_raw = _normalize_judge_winner(_judge_lookup(parsed, "winner"))
+    score_a = _clamp_unit_interval(_coerce_judge_float(parsed, "score_A", "score_a"))
+    score_b = _clamp_unit_interval(_coerce_judge_float(parsed, "score_B", "score_b"))
+    direct_a = _clamp_unit_interval(_coerce_judge_float(parsed, "directness_A", "directness_a"))
+    direct_b = _clamp_unit_interval(_coerce_judge_float(parsed, "directness_B", "directness_b"))
+    depth_a = _clamp_unit_interval(_coerce_judge_float(parsed, "depth_A", "depth_a", "explanatory_depth_A", "explanatory_depth_a"))
+    depth_b = _clamp_unit_interval(_coerce_judge_float(parsed, "depth_B", "depth_b", "explanatory_depth_B", "explanatory_depth_b"))
+    resolution_a = _clamp_unit_interval(_coerce_judge_float(parsed, "resolution_A", "resolution_a", "problem_resolution_A", "problem_resolution_a"))
+    resolution_b = _clamp_unit_interval(_coerce_judge_float(parsed, "resolution_B", "resolution_b", "problem_resolution_B", "problem_resolution_b"))
+    confidence = _clamp_unit_interval(_coerce_judge_float(parsed, "confidence"))
+
+    if not winner_raw:
+        if score_a is not None and score_b is not None:
+            if abs(float(score_a) - float(score_b)) <= 1e-6:
+                winner_raw = "tie"
+            else:
+                winner_raw = "a" if float(score_a) > float(score_b) else "b"
+        else:
+            winner_raw = "tie"
+
+    def _pick(slot_a: Optional[float], slot_b: Optional[float], label: str) -> Optional[float]:
+        if label == "A":
+            return slot_a
+        return slot_b
+
+    winner = "tie"
+    if winner_raw == label_for_baseline.casefold():
+        winner = "baseline"
+    elif winner_raw == label_for_ponder.casefold():
+        winner = "ponder"
+    elif winner_raw == "tie":
+        winner = "tie"
+
+    score_baseline = _pick(score_a, score_b, label_for_baseline)
+    score_ponder = _pick(score_a, score_b, label_for_ponder)
+    direct_baseline = _pick(direct_a, direct_b, label_for_baseline)
+    direct_ponder = _pick(direct_a, direct_b, label_for_ponder)
+    depth_baseline = _pick(depth_a, depth_b, label_for_baseline)
+    depth_ponder = _pick(depth_a, depth_b, label_for_ponder)
+    resolution_baseline = _pick(resolution_a, resolution_b, label_for_baseline)
+    resolution_ponder = _pick(resolution_a, resolution_b, label_for_ponder)
+
+    def _delta(b: Optional[float], p: Optional[float]) -> Optional[float]:
+        if b is None or p is None:
+            return None
+        return float(p - b)
+
+    out = {
+        "status": "ok",
+        "method": method,
+        "winner": winner,
+        "confidence": confidence,
+        "score_baseline": score_baseline,
+        "score_ponder": score_ponder,
+        "score_delta": _delta(score_baseline, score_ponder),
+        "directness_baseline": direct_baseline,
+        "directness_ponder": direct_ponder,
+        "directness_delta": _delta(direct_baseline, direct_ponder),
+        "depth_baseline": depth_baseline,
+        "depth_ponder": depth_ponder,
+        "depth_delta": _delta(depth_baseline, depth_ponder),
+        "resolution_baseline": resolution_baseline,
+        "resolution_ponder": resolution_ponder,
+        "resolution_delta": _delta(resolution_baseline, resolution_ponder),
+        "brief_reason": str(_judge_lookup(parsed, "brief_reason", "reason", "briefReason") or "").strip(),
+        "presented_order": "ponder,baseline" if swap_ab else "baseline,ponder",
+    }
+    if api_meta:
+        out["api_generation"] = api_meta
+    if warnings:
+        out["warnings"] = list(warnings)
+    if isinstance(hf, OpenAICompatModel):
+        out["provider"] = str(getattr(cfg, "provider", "") or "")
+        out["model"] = str(getattr(hf, "model", "") or "")
+    elif isinstance(hf, LocalHFModel):
+        out["model"] = str(getattr(hf, "model_path", "") or "")
+    return out
+
+
 def _tfidf_vec(tf: Dict[int, float], idf: Dict[int, float]) -> Tuple[Dict[int, float], float]:
     """Return (tfidf_vec, norm)."""
     vec: Dict[int, float] = {}
@@ -5239,6 +5586,7 @@ class RunConfig:
     probe_compare_stages: bool = False
     probe_compare_top_n: int = 32
     compare_semantic: str = "auto"  # off|auto|hash|embed
+    compare_judge: str = "off"  # off|auto
     compare_stance: str = "auto"  # off|auto
     compare_spatial_metaphor: str = "auto"  # off|auto
     compare_token_budget: str = "auto"  # off|auto
@@ -8329,6 +8677,12 @@ def main() -> None:
         help="Add semantic answer comparison: auto=HF token embeddings or hashed n-grams, embed=force embedding mode",
     )
     g_observe.add_argument(
+        "--compare_judge",
+        choices=["off", "auto"],
+        default="off",
+        help="Add same-model pairwise quality judging (extra generation call; useful when alignment metrics disagree with human preference)",
+    )
+    g_observe.add_argument(
         "--compare_stance",
         choices=["off", "auto"],
         default="auto",
@@ -8613,6 +8967,7 @@ def main() -> None:
         probe_compare_stages=bool(args.probe_compare_stages),
         probe_compare_top_n=int(args.probe_compare_top_n),
         compare_semantic=str(args.compare_semantic),
+        compare_judge=str(args.compare_judge),
         compare_stance=str(args.compare_stance),
         compare_spatial_metaphor=str(args.compare_spatial_metaphor),
         compare_token_budget=str(args.compare_token_budget),
@@ -9054,11 +9409,20 @@ def main() -> None:
             item["metrics"] = {"answer_chars": len(ans or ""), "records": int(len(recs)), "elapsed_s": float(time.perf_counter() - t0)}
             if baseline_reference_answer is not None:
                 semantic_compare = None
+                judge_compare = None
                 stance_compare = None
                 spatial_metaphor_compare = None
                 token_budget_compare = None
                 if str(getattr(cfg2, "compare_semantic", "auto") or "auto").strip().lower() != "off":
                     semantic_compare = build_semantic_compare(
+                        hf=hf,
+                        cfg=cfg2,
+                        query=item_query,
+                        baseline_answer=baseline_reference_answer,
+                        ponder_answer=ans,
+                    )
+                if str(getattr(cfg2, "compare_judge", "off") or "off").strip().lower() != "off":
+                    judge_compare = build_judge_compare(
                         hf=hf,
                         cfg=cfg2,
                         query=item_query,
@@ -9089,6 +9453,7 @@ def main() -> None:
                     records=recs,
                     extras=extras,
                     semantic_compare=semantic_compare,
+                    judge_compare=judge_compare,
                     stance_compare=stance_compare,
                     spatial_metaphor_compare=spatial_metaphor_compare,
                     token_budget_compare=token_budget_compare,
@@ -9181,6 +9546,7 @@ def main() -> None:
     ponder_extras: Dict[str, Any] = {}
     comparison: Dict[str, Any] = {}
     semantic_compare: Optional[Dict[str, Any]] = None
+    judge_compare: Optional[Dict[str, Any]] = None
     stance_compare: Optional[Dict[str, Any]] = None
     spatial_metaphor_compare: Optional[Dict[str, Any]] = None
     token_budget_compare: Optional[Dict[str, Any]] = None
@@ -9247,6 +9613,14 @@ def main() -> None:
                 baseline_answer=baseline_ans,
                 ponder_answer=ponder_ans,
             )
+        if str(getattr(cfg, "compare_judge", "off") or "off").strip().lower() != "off":
+            judge_compare = build_judge_compare(
+                hf=hf,
+                cfg=cfg,
+                query=args.query,
+                baseline_answer=baseline_ans,
+                ponder_answer=ponder_ans,
+            )
         if str(getattr(cfg, "compare_stance", "auto") or "auto").strip().lower() != "off":
             stance_compare = build_stance_compare(baseline_ans, ponder_ans)
         if str(getattr(cfg, "compare_spatial_metaphor", "auto") or "auto").strip().lower() != "off":
@@ -9271,6 +9645,7 @@ def main() -> None:
         records=ponder_recs,
         extras=ponder_extras if ponder_extras else None,
         semantic_compare=semantic_compare,
+        judge_compare=judge_compare,
         stance_compare=stance_compare,
         spatial_metaphor_compare=spatial_metaphor_compare,
         token_budget_compare=token_budget_compare,
@@ -9314,6 +9689,7 @@ def main() -> None:
                 records=ponder_recs,
                 extras=ponder_extras if ponder_extras else None,
                 semantic_compare=semantic_compare,
+                judge_compare=judge_compare,
                 stance_compare=stance_compare,
                 spatial_metaphor_compare=spatial_metaphor_compare,
                 token_budget_compare=token_budget_compare,

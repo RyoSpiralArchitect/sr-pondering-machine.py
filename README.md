@@ -23,6 +23,7 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Persistent memory** — ponder logs are stored in a JSONL file and the most recent entries are reused in subsequent runs.
 - **Baseline comparison** — `--mode both` prints baseline, pondered answer, and a compact comparison summary by default.
 - **Semantic comparison** — comparison output now includes a semantic similarity/alignment block (`--compare_semantic auto|hash|embed`).
+- **Judge comparison** — an optional same-model pairwise judge can score whether the pondered answer is actually better (`--compare_judge auto`).
 - **Stance shift** — comparison output can profile `definition / framing / conditionalization / example expansion / resolution` drift with `--compare_stance auto`.
 - **Spatial metaphor density** — comparison output can track spatial-metaphor density in answers and ponder logs with `--compare_spatial_metaphor auto`.
 - **Token budget comparison** — comparison output can now separate visible scaffold size from API `reasoning_tokens` / `completion_tokens` with `--compare_token_budget auto`.
@@ -572,6 +573,7 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | `--print_ponder` | `auto` | Print human-readable ponder logs to stdout |
 | `--print_records` | `none` | Debug: print raw ponder-record JSON |
 | `--compare_semantic` | `auto` | `off` · `auto` · `hash` · `embed` |
+| `--compare_judge` | `off` | `off` · `auto` |
 | `--compare_stance` | `auto` | `off` · `auto` |
 | `--compare_spatial_metaphor` | `auto` | `off` · `auto` |
 | `--compare_token_budget` | `auto` | `off` · `auto` |
@@ -671,13 +673,14 @@ python3 sr_matrix_report.py --results ./artifacts/scaffold_abcd.json --out ./art
 - For `--compare_semantic auto`, local HF runs use cosine over mean token embeddings from the active model; API runs first try a local encoder auto-discovery pass (`model/minilm`, `models/minilm`, or similar MiniLM/e5/bge/gte/mpnet dirs) on CPU and only fall back to hashed char n-gram TF-IDF cosine if none is available.
 - When that API-side local encoder exists, the script prewarms it in the background while the main API generations are running, so the semantic block is less likely to become the last visible bottleneck.
 - For `--compare_semantic embed`, you can set `--compare_embed_model` explicitly, or let the script auto-pick a local encoder from the same MiniLM/e5/bge/gte/mpnet search path. Set `SR_COMPARE_EMBED_MODEL` if you want to pin that default without passing the CLI flag each time.
+- `--compare_judge auto` adds one extra same-model generation call that compares baseline vs pondered answer directly and scores directness, explanatory depth, and paradox/ambiguity resolution. It stays off by default because it costs another call and can itself be biased, but it is useful when similarity metrics disagree with human preference.
 - `--compare_stance auto` uses a built-in heuristic lexicon to estimate answer-policy drift across `definition`, `framing`, `conditionalization`, `example_expansion`, and `resolution`.
 - `--compare_spatial_metaphor auto` measures spatial-metaphor density per 1k chars for the baseline answer, pondered answer, ponder questions, and ponder logs, then reports dominant groups like `path`, `stage`, `container`, and `geometry`.
 - `--compare_token_budget auto` reports visible scaffold size (keywords, ponder questions/logs, injected memory) alongside API-side prompt / completion / reasoning token totals, so you can test “more scaffold” against “more internal reasoning” instead of conflating them.
 - `--scaffold_condition` only changes the final injected scaffold block; the upstream ponder logs are still generated and logged, which makes A/B/C/D style comparisons possible without hiding the original run trace.
 - `--scaffold_token_target` normalizes the final scaffold block to an approximate token budget using the active tokenizer when available, otherwise a mixed-script heuristic estimator.
 - `--lab_matrix scaffold_abcd` runs `baseline + assoc + random + facts + isomorphic` with the current CLI defaults; combine it with `--scaffold_token_target 400` to approximate a fixed-budget scaffold sweep.
-- `--matrix_report_out` renders the saved pack / lab-matrix JSON into a compact HTML table with semantic, stance, and token-budget columns, plus client-side sorting by baseline-relative metrics like `query_alignment_delta`, `stance_shift`, and token deltas. It also includes a pairwise A/B/C/D heatmap so you can see which scaffold condition beats which on alignment, shift, and token-cost axes. If you already use `--out_dir`, pack / lab-matrix runs auto-fill this path for you.
+- `--matrix_report_out` renders the saved pack / lab-matrix JSON into a compact HTML table with semantic, judge, stance, and token-budget columns, plus client-side sorting by baseline-relative metrics like `judge_score_delta`, `query_alignment_delta`, `stance_shift`, and token deltas. It also includes a pairwise A/B/C/D heatmap so you can see which scaffold condition beats which on judge, alignment, shift, and token-cost axes. If you already use `--out_dir`, pack / lab-matrix runs auto-fill this path for you.
 - External semantic encoder loading is quiet by default to avoid noisy `from_pretrained()` progress bars and local `sitecustomize` chatter; set `SR_COMPARE_EMBED_VERBOSE=1` if you want to see that load output.
 - For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams + IDF weighting). It’s not as strong as real embedding retrieval, but better than raw tail.
 - For API backends, `--api_logprobs_top_n` is provider-capped. If the returned logprob depth is shallower than a requested band (for example `spectrum3` + `far`), that band degrades to self-seeded keywords and the script warns about it.

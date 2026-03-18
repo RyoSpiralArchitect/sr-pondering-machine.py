@@ -243,6 +243,8 @@ class TestSemanticCompare(unittest.TestCase):
                 "q",
                 "--compare_semantic",
                 "embed",
+                "--compare_judge",
+                "auto",
                 "--compare_embed_model",
                 "./emb-model",
                 "--compare_token_budget",
@@ -253,6 +255,7 @@ class TestSemanticCompare(unittest.TestCase):
         obj = json.loads(out)
         cfg = obj.get("cfg") or {}
         self.assertEqual(cfg.get("compare_semantic"), "embed")
+        self.assertEqual(cfg.get("compare_judge"), "auto")
         self.assertEqual(cfg.get("compare_token_budget"), "auto")
         self.assertTrue(str(cfg.get("compare_embed_model") or "").endswith("emb-model"))
 
@@ -332,6 +335,58 @@ class TestReasoningCompare(unittest.TestCase):
         self.assertGreater(int(((comp.get("delta") or {}).get("external_scaffold_tokens_est") or 0)), 0)
         self.assertEqual(((comp.get("delta") or {}).get("api_reasoning_tokens")), 68)
         self.assertEqual((((comp.get("ponder") or {}).get("api_aux_usage_by_phase") or {}).get("seed") or {}).get("calls"), 1)
+
+    def test_build_judge_compare_maps_same_model_scores(self) -> None:
+        hf = sp.OpenAICompatModel(
+            model="gpt-5.4",
+            api_base_url="https://api.openai.com/v1",
+            api_key="test",
+        )
+        cfg = sp.RunConfig(
+            model_path="dummy",
+            memory_path=Path("ponder_logs.jsonl"),
+            backend="openai_compat",
+            provider="openai",
+            prompt_lang="en",
+            compare_judge="auto",
+        )
+        judge_json = json.dumps(
+            {
+                "winner": "B",
+                "confidence": 0.82,
+                "score_A": 0.42,
+                "score_B": 0.77,
+                "directness_A": 0.55,
+                "directness_B": 0.74,
+                "depth_A": 0.30,
+                "depth_B": 0.80,
+                "resolution_A": 0.40,
+                "resolution_B": 0.78,
+                "brief_reason": "B resolves the paradox more directly.",
+            }
+        )
+        with patch.object(sp, "stable_hash_mod", return_value=0), patch.object(
+            sp,
+            "_generate_api_text_with_reasoning_retry",
+            return_value=(
+                judge_json,
+                {"api_calls": 1, "prompt_tokens": 32, "completion_tokens": 24, "reasoning_tokens": 12, "total_tokens": 56},
+            ),
+        ):
+            comp = sp.build_judge_compare(
+                hf=hf,
+                cfg=cfg,
+                query="When does Occam's razor chip its edge?",
+                baseline_answer="Prefer simplicity.",
+                ponder_answer="Prefer explanatory adequacy once simplicity stops resolving the paradox.",
+            )
+        self.assertIsNotNone(comp)
+        assert comp is not None
+        self.assertEqual(comp.get("status"), "ok")
+        self.assertEqual(comp.get("winner"), "ponder")
+        self.assertAlmostEqual(float(comp.get("score_delta") or 0.0), 0.35, places=6)
+        self.assertAlmostEqual(float(comp.get("resolution_delta") or 0.0), 0.38, places=6)
+        self.assertEqual((((comp.get("api_generation") or {}).get("api_calls"))), 1)
 
     def test_build_stance_compare_detects_definition_to_example_shift(self) -> None:
         comp = sp.build_stance_compare(
@@ -630,6 +685,18 @@ class TestTerminalUX(unittest.TestCase):
             with _Chdir(td_path):
                 with patch.object(sp, "run_baseline", side_effect=_baseline), patch.object(
                     sp, "run_ponder_dispatch", side_effect=_ponder
+                ), patch.object(
+                    sp,
+                    "build_judge_compare",
+                    return_value={
+                        "status": "ok",
+                        "method": "same_model_json_judge",
+                        "winner": "ponder",
+                        "confidence": 0.81,
+                        "score_delta": 0.24,
+                        "resolution_delta": 0.31,
+                        "brief_reason": "The pondered answer resolves the tradeoff more explicitly.",
+                    },
                 ):
                     out, _err = _run_main(
                         [
@@ -643,6 +710,8 @@ class TestTerminalUX(unittest.TestCase):
                             "both",
                             "--compare_semantic",
                             "hash",
+                            "--compare_judge",
+                            "auto",
                             "--json_out",
                             str(out_path),
                         ]
@@ -653,6 +722,7 @@ class TestTerminalUX(unittest.TestCase):
             self.assertIn("=== COMPARISON ===", out)
             self.assertIn("answers_changed=yes", out)
             self.assertIn("semantic[hashed_char_ngrams_tfidf]", out)
+            self.assertIn("judge[same_model_json_judge]", out)
             self.assertIn("stance[heuristic_lexicon]", out)
             self.assertIn("spatial[heuristic_lexicon]", out)
             self.assertIn("budget[", out)
@@ -664,6 +734,7 @@ class TestTerminalUX(unittest.TestCase):
             self.assertEqual(comp.get("memory_selected"), 1)
             self.assertAlmostEqual(comp.get("probe_js_divergence"), 0.12)
             self.assertEqual((comp.get("semantic") or {}).get("method"), "hashed_char_ngrams_tfidf")
+            self.assertEqual((comp.get("judge") or {}).get("winner"), "ponder")
             self.assertEqual((comp.get("stance") or {}).get("method"), "heuristic_lexicon")
             self.assertEqual((comp.get("spatial_metaphor") or {}).get("method"), "heuristic_lexicon")
             self.assertEqual((comp.get("token_budget") or {}).get("status"), "ok")
@@ -959,6 +1030,15 @@ class TestTraceReportProbeCompare(unittest.TestCase):
                         "baseline_chars": 100,
                         "ponder_chars": 140,
                         "diff_ratio": 0.22,
+                        "judge": {
+                            "status": "ok",
+                            "method": "same_model_json_judge",
+                            "winner": "ponder",
+                            "confidence": 0.78,
+                            "score_delta": 0.22,
+                            "resolution_delta": 0.28,
+                            "brief_reason": "B resolves the paradox more directly.",
+                        },
                         "stance": {
                             "status": "ok",
                             "method": "heuristic_lexicon",
@@ -1002,6 +1082,7 @@ class TestTraceReportProbeCompare(unittest.TestCase):
             html = tr.render_html(report)
             self.assertIn("probe compare", html.lower())
             self.assertIn("comparison", html.lower())
+            self.assertIn("judge[same_model_json_judge]", html)
             self.assertIn("conditionalization", html)
             self.assertIn("spatial[heuristic_lexicon]", html)
             self.assertIn("budget[api_usage_plus_visible_estimate]", html)
@@ -1031,6 +1112,7 @@ class TestMatrixReport(unittest.TestCase):
                         "diff_ratio": 0.2,
                         "answer_changed": True,
                         "semantic": {"method": "hashed_char_ngrams_tfidf", "answer_cosine": 0.7, "query_alignment_delta": -0.04},
+                        "judge": {"method": "same_model_json_judge", "winner": "ponder", "confidence": 0.8, "score_delta": 0.18, "resolution_delta": 0.24},
                         "stance": {"dominant_baseline": "definition", "dominant_ponder": "conditionalization", "shift_score": 0.3},
                         "spatial_metaphor": {"logs": {"density_per_1k_chars": 4.0}},
                         "token_budget": {
@@ -1050,6 +1132,7 @@ class TestMatrixReport(unittest.TestCase):
                         "diff_ratio": 0.1,
                         "answer_changed": True,
                         "semantic": {"method": "hashed_char_ngrams_tfidf", "answer_cosine": 0.5, "query_alignment_delta": -0.09},
+                        "judge": {"method": "same_model_json_judge", "winner": "baseline", "confidence": 0.61, "score_delta": -0.12, "resolution_delta": -0.08},
                         "stance": {"dominant_baseline": "definition", "dominant_ponder": "framing", "shift_score": 0.2},
                         "spatial_metaphor": {"logs": {"density_per_1k_chars": 1.0}},
                         "token_budget": {
@@ -1065,9 +1148,12 @@ class TestMatrixReport(unittest.TestCase):
         self.assertIn("scaffold_abcd", html)
         self.assertIn("facts/400", html)
         self.assertIn("reasonΔ=50", html)
+        self.assertIn("winner=ponder", html)
         self.assertIn("conditionalization", html)
         self.assertIn("Sort by baseline-relative metric", html)
+        self.assertIn("Judge score Δ", html)
         self.assertIn("matrix-sort-key", html)
+        self.assertIn("data-judge-score-delta='0.18'", html)
         self.assertIn("data-query-alignment-delta='-0.04'", html)
         self.assertIn("Baseline rows stay pinned to the top.", html)
         self.assertIn("Pairwise heatmap", html)
