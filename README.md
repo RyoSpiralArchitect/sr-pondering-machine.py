@@ -2,6 +2,10 @@
 
 A **pondering machine** for local Hugging Face causal language models *and* OpenAI-compatible API models — optimised for Apple Silicon (MPS) and Gemma instruction-tuned models.
 
+> Canonical implementation: `external/sr-pondering-machine.py/sr_pondering_machine.py`
+>
+> The root-level `sr_pondering_machine.py` is now only a compatibility wrapper so old commands still work.
+
 ## What Is a "Pondering Machine"?
 
 Instead of answering a question directly, the pondering machine first *wanders off on a tangent* before giving the final answer.
