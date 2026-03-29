@@ -73,6 +73,37 @@ from urllib import error as urlerror
 from urllib import request as urlrequest
 
 
+_CAPSULE_TOOL_CACHE: Optional[Dict[str, Any]] = None
+
+
+def _load_capsule_tools() -> Dict[str, Any]:
+    global _CAPSULE_TOOL_CACHE
+    if _CAPSULE_TOOL_CACHE is not None:
+        return _CAPSULE_TOOL_CACHE
+    try:
+        from sr_memory_capsule import (  # type: ignore
+            EMBED_BACKEND_CHAR_NGRAM4096,
+            EMBED_BACKEND_CHOICES,
+            encode_baton_hashproj,
+            gateway_retrieve,
+            normalize_embed_backend,
+            pack_memory_slots,
+        )
+    except Exception as exc:
+        raise RuntimeError(
+            "capsule_store memory requires local `sr_memory_capsule.py` and its dependencies to be importable"
+        ) from exc
+    _CAPSULE_TOOL_CACHE = {
+        "EMBED_BACKEND_CHAR_NGRAM4096": EMBED_BACKEND_CHAR_NGRAM4096,
+        "EMBED_BACKEND_CHOICES": EMBED_BACKEND_CHOICES,
+        "encode_baton_hashproj": encode_baton_hashproj,
+        "gateway_retrieve": gateway_retrieve,
+        "normalize_embed_backend": normalize_embed_backend,
+        "pack_memory_slots": pack_memory_slots,
+    }
+    return _CAPSULE_TOOL_CACHE
+
+
 # -----------------------------
 # Utilities
 # -----------------------------
@@ -1113,6 +1144,24 @@ def append_jsonl(path: Path, record: Dict[str, Any]) -> None:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+def iter_jsonl(path: Path) -> List[Dict[str, Any]]:
+    if not path.exists():
+        return []
+    out: List[Dict[str, Any]] = []
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(obj, dict):
+                out.append(obj)
+    return out
+
+
 def tail_jsonl(path: Path, n: int) -> List[Dict[str, Any]]:
     if n <= 0:
         return []
@@ -1691,6 +1740,331 @@ def build_memory_block(records: Sequence[Dict[str, Any]], *, max_chars_per_log: 
     return "\n".join(chunks).strip()
 
 
+def _clip_text(text: Any, limit: int) -> str:
+    s = str(text or "").strip()
+    if limit > 0 and len(s) > limit:
+        return s[: max(0, limit - 1)].rstrip() + "…"
+    return s
+
+
+def _unique_strings(items: Sequence[Any], *, limit: int = 16) -> List[str]:
+    seen = set()
+    out: List[str] = []
+    for item in items:
+        s = str(item or "").strip()
+        if not s or s in seen:
+            continue
+        seen.add(s)
+        out.append(s)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def _compact_ponder_excerpt(text: str, *, max_lines: int = 3, max_chars: int = 420) -> str:
+    s = (text or "").strip()
+    if not s:
+        return ""
+    raw_lines = [ln.strip() for ln in s.splitlines() if ln.strip()]
+    bullet_lines = []
+    for ln in raw_lines:
+        t = re.sub(r"^[\-\*\•\d\.\)\s]+", "", ln).strip()
+        if t:
+            bullet_lines.append(t)
+    lines = bullet_lines or raw_lines
+    out = " | ".join(lines[: max(1, int(max_lines))]).strip()
+    return _clip_text(out, int(max_chars))
+
+
+def build_capsule_angles(records: Sequence[Dict[str, Any]], *, max_chars: int = 420) -> str:
+    bits: List[str] = []
+    modes = _unique_strings([r.get("ponder_mode") for r in records], limit=6)
+    if modes:
+        bits.append("modes: " + ", ".join(modes))
+    bands = _unique_strings([r.get("band_label") for r in records], limit=6)
+    if bands:
+        bits.append("bands: " + ", ".join(bands))
+    keywords: List[str] = []
+    for r in records:
+        kws = r.get("keywords") or r.get("keywords_raw") or []
+        if isinstance(kws, list):
+            keywords.extend(kws)
+    uniq_keywords = _unique_strings(keywords, limit=12)
+    if uniq_keywords:
+        bits.append("keywords: " + ", ".join(uniq_keywords))
+    questions = _unique_strings([r.get("ponder_question") for r in records], limit=3)
+    if questions:
+        bits.append("questions: " + " || ".join(_clip_text(q, 120) for q in questions))
+    return _clip_text(" | ".join(bits), int(max_chars))
+
+
+def build_capsule_memory(
+    *,
+    query: str,
+    records: Sequence[Dict[str, Any]],
+    answer: str,
+    slots: Sequence[str],
+    max_chars_per_slot: int,
+) -> Dict[str, str]:
+    slots2 = [str(s or "").strip() for s in slots if str(s or "").strip()]
+    ponder_text = build_memory_block(records, max_chars_per_log=max(120, int(max_chars_per_slot)))
+    compact_lines: List[str] = []
+    for r in records:
+        mode = str(r.get("ponder_mode", "") or "").strip()
+        band = str(r.get("band_label", "") or "").strip()
+        excerpt = _compact_ponder_excerpt(str(r.get("ponder_log", "") or ""), max_lines=2, max_chars=max_chars_per_slot)
+        if not excerpt:
+            continue
+        prefix_bits = [x for x in (band, mode) if x]
+        prefix = f"[{'/'.join(prefix_bits)}] " if prefix_bits else ""
+        compact_lines.append(_clip_text(prefix + excerpt, int(max_chars_per_slot)))
+        if len(compact_lines) >= 6:
+            break
+
+    memory: Dict[str, str] = {}
+    for slot in slots2:
+        if slot in ("task", "query"):
+            memory[slot] = _clip_text(query, int(max_chars_per_slot))
+        elif slot == "angles":
+            memory[slot] = build_capsule_angles(records, max_chars=int(max_chars_per_slot))
+        elif slot == "ponder":
+            if compact_lines:
+                memory[slot] = _clip_text("\n".join(compact_lines), int(max_chars_per_slot) * 2)
+            else:
+                memory[slot] = _clip_text(ponder_text, int(max_chars_per_slot) * 2)
+        elif slot == "answer":
+            memory[slot] = _clip_text(answer, int(max_chars_per_slot))
+        else:
+            memory[slot] = _clip_text(ponder_text, int(max_chars_per_slot) * 2)
+    return memory
+
+
+def build_capsule_memory_block(
+    items: Sequence[Dict[str, Any]],
+    *,
+    slots: Sequence[str],
+    max_chars_per_slot: int = 420,
+) -> str:
+    pack_memory_slots = _load_capsule_tools()["pack_memory_slots"]
+    chunks: List[str] = []
+    for item in items:
+        memory = item.get("memory") or {}
+        if not isinstance(memory, dict):
+            continue
+        clipped = {str(k): _clip_text(v, int(max_chars_per_slot)) for k, v in memory.items()}
+        packed = pack_memory_slots(clipped, [str(s) for s in slots if str(s)])
+        if not packed:
+            continue
+        meta = item.get("meta") or {}
+        meta_bits: List[str] = []
+        if item.get("created_at"):
+            meta_bits.append(str(item.get("created_at")))
+        if isinstance(meta, dict):
+            if meta.get("run_id"):
+                meta_bits.append(f"run:{meta['run_id']}")
+            if meta.get("kind"):
+                meta_bits.append(str(meta["kind"]))
+        header = f"[{' '.join(meta_bits)}]\n" if meta_bits else ""
+        chunks.append(header + packed)
+    return "\n\n".join(chunks).strip()
+
+
+def resolve_memory_capsule_path(memory_path: Path, explicit: Optional[Path]) -> Path:
+    if explicit is not None:
+        return explicit
+    name = memory_path.name
+    if name.endswith(".jsonl"):
+        return memory_path.with_name(name[:-6] + ".latest_capsule.json")
+    return memory_path.with_suffix(memory_path.suffix + ".latest_capsule.json")
+
+
+def resolve_embed_device(hf: Any) -> torch.device:
+    if torch is None:
+        raise RuntimeError("capsule_store memory requires torch")
+    dev = getattr(hf, "device", None)
+    if isinstance(dev, torch.device):
+        return dev
+    inp = getattr(hf, "input_device", None)
+    if isinstance(inp, torch.device):
+        return inp
+    return torch.device("cpu")
+
+
+def encode_capsule_baton(
+    *,
+    memory: Dict[str, str],
+    slots: Sequence[str],
+    baton_dim: int,
+    proj_seed: int,
+    embed_backend: str,
+    device: torch.device,
+) -> Dict[str, str]:
+    tools = _load_capsule_tools()
+    proj_cache: Dict[Tuple[str, str, int, int], Any] = {}
+    baton: Dict[str, str] = {}
+    normalize_embed_backend = tools["normalize_embed_backend"]
+    encode_baton_hashproj = tools["encode_baton_hashproj"]
+    backend = normalize_embed_backend(embed_backend)
+    for slot in [str(s or "").strip() for s in slots if str(s or "").strip()]:
+        baton[slot] = encode_baton_hashproj(
+            memory.get(slot, ""),
+            baton_dim=int(baton_dim),
+            proj_seed=int(proj_seed),
+            device=device,
+            proj_cache=proj_cache,
+            slot=slot,
+            embed_backend=backend,
+        )
+    return baton
+
+
+def select_capsule_store_items(
+    *,
+    memory_path: Path,
+    query: str,
+    current_records: Sequence[Dict[str, Any]],
+    memory_policy: str,
+    memory_retrieve: str,
+    n_memory: int,
+    slots: Sequence[str],
+    baton_dim: int,
+    proj_seed: int,
+    embed_backend: str,
+    max_chars_per_slot: int,
+    device: torch.device,
+) -> Tuple[List[Dict[str, Any]], str]:
+    tools = _load_capsule_tools()
+    gateway_retrieve = tools["gateway_retrieve"]
+    normalize_embed_backend = tools["normalize_embed_backend"]
+
+    if memory_policy == "off":
+        return [], "off"
+    if memory_policy == "current_only":
+        cur_mem = build_capsule_memory(
+            query=query,
+            records=current_records,
+            answer="",
+            slots=slots,
+            max_chars_per_slot=max_chars_per_slot,
+        )
+        return [{"created_at": now_iso(), "memory": cur_mem, "meta": {"kind": "current_only"}}], "current_only"
+    if memory_policy != "tail":
+        raise ValueError(f"Unknown memory_policy: {memory_policy!r}")
+
+    take = max(0, int(n_memory))
+    if take <= 0:
+        return [], "none"
+
+    mode = (memory_retrieve or "tail").strip()
+    if mode == "tail":
+        return tail_jsonl(memory_path, take), "capsule_tail"
+    if mode != "similar":
+        raise ValueError("memory_format=capsule_store supports only --memory_retrieve tail|similar")
+
+    query_mem = build_capsule_memory(
+        query=query,
+        records=current_records,
+        answer="",
+        slots=slots,
+        max_chars_per_slot=max_chars_per_slot,
+    )
+    query_baton = encode_capsule_baton(
+        memory=query_mem,
+        slots=slots,
+        baton_dim=baton_dim,
+        proj_seed=proj_seed,
+        embed_backend=embed_backend,
+        device=device,
+    )
+    items = gateway_retrieve(str(memory_path), query_baton, [str(s) for s in slots if str(s)], top_k=take, device=device)
+    return items, f"capsule:{normalize_embed_backend(embed_backend)}"
+
+
+def write_capsule_store_snapshot(
+    *,
+    memory_path: Path,
+    capsule_path: Path,
+    query: str,
+    records: Sequence[Dict[str, Any]],
+    answer: str,
+    slots: Sequence[str],
+    baton_dim: int,
+    proj_seed: int,
+    embed_backend: str,
+    max_chars_per_slot: int,
+    device: torch.device,
+    notes: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    normalize_embed_backend = _load_capsule_tools()["normalize_embed_backend"]
+    memory = build_capsule_memory(
+        query=query,
+        records=records,
+        answer=answer,
+        slots=slots,
+        max_chars_per_slot=max_chars_per_slot,
+    )
+    baton = encode_capsule_baton(
+        memory=memory,
+        slots=slots,
+        baton_dim=baton_dim,
+        proj_seed=proj_seed,
+        embed_backend=embed_backend,
+        device=device,
+    )
+    payload = {
+        "created_at": now_iso(),
+        "memory": memory,
+        "baton": baton,
+        "meta": dict(notes or {}),
+    }
+    append_jsonl(memory_path, payload)
+    latest = {
+        "created_at": payload["created_at"],
+        "base_system": "",
+        "slots": [str(s) for s in slots if str(s)],
+        "memory": memory,
+        "baton": baton,
+        "baton_meta": {
+            "format": "SMEM1",
+            "embed_backend": normalize_embed_backend(embed_backend),
+            "proj_seed": int(proj_seed),
+            "baton_dim": int(baton_dim),
+        },
+        "cold_archive": None,
+        "notes": dict(notes or {}),
+    }
+    write_json(capsule_path, latest)
+    return payload
+
+
+def summarize_selected_memory(items: Sequence[Dict[str, Any]], *, memory_format: str) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    if (memory_format or "ponder_jsonl").strip() == "capsule_store":
+        for item in items or []:
+            meta = item.get("meta") or {}
+            out.append(
+                {
+                    "created_at": item.get("created_at"),
+                    "run_id": meta.get("run_id") if isinstance(meta, dict) else None,
+                    "kind": meta.get("kind") if isinstance(meta, dict) else None,
+                    "source": "capsule_store",
+                }
+            )
+        return out
+
+    for r in items or []:
+        out.append(
+            {
+                "ts": r.get("ts"),
+                "run_id": r.get("run_id"),
+                "band_label": r.get("band_label"),
+                "ponder_ix": r.get("ponder_ix"),
+                "ponder_mode": r.get("ponder_mode"),
+            }
+        )
+    return out
+
+
 _RANDOM_SCAFFOLD_SCENES_EN = [
     ("tram stop", "receipt", "rain gutter"),
     ("museum foyer", "paper cup", "elevator chime"),
@@ -2135,13 +2509,32 @@ def _answer_style_guidance(style: str, *, lang: str) -> str:
     raise ValueError(f"Unknown answer_style: {style!r}")
 
 
-def build_prompt_for_answer(query: str, memory_block: Optional[str], *, lang: str, style: str = "plain") -> str:
+def build_prompt_for_answer(
+    query: str,
+    memory_block: Optional[str],
+    *,
+    lang: str,
+    style: str = "plain",
+    memory_style: str = "ponder_log",
+) -> str:
     style_note = _answer_style_guidance(style, lang=lang).strip()
     prefix = f"{default_system_text(lang)}\n\n"
     if style_note:
         prefix += style_note + "\n\n"
     if memory_block:
+        mem_style = (memory_style or "ponder_log").strip()
         if lang == "ja":
+            if mem_style == "background_memory":
+                return (
+                    prefix
+                    + "以下は背景記憶です。必要な範囲でだけ参照し、本題に集中してください。\n"
+                    + "<background_memory>\n"
+                    + f"{memory_block}\n"
+                    + "</background_memory>\n\n"
+                    + "本題の質問:\n"
+                    + f"{query}\n\n"
+                    + "出力は回答本文のみ（見出しや引用は不要）。\n"
+                )
             return (
                 prefix
                 + "以下は最近生成された「本題と直接関係しない Ponder Log」です。"
@@ -2152,6 +2545,17 @@ def build_prompt_for_answer(query: str, memory_block: Optional[str], *, lang: st
                 + "本題の質問:\n"
                 + f"{query}\n\n"
                 + "出力は回答本文のみ（見出しや引用は不要）。\n"
+            )
+        if mem_style == "background_memory":
+            return (
+                prefix
+                + "The following is background memory. Consult it only if it helps, then stay focused on the actual question.\n"
+                + "<background_memory>\n"
+                + f"{memory_block}\n"
+                + "</background_memory>\n\n"
+                + "Actual Question:\n"
+                + f"{query}\n\n"
+                + "Write only the answer in your output (headings and quotes are not needed).\n"
             )
         return (
             prefix
@@ -3471,6 +3875,59 @@ def apply_preset_inplace(args: argparse.Namespace, *, explicit_dests: Optional[s
         args.answer_style = "surreal"
 
 
+_AUTO_PROFILE_CHOICES = ("balanced", "creative", "skeptic", "interrogator")
+
+
+def _argv_has_flag(argv: Sequence[str], flag: str) -> bool:
+    target = str(flag or "").strip()
+    if not target:
+        return False
+    for tok in argv or []:
+        t = str(tok or "").strip()
+        if not t:
+            continue
+        if t == target or t.startswith(target + "="):
+            return True
+    return False
+
+
+def auto_select_ponder_pipeline(query: str, *, lang: str, profile: str) -> List[str]:
+    q = (query or "").lower()
+    p = (profile or "balanced").strip()
+    if p == "creative":
+        if any(k in q for k in ("design", "invent", "novel", "new kind", "musical", "metaphor", "story")):
+            return ["metaphor", "questions_only"]
+        return ["assoc", "metaphor"]
+    if p == "skeptic":
+        if any(k in q for k in ("why", "claim", "evidence", "safety", "risk", "failure", "bias")):
+            return ["assumption", "counterexample"]
+        return ["counterexample", "questions_only"]
+    if p == "interrogator":
+        return ["questions_only", "assumption"]
+    if lang == "ja":
+        if any(k in query for k in ("なぜ", "本当に", "前提", "仮定", "危険", "失敗", "バイアス")):
+            return ["assumption", "counterexample"]
+        if any(k in query for k in ("設計", "創作", "比喩", "新しい", "発明")):
+            return ["assoc", "metaphor"]
+        return ["assumption", "questions_only"]
+    if any(k in q for k in ("why", "assumption", "bias", "failure", "risk", "tradeoff")):
+        return ["assumption", "counterexample"]
+    if any(k in q for k in ("design", "create", "invent", "metaphor", "creative")):
+        return ["assoc", "metaphor"]
+    return ["assumption", "questions_only"]
+
+
+def auto_recommend_memory_defaults(*, profile: str) -> Dict[str, Any]:
+    p = (profile or "balanced").strip()
+    if p == "creative":
+        return {"memory_retrieve": "mix", "memory_mix_ratio": 0.65, "memory_backend": "fuzzy", "memory_pool": 320}
+    if p == "skeptic":
+        return {"memory_retrieve": "mix", "memory_mix_ratio": 0.45, "memory_backend": "fuzzy", "memory_pool": 480}
+    if p == "interrogator":
+        return {"memory_retrieve": "similar", "memory_mix_ratio": 0.65, "memory_backend": "fuzzy", "memory_pool": 320}
+    return {"memory_retrieve": "mix", "memory_mix_ratio": 0.6, "memory_backend": "fuzzy", "memory_pool": 400}
+
+
 def _cosine_sim(a: torch.Tensor, b: torch.Tensor, eps: float = 1e-8) -> float:
     aa = a.detach().float().cpu()
     bb = b.detach().float().cpu()
@@ -4594,28 +5051,48 @@ def select_memory_records(
     query: str,
     memory_policy: str,
     memory_retrieve: str,
+    memory_backend: str,
     n_memory: int,
     pool_size: int,
     mix_ratio: float,
     exclude_run_id: Optional[str],
-) -> List[Dict[str, Any]]:
+) -> Tuple[List[Dict[str, Any]], str]:
     if memory_policy == "off":
-        return []
+        return [], "off"
     if memory_policy == "current_only":
         take = max(0, int(n_memory))
         if take <= 0:
-            return []
+            return [], "current_only"
         cur = list(current_records)
-        return cur[-take:] if len(cur) > take else cur
+        return (cur[-take:] if len(cur) > take else cur), "current_only"
     if memory_policy != "tail":
         raise ValueError(f"Unknown memory_policy: {memory_policy!r}")
 
     pool = tail_jsonl(memory_path, max(0, int(pool_size)))
     if not pool:
-        return []
+        return [], "empty"
 
     if memory_retrieve == "tail":
-        return pool[-int(n_memory) :] if n_memory > 0 else []
+        return (pool[-int(n_memory) :] if n_memory > 0 else []), "tail"
+
+    backend = (memory_backend or "auto").strip()
+    if backend not in ("auto", "embed", "fuzzy"):
+        raise ValueError(f"Unknown memory_backend: {backend!r}")
+    if backend == "fuzzy":
+        return (
+            select_memory_records_fuzzy(
+                memory_path=memory_path,
+                current_records=current_records,
+                query=query,
+                memory_policy="tail",
+                memory_retrieve=memory_retrieve,
+                n_memory=n_memory,
+                pool_size=pool_size,
+                mix_ratio=mix_ratio,
+                exclude_run_id=exclude_run_id,
+            ),
+            "fuzzy",
+        )
 
     cur_token_ids: List[int] = []
     for r in current_records:
@@ -4629,16 +5106,19 @@ def select_memory_records(
     cur_vec = mean_embedding_for_token_ids(hf, cur_token_ids)
     if cur_vec is None:
         # Fallback: approximate similarity on text when embedding retrieval isn't available.
-        return select_memory_records_fuzzy(
-            memory_path=memory_path,
-            current_records=current_records,
-            query=query,
-            memory_policy="tail",
-            memory_retrieve=memory_retrieve,
-            n_memory=n_memory,
-            pool_size=pool_size,
-            mix_ratio=mix_ratio,
-            exclude_run_id=exclude_run_id,
+        return (
+            select_memory_records_fuzzy(
+                memory_path=memory_path,
+                current_records=current_records,
+                query=query,
+                memory_policy="tail",
+                memory_retrieve=memory_retrieve,
+                n_memory=n_memory,
+                pool_size=pool_size,
+                mix_ratio=mix_ratio,
+                exclude_run_id=exclude_run_id,
+            ),
+            "fuzzy",
         )
 
     scored: List[Tuple[float, Dict[str, Any]]] = []
@@ -4655,23 +5135,23 @@ def select_memory_records(
         scored.append((sim, r))
 
     if not scored:
-        return pool[-int(n_memory) :] if n_memory > 0 else []
+        return (pool[-int(n_memory) :] if n_memory > 0 else []), "tail"
 
     scored.sort(key=lambda x: x[0])
     take = max(0, int(n_memory))
     if take == 0:
-        return []
+        return [], "none"
 
     if memory_retrieve == "anti":
-        return [r for _, r in scored[:take]]
+        return [r for _, r in scored[:take]], "embed"
     if memory_retrieve == "similar":
-        return [r for _, r in scored[-take:]][::-1]
+        return [r for _, r in scored[-take:]][::-1], "embed"
     if memory_retrieve == "mix":
         k_sim = max(0, min(take, int(round(take * float(mix_ratio)))))
         k_anti = take - k_sim
         anti = [r for _, r in scored[:k_anti]]
         sim = [r for _, r in scored[-k_sim:]][::-1]
-        return sim + anti
+        return sim + anti, "embed"
 
     raise ValueError(f"Unknown memory_retrieve: {memory_retrieve!r}")
 
@@ -5531,8 +6011,10 @@ class RunConfig:
     api_logprobs_top_n: int = 0  # 0 disables logprobs probing
 
     n_memory: int = 12
+    memory_format: str = "ponder_jsonl"  # ponder_jsonl|capsule_store
     memory_policy: str = "tail"  # tail|current_only|off
     memory_retrieve: str = "tail"  # tail|similar|anti|mix (only when memory_policy=tail)
+    memory_backend: str = "auto"  # auto|embed|fuzzy
     memory_pool: int = 200
     memory_mix_ratio: float = 0.5
     memory_exclude_current_run: bool = True
@@ -5540,6 +6022,12 @@ class RunConfig:
     memory_remix_keep_original: bool = False
     memory_remix_max_new_tokens: int = 240
     memory_remix_temperature: float = 0.9
+    memory_capsule_path: Optional[Path] = None
+    memory_slots: List[str] = dataclasses.field(default_factory=lambda: ["task", "ponder"])
+    memory_baton_dim: int = 256
+    memory_proj_seed: int = 0
+    memory_embed_backend: str = "charngram4096"
+    memory_capsule_max_chars: int = 420
 
     rejected: RejectedTokenConfig = dataclasses.field(default_factory=RejectedTokenConfig)
     band_profile: str = "single"  # single|spectrum3
@@ -5556,6 +6044,8 @@ class RunConfig:
     seed: int = 1234
 
     prompt_lang: str = "en"  # resolved: en|ja
+    ponder_policy: str = "manual"  # manual|auto
+    auto_profile: str = "balanced"  # balanced|creative|skeptic|interrogator
     ponder_mode: str = "assoc"  # assoc|assumption|counterexample|questions_only|metaphor (fallback)
     ponder_pipeline: List[str] = dataclasses.field(default_factory=list)  # if empty, uses ponder_mode
     pipeline_context: str = "prev"  # none|prev|all
@@ -6614,6 +7104,7 @@ def run_ponder(
     t_total0 = time.perf_counter()
     lang = cfg.prompt_lang
     n_ponder = max(1, int(cfg.n_ponder))  # per band
+    memory_style = "background_memory" if cfg.memory_format == "capsule_store" else "ponder_log"
 
     run_id = make_run_id(cfg.seed, query)
     query_sha = sha256_short(query)
@@ -6640,6 +7131,8 @@ def run_ponder(
             band_profile=cfg.band_profile,
             memory_policy=cfg.memory_policy,
             memory_retrieve=cfg.memory_retrieve,
+            memory_backend=cfg.memory_backend,
+            memory_format=cfg.memory_format,
             memory_remix=cfg.memory_remix,
             answer_style=cfg.answer_style,
         )
@@ -7019,6 +7512,9 @@ def run_ponder(
                         "run_id": run_id,
                         "query_sha": query_sha,
                         "prompt_lang": lang,
+                        "ponder_policy": cfg.ponder_policy,
+                        "auto_profile": cfg.auto_profile,
+                        "memory_backend": cfg.memory_backend,
                         "control": control,
                         "band_profile": cfg.band_profile,
                         "band_ix": band_ix,
@@ -7047,14 +7543,39 @@ def run_ponder(
                     if jitter_queries and log_ix == 0 and hop_ix == 0:
                         record["prompt_jitter_queries"] = jitter_queries
 
-                    if cfg.write_memory:
+                    if cfg.write_memory and cfg.memory_format == "ponder_jsonl":
                         append_jsonl(cfg.memory_path, record)
                     records.append(record)
                     if cfg.probe_compare_stages and probe_compare_before:
                         compare_top_n = max(1, int(cfg.probe_compare_top_n))
-                        stage_memory_block = build_memory_block(records, max_chars_per_log=700) if records else None
+                        if cfg.memory_format == "capsule_store":
+                            stage_memory_block = build_capsule_memory_block(
+                                [
+                                    {
+                                        "created_at": now_iso(),
+                                        "memory": build_capsule_memory(
+                                            query=query,
+                                            records=records,
+                                            answer="",
+                                            slots=cfg.memory_slots,
+                                            max_chars_per_slot=cfg.memory_capsule_max_chars,
+                                        ),
+                                        "meta": {"kind": "current_records", "run_id": run_id},
+                                    }
+                                ],
+                                slots=cfg.memory_slots,
+                                max_chars_per_slot=cfg.memory_capsule_max_chars,
+                            )
+                        else:
+                            stage_memory_block = build_memory_block(records, max_chars_per_log=700) if records else None
                         stage_prompt = hf._apply_chat(
-                            build_prompt_for_answer(query, memory_block=stage_memory_block, lang=lang, style=cfg.answer_style),
+                            build_prompt_for_answer(
+                                query,
+                                memory_block=stage_memory_block,
+                                lang=lang,
+                                style=cfg.answer_style,
+                                memory_style=memory_style,
+                            ),
                             system_text=None,
                         )
                         stage_logits = hf.next_token_logits(stage_prompt)
@@ -7117,45 +7638,63 @@ def run_ponder(
 
     # Select memory records for final answer injection
     exclude_run_id = run_id if cfg.memory_exclude_current_run and cfg.memory_policy == "tail" else None
-    mem_records = select_memory_records(
-        hf,
-        memory_path=cfg.memory_path,
-        current_records=records,
-        query=query,
-        memory_policy=cfg.memory_policy,
-        memory_retrieve=cfg.memory_retrieve,
-        n_memory=cfg.n_memory,
-        pool_size=cfg.memory_pool,
-        mix_ratio=cfg.memory_mix_ratio,
-        exclude_run_id=exclude_run_id,
-    )
+    if cfg.memory_format == "capsule_store":
+        mem_records, memory_backend_used = select_capsule_store_items(
+            memory_path=cfg.memory_path,
+            query=query,
+            current_records=records,
+            memory_policy=cfg.memory_policy,
+            memory_retrieve=cfg.memory_retrieve,
+            n_memory=cfg.n_memory,
+            slots=cfg.memory_slots,
+            baton_dim=cfg.memory_baton_dim,
+            proj_seed=cfg.memory_proj_seed,
+            embed_backend=cfg.memory_embed_backend,
+            max_chars_per_slot=cfg.memory_capsule_max_chars,
+            device=resolve_embed_device(hf),
+        )
+    else:
+        mem_records, memory_backend_used = select_memory_records(
+            hf,
+            memory_path=cfg.memory_path,
+            current_records=records,
+            query=query,
+            memory_policy=cfg.memory_policy,
+            memory_retrieve=cfg.memory_retrieve,
+            memory_backend=cfg.memory_backend,
+            n_memory=cfg.n_memory,
+            pool_size=cfg.memory_pool,
+            mix_ratio=cfg.memory_mix_ratio,
+            exclude_run_id=exclude_run_id,
+        )
 
     if control == "no_inject":
         mem_records = []
 
-    memory_selected_meta = [
-        {
-            "ts": r.get("ts"),
-            "run_id": r.get("run_id"),
-            "band_label": r.get("band_label"),
-            "ponder_ix": r.get("ponder_ix"),
-            "ponder_mode": r.get("ponder_mode"),
-        }
-        for r in (mem_records or [])
-    ]
+    memory_selected_meta = summarize_selected_memory(mem_records or [], memory_format=cfg.memory_format)
     if trace:
         trace.event(
             "memory_selected",
             run_id=run_id,
             pack_item=pack_item,
             count=int(len(mem_records or [])),
+            memory_format=cfg.memory_format,
             memory_policy=cfg.memory_policy,
             memory_retrieve=cfg.memory_retrieve,
+            memory_backend=cfg.memory_backend,
+            memory_backend_used=memory_backend_used,
             memory_remix=cfg.memory_remix,
             selected=memory_selected_meta[:12],
         )
 
-    memory_block = build_memory_block(mem_records, max_chars_per_log=700) if mem_records else None
+    if cfg.memory_format == "capsule_store":
+        memory_block = build_capsule_memory_block(
+            mem_records,
+            slots=cfg.memory_slots,
+            max_chars_per_slot=cfg.memory_capsule_max_chars,
+        ) if mem_records else None
+    else:
+        memory_block = build_memory_block(mem_records, max_chars_per_log=700) if mem_records else None
     t_remix0 = time.perf_counter()
     memory_block = remix_memory_block(
         hf,
@@ -7214,7 +7753,28 @@ def run_ponder(
             band_recs = [r for r in records if str(r.get("band_label", "")) == bl]
             if not band_recs:
                 continue
-            band_mem = None if control == "no_inject" else build_memory_block(band_recs, max_chars_per_log=700)
+            if control == "no_inject":
+                band_mem = None
+            elif cfg.memory_format == "capsule_store":
+                band_mem = build_capsule_memory_block(
+                    [
+                        {
+                            "created_at": now_iso(),
+                            "memory": build_capsule_memory(
+                                query=query,
+                                records=band_recs,
+                                answer="",
+                                slots=cfg.memory_slots,
+                                max_chars_per_slot=cfg.memory_capsule_max_chars,
+                            ),
+                            "meta": {"kind": "current_band", "run_id": run_id},
+                        }
+                    ],
+                    slots=cfg.memory_slots,
+                    max_chars_per_slot=cfg.memory_capsule_max_chars,
+                )
+            else:
+                band_mem = build_memory_block(band_recs, max_chars_per_log=700)
             band_mem = remix_memory_block(
                 hf,
                 memory_block=band_mem,
@@ -7226,7 +7786,13 @@ def run_ponder(
                 seed=int(cfg.seed) + 9000 + stable_hash_mod(bl, 1000),
             )
             fp = hf._apply_chat(
-                build_prompt_for_answer(query, memory_block=band_mem, lang=lang, style=cfg.answer_style),
+                build_prompt_for_answer(
+                    query,
+                    memory_block=band_mem,
+                    lang=lang,
+                    style=cfg.answer_style,
+                    memory_style=memory_style,
+                ),
                 system_text=None,
             )
             band_ans = hf.generate_text(
@@ -7290,7 +7856,13 @@ def run_ponder(
                 text_preview=trace.preview(final_answer_block),
             )
     final_prompt = hf._apply_chat(
-        build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang, style=cfg.answer_style),
+        build_prompt_for_answer(
+            query,
+            memory_block=final_answer_block,
+            lang=lang,
+            style=cfg.answer_style,
+            memory_style=memory_style,
+        ),
         system_text=None,
     )
 
@@ -7347,6 +7919,29 @@ def run_ponder(
             answer_preview=trace.preview(answer),
         )
 
+    if cfg.write_memory and cfg.memory_format == "capsule_store":
+        write_capsule_store_snapshot(
+            memory_path=cfg.memory_path,
+            capsule_path=resolve_memory_capsule_path(cfg.memory_path, cfg.memory_capsule_path),
+            query=query,
+            records=records,
+            answer=answer,
+            slots=cfg.memory_slots,
+            baton_dim=cfg.memory_baton_dim,
+            proj_seed=cfg.memory_proj_seed,
+            embed_backend=cfg.memory_embed_backend,
+            max_chars_per_slot=cfg.memory_capsule_max_chars,
+            device=resolve_embed_device(hf),
+            notes={
+                "source": "sr_pondering_machine",
+                "run_id": run_id,
+                "query_sha": query_sha,
+                "memory_format": cfg.memory_format,
+                "memory_retrieve": cfg.memory_retrieve,
+                "pipeline": pipeline,
+            },
+        )
+
     total_s = float(time.perf_counter() - t_total0)
     memory_block_chars = int(len(final_answer_block or ""))
     memory_block_est_tokens, _memory_block_est_method = estimate_text_token_count(hf, final_answer_block or "")
@@ -7355,9 +7950,15 @@ def run_ponder(
         "run_id": run_id,
         "control": control,
         "pipeline": pipeline,
+        "ponder_policy": cfg.ponder_policy,
+        "auto_profile": cfg.auto_profile,
         "answer_style": cfg.answer_style,
+        "memory_format": cfg.memory_format,
         "memory_policy": cfg.memory_policy,
         "memory_retrieve": cfg.memory_retrieve,
+        "memory_backend": cfg.memory_backend,
+        "memory_backend_used": memory_backend_used,
+        "memory_slots": cfg.memory_slots,
         "memory_remix": cfg.memory_remix,
         "memory_selected": memory_selected_meta,
         "band_answers": band_answers if band_answers else None,
@@ -7396,6 +7997,7 @@ def run_ponder_api(
     t_total0 = time.perf_counter()
     lang = cfg.prompt_lang
     n_ponder = max(1, int(cfg.n_ponder))  # per band
+    memory_style = "background_memory" if cfg.memory_format == "capsule_store" else "ponder_log"
 
     run_id = make_run_id(cfg.seed, query)
     query_sha = sha256_short(query)
@@ -7422,6 +8024,8 @@ def run_ponder_api(
             band_profile=cfg.band_profile,
             memory_policy=cfg.memory_policy,
             memory_retrieve=cfg.memory_retrieve,
+            memory_backend=cfg.memory_backend,
+            memory_format=cfg.memory_format,
             memory_remix=cfg.memory_remix,
             answer_style=cfg.answer_style,
         )
@@ -7879,6 +8483,9 @@ def run_ponder_api(
                         "run_id": run_id,
                         "query_sha": query_sha,
                         "prompt_lang": lang,
+                        "ponder_policy": cfg.ponder_policy,
+                        "auto_profile": cfg.auto_profile,
+                        "memory_backend": cfg.memory_backend,
                         "backend": "openai_compat",
                         "control": control,
                         "band_profile": cfg.band_profile,
@@ -7914,7 +8521,7 @@ def run_ponder_api(
                     if jitter_queries and log_ix == 0 and hop_ix == 0:
                         record["prompt_jitter_queries"] = jitter_queries
 
-                    if cfg.write_memory:
+                    if cfg.write_memory and cfg.memory_format == "ponder_jsonl":
                         append_jsonl(cfg.memory_path, record)
                     records.append(record)
                     if not (ponder_log or "").strip():
@@ -7932,9 +8539,34 @@ def run_ponder_api(
                             api_warnings.append(msg)
                             print(f"[sr_ponder] WARN: {msg}", file=sys.stderr)
                     if stage_probe_active:
-                        stage_memory_block = build_memory_block(records, max_chars_per_log=700) if records else None
+                        if cfg.memory_format == "capsule_store":
+                            stage_memory_block = build_capsule_memory_block(
+                                [
+                                    {
+                                        "created_at": now_iso(),
+                                        "memory": build_capsule_memory(
+                                            query=query,
+                                            records=records,
+                                            answer="",
+                                            slots=cfg.memory_slots,
+                                            max_chars_per_slot=cfg.memory_capsule_max_chars,
+                                        ),
+                                        "meta": {"kind": "current_records", "run_id": run_id},
+                                    }
+                                ],
+                                slots=cfg.memory_slots,
+                                max_chars_per_slot=cfg.memory_capsule_max_chars,
+                            )
+                        else:
+                            stage_memory_block = build_memory_block(records, max_chars_per_log=700) if records else None
                         stage_prompt = hf._apply_chat(
-                            build_prompt_for_answer(query, memory_block=stage_memory_block, lang=lang, style=cfg.answer_style),
+                            build_prompt_for_answer(
+                                query,
+                                memory_block=stage_memory_block,
+                                lang=lang,
+                                style=cfg.answer_style,
+                                memory_style=memory_style,
+                            ),
                             system_text=None,
                         )
                         stage_items: List[Dict[str, Any]] = []
@@ -8033,41 +8665,66 @@ def run_ponder_api(
                 prev_hop_keywords = list(hop_keywords)
 
     # Select memory records for final answer injection (API: fuzzy retrieval via hashed char n-grams)
-    exclude_run_id = run_id if cfg.memory_exclude_current_run and cfg.memory_policy == "tail" else None
-    mem_records = select_memory_records_fuzzy(
-        memory_path=cfg.memory_path,
-        current_records=records,
-        query=query,
-        memory_policy=cfg.memory_policy,
-        memory_retrieve=cfg.memory_retrieve,
-        n_memory=cfg.n_memory,
-        pool_size=cfg.memory_pool,
-        mix_ratio=cfg.memory_mix_ratio,
-        exclude_run_id=exclude_run_id,
-    )
+    if cfg.memory_format == "capsule_store":
+        mem_records, memory_backend_used = select_capsule_store_items(
+            memory_path=cfg.memory_path,
+            query=query,
+            current_records=records,
+            memory_policy=cfg.memory_policy,
+            memory_retrieve=cfg.memory_retrieve,
+            n_memory=cfg.n_memory,
+            slots=cfg.memory_slots,
+            baton_dim=cfg.memory_baton_dim,
+            proj_seed=cfg.memory_proj_seed,
+            embed_backend=cfg.memory_embed_backend,
+            max_chars_per_slot=cfg.memory_capsule_max_chars,
+            device=torch.device("cpu"),
+        )
+    else:
+        exclude_run_id = run_id if cfg.memory_exclude_current_run and cfg.memory_policy == "tail" else None
+        mem_records = select_memory_records_fuzzy(
+            memory_path=cfg.memory_path,
+            current_records=records,
+            query=query,
+            memory_policy=cfg.memory_policy,
+            memory_retrieve=cfg.memory_retrieve,
+            n_memory=cfg.n_memory,
+            pool_size=cfg.memory_pool,
+            mix_ratio=cfg.memory_mix_ratio,
+            exclude_run_id=exclude_run_id,
+        )
+        if cfg.memory_policy == "off":
+            memory_backend_used = "off"
+        elif cfg.memory_policy == "current_only":
+            memory_backend_used = "current_only"
+        elif cfg.memory_retrieve == "tail":
+            memory_backend_used = "tail"
+        else:
+            memory_backend_used = "fuzzy"
     if control == "no_inject":
         mem_records = []
 
-    memory_block = build_memory_block(mem_records, max_chars_per_log=700) if mem_records else None
+    if cfg.memory_format == "capsule_store":
+        memory_block = build_capsule_memory_block(
+            mem_records,
+            slots=cfg.memory_slots,
+            max_chars_per_slot=cfg.memory_capsule_max_chars,
+        ) if mem_records else None
+    else:
+        memory_block = build_memory_block(mem_records, max_chars_per_log=700) if mem_records else None
 
-    memory_selected_meta = [
-        {
-            "ts": r.get("ts"),
-            "run_id": r.get("run_id"),
-            "band_label": r.get("band_label"),
-            "ponder_ix": r.get("ponder_ix"),
-            "ponder_mode": r.get("ponder_mode"),
-        }
-        for r in (mem_records or [])
-    ]
+    memory_selected_meta = summarize_selected_memory(mem_records or [], memory_format=cfg.memory_format)
     if trace:
         trace.event(
             "memory_selected",
             run_id=run_id,
             pack_item=pack_item,
             count=int(len(mem_records or [])),
+            memory_format=cfg.memory_format,
             memory_policy=cfg.memory_policy,
             memory_retrieve=cfg.memory_retrieve,
+            memory_backend=cfg.memory_backend,
+            memory_backend_used=memory_backend_used,
             memory_remix=cfg.memory_remix,
             selected=memory_selected_meta[:12],
         )
@@ -8140,7 +8797,28 @@ def run_ponder_api(
             band_recs = [r for r in records if str(r.get("band_label", "")) == bl]
             if not band_recs:
                 continue
-            band_mem = None if control == "no_inject" else build_memory_block(band_recs, max_chars_per_log=700)
+            if control == "no_inject":
+                band_mem = None
+            elif cfg.memory_format == "capsule_store":
+                band_mem = build_capsule_memory_block(
+                    [
+                        {
+                            "created_at": now_iso(),
+                            "memory": build_capsule_memory(
+                                query=query,
+                                records=band_recs,
+                                answer="",
+                                slots=cfg.memory_slots,
+                                max_chars_per_slot=cfg.memory_capsule_max_chars,
+                            ),
+                            "meta": {"kind": "current_band", "run_id": run_id},
+                        }
+                    ],
+                    slots=cfg.memory_slots,
+                    max_chars_per_slot=cfg.memory_capsule_max_chars,
+                )
+            else:
+                band_mem = build_memory_block(band_recs, max_chars_per_log=700)
             band_mem = remix_memory_block(
                 hf,
                 memory_block=band_mem,
@@ -8154,7 +8832,13 @@ def run_ponder_api(
             if str(cfg.memory_remix).strip() == "dream" and band_mem:
                 _record_api_budget("band_answers")
             fp = hf._apply_chat(
-                build_prompt_for_answer(query, memory_block=band_mem, lang=lang, style=cfg.answer_style),
+                build_prompt_for_answer(
+                    query,
+                    memory_block=band_mem,
+                    lang=lang,
+                    style=cfg.answer_style,
+                    memory_style=memory_style,
+                ),
                 system_text=None,
             )
             band_ans, _band_meta = _generate_api_text_with_reasoning_retry(
@@ -8232,7 +8916,13 @@ def run_ponder_api(
                 api_meta=(scaffold_meta or {}).get("api_generation") if isinstance(scaffold_meta, dict) else None,
             )
     final_prompt = hf._apply_chat(
-        build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang, style=cfg.answer_style),
+        build_prompt_for_answer(
+            query,
+            memory_block=final_answer_block,
+            lang=lang,
+            style=cfg.answer_style,
+            memory_style=memory_style,
+        ),
         system_text=None,
     )
 
@@ -8353,6 +9043,29 @@ def run_ponder_api(
             api_meta=final_answer_meta if final_answer_meta else None,
         )
 
+    if cfg.write_memory and cfg.memory_format == "capsule_store":
+        write_capsule_store_snapshot(
+            memory_path=cfg.memory_path,
+            capsule_path=resolve_memory_capsule_path(cfg.memory_path, cfg.memory_capsule_path),
+            query=query,
+            records=records,
+            answer=answer,
+            slots=cfg.memory_slots,
+            baton_dim=cfg.memory_baton_dim,
+            proj_seed=cfg.memory_proj_seed,
+            embed_backend=cfg.memory_embed_backend,
+            max_chars_per_slot=cfg.memory_capsule_max_chars,
+            device=torch.device("cpu"),
+            notes={
+                "source": "sr_pondering_machine",
+                "run_id": run_id,
+                "query_sha": query_sha,
+                "memory_format": cfg.memory_format,
+                "memory_retrieve": cfg.memory_retrieve,
+                "pipeline": pipeline,
+            },
+        )
+
     total_s = float(time.perf_counter() - t_total0)
     memory_block_chars = int(len(final_answer_block or ""))
     memory_block_est_tokens, _memory_block_est_method = estimate_text_token_count(hf, final_answer_block or "")
@@ -8362,8 +9075,14 @@ def run_ponder_api(
         "control": control,
         "pipeline": pipeline,
         "answer_style": cfg.answer_style,
+        "ponder_policy": cfg.ponder_policy,
+        "auto_profile": cfg.auto_profile,
+        "memory_format": cfg.memory_format,
         "memory_policy": cfg.memory_policy,
         "memory_retrieve": cfg.memory_retrieve,
+        "memory_backend": cfg.memory_backend,
+        "memory_backend_used": memory_backend_used,
+        "memory_slots": cfg.memory_slots,
         "memory_remix": cfg.memory_remix,
         "memory_selected": memory_selected_meta,
         "band_answers": band_answers if band_answers else None,
@@ -8454,10 +9173,12 @@ def main() -> None:
     g_core = ap.add_argument_group("Core")
     g_ponder = ap.add_argument_group("Ponder")
     g_pipeline = ap.add_argument_group("Pipeline")
+    g_policy = ap.add_argument_group("Auto Policy")
     g_bands = ap.add_argument_group("Bands")
     g_keywords = ap.add_argument_group("Keywords")
     g_jitter = ap.add_argument_group("Prompt Jitter")
     g_memory = ap.add_argument_group("Memory")
+    g_capsule = ap.add_argument_group("Capsule Store Memory")
     g_answer = ap.add_argument_group("Answers")
     g_interactive = ap.add_argument_group("Interactive")
     g_controls = ap.add_argument_group("Controls / Pack")
@@ -8521,6 +9242,19 @@ def main() -> None:
     g_pipeline.add_argument("--pipeline_context", choices=["none", "prev", "all"], default="prev")
     g_pipeline.add_argument("--pipeline_context_max_chars", type=int, default=1200)
 
+    g_policy.add_argument(
+        "--ponder_policy",
+        choices=["manual", "auto"],
+        default="manual",
+        help="manual: respect CLI settings; auto: recommend pipeline + memory defaults (unless explicitly set)",
+    )
+    g_policy.add_argument(
+        "--auto_profile",
+        choices=list(_AUTO_PROFILE_CHOICES),
+        default="balanced",
+        help="Auto policy profile",
+    )
+
     g_bands.add_argument("--band_profile", choices=["single", "spectrum3"], default="single", help="Rank-band profile")
     g_bands.add_argument(
         "--band",
@@ -8567,6 +9301,12 @@ def main() -> None:
 
     g_memory.add_argument("--n_memory", type=int, default=6)
     g_memory.add_argument(
+        "--memory_format",
+        choices=["ponder_jsonl", "capsule_store"],
+        default="ponder_jsonl",
+        help="Memory file format: raw ponder records or sr_memory_capsule-compatible store JSONL",
+    )
+    g_memory.add_argument(
         "--memory_policy",
         choices=["tail", "current_only", "off"],
         default="tail",
@@ -8577,6 +9317,12 @@ def main() -> None:
         choices=["tail", "similar", "anti", "mix"],
         default="tail",
         help="How to pick memory records when --memory_policy=tail",
+    )
+    g_memory.add_argument(
+        "--memory_backend",
+        choices=["auto", "embed", "fuzzy"],
+        default="auto",
+        help="Similarity backend for --memory_retrieve similar|anti|mix (hf only; API uses fuzzy)",
     )
     g_memory.add_argument("--memory_pool", type=int, default=200, help="Pool size for retrieval (tail records)")
     g_memory.add_argument("--memory_mix_ratio", type=float, default=0.5, help="similar/(similar+anti) when mix")
@@ -8589,6 +9335,17 @@ def main() -> None:
     g_memory.add_argument("--memory_remix_keep_original", action="store_true")
     g_memory.add_argument("--memory_remix_max_new_tokens", type=int, default=240)
     g_memory.add_argument("--memory_remix_temperature", type=float, default=0.9)
+    g_capsule.add_argument("--memory_capsule", default="", help="Companion latest capsule JSON (auto-derived if empty)")
+    g_capsule.add_argument("--memory_slots", default="task,ponder", help="Comma-separated capsule slots")
+    g_capsule.add_argument("--memory_baton_dim", type=int, default=256)
+    g_capsule.add_argument("--memory_proj_seed", type=int, default=0)
+    g_capsule.add_argument(
+        "--memory_embed_backend",
+        choices=["hash4096", "charngram4096"],
+        default="charngram4096",
+        help="Embedding backend used for capsule_store batons",
+    )
+    g_capsule.add_argument("--memory_capsule_max_chars", type=int, default=420)
     g_memory.add_argument(
         "--scaffold_condition",
         choices=list(_SCAFFOLD_CONDITIONS),
@@ -8891,6 +9648,8 @@ def main() -> None:
     prompt_lang = resolve_prompt_lang(args.prompt_lang, args.query)
     bands = [_parse_band_spec(x) for x in (args.band or [])]
     pipeline = parse_ponder_pipeline(args.ponder_pipeline, fallback_mode=args.ponder_mode)
+    memory_slots = [s.strip() for s in str(args.memory_slots or "").split(",") if s.strip()]
+    memory_capsule_path = Path(args.memory_capsule).expanduser() if str(args.memory_capsule or "").strip() else None
 
     write_memory = not bool(args.no_write_memory)
     if (args.pack != "none" or pack_file_s or lab_matrix_s) and not bool(args.pack_write_memory):
@@ -8912,8 +9671,10 @@ def main() -> None:
         api_seed_method=args.api_seed_method,
         api_logprobs_top_n=int(args.api_logprobs_top_n),
         n_memory=args.n_memory,
+        memory_format=args.memory_format,
         memory_policy=args.memory_policy,
         memory_retrieve=args.memory_retrieve,
+        memory_backend=args.memory_backend,
         memory_pool=args.memory_pool,
         memory_mix_ratio=args.memory_mix_ratio,
         memory_exclude_current_run=not bool(args.memory_include_current_run),
@@ -8921,6 +9682,12 @@ def main() -> None:
         memory_remix_keep_original=bool(args.memory_remix_keep_original),
         memory_remix_max_new_tokens=args.memory_remix_max_new_tokens,
         memory_remix_temperature=args.memory_remix_temperature,
+        memory_capsule_path=memory_capsule_path,
+        memory_slots=memory_slots or ["task", "ponder"],
+        memory_baton_dim=int(args.memory_baton_dim),
+        memory_proj_seed=int(args.memory_proj_seed),
+        memory_embed_backend=str(args.memory_embed_backend),
+        memory_capsule_max_chars=int(args.memory_capsule_max_chars),
         rejected=RejectedTokenConfig(
             top_k=args.top_k_rejected,
             strategy=args.strategy,
@@ -8940,6 +9707,8 @@ def main() -> None:
         no_repeat_ngram_size=args.no_repeat_ngram_size,
         seed=args.seed,
         prompt_lang=prompt_lang,
+        ponder_policy=args.ponder_policy,
+        auto_profile=args.auto_profile,
         ponder_mode=args.ponder_mode,
         ponder_pipeline=pipeline,
         pipeline_context=args.pipeline_context,
@@ -8991,6 +9760,59 @@ def main() -> None:
         force_gemma_format=not args.no_gemma_format,
         hf_local_files_only=not bool(args.hf_online),
     )
+
+    if (cfg.ponder_policy or "manual").strip() == "auto":
+        argv = sys.argv[1:]
+        auto_changed: List[str] = []
+
+        if (
+            not cfg.ponder_pipeline
+            and not _argv_has_flag(argv, "--ponder_pipeline")
+            and not _argv_has_flag(argv, "--ponder_mode")
+        ):
+            auto_pipeline = auto_select_ponder_pipeline(args.query, lang=cfg.prompt_lang, profile=cfg.auto_profile)
+            if auto_pipeline:
+                cfg = dataclasses.replace(cfg, ponder_pipeline=auto_pipeline)
+                auto_changed.append(f"pipeline={','.join(auto_pipeline)}")
+
+        if cfg.memory_policy == "tail":
+            mem_defaults = auto_recommend_memory_defaults(profile=cfg.auto_profile)
+            if not _argv_has_flag(argv, "--memory_retrieve"):
+                cfg = dataclasses.replace(
+                    cfg,
+                    memory_retrieve=str(mem_defaults.get("memory_retrieve", cfg.memory_retrieve)),
+                )
+                auto_changed.append(f"memory_retrieve={cfg.memory_retrieve}")
+
+            if cfg.memory_retrieve != "tail":
+                if not _argv_has_flag(argv, "--memory_backend"):
+                    cfg = dataclasses.replace(
+                        cfg,
+                        memory_backend=str(mem_defaults.get("memory_backend", cfg.memory_backend)),
+                    )
+                    auto_changed.append(f"memory_backend={cfg.memory_backend}")
+
+                if cfg.memory_retrieve == "mix" and not _argv_has_flag(argv, "--memory_mix_ratio"):
+                    cfg = dataclasses.replace(
+                        cfg,
+                        memory_mix_ratio=float(mem_defaults.get("memory_mix_ratio", cfg.memory_mix_ratio)),
+                    )
+                    auto_changed.append(f"memory_mix_ratio={cfg.memory_mix_ratio:.2f}")
+
+                if not _argv_has_flag(argv, "--memory_pool"):
+                    cfg = dataclasses.replace(
+                        cfg,
+                        memory_pool=int(mem_defaults.get("memory_pool", cfg.memory_pool)),
+                    )
+                    auto_changed.append(f"memory_pool={cfg.memory_pool}")
+
+        if auto_changed:
+            print(f"[sr_ponder] auto_policy profile={cfg.auto_profile} " + " ".join(auto_changed))
+
+    if cfg.memory_format == "capsule_store" and cfg.memory_retrieve not in ("tail", "similar"):
+        raise SystemExit(
+            "[sr_ponder] ERROR: memory_format=capsule_store currently supports --memory_retrieve tail|similar only."
+        )
 
     trace: Optional[Any] = None
     trace_path_s = str(getattr(args, "trace_out", "") or "").strip()
@@ -9076,7 +9898,8 @@ def main() -> None:
             f"objective={cfg.keyword_objective} diversity={cfg.keyword_diversity} hops={cfg.ponder_hops} answer_style={cfg.answer_style} "
             f"hf_local_only={cfg.hf_local_files_only} control={cfg.control} "
             f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
-            f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} "
+            f"policy={cfg.ponder_policy}/{cfg.auto_profile} "
+            f"memory={cfg.memory_format}/{cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_backend}/{cfg.memory_remix} "
             f"scaffold={cfg.scaffold_condition}/{cfg.scaffold_token_target or 'source'} "
             f"write_memory={cfg.write_memory}"
         )
@@ -9102,7 +9925,8 @@ def main() -> None:
             f"lang={cfg.prompt_lang} band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
             f"objective={cfg.keyword_objective} diversity={cfg.keyword_diversity} hops={cfg.ponder_hops} answer_style={cfg.answer_style} control={cfg.control} "
             f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
-            f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} "
+            f"policy={cfg.ponder_policy}/{cfg.auto_profile} "
+            f"memory={cfg.memory_format}/{cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_backend}/{cfg.memory_remix} "
             f"scaffold={cfg.scaffold_condition}/{cfg.scaffold_token_target or 'source'} "
             f"write_memory={cfg.write_memory}"
         )

@@ -33,6 +33,7 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Terminal ponder logs** — human-readable ponder logs now print to the terminal by default; raw JSON records stay opt-in.
 - **Ponder lenses** — switch between association / assumptions / counterexamples / questions-only / metaphor via `--ponder_mode`.
 - **Lens pipeline** — chain multiple lenses via `--ponder_pipeline` (with `--pipeline_context prev|all|none`).
+- **Auto policy** — `--ponder_policy auto` recommends a lens pipeline + memory defaults (profile via `--auto_profile`).
 - **Multi-ponder** — generate multiple ponder logs per band with `--n_ponder`.
 - **Latent walk (hops)** — chain multiple drift steps via `--ponder_hops` (next-hop seeds from `--hop_keyword_source model|heuristic`).
 - **Presets** — apply curated settings with one flag (e.g. `--preset surreal`).
@@ -45,6 +46,8 @@ The hypothesis is that the tangential pondering log can surface hidden assumptio
 - **Probe compare** — measure how pondering changes the next-token distribution with `--probe_compare` and `--probe_compare_stages` (rank movers + JS divergence).
 - **Spectral bands** — run multiple rank-bands (near/mid/far) via `--band_profile spectrum3` or define custom bands with `--band`.
 - **Memory retrieval** — pick memory by similarity/anti-similarity via `--memory_retrieve similar|anti|mix`.
+- **Capsule-store memory** — read/write `sr_memory_capsule.py`-compatible `store + latest_capsule` files via `--memory_format capsule_store`.
+- **Memory benchmark** — compare `embed` vs `fuzzy` across `log` / `capsule` / `hybrid` corpora with `sr_ponder_memory_bench.py`.
 - **Memory remix** — shuffle/compress/dream the injected memory via `--memory_remix`.
 - **Answer style** — steer the final answer style via `--answer_style plain|surreal|metaphor|meta`.
 - **Answer ensemble** — generate per-band answers + merged answer with `--answer_per_band` / `--answer_ensemble`.
@@ -403,6 +406,23 @@ python3 sr_pondering_machine.py \
   --memory_policy current_only
 ```
 
+### Auto policy: balanced / creative
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "Why do we overfit narratives to randomness?" \
+  --mode ponder \
+  --ponder_policy auto
+
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "Design a new kind of musical scale." \
+  --mode ponder \
+  --ponder_policy auto \
+  --auto_profile creative
+```
+
 ### Answer ensemble: per-band answers + merged final answer
 
 ```bash
@@ -451,9 +471,39 @@ python3 sr_pondering_machine.py \
   --mode ponder \
   --memory_policy tail \
   --memory_retrieve mix \
+  --memory_backend fuzzy \
   --memory_pool 300 \
   --memory_mix_ratio 0.5 \
   --memory_remix dream
+```
+
+### Capsule-store memory (compatible with `sr_memory_capsule.py`)
+
+```bash
+python3 sr_pondering_machine.py \
+  --model ./model/gemma-3-270m-it \
+  --query "What hidden assumptions are we making?" \
+  --mode ponder \
+  --memory ./ponder_capsules/session_a.jsonl \
+  --memory_format capsule_store \
+  --memory_capsule ./ponder_capsules/session_a.latest_capsule.json \
+  --memory_slots task,angles,ponder,answer \
+  --memory_retrieve similar \
+  --memory_embed_backend charngram4096
+```
+
+### Memory benchmark: log vs capsule vs hybrid
+
+```bash
+python3 sr_ponder_memory_bench.py \
+  --model ./model/gemma-3-270m-it \
+  --queries ./bench_queries.jsonl \
+  --log_memory ./ponder_logs.jsonl \
+  --capsule_store ./ponder_capsules/session_a.jsonl \
+  --sources log,capsule,hybrid \
+  --memory_backends embed,fuzzy \
+  --memory_retrieve similar \
+  --seeds 1234,1235,1236
 ```
 
 ### Interactive pick (human-in-the-loop keywords)
@@ -504,6 +554,13 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | `--control` | `none` | `none` · `no_inject` · `random_log` · `random_keywords` · `lens_only` |
 | `--no_write_memory` | `False` | Don’t append JSONL records |
 
+### Auto policy
+
+| Argument | Default | Description |
+|---|---|---|
+| `--ponder_policy` | `manual` | `manual` · `auto` |
+| `--auto_profile` | `balanced` | `balanced` · `creative` · `skeptic` · `interrogator` |
+
 ### Bands
 
 | Argument | Default | Description |
@@ -539,14 +596,27 @@ Run `python3 sr_pondering_machine.py --help` for the full grouped help.
 | Argument | Default | Description |
 |---|---|---|
 | `--n_memory` | `6` | Memory records to inject |
+| `--memory_format` | `ponder_jsonl` | `ponder_jsonl` · `capsule_store` |
 | `--memory_policy` | `tail` | `tail` · `current_only` · `off` |
 | `--memory_retrieve` | `tail` | `tail` · `similar` · `anti` · `mix` |
+| `--memory_backend` | `auto` | `auto` · `embed` · `fuzzy` |
 | `--memory_pool` | `200` | Tail pool size for retrieval |
 | `--memory_mix_ratio` | `0.5` | similar/(similar+anti) in mix |
 | `--memory_include_current_run` | `False` | Allow selecting current run from tail |
 | `--memory_remix` | `off` | `off` · `shuffle` · `compress` · `dream` |
 | `--scaffold_condition` | `assoc` | `assoc` · `random` · `facts` · `isomorphic` |
 | `--scaffold_token_target` | `0` | Approx target token budget for the final injected scaffold |
+
+### Capsule store memory
+
+| Argument | Default | Description |
+|---|---|---|
+| `--memory_capsule` | *(auto)* | Companion `*.latest_capsule.json` path |
+| `--memory_slots` | `task,ponder` | Slots used for capsule retrieval / writing |
+| `--memory_baton_dim` | `256` | Projected baton dimension |
+| `--memory_proj_seed` | `0` | Slot projection seed |
+| `--memory_embed_backend` | `charngram4096` | `hash4096` · `charngram4096` |
+| `--memory_capsule_max_chars` | `420` | Per-slot compression budget |
 
 ### Answers
 
@@ -614,6 +684,9 @@ Each ponder run appends a JSON record to the JSONL file:
   "band_label": "outside_topk:80:336",
   "ponder_ix": 0,
   "prompt_lang": "en",
+  "ponder_policy": "manual",
+  "auto_profile": "balanced",
+  "memory_backend": "auto",
   "pipeline": ["assoc", "metaphor"],
   "pipeline_stage_ix": 0,
   "pipeline_context": "prev",
@@ -639,10 +712,27 @@ With `--memory_policy tail`, you can choose retrieval:
 
 - `--memory_retrieve tail`: literal tail
 - `--memory_retrieve similar|anti|mix`:
-  - `--backend hf`: cosine similarity over token-id embeddings
-  - `--backend openai_compat`: approximate TF‑IDF cosine over hashed character n-grams (plus MMR-style diversity)
+  - `--backend hf`: `--memory_backend auto|embed` (token-id embedding cosine) or `--memory_backend fuzzy` (hashed char n-grams + IDF + MMR)
+  - `--backend openai_compat`: hashed char n-grams + IDF + MMR (always)
 
 And optionally remix the injected text with `--memory_remix`.
+
+If you switch to `--memory_format capsule_store`, `--memory` points at the capsule store JSONL and the script also writes/reads the companion latest capsule JSON (`--memory_capsule`, auto-derived if omitted). In capsule mode, retrieval currently supports:
+
+- `--memory_retrieve tail`
+- `--memory_retrieve similar`
+
+`anti` / `mix` stay available in the default `ponder_jsonl` format.
+
+## Memory Benchmark
+
+`sr_ponder_memory_bench.py` builds canonical `log`, `capsule`, and `hybrid` corpora, runs `sr_pondering_machine.py` through `run_ponder_dispatch()`, and writes:
+
+- raw JSONL rows (`--out_jsonl`)
+- aggregate summary JSON (`--out_summary_json`)
+- Markdown table (`--out_summary_md`)
+
+The wrapper is intended for fair A/B sweeps of `--memory_backend embed|fuzzy` on the same query / seed grid.
 
 ## Memory Report (Visualization)
 
@@ -683,6 +773,7 @@ python3 sr_matrix_report.py --results ./artifacts/scaffold_abcd.json --out ./art
 - `--matrix_report_out` renders the saved pack / lab-matrix JSON into a compact HTML table with semantic, judge, stance, and token-budget columns, plus client-side sorting by baseline-relative metrics like `judge_score_delta`, `query_alignment_delta`, `stance_shift`, and token deltas. It also includes a pairwise A/B/C/D heatmap so you can see which scaffold condition beats which on judge, alignment, shift, and token-cost axes. If you already use `--out_dir`, pack / lab-matrix runs auto-fill this path for you.
 - External semantic encoder loading is quiet by default to avoid noisy `from_pretrained()` progress bars and local `sitecustomize` chatter; set `SR_COMPARE_EMBED_VERBOSE=1` if you want to see that load output.
 - For API backends, `--memory_retrieve similar|anti|mix` uses a cheap approximate similarity (hashed character n-grams + IDF weighting). It’s not as strong as real embedding retrieval, but better than raw tail.
+- For `--memory_format capsule_store`, retrieval currently supports `--memory_retrieve tail|similar`; use the default `ponder_jsonl` format for `anti|mix`.
 - For API backends, `--api_logprobs_top_n` is provider-capped. If the returned logprob depth is shallower than a requested band (for example `spectrum3` + `far`), that band degrades to self-seeded keywords and the script warns about it.
 - For `--probe_compare`, `--backend hf` computes JS divergence on the full vocab; `--backend openai_compat` computes an approximate JS divergence on the observed top-logprobs union and reports the observed mass.
 - `--probe_compare_stages` uses the current run’s accumulated ponder logs as the injected memory source for each timeline point. This is diagnostic by design; the final answer may still use a different selected/remixed memory block.
