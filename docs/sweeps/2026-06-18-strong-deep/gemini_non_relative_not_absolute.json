@@ -1,0 +1,2103 @@
+{
+  "ts": "2026-06-17T16:45:35Z",
+  "kind": "lab_matrix",
+  "provider": "custom",
+  "model": "gemini-3.1-pro-preview",
+  "query": "非相対的ではあるが絶対的ではない状態とは？",
+  "pack": "lab_scaffold_abcd",
+  "pack_file": "",
+  "lab_matrix": "scaffold_abcd",
+  "preset": "none",
+  "config": "",
+  "env": {
+    "python": "3.13.13 (v3.13.13:01104ce1beb, Apr  7 2026, 14:43:30) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "platform": "darwin",
+    "torch": "2.11.0",
+    "transformers": "4.57.6"
+  },
+  "base_cfg": {
+    "model_path": "gemini-3.1-pro-preview",
+    "memory_path": "ponder_logs.jsonl",
+    "backend": "openai_compat",
+    "provider": "custom",
+    "api_base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "api_chat_path": "/chat/completions",
+    "api_key_env": "GEMINI_API_KEY",
+    "api_key": "",
+    "api_headers": [],
+    "api_timeout": 900.0,
+    "api_max_retries": 1,
+    "api_reasoning_effort": "high",
+    "api_seed_method": "auto",
+    "api_logprobs_top_n": 0,
+    "n_memory": 6,
+    "memory_policy": "current_only",
+    "memory_retrieve": "tail",
+    "memory_pool": 200,
+    "memory_mix_ratio": 0.5,
+    "memory_exclude_current_run": true,
+    "memory_remix": "off",
+    "memory_remix_keep_original": false,
+    "memory_remix_max_new_tokens": 240,
+    "memory_remix_temperature": 0.9,
+    "rejected": {
+      "top_k": 80,
+      "strategy": "outside_topk",
+      "exclude_top": 8,
+      "band_width": 256,
+      "n_keywords": 6
+    },
+    "band_profile": "single",
+    "bands": [],
+    "answer_style": "plain",
+    "answer_max_new_tokens": 2048,
+    "ponder_max_new_tokens": 1024,
+    "temperature": 0.7,
+    "top_p": 0.95,
+    "top_k": 0,
+    "repetition_penalty": 1.05,
+    "no_repeat_ngram_size": 0,
+    "seed": 1234,
+    "prompt_lang": "ja",
+    "ponder_mode": "assoc",
+    "ponder_pipeline": [],
+    "pipeline_context": "prev",
+    "pipeline_context_max_chars": 1200,
+    "n_ponder": 1,
+    "ponder_hops": 1,
+    "hop_keyword_source": "model",
+    "hop_context_max_chars": 900,
+    "keyword_refine": false,
+    "keyword_refine_max_new_tokens": 96,
+    "keyword_refine_temperature": 0.3,
+    "keyword_objective": "random_band",
+    "keyword_select_top": 128,
+    "keyword_diversity": "off",
+    "keyword_diversity_threshold": 0.82,
+    "dissonance_target": 0.9,
+    "dissonance_width": 0.6,
+    "dissonance_tail_k": 64,
+    "prompt_jitter": 0,
+    "prompt_jitter_include_original": true,
+    "prompt_jitter_max_new_tokens": 160,
+    "prompt_jitter_temperature": 0.6,
+    "probe_top_n": 0,
+    "probe_compare": false,
+    "probe_compare_stages": false,
+    "probe_compare_top_n": 32,
+    "compare_semantic": "hash",
+    "compare_judge": "off",
+    "compare_stance": "auto",
+    "compare_spatial_metaphor": "auto",
+    "compare_token_budget": "auto",
+    "compare_embed_model": "",
+    "scaffold_condition": "assoc",
+    "scaffold_token_target": 320,
+    "print_probe": false,
+    "interactive": false,
+    "interactive_candidates": 48,
+    "answer_per_band": false,
+    "answer_ensemble": false,
+    "answer_ensemble_max_new_tokens": 512,
+    "answer_ensemble_temperature": 0.2,
+    "control": "none",
+    "write_memory": false,
+    "device": "auto",
+    "dtype": "auto",
+    "allocator_warmup": "auto",
+    "trust_remote_code": false,
+    "use_chat_template": true,
+    "force_gemma_format": true,
+    "hf_local_files_only": true
+  },
+  "items": [
+    {
+      "name": "baseline",
+      "kind": "baseline",
+      "answer": "言葉の前提を疑うところから、少し思考を歩かせてみます。私たちは通常、「相対的」と「絶対的」を対義語として、コインの裏表のように捉えがちです。相対的とは、他との比較や関係性によってその性質や価値が定まること。対して絶対的とは、他に依存せず、それ自体で普遍",
+      "metrics": {
+        "answer_chars": 126,
+        "elapsed_s": 23.42548133300079
+      }
+    },
+    {
+      "name": "assoc",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "昼と夜の境界である黄昏時は、昼の明るさや夜の暗さと比較されることで成り立つ相対的なものではなく、ただ「空が青でも赤でもない両方である」という独自の瞬間としてそこに存在します。しかし、それは永遠に続く不変の真理ではなく、時間が経てば移ろうため絶対的なものでもありません。このような境界領域や、観",
+      "records": [
+        {
+          "ts": "2026-06-17T16:46:15Z",
+          "run_id": "830ea3c16e79b21e",
+          "query_sha": "9181d8526a4c",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "境界領域",
+            "量子重ね合わせ"
+          ],
+          "keywords": [
+            "境界領域",
+            "量子重ね合わせ"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "境界領域",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "量子重ね合わせ",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "Ss8yarw4tsit9w_y1YLxBA",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 100,
+            "completion_tokens": 36,
+            "reasoning_tokens": 0,
+            "total_tokens": 1120,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「境界領域」と「量子重ね合わせ」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "- 昼と夜の境界である黄昏時、空が青でも赤でもない「両方」である瞬間が、夢への入り口になるのだろうか。",
+          "gen_elapsed_s": 13.485858166999606
+        }
+      ],
+      "extras": {
+        "run_id": "830ea3c16e79b21e",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:46:15Z",
+            "run_id": "830ea3c16e79b21e",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "assoc",
+          "target_tokens": 320,
+          "source_tokens_est": 130,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": false,
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 300,
+          "normalized": true,
+          "strategy": "direct_memory_block"
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 394,
+        "memory_block_est_tokens": 300,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 7,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "V88yar_BHdDB0-kPyuba8A0",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 340,
+          "completion_tokens": 81,
+          "reasoning_tokens": 0,
+          "total_tokens": 2384,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 40.507431166999595,
+          "probe_s": 1.3750001016887836e-05,
+          "memory_remix_s": 4.207999154459685e-06,
+          "answer_s": 24.04670645799888
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "assoc",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 146,
+        "records": 1,
+        "elapsed_s": 40.508026167000935
+      },
+      "comparison": {
+        "baseline_chars": 126,
+        "ponder_chars": 146,
+        "answer_changed": true,
+        "char_delta": 20,
+        "diff_ratio": 0.875,
+        "records": 1,
+        "unique_keywords": 2,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_baseline_dominant": "definition",
+        "stance_top_drop": "definition",
+        "spatial_answer_density_delta": 13.698630136986301,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 13.698630136986301,
+        "spatial_question_density": 27.77777777777778,
+        "spatial_log_density": 19.607843137254903,
+        "spatial_log_question_density_delta": -8.169934640522875,
+        "budget_baseline_answer_tokens_est": 126.0,
+        "budget_ponder_answer_tokens_est": 146.0,
+        "budget_external_scaffold_tokens_est": 397.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.0523852248002273,
+          "query_baseline_cosine": 0.03818614595464423,
+          "query_ponder_cosine": 0.04539756484987637,
+          "query_alignment_delta": 0.007211418895232143
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 4.0,
+            "dominant": "definition",
+            "scores": {
+              "definition": 0.5,
+              "framing": 0.0,
+              "conditionalization": 0.25,
+              "example_expansion": 0.25,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 2,
+              "framing": 0,
+              "conditionalization": 1,
+              "example_expansion": 1,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "definition": [
+                {
+                  "term": "とは",
+                  "count": 2
+                }
+              ],
+              "conditionalization": [
+                {
+                  "term": "依存",
+                  "count": 1
+                }
+              ],
+              "example_expansion": [
+                {
+                  "term": "のように",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "ponder": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "definition",
+          "dominant_ponder": "",
+          "dominant_shift": "definition->",
+          "top_gain": "",
+          "top_gain_delta": 0.0,
+          "top_drop": "definition",
+          "top_drop_delta": -0.5,
+          "deltas": {
+            "definition": -0.5,
+            "framing": 0.0,
+            "conditionalization": -0.25,
+            "example_expansion": -0.25,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 126,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 146,
+            "count": 2,
+            "density_per_1k_chars": 13.698630136986301,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 2
+            },
+            "top_terms": [
+              {
+                "term": "境界",
+                "count": 2
+              }
+            ]
+          },
+          "questions": {
+            "chars": 36,
+            "count": 1,
+            "density_per_1k_chars": 27.77777777777778,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "境界",
+                "count": 1
+              }
+            ]
+          },
+          "logs": {
+            "chars": 51,
+            "count": 1,
+            "density_per_1k_chars": 19.607843137254903,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "境界",
+                "count": 1
+              }
+            ]
+          },
+          "answer_density_delta": 13.698630136986301,
+          "log_question_density_delta": -8.169934640522875
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 126,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 53,
+              "completion_tokens": 79,
+              "reasoning_tokens": 0,
+              "total_tokens": 2097
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 146,
+            "ponder_question_tokens_est": 36,
+            "ponder_log_tokens_est": 50,
+            "keyword_tokens_est": 11,
+            "memory_block_chars": 394,
+            "memory_block_tokens_est": 300,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 546,
+              "completion_tokens": 124,
+              "reasoning_tokens": 0,
+              "total_tokens": 3766
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 100,
+              "completion_tokens": 36,
+              "reasoning_tokens": 0,
+              "total_tokens": 1120
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 106,
+                "completion_tokens": 7,
+                "reasoning_tokens": 0,
+                "total_tokens": 262
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 106,
+              "completion_tokens": 7,
+              "reasoning_tokens": 0,
+              "total_tokens": 262
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 340,
+              "completion_tokens": 81,
+              "reasoning_tokens": 0,
+              "total_tokens": 2384
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 20,
+            "external_scaffold_tokens_est": 397,
+            "api_prompt_tokens": 493,
+            "api_completion_tokens": 45,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 1669
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 599,
+            "completion_tokens": 203,
+            "reasoning_tokens": 0,
+            "total_tokens": 5863
+          }
+        }
+      }
+    },
+    {
+      "name": "random",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "駅前で妙に丁寧に折られているレシートの端や、美術館のロビーに置き去りにされた紙コップ。それらは、他の何かと比較してその形を保っているわけではありません。周囲の環境との関係において「より美しい」とか「より意味がある」といった相対的な評価の網目からは抜け落ちています。しかし同時に、それが宇宙の真理のように永遠不変であるわけでも、いかなる条件にも縛られない絶対的な存在であるわけでもありません。ただその瞬間、その場所で、それ自身の小さな論理によって完結してそこにあるだけです。\n\nこのような情景を思い浮かべると、非相対的ではあるが絶対的ではない状態の輪郭が自然と浮かび上がってきます。\n\n何かと比べることで価値や意味が決まる相対的な文脈から切り離され、それ自体で独立して成立している。しかし、すべての制約を超越した永遠不変の絶対的なものでもなく、やがては風に飛ばされたり、誰かに片付けられたりする有限なものである。\n\nつまりその状態とは、他者や外部の基準に依存せずに自己完結していながらも、普遍性や永遠性を持たない「局所的な固有性」を指します。特定の時間と空間の中でのみ一意に存在する、一過性でありながらも独立したあり方です。比較されることも、永遠を約束されることもなく、ただその瞬間にそのように存在しているという完結した有限性こそが、非相対的でありながら絶対的ではない状態の正体です。",
+      "records": [
+        {
+          "ts": "2026-06-17T16:46:54Z",
+          "run_id": "70bd5551be8c7fbc",
+          "query_sha": "9181d8526a4c",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "json"
+          ],
+          "keywords": [
+            "json"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "json",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "cs8yasKNMZOA2roPy9fBkAY",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 99,
+            "completion_tokens": 40,
+            "reasoning_tokens": 0,
+            "total_tokens": 1119,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「json」と「Emptiness」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "- 夢の中でふと開いた本や看板の文字が `{\"key\": \"value\"}` のような構造に置き換わっていたら、それは夢の合図かもしれない。",
+          "gen_elapsed_s": 11.465020875000846
+        }
+      ],
+      "extras": {
+        "run_id": "70bd5551be8c7fbc",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:46:54Z",
+            "run_id": "70bd5551be8c7fbc",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "random",
+          "target_tokens": 320,
+          "source_tokens_est": 547,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": false,
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 316,
+          "normalized": true,
+          "strategy": "local_random_sentences"
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 329,
+        "memory_block_est_tokens": 316,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 2,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "stop",
+          "response_id": "fs8yapTxEJvM0-kPobnmiAg",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 313,
+          "completion_tokens": 327,
+          "reasoning_tokens": 0,
+          "total_tokens": 2094,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 32.1431080830007,
+          "probe_s": 9.125000360654667e-06,
+          "memory_remix_s": 8.292001439258456e-06,
+          "answer_s": 17.417631292000806
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "random",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 591,
+        "records": 1,
+        "elapsed_s": 32.143420209000396
+      },
+      "comparison": {
+        "baseline_chars": 126,
+        "ponder_chars": 591,
+        "answer_changed": true,
+        "char_delta": 465,
+        "diff_ratio": 0.9191073919107392,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.3571428571428571,
+        "stance_baseline_dominant": "definition",
+        "stance_ponder_dominant": "conditionalization",
+        "stance_top_gain": "conditionalization",
+        "stance_top_drop": "definition",
+        "spatial_answer_density_delta": 5.0761421319796955,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 5.0761421319796955,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 126.0,
+        "budget_ponder_answer_tokens_est": 585.0,
+        "budget_external_scaffold_tokens_est": 404.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.09904725924808201,
+          "query_baseline_cosine": 0.041797509182114695,
+          "query_ponder_cosine": 0.18667132984712848,
+          "query_alignment_delta": 0.14487382066501378
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 4.0,
+            "dominant": "definition",
+            "scores": {
+              "definition": 0.5,
+              "framing": 0.0,
+              "conditionalization": 0.25,
+              "example_expansion": 0.25,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 2,
+              "framing": 0,
+              "conditionalization": 1,
+              "example_expansion": 1,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "definition": [
+                {
+                  "term": "とは",
+                  "count": 2
+                }
+              ],
+              "conditionalization": [
+                {
+                  "term": "依存",
+                  "count": 1
+                }
+              ],
+              "example_expansion": [
+                {
+                  "term": "のように",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 7.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.14285714285714285,
+              "framing": 0.0,
+              "conditionalization": 0.42857142857142855,
+              "example_expansion": 0.2857142857142857,
+              "resolution": 0.14285714285714285
+            },
+            "raw_counts": {
+              "definition": 1,
+              "framing": 0,
+              "conditionalization": 3,
+              "example_expansion": 2,
+              "resolution": 1
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "definition": [
+                {
+                  "term": "とは",
+                  "count": 1
+                }
+              ],
+              "conditionalization": [
+                {
+                  "term": "依存",
+                  "count": 1
+                },
+                {
+                  "term": "条件",
+                  "count": 1
+                },
+                {
+                  "term": "文脈",
+                  "count": 1
+                }
+              ],
+              "example_expansion": [
+                {
+                  "term": "のように",
+                  "count": 2
+                }
+              ],
+              "resolution": [
+                {
+                  "term": "つまり",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.3571428571428571,
+          "dominant_baseline": "definition",
+          "dominant_ponder": "conditionalization",
+          "dominant_shift": "definition->conditionalization",
+          "top_gain": "conditionalization",
+          "top_gain_delta": 0.17857142857142855,
+          "top_drop": "definition",
+          "top_drop_delta": -0.35714285714285715,
+          "deltas": {
+            "definition": -0.35714285714285715,
+            "framing": 0.0,
+            "conditionalization": 0.17857142857142855,
+            "example_expansion": 0.0357142857142857,
+            "resolution": 0.14285714285714285
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 126,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 591,
+            "count": 3,
+            "density_per_1k_chars": 5.0761421319796955,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 1,
+              "stage": 0,
+              "container": 0,
+              "geometry": 2
+            },
+            "top_terms": [
+              {
+                "term": "駅",
+                "count": 1
+              },
+              {
+                "term": "空間",
+                "count": 1
+              },
+              {
+                "term": "場所",
+                "count": 1
+              }
+            ]
+          },
+          "questions": {
+            "chars": 38,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 70,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": 5.0761421319796955,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 126,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 53,
+              "completion_tokens": 79,
+              "reasoning_tokens": 0,
+              "total_tokens": 2097
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 585,
+            "ponder_question_tokens_est": 27,
+            "ponder_log_tokens_est": 60,
+            "keyword_tokens_est": 1,
+            "memory_block_chars": 329,
+            "memory_block_tokens_est": 316,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 518,
+              "completion_tokens": 369,
+              "reasoning_tokens": 0,
+              "total_tokens": 3475
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 99,
+              "completion_tokens": 40,
+              "reasoning_tokens": 0,
+              "total_tokens": 1119
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 106,
+                "completion_tokens": 2,
+                "reasoning_tokens": 0,
+                "total_tokens": 262
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 106,
+              "completion_tokens": 2,
+              "reasoning_tokens": 0,
+              "total_tokens": 262
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 313,
+              "completion_tokens": 327,
+              "reasoning_tokens": 0,
+              "total_tokens": 2094
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 459,
+            "external_scaffold_tokens_est": 404,
+            "api_prompt_tokens": 465,
+            "api_completion_tokens": 290,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 1378
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 571,
+            "completion_tokens": 448,
+            "reasoning_tokens": 0,
+            "total_tokens": 5572
+          }
+        }
+      }
+    },
+    {
+      "name": "facts",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "「相対的」と「絶対的」という言葉の定義について思索を巡らせてみる。相対的とは、対象の性質や価値が他者との比較や外部の基準、観測者の視点に依存して決まる状態を指す。したがって「非相対的」とは、他との比較や関係性に依存せず、それ自体で性質が定まっている自",
+      "records": [
+        {
+          "ts": "2026-06-17T16:47:25Z",
+          "run_id": "b8fcb527283d6250",
+          "query_sha": "9181d8526a4c",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "と絶対"
+          ],
+          "keywords": [
+            "と絶対"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "と絶対",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "ks8yar21Md_SrfcP6tD-6Aw",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 100,
+            "completion_tokens": 39,
+            "reasoning_tokens": 0,
+            "total_tokens": 1120,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「と絶対」と「Emptiness」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "- 「と絶対」という言葉の尻尾だけが、壊れたレコードのようにリフレインしている空間。\n- なぜ「絶対」の前に「と」が張り付いている",
+          "gen_elapsed_s": 11.18735070799994
+        }
+      ],
+      "extras": {
+        "run_id": "b8fcb527283d6250",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:47:25Z",
+            "run_id": "b8fcb527283d6250",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "facts",
+          "target_tokens": 320,
+          "source_tokens_est": 35,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "nc8yar6xO6W12roPxOaswA4",
+            "model": "gemini-3.1-pro-preview",
+            "api_calls": 1,
+            "prompt_tokens": 118,
+            "completion_tokens": 26,
+            "reasoning_tokens": 0,
+            "total_tokens": 754,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 311,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 326,
+        "memory_block_est_tokens": 311,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 2,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 118,
+            "completion_tokens": 26,
+            "reasoning_tokens": 0,
+            "total_tokens": 754
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "ps8yapDHC7X_2roPjdOE2AI",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 301,
+          "completion_tokens": 81,
+          "reasoning_tokens": 0,
+          "total_tokens": 2345,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 43.85189533299854,
+          "probe_s": 8.041000910452567e-06,
+          "memory_remix_s": 3.2080006349133328e-06,
+          "answer_s": 21.344194625000455
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 125,
+        "records": 1,
+        "elapsed_s": 43.85227550000127
+      },
+      "comparison": {
+        "baseline_chars": 126,
+        "ponder_chars": 125,
+        "answer_changed": true,
+        "char_delta": -1,
+        "diff_ratio": 0.6812749003984064,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.25,
+        "stance_baseline_dominant": "definition",
+        "stance_ponder_dominant": "definition",
+        "stance_top_gain": "resolution",
+        "stance_top_drop": "example_expansion",
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 15.384615384615385,
+        "spatial_log_question_density_delta": 15.384615384615385,
+        "budget_baseline_answer_tokens_est": 126.0,
+        "budget_ponder_answer_tokens_est": 125.0,
+        "budget_external_scaffold_tokens_est": 405.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.28825261043613215,
+          "query_baseline_cosine": 0.038296401836302306,
+          "query_ponder_cosine": 0.04515113365014259,
+          "query_alignment_delta": 0.006854731813840283
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 4.0,
+            "dominant": "definition",
+            "scores": {
+              "definition": 0.5,
+              "framing": 0.0,
+              "conditionalization": 0.25,
+              "example_expansion": 0.25,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 2,
+              "framing": 0,
+              "conditionalization": 1,
+              "example_expansion": 1,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "definition": [
+                {
+                  "term": "とは",
+                  "count": 2
+                }
+              ],
+              "conditionalization": [
+                {
+                  "term": "依存",
+                  "count": 1
+                }
+              ],
+              "example_expansion": [
+                {
+                  "term": "のように",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 6.0,
+            "dominant": "definition",
+            "scores": {
+              "definition": 0.5,
+              "framing": 0.0,
+              "conditionalization": 0.3333333333333333,
+              "example_expansion": 0.0,
+              "resolution": 0.16666666666666666
+            },
+            "raw_counts": {
+              "definition": 3,
+              "framing": 0,
+              "conditionalization": 2,
+              "example_expansion": 0,
+              "resolution": 1
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "definition": [
+                {
+                  "term": "とは",
+                  "count": 2
+                },
+                {
+                  "term": "定義",
+                  "count": 1
+                }
+              ],
+              "conditionalization": [
+                {
+                  "term": "依存",
+                  "count": 2
+                }
+              ],
+              "resolution": [
+                {
+                  "term": "したがって",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.25,
+          "dominant_baseline": "definition",
+          "dominant_ponder": "definition",
+          "dominant_shift": "definition->definition",
+          "top_gain": "resolution",
+          "top_gain_delta": 0.16666666666666666,
+          "top_drop": "example_expansion",
+          "top_drop_delta": -0.25,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 0.0,
+            "conditionalization": 0.08333333333333331,
+            "example_expansion": -0.25,
+            "resolution": 0.16666666666666666
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 126,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 125,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 37,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 65,
+            "count": 1,
+            "density_per_1k_chars": 15.384615384615385,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "空間",
+                "count": 1
+              }
+            ]
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 15.384615384615385
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 126,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 53,
+              "completion_tokens": 79,
+              "reasoning_tokens": 0,
+              "total_tokens": 2097
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 125,
+            "ponder_question_tokens_est": 29,
+            "ponder_log_tokens_est": 62,
+            "keyword_tokens_est": 3,
+            "memory_block_chars": 326,
+            "memory_block_tokens_est": 311,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 625,
+              "completion_tokens": 148,
+              "reasoning_tokens": 0,
+              "total_tokens": 4481
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 100,
+              "completion_tokens": 39,
+              "reasoning_tokens": 0,
+              "total_tokens": 1120
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 106,
+                "completion_tokens": 2,
+                "reasoning_tokens": 0,
+                "total_tokens": 262
+              },
+              "scaffold_condition": {
+                "calls": 1,
+                "prompt_tokens": 118,
+                "completion_tokens": 26,
+                "reasoning_tokens": 0,
+                "total_tokens": 754
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 224,
+              "completion_tokens": 28,
+              "reasoning_tokens": 0,
+              "total_tokens": 1016
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 301,
+              "completion_tokens": 81,
+              "reasoning_tokens": 0,
+              "total_tokens": 2345
+            }
+          },
+          "delta": {
+            "answer_tokens_est": -1,
+            "external_scaffold_tokens_est": 405,
+            "api_prompt_tokens": 572,
+            "api_completion_tokens": 69,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 2384
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 678,
+            "completion_tokens": 227,
+            "reasoning_tokens": 0,
+            "total_tokens": 6578
+          }
+        }
+      }
+    },
+    {
+      "name": "isomorphic",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "相対的であるとは、他者や周囲の環境との比較や関係性のなかに意味を見出すことである。枯れることと潤うことの対比のように、自然の周期はまさに相対的な変化の連続だ。しかし、その関係性が静かに崩れ去り、外部との繋がりが断たれた空間を想像してみる。たとえば、外界から切り離された温",
+      "records": [
+        {
+          "ts": "2026-06-17T16:48:11Z",
+          "run_id": "62c701219bcc7099",
+          "query_sha": "9181d8526a4c",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "相対的ではない"
+          ],
+          "keywords": [
+            "相対的ではない"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "相対的ではない",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "vs8yaqW0IIbM0-kPnIqtgAw",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 101,
+            "completion_tokens": 180,
+            "reasoning_tokens": 0,
+            "total_tokens": 1121,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「相対的ではない」と「Emptiness」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "- 「相対的ではない」ということは、大きい・小さい、明・暗という比較の定規がドロドロに溶けることだろうか。\n- もし定規が完全に溶け落ちたら、夢の中のリンゴは「ただ在る」だけの絶対的な質量を持つのか、概念ごと消えるのか。\n- そこで「Emptiness」が合図だとしたら、それは空っぽの部屋なのか、それとも水が満ちる直前の透明な器なのか。\n- いや、器すらない「空（くう）」だとしたら、私という観測者すらも夢の背景に溶け込んでしまうかもしれない。\n- 観測者がいない夢は、果たして「展開する」という時間軸や物語の起伏を持ち得るのだろうか。\n- 例えば、音符が一つも書かれて",
+          "gen_elapsed_s": 13.103039625000747
+        }
+      ],
+      "extras": {
+        "run_id": "62c701219bcc7099",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:48:11Z",
+            "run_id": "62c701219bcc7099",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "isomorphic",
+          "target_tokens": 320,
+          "source_tokens_est": 34,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "y88yap73J-Cd0-kPytqmkQw",
+            "model": "gemini-3.1-pro-preview",
+            "api_calls": 1,
+            "prompt_tokens": 405,
+            "completion_tokens": 25,
+            "reasoning_tokens": 0,
+            "total_tokens": 1041,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 314,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 331,
+        "memory_block_est_tokens": 314,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 5,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 405,
+            "completion_tokens": 25,
+            "reasoning_tokens": 0,
+            "total_tokens": 1041
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "088yapujB_Cb0-kPjunhgAw",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 315,
+          "completion_tokens": 81,
+          "reasoning_tokens": 0,
+          "total_tokens": 2359,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 45.79232716700062,
+          "probe_s": 6.5829990489874035e-06,
+          "memory_remix_s": 3.5000011848751456e-06,
+          "answer_s": 22.205429749999894
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 135,
+        "records": 1,
+        "elapsed_s": 45.79279758300072
+      },
+      "comparison": {
+        "baseline_chars": 126,
+        "ponder_chars": 135,
+        "answer_changed": true,
+        "char_delta": 9,
+        "diff_ratio": 0.8007662835249042,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.41666666666666663,
+        "stance_baseline_dominant": "definition",
+        "stance_ponder_dominant": "example_expansion",
+        "stance_top_gain": "example_expansion",
+        "stance_top_drop": "conditionalization",
+        "spatial_answer_density_delta": 7.407407407407407,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 7.407407407407407,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 10.48951048951049,
+        "spatial_log_question_density_delta": 10.48951048951049,
+        "budget_baseline_answer_tokens_est": 126.0,
+        "budget_ponder_answer_tokens_est": 135.0,
+        "budget_external_scaffold_tokens_est": 621.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.09244636299870866,
+          "query_baseline_cosine": 0.04172032537031064,
+          "query_ponder_cosine": 0.046201353797670194,
+          "query_alignment_delta": 0.0044810284273595555
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 4.0,
+            "dominant": "definition",
+            "scores": {
+              "definition": 0.5,
+              "framing": 0.0,
+              "conditionalization": 0.25,
+              "example_expansion": 0.25,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 2,
+              "framing": 0,
+              "conditionalization": 1,
+              "example_expansion": 1,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "definition": [
+                {
+                  "term": "とは",
+                  "count": 2
+                }
+              ],
+              "conditionalization": [
+                {
+                  "term": "依存",
+                  "count": 1
+                }
+              ],
+              "example_expansion": [
+                {
+                  "term": "のように",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 3.0,
+            "dominant": "example_expansion",
+            "scores": {
+              "definition": 0.3333333333333333,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.6666666666666666,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 1,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 2,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "definition": [
+                {
+                  "term": "とは",
+                  "count": 1
+                }
+              ],
+              "example_expansion": [
+                {
+                  "term": "たとえば",
+                  "count": 1
+                },
+                {
+                  "term": "のように",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.41666666666666663,
+          "dominant_baseline": "definition",
+          "dominant_ponder": "example_expansion",
+          "dominant_shift": "definition->example_expansion",
+          "top_gain": "example_expansion",
+          "top_gain_delta": 0.41666666666666663,
+          "top_drop": "conditionalization",
+          "top_drop_delta": -0.25,
+          "deltas": {
+            "definition": -0.16666666666666669,
+            "framing": 0.0,
+            "conditionalization": -0.25,
+            "example_expansion": 0.41666666666666663,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 126,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 135,
+            "count": 1,
+            "density_per_1k_chars": 7.407407407407407,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "空間",
+                "count": 1
+              }
+            ]
+          },
+          "questions": {
+            "chars": 41,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 286,
+            "count": 3,
+            "density_per_1k_chars": 10.48951048951049,
+            "dominant_group": "container",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 3,
+              "geometry": 0
+            },
+            "top_terms": [
+              {
+                "term": "器",
+                "count": 2
+              },
+              {
+                "term": "部屋",
+                "count": 1
+              }
+            ]
+          },
+          "answer_density_delta": 7.407407407407407,
+          "log_question_density_delta": 10.48951048951049
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 126,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 53,
+              "completion_tokens": 79,
+              "reasoning_tokens": 0,
+              "total_tokens": 2097
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 135,
+            "ponder_question_tokens_est": 33,
+            "ponder_log_tokens_est": 267,
+            "keyword_tokens_est": 7,
+            "memory_block_chars": 331,
+            "memory_block_tokens_est": 314,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 927,
+              "completion_tokens": 291,
+              "reasoning_tokens": 0,
+              "total_tokens": 4783
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 101,
+              "completion_tokens": 180,
+              "reasoning_tokens": 0,
+              "total_tokens": 1121
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 106,
+                "completion_tokens": 5,
+                "reasoning_tokens": 0,
+                "total_tokens": 262
+              },
+              "scaffold_condition": {
+                "calls": 1,
+                "prompt_tokens": 405,
+                "completion_tokens": 25,
+                "reasoning_tokens": 0,
+                "total_tokens": 1041
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 511,
+              "completion_tokens": 30,
+              "reasoning_tokens": 0,
+              "total_tokens": 1303
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 315,
+              "completion_tokens": 81,
+              "reasoning_tokens": 0,
+              "total_tokens": 2359
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 9,
+            "external_scaffold_tokens_est": 621,
+            "api_prompt_tokens": 874,
+            "api_completion_tokens": 212,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 2686
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 980,
+            "completion_tokens": 370,
+            "reasoning_tokens": 0,
+            "total_tokens": 6880
+          }
+        }
+      }
+    }
+  ],
+  "artifacts": {
+    "out_label": "json_out",
+    "out": "artifacts/sweep_20260618_strong_deep/gemini_non_relative_not_absolute.json",
+    "trace_out": "artifacts/sweep_20260618_strong_deep/gemini_non_relative_not_absolute.trace.jsonl",
+    "trace_report_out": "artifacts/sweep_20260618_strong_deep/gemini_non_relative_not_absolute.trace.html",
+    "matrix_report_out": "artifacts/sweep_20260618_strong_deep/gemini_non_relative_not_absolute.matrix.html",
+    "out_dir": "",
+    "resume_from": ""
+  }
+}

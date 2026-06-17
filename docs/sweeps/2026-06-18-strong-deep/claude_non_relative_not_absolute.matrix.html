@@ -1,0 +1,351 @@
+<!doctype html>
+<html><head><meta charset='utf-8'/>
+<title>sr_ponder matrix report</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:24px;color:#111;background:#fafafa;}h1,h2,h3{margin:0 0 12px 0;} .muted{color:#666;} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0;}.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 14px 0;padding:10px 12px;background:#fff;border:1px solid #ddd;border-radius:10px;}.toolbar label{font-size:13px;color:#333;display:flex;gap:6px;align-items:center;}.toolbar select,.toolbar button{font:inherit;padding:6px 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111;}.toolbar button{cursor:pointer;}.heatmap-wrap{margin:12px 0 20px 0;}.heatmap-cell{min-width:74px;text-align:center;font-variant-numeric:tabular-nums;}.heat-win{background:#e8f7ee;color:#0a5a2e;}.heat-loss{background:#fdecec;color:#8b1d1d;}.heat-tie,.heat-diag{background:#f3f3f3;color:#666;}.heat-missing{background:#fff8e6;color:#8a6d1f;}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #ddd;} th,td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:top;text-align:left;font-size:13px;}th{background:#f3f3f3;position:sticky;top:0;} code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}pre{white-space:pre-wrap;background:#fbfbfb;border:1px solid #eee;padding:12px;border-radius:8px;}.pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef4ff;color:#245; margin-right:6px;font-size:12px;}details{margin:12px 0;} .num{text-align:right;} .ok{color:#0a6;} .warn{color:#a60;}</style>
+</head><body>
+<h1>sr_ponder matrix report</h1>
+<div class='muted'>scaffold_abcd · claude / opus</div>
+<p><strong>Query:</strong> 非相対的ではあるが絶対的ではない状態とは？</p>
+<div class='grid'>
+<div class='card'><div class='muted'>Items</div><div><strong>5</strong></div></div>
+<div class='card'><div class='muted'>Ponder items</div><div><strong>4</strong></div></div>
+<div class='card'><div class='muted'>Warnings</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Baseline</div><div><strong>baseline</strong></div></div>
+<div class='card'><div class='muted'>Max reasoning Δ</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Max stance shift</div><div><strong>0.4333</strong></div></div>
+<div class='card'><div class='muted'>Best align Δ</div><div><strong>0.0014</strong></div></div>
+</div>
+<h2>Pairwise heatmap</h2>
+<div class='toolbar'><strong>A/B/C/D win-loss heatmap</strong><label>Metric<select id='heatmap-metric-key'>
+<option value='query_alignment_delta' selected>Query align Δ</option>
+<option value='stance_shift'>Stance shift</option>
+<option value='budget_reasoning_delta'>Reasoning token Δ</option>
+<option value='budget_total_delta'>Total token Δ</option>
+</select></label><span class='muted'>Green means the row beats the column on the selected metric. Cost metrics use lower-is-better.</span></div>
+<div class='heatmap-wrap' data-heatmap-key='query_alignment_delta'><div class='muted'>Query align Δ · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.0014 · 3W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0619</td>
+<td class='heatmap-cell heat-win'>0.0524</td>
+<td class='heatmap-cell heat-win'>0.0408</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>-0.0605 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0619</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0095</td>
+<td class='heatmap-cell heat-loss'>-0.0211</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>-0.0510 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0524</td>
+<td class='heatmap-cell heat-win'>0.0095</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0116</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>-0.0394 · 2W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0408</td>
+<td class='heatmap-cell heat-win'>0.0211</td>
+<td class='heatmap-cell heat-win'>0.0116</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='stance_shift' style='display:none'><div class='muted'>Stance shift · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.1138 · 0W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1487</td>
+<td class='heatmap-cell heat-loss'>-0.1100</td>
+<td class='heatmap-cell heat-loss'>-0.3195</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.2625 · 2W</span></td>
+<td class='heatmap-cell heat-win'>0.1487</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0387</td>
+<td class='heatmap-cell heat-loss'>-0.1708</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>0.2238 · 1W</span></td>
+<td class='heatmap-cell heat-win'>0.1100</td>
+<td class='heatmap-cell heat-loss'>-0.0387</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.2095</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>0.4333 · 3W</span></td>
+<td class='heatmap-cell heat-win'>0.3195</td>
+<td class='heatmap-cell heat-win'>0.1708</td>
+<td class='heatmap-cell heat-win'>0.2095</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_reasoning_delta' style='display:none'><div class='muted'>Reasoning token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_total_delta' style='display:none'><div class='muted'>Total token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>5551.0000 · 3W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>1196.0000</td>
+<td class='heatmap-cell heat-win'>2889.0000</td>
+<td class='heatmap-cell heat-win'>6589.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>6747.0000 · 2W</span></td>
+<td class='heatmap-cell heat-loss'>-1196.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>1693.0000</td>
+<td class='heatmap-cell heat-win'>5393.0000</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>8440.0000 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-2889.0000</td>
+<td class='heatmap-cell heat-loss'>-1693.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>3700.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>12140.0000 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-6589.0000</td>
+<td class='heatmap-cell heat-loss'>-5393.0000</td>
+<td class='heatmap-cell heat-loss'>-3700.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<h2>Comparison table</h2>
+<div class='toolbar'><strong>Sort by baseline-relative metric</strong><label>Metric<select id='matrix-sort-key'><option value='judge_score_delta'>Judge score Δ</option><option value='judge_resolution_delta'>Judge resolution Δ</option><option value='query_alignment_delta'>Query align Δ</option><option value='stance_shift'>Stance shift</option><option value='budget_reasoning_delta'>Reasoning token Δ</option><option value='budget_completion_delta'>Completion token Δ</option><option value='budget_total_delta'>Total token Δ</option><option value='answer_cosine'>Answer cosine</option><option value='diff_ratio'>Diff ratio</option><option value='answer_chars'>Answer chars</option><option value='elapsed_s'>Elapsed seconds</option><option value='name'>Name</option></select></label><label>Direction<select id='matrix-sort-dir'><option value='desc'>Descending</option><option value='asc'>Ascending</option></select></label><button type='button' id='matrix-sort-apply'>Apply</button><span class='muted'>Baseline rows stay pinned to the top.</span></div>
+<table><thead><tr>
+<th>Item</th>
+<th>Kind</th>
+<th>Scaffold</th>
+<th>Chars</th>
+<th>Elapsed</th>
+<th>Semantic</th>
+<th>Judge</th>
+<th>Stance</th>
+<th>Budget</th>
+<th>Warnings</th>
+</tr></thead><tbody id='matrix-report-body'>
+<tr data-name='baseline' data-kind='baseline' data-answer-chars='1142' data-elapsed-s='45.26174987500053' data-diff-ratio='' data-answer-cosine='' data-query-alignment-delta='' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='' data-budget-scaffold-tokens='' data-budget-reasoning-delta='' data-budget-completion-delta='' data-budget-total-delta=''>
+<td><strong>baseline</strong><br/><span class='muted'></span></td>
+<td>baseline</td>
+<td>—</td>
+<td class='num'>1142</td>
+<td class='num'>45.26</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='assoc' data-kind='ponder' data-answer-chars='1337' data-elapsed-s='64.9758749169996' data-diff-ratio='0.9346510689794272' data-answer-cosine='0.2930296053168971' data-query-alignment-delta='0.001387334181176758' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.11379310344827587' data-budget-scaffold-tokens='976' data-budget-reasoning-delta='0' data-budget-completion-delta='110' data-budget-total-delta='5551'>
+<td><strong>assoc</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>assoc/320</td>
+<td class='num'>1337</td>
+<td class='num'>64.98</td>
+<td>cos=0.2930 | Δalign=0.0014</td>
+<td>—</td>
+<td>conditionalization→conditionalization | shift=0.1138</td>
+<td>scaf=976 | reasonΔ=0 | compΔ=110</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='random' data-kind='ponder' data-answer-chars='1253' data-elapsed-s='85.59902366699862' data-diff-ratio='0.941544885177453' data-answer-cosine='0.28003832017148145' data-query-alignment-delta='-0.06051099899801764' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.2625' data-budget-scaffold-tokens='1117' data-budget-reasoning-delta='0' data-budget-completion-delta='1354' data-budget-total-delta='6747'>
+<td><strong>random</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>random/320</td>
+<td class='num'>1253</td>
+<td class='num'>85.60</td>
+<td>cos=0.2800 | Δalign=-0.0605</td>
+<td>—</td>
+<td>conditionalization→conditionalization | shift=0.2625</td>
+<td>scaf=1117 | reasonΔ=0 | compΔ=1354</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts' data-kind='ponder' data-answer-chars='780' data-elapsed-s='70.9709101669996' data-diff-ratio='0.9552549427679501' data-answer-cosine='0.275825219511453' data-query-alignment-delta='-0.05102472450532797' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.22380952380952382' data-budget-scaffold-tokens='1000' data-budget-reasoning-delta='0' data-budget-completion-delta='554' data-budget-total-delta='8440'>
+<td><strong>facts</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/320</td>
+<td class='num'>780</td>
+<td class='num'>70.97</td>
+<td>cos=0.2758 | Δalign=-0.0510</td>
+<td>—</td>
+<td>conditionalization→conditionalization | shift=0.2238</td>
+<td>scaf=1000 | reasonΔ=0 | compΔ=554</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic' data-kind='ponder' data-answer-chars='844' data-elapsed-s='108.45024920900141' data-diff-ratio='0.9536757301107754' data-answer-cosine='0.2512729824946651' data-query-alignment-delta='-0.03942762937812891' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.43333333333333335' data-budget-scaffold-tokens='907' data-budget-reasoning-delta='0' data-budget-completion-delta='3496' data-budget-total-delta='12140'>
+<td><strong>isomorphic</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/320</td>
+<td class='num'>844</td>
+<td class='num'>108.45</td>
+<td>cos=0.2513 | Δalign=-0.0394</td>
+<td>—</td>
+<td>conditionalization→resolution | shift=0.4333</td>
+<td>scaf=907 | reasonΔ=0 | compΔ=3496</td>
+<td class='ok'>0</td>
+</tr>
+</tbody></table>
+<h2>Item details</h2>
+<details>
+<summary><strong>baseline</strong> · baseline</summary>
+<div class='card'>
+<h3>answer</h3>
+<pre>まず「相対的」と「絶対的」という二つの極を、それぞれ別の問いとしてほどいてみる。相対的とは、何かが必ず別の基準・視点・座標系との関係においてはじめて値を持つこと。観測者を変えれば変わる、立ち位置に依存する。一方で絶対的とは、いかなる基準にも、いかなる文脈にも、いかなる条件にも依存せず、それ自身で完結し、例外なく成り立つこと。
+
+ここで気づくのは、この二つは正反対の対ではなく、別々の軸だということだ。「相対的でない」は「視点に依存しない・変わらない」という不変性を指す。「絶対的でない」は「無条件ではない・成立の地盤を持つ」という被制約性を指す。だから「非相対的かつ非絶対的」は矛盾ではなく、二つの軸が交わる第三の領域として存在しうる。
+
+寄り道して具体例を探す。物理学の特殊相対論がきれいな模型を与えてくれる。空間の長さや時間の間隔は観測者ごとに伸び縮みする——相対的だ。しかし時空の「間隔」（インターバル）はどの慣性系から見ても同じ値をとる——不変、つまり非相対的。ところがその不変性は宇宙が特定の計量構造を持つという前提の上に乗っている。ニュートンが夢見た、何にも依存せず存在する「絶対空間・絶対時間」ではない。つまり、視点に依らないが、構造に依る。これがまさに非相対的だが絶対的でない状態だ。
+
+数学に目を移しても同じ形が現れる。ある定理は、証明する人や言語に依存せず真である（非相対的）。だが、それはある公理系を選んだという条件のもとでの真理であって、公理を変えれば成り立たない。ユークリッドの平行線公準のように。だから無条件・絶対ではない。地盤の上での揺るがなさ、と言える。
+
+存在の在り方としても読める。自分の価値を他人との比較や承認に委ねていない——非相対的。けれど永遠不変で完成された実体でもなく、なお生成し条件づけられている——非絶対的。関係に振り回されないが、無からの孤立でもない、地に足のついた過程的な自己。
+
+これらに共通する形が見えてきた。鍵は「条件づけられた不変性（conditioned invariance）」だ。
+
+非相対的ではあるが絶対的ではない状態とは、ある基準・視点・観測者を取り替えても値や真偽が動かないという意味で客観的・不変でありながら、その不変性自体が特定の地盤——構造・公理・文脈・関係の総体——の成立を前提として初めて妥当する、という状態である。視点に対しては独立だが、地盤に対しては依存している。言い換えれば、フレームの内側では揺るがず誰にとっても同一だが、フレームそのものが別でありえた可能性を排除できない。観測者の恣意は退けるが、世界の偶有性は背負ったまま立っている、不変だが無条件ではない、地盤の上の安定がそれにあたる。</pre>
+</div>
+</details>
+<details>
+<summary><strong>assoc</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9347 | changed=True</div>
+<h3>answer</h3>
+<pre>相対的とは「視点ごとにバラバラで、誰の立場かを言わなければ何も言えない」状態を指し、絶対的とは「いかなる視点からも、いかなる条件のもとでも、無条件に同じく成り立つ」状態を指す。この問いが探しているのは、その両端のどちらでもない中間の領域だ。
+
+非相対的ではあるが絶対的ではない状態とは、要するに「複数の視点をまたいで共有される妥当性を持つが、なお有限の条件に支えられている」状態のことだと言える。それは「人による」では片づかない——だから相対的ではない。けれど「いつでもどこでも無条件に」でもない——だから絶対的でもない。
+
+具体的に言い換えると、いくつかの相が重なっている。
+
+第一に、間主観的な妥当性。私一人の感じ方には還元できず、立場を異にする観測者のあいだで突き合わせても崩れない。けれどその一致は、共有された前提・言語・測定の枠の内側で成り立っているもので、その枠ごと変われば手触りを変える。科学的な事実が典型で、観測者を選ばない頑健さを持ちながら、なお改訂可能で暫定的だ。
+
+第二に、文脈依存的だが文脈の内では確定している、という二重性。条件を固定すれば答えは一意に定まる(だから恣意ではない)。しかし条件そのものが座標系として効いていて、座標を取り替えれば別の確定値になる。Ponder Logの「同じ語でも条件が変わると別の手触りを持つ」がこれにあたる。値は確かにあるが、座標抜きの裸の値ではない。
+
+第三に、観測者を含む座標系における定点。観測者を消去した「どこからでもない眺め」(view from nowhere)に立てるなら絶対的になるが、それはできない。観測者は必ず系の内側にいる。それでも、その系の内側で動かない基準点は立てられる。これが「暫定的な定点」だ——揺らぎの只中で、いまここでは動かないと合意できる軸。
+
+均衡という比喩がここで効く。Ponder Logの「相互依存的均衡」は、誰の一歩も他者の一歩を前提にしながら、全体としては崩れない配置を描いていた。これは絶対的な土台の上に固定されているのではない。互いを支え合うことで成立している。支えの一つが抜ければ位置はずれる。けれど、いまその構成のもとでは確かに「合っている」。潮の満ち引きが、絶対的な高さではなく月と地形との関係のなかで、それでもその瞬間には一意の水位を持つように。
+
+だから一言にすれば——
+
+非相対的ではあるが絶対的ではない状態とは、共有可能で(私の気分には還元されない)、条件づけられていて(無条件ではない)、改訂に開かれている(永遠ではない)妥当性の在りようである。視点に汚染されていない真理ではなく、複数の視点が突き合わせのなかで仮に支え合って立てた定点。客観性と恣意のあいだにある「間主観的・状況内的に確定した」ものだと言える。
+
+数学の定理のような無条件の真理ではなく、かといって好…</pre>
+</div>
+</details>
+<details>
+<summary><strong>random</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9415 | changed=True</div>
+<h3>answer</h3>
+<pre>それは「自分のうちで成り立っているが、すべてに通用するわけではない」状態だと思う。
+
+整理すると、「相対的」とは関係に依存して初めて成り立つこと――AはBと比べて初めて「大きい」になり、比較の相手を取り去れば性質そのものが消える。基準・観測者・対立項という外部の枠があって、はじめて意味が定まる。
+
+一方「絶対的」とは、どんな関係からも独立しているだけでなく、無条件・例外なし・どこでもいつでも・全体を貫く、ということを含む。土台として他のすべてを支え、揺るがない。
+
+この二つのあいだに、確かに空白がある。比較によって生じたのではない、それ自体で立っている――その意味で非相対的なのに、無条件でも普遍でも永続でもない、という状態だ。自律しているが、君臨はしていない。
+
+具体的に言うと、いくつかの相が当てはまる。
+
+ひとつは、直接に与えられた「質」。痛みや、赤さの感じは、「何かと比べて痛い／赤い」という比較から構成されてはいない。ただそのものとして現れる。だから非相対的だ。けれど痛みは過ぎ去り、私のものであり、宇宙の法則ではない。例外なく全体を貫くわけではないから、絶対ではない。
+
+もうひとつは、「局所的な秩序」。Ponder Log の、レシートの端だけが妙に丁寧に折られている、雨どいだけが規則正しい――あれがまさにそれだ。その折り目はどこかの規範と照らし合わせて正しいのではない。それ自体で完結した、内的に整った手順がそこにある。だから相対的ではない。しかしその規則は「ここ」でしか効いておらず、ほかへ広がる根拠も、いつまでも続く保証もない。説明にならない小さな手順だけが増え、紙コップは毎回別の役を持つ――秩序はあるのに普遍化を拒む。これが非相対的・非絶対の典型だ。
+
+三つめは、「今」という時間。生きられた現在は、「過去と比べての今」ではなく、唯一現実であるものとして絶対的に立ち会われる。その瞬間には比較相手がいない。だから相対的ではない。だが現在は絶え間なくずり落ちていき、固定できず、有限だ。水筒のふたの位置だけが静かにずれていくように。掴んだ途端にもう別の今になっている。だから絶対でもない。
+
+つまり共通の構造はこうだ――それ自身に根拠をもち（非相対的）、しかし偶然的・有限・局所的であって、無条件の普遍性をもたない（非絶対的）。比較に還元されない「ただ、そうである（こうなっている）」というあり方でありながら、「いつでもどこでも必ずそうである」とは言わない。
+
+哲学の言葉を借りれば、それは個物の「このもの性（haecceity）」、現象学的な所与、あるいは「事実としての偶然性」に近い。事は事として揺るがずそこにあるが、別様でもありえた――その二重性こそが、非相対でありながら絶対でない状態の核心だ。
+
+要するに、関係なしに自立しているのに、無条件ではないもの。比較…</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9553 | changed=True</div>
+<h3>answer</h3>
+<pre>それは、誰がどの立場から見ても評価が一致するという意味で観点に依存しないが、その一致がある前提・領域・背景条件の上ではじめて成り立っている、という状態を指します。言い換えれば「主体や基準系を超えて一定」でありながら「無条件・例外不可ではない」もの——条件付きの普遍性を持つ状態です。
+
+二つの軸で位置づけると整理しやすくなります。一方の軸は観点依存性（相対的か非相対的か）、もう一方の軸は無条件性・例外不可性（絶対的か否か）で、この二軸は互いに独立しています。問われている状態は、前者の軸では「非相対的（観点を変えても揺るがない）」に振れ、後者の軸では「非絶対的（成立に条件を要し、例外がありうる）」に振れている、その交点に位置します。
+
+具体的なイメージとしては次のようなものがあります。ある公理系のもとで証明された定理は、誰が検証しても同じ結論に至る点で観点に依存しませんが、その妥当性は採用された公理の上に乗っており、公理を変えれば成り立たなくなる点で絶対的ではありません。物理法則も、どの観測者から見ても同じ形をとる（非相対的・不変）にもかかわらず、適用範囲や近似の前提という条件の内側でのみ妥当であり、領域を外れれば破れうる点で絶対的ではありません。社会的なルールや測定の基準なども、共同体の内部では誰にとっても同一に通用する一方、その共同体や制度という背景条件に依拠している、という同種の構造を持ちます。
+
+要点は、「観点を超えた一致（=非相対性）」と「条件からの独立（=絶対性）」を混同しないことです。観点に依存しないことは、ただちに無条件であることを意味しません。前提が共有されている限りで誰にとっても同じように成り立つ——その「前提が共有されている限りで」という限定が残っているとき、その状態は非相対的でありながら絶対的ではない、と言えます。</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9537 | changed=True</div>
+<h3>answer</h3>
+<pre>それは、よりどころを外から借りてもいないが、外から永久に与えられてもいない状態のことだと思う。
+
+相対的とは「何か別のものと比べて初めて位置が決まる」こと、絶対的とは「何とも関係せず、どんな視点からも同じく動かない」こと。この二つの間に、第三の様式がある——基準を自分の内側で、しかも一回きりではなく刻々と作り直しながら保つ、というあり方だ。
+
+渚を思い浮かべるといい。汀線は座標に釘で打たれているわけではない（だから絶対的ではない）。かといって、ただ波や月との関係に解け去ってしまうのでもない（だから単に相対的でもない）。昨日の砂が今朝には見知らぬ岩礁を縁取っていても、「渚が続いている」という事実そのものが目盛りになっている。つまり、続けるという行為が、外部の物差しを参照せずに自前の基準を生み出している。これが非相対的だ——他と比べて決まるのではなく、自分の持続が自分の規準になっている。だが同時に、その規準は固定された一枚の床ではなく、満ち引きごとに描き直される。だから絶対的でもない。
+
+大潮で堆積の矢印が逆を向く瞬間、その状態は崩れない。崩れる代わりに、別の基準面へ乗り換える。ここが肝心で、絶対的なものなら一つの基準面に縛られて、それが崩れれば全部崩れる。相対的なだけのものなら、参照先が消えた途端に意味を失う。非相対的だが絶対的でない状態は、基準面を取り替えても自己同一性を保てる。乗り換えること自体が、その状態の続き方なのだ。
+
+言い換えれば、これは外的座標に依らない内在的な規準を持ち、しかもその規準が過程として更新され続けるもの——動的平衡、自己維持するパターン、渦や定常波のように、素材が流れ去っても形が残る種類の安定だ。海の記憶が器でも刻み手でもなく、波が形を覚えていく運動そのものであるように。
+
+ひとつの基準で測りきれるわけではないが、測りそのものを毎瞬自分で立て直している。だから動いていても見失われない。それが、非相対的でありながら絶対的ではない状態だ。</pre>
+</div>
+</details>
+<script>(function(){const body=document.getElementById('matrix-report-body');const heatSel=document.getElementById('heatmap-metric-key');const keySel=document.getElementById('matrix-sort-key');const dirSel=document.getElementById('matrix-sort-dir');const applyBtn=document.getElementById('matrix-sort-apply');const heatmaps=Array.from(document.querySelectorAll('[data-heatmap-key]'));if(heatSel&&heatmaps.length){function syncHeatmap(){const wanted=heatSel.value||'';for(const node of heatmaps){node.style.display=(node.getAttribute('data-heatmap-key')===wanted)?'':'none';}}heatSel.addEventListener('change',syncHeatmap);syncHeatmap();}if(!body||!keySel||!dirSel||!applyBtn){return;}function metricValue(row,key){const attr='data-'+String(key||'').replace(/_/g,'-');const raw=row.getAttribute(attr)||'';if(key==='name'){return raw.toLowerCase();}const num=Number(raw);return Number.isFinite(num)?num:null;}function compareRows(a,b,key,dir){const av=metricValue(a,key);const bv=metricValue(b,key);if(typeof av==='string'||typeof bv==='string'){const as=String(av||'');const bs=String(bv||'');return dir==='asc'?as.localeCompare(bs):bs.localeCompare(as);}if(av===null&&bv===null){return 0;}if(av===null){return 1;}if(bv===null){return -1;}return dir==='asc'?(av-bv):(bv-av);}function sortRows(){const key=keySel.value||'query_alignment_delta';const dir=dirSel.value||'desc';const rows=Array.from(body.querySelectorAll('tr'));const pinned=rows.filter((row)=>row.getAttribute('data-kind')==='baseline');const sortable=rows.filter((row)=>row.getAttribute('data-kind')!=='baseline');sortable.sort((a,b)=>{const main=compareRows(a,b,key,dir);if(main!==0){return main;}return compareRows(a,b,'name','asc');});for(const row of pinned.concat(sortable)){body.appendChild(row);}}applyBtn.addEventListener('click',sortRows);keySel.addEventListener('change',sortRows);dirSel.addEventListener('change',sortRows);sortRows();})();</script>
+</body></html>

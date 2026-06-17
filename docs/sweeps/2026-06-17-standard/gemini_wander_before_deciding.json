@@ -1,0 +1,1636 @@
+{
+  "ts": "2026-06-17T16:14:17Z",
+  "kind": "lab_matrix",
+  "provider": "custom",
+  "model": "gemini-3.5-flash",
+  "query": "What changes when an answer is allowed to wander before deciding?",
+  "pack": "lab_scaffold_abcd",
+  "pack_file": "",
+  "lab_matrix": "scaffold_abcd",
+  "preset": "none",
+  "config": "",
+  "env": {
+    "python": "3.13.13 (v3.13.13:01104ce1beb, Apr  7 2026, 14:43:30) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "platform": "darwin",
+    "torch": "2.11.0",
+    "transformers": "4.57.6"
+  },
+  "base_cfg": {
+    "model_path": "gemini-3.5-flash",
+    "memory_path": "ponder_logs.jsonl",
+    "backend": "openai_compat",
+    "provider": "custom",
+    "api_base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "api_chat_path": "/chat/completions",
+    "api_key_env": "GEMINI_API_KEY",
+    "api_key": "",
+    "api_headers": [],
+    "api_timeout": 180.0,
+    "api_max_retries": 1,
+    "api_reasoning_effort": "auto",
+    "api_seed_method": "auto",
+    "api_logprobs_top_n": 0,
+    "n_memory": 6,
+    "memory_policy": "current_only",
+    "memory_retrieve": "tail",
+    "memory_pool": 200,
+    "memory_mix_ratio": 0.5,
+    "memory_exclude_current_run": true,
+    "memory_remix": "off",
+    "memory_remix_keep_original": false,
+    "memory_remix_max_new_tokens": 240,
+    "memory_remix_temperature": 0.9,
+    "rejected": {
+      "top_k": 80,
+      "strategy": "outside_topk",
+      "exclude_top": 8,
+      "band_width": 256,
+      "n_keywords": 6
+    },
+    "band_profile": "single",
+    "bands": [],
+    "answer_style": "plain",
+    "answer_max_new_tokens": 256,
+    "ponder_max_new_tokens": 192,
+    "temperature": 0.7,
+    "top_p": 0.95,
+    "top_k": 0,
+    "repetition_penalty": 1.05,
+    "no_repeat_ngram_size": 0,
+    "seed": 1234,
+    "prompt_lang": "en",
+    "ponder_mode": "assoc",
+    "ponder_pipeline": [],
+    "pipeline_context": "prev",
+    "pipeline_context_max_chars": 1200,
+    "n_ponder": 1,
+    "ponder_hops": 1,
+    "hop_keyword_source": "model",
+    "hop_context_max_chars": 900,
+    "keyword_refine": false,
+    "keyword_refine_max_new_tokens": 96,
+    "keyword_refine_temperature": 0.3,
+    "keyword_objective": "random_band",
+    "keyword_select_top": 128,
+    "keyword_diversity": "off",
+    "keyword_diversity_threshold": 0.82,
+    "dissonance_target": 0.9,
+    "dissonance_width": 0.6,
+    "dissonance_tail_k": 64,
+    "prompt_jitter": 0,
+    "prompt_jitter_include_original": true,
+    "prompt_jitter_max_new_tokens": 160,
+    "prompt_jitter_temperature": 0.6,
+    "probe_top_n": 0,
+    "probe_compare": false,
+    "probe_compare_stages": false,
+    "probe_compare_top_n": 32,
+    "compare_semantic": "hash",
+    "compare_judge": "off",
+    "compare_stance": "auto",
+    "compare_spatial_metaphor": "auto",
+    "compare_token_budget": "auto",
+    "compare_embed_model": "",
+    "scaffold_condition": "assoc",
+    "scaffold_token_target": 180,
+    "print_probe": false,
+    "interactive": false,
+    "interactive_candidates": 48,
+    "answer_per_band": false,
+    "answer_ensemble": false,
+    "answer_ensemble_max_new_tokens": 512,
+    "answer_ensemble_temperature": 0.2,
+    "control": "none",
+    "write_memory": false,
+    "device": "auto",
+    "dtype": "auto",
+    "allocator_warmup": "auto",
+    "trust_remote_code": false,
+    "use_chat_template": true,
+    "force_gemma_format": true,
+    "hf_local_files_only": true
+  },
+  "items": [
+    {
+      "name": "baseline",
+      "kind": "baseline",
+      "answer": "The depth, nuance, and quality of the",
+      "metrics": {
+        "answer_chars": 37,
+        "elapsed_s": 3.3798161249997065
+      }
+    },
+    {
+      "name": "assoc",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "When an answer is allowed to wander before deciding,",
+      "extras": {
+        "run_id": "964c3c78dffeb4c5",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:14:25Z",
+            "run_id": "964c3c78dffeb4c5",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "assoc",
+          "target_tokens": 180,
+          "source_tokens_est": 56,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": false,
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 180,
+          "normalized": true,
+          "strategy": "direct_memory_block"
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 939,
+        "memory_block_est_tokens": 180,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 100,
+            "completion_tokens": 4,
+            "reasoning_tokens": 0,
+            "total_tokens": 256
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "4ccyasWJLbTL2roPl62esQI",
+          "model": "gemini-3.5-flash",
+          "prompt_tokens": 318,
+          "completion_tokens": 10,
+          "reasoning_tokens": 0,
+          "total_tokens": 570,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 7.202640417001021,
+          "probe_s": 9.790999683900736e-06,
+          "memory_remix_s": 1.0417001249152236e-05,
+          "answer_s": 2.2752463329998136
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "assoc",
+        "scaffold_token_target": 180
+      },
+      "metrics": {
+        "answer_chars": 52,
+        "records": 1,
+        "elapsed_s": 7.202822582999943
+      },
+      "comparison": {
+        "baseline_chars": 37,
+        "ponder_chars": 52,
+        "answer_changed": true,
+        "char_delta": 15,
+        "diff_ratio": 0.8651685393258427,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_ponder_dominant": "conditionalization",
+        "stance_top_gain": "conditionalization",
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 9.0,
+        "budget_ponder_answer_tokens_est": 10.0,
+        "budget_external_scaffold_tokens_est": 204.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.07078604488832729,
+          "query_baseline_cosine": 0.05994329667504521,
+          "query_ponder_cosine": 0.8392032882330288,
+          "query_alignment_delta": 0.7792599915579836
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 1.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 1,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "conditionalization": [
+                {
+                  "term": "when ",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "",
+          "dominant_ponder": "conditionalization",
+          "dominant_shift": "->conditionalization",
+          "top_gain": "conditionalization",
+          "top_gain_delta": 1.0,
+          "top_drop": "",
+          "top_drop_delta": 0.0,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 0.0,
+            "conditionalization": 1.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 37,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 52,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 76,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 32,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 9,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 45,
+              "completion_tokens": 9,
+              "reasoning_tokens": 0,
+              "total_tokens": 297
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 10,
+            "ponder_question_tokens_est": 15,
+            "ponder_log_tokens_est": 8,
+            "keyword_tokens_est": 1,
+            "memory_block_chars": 939,
+            "memory_block_tokens_est": 180,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 498,
+              "completion_tokens": 22,
+              "reasoning_tokens": 0,
+              "total_tokens": 1094
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 80,
+              "completion_tokens": 8,
+              "reasoning_tokens": 0,
+              "total_tokens": 268
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 100,
+                "completion_tokens": 4,
+                "reasoning_tokens": 0,
+                "total_tokens": 256
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 100,
+              "completion_tokens": 4,
+              "reasoning_tokens": 0,
+              "total_tokens": 256
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 318,
+              "completion_tokens": 10,
+              "reasoning_tokens": 0,
+              "total_tokens": 570
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 1,
+            "external_scaffold_tokens_est": 204,
+            "api_prompt_tokens": 453,
+            "api_completion_tokens": 13,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 797
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 543,
+            "completion_tokens": 31,
+            "reasoning_tokens": 0,
+            "total_tokens": 1391
+          }
+        }
+      }
+    },
+    {
+      "name": "random",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "When an answer is allowed to wander before deciding, the",
+      "extras": {
+        "run_id": "35164a71e0349705",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:14:31Z",
+            "run_id": "35164a71e0349705",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "random",
+          "target_tokens": 180,
+          "source_tokens_est": 271,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": false,
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 180,
+          "normalized": true,
+          "strategy": "local_random_sentences"
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 845,
+        "memory_block_est_tokens": 180,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 100,
+            "completion_tokens": 5,
+            "reasoning_tokens": 0,
+            "total_tokens": 256
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "6McyatrnBsCx2roPhJa12AM",
+          "model": "gemini-3.5-flash",
+          "prompt_tokens": 282,
+          "completion_tokens": 11,
+          "reasoning_tokens": 0,
+          "total_tokens": 534,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 6.462221375000809,
+          "probe_s": 4.749999789055437e-06,
+          "memory_remix_s": 3.99999953515362e-06,
+          "answer_s": 2.3873933340000804
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "random",
+        "scaffold_token_target": 180
+      },
+      "metrics": {
+        "answer_chars": 56,
+        "records": 1,
+        "elapsed_s": 6.462742292000257
+      },
+      "comparison": {
+        "baseline_chars": 37,
+        "ponder_chars": 56,
+        "answer_changed": true,
+        "char_delta": 19,
+        "diff_ratio": 0.7849462365591398,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_ponder_dominant": "conditionalization",
+        "stance_top_gain": "conditionalization",
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 9.0,
+        "budget_ponder_answer_tokens_est": 11.0,
+        "budget_external_scaffold_tokens_est": 201.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.10770723533897088,
+          "query_baseline_cosine": 0.061087165432551306,
+          "query_ponder_cosine": 0.7978908817327937,
+          "query_alignment_delta": 0.7368037163002423
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 1.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 1,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "conditionalization": [
+                {
+                  "term": "when ",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "",
+          "dominant_ponder": "conditionalization",
+          "dominant_shift": "->conditionalization",
+          "top_gain": "conditionalization",
+          "top_gain_delta": 1.0,
+          "top_drop": "",
+          "top_drop_delta": 0.0,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 0.0,
+            "conditionalization": 1.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 37,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 56,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 76,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 18,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 9,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 45,
+              "completion_tokens": 9,
+              "reasoning_tokens": 0,
+              "total_tokens": 297
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 11,
+            "ponder_question_tokens_est": 15,
+            "ponder_log_tokens_est": 5,
+            "keyword_tokens_est": 1,
+            "memory_block_chars": 845,
+            "memory_block_tokens_est": 180,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 462,
+              "completion_tokens": 21,
+              "reasoning_tokens": 0,
+              "total_tokens": 1058
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 80,
+              "completion_tokens": 5,
+              "reasoning_tokens": 0,
+              "total_tokens": 268
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 100,
+                "completion_tokens": 5,
+                "reasoning_tokens": 0,
+                "total_tokens": 256
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 100,
+              "completion_tokens": 5,
+              "reasoning_tokens": 0,
+              "total_tokens": 256
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 282,
+              "completion_tokens": 11,
+              "reasoning_tokens": 0,
+              "total_tokens": 534
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 2,
+            "external_scaffold_tokens_est": 201,
+            "api_prompt_tokens": 417,
+            "api_completion_tokens": 12,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 761
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 507,
+            "completion_tokens": 30,
+            "reasoning_tokens": 0,
+            "total_tokens": 1355
+          }
+        }
+      }
+    },
+    {
+      "name": "facts",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "explore different paths, deliberate, ponder, think step-",
+      "extras": {
+        "run_id": "06067356843775a9",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:14:39Z",
+            "run_id": "06067356843775a9",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "facts",
+          "target_tokens": 180,
+          "source_tokens_est": 12,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "stop",
+            "response_id": "8McyavKnBrDs2roPheTi-AU",
+            "model": "gemini-3.5-flash",
+            "api_calls": 1,
+            "prompt_tokens": 91,
+            "completion_tokens": 12,
+            "reasoning_tokens": 0,
+            "total_tokens": 447,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 173,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 848,
+        "memory_block_est_tokens": 173,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 100,
+            "completion_tokens": 5,
+            "reasoning_tokens": 0,
+            "total_tokens": 256
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 91,
+            "completion_tokens": 12,
+            "reasoning_tokens": 0,
+            "total_tokens": 447
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "88cyarjDCZyM0-kPvJD18As",
+          "model": "gemini-3.5-flash",
+          "prompt_tokens": 280,
+          "completion_tokens": 11,
+          "reasoning_tokens": 0,
+          "total_tokens": 532,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 13.609286416000032,
+          "probe_s": 1.2417000107234344e-05,
+          "memory_remix_s": 2.1670002752216533e-06,
+          "answer_s": 4.9350897499989514
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 180
+      },
+      "metrics": {
+        "answer_chars": 56,
+        "records": 1,
+        "elapsed_s": 13.60974320800051
+      },
+      "comparison": {
+        "baseline_chars": 37,
+        "ponder_chars": 56,
+        "answer_changed": true,
+        "char_delta": 19,
+        "diff_ratio": 0.5913978494623655,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.0,
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 9.0,
+        "budget_ponder_answer_tokens_est": 11.0,
+        "budget_external_scaffold_tokens_est": 196.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.066628091435676,
+          "query_baseline_cosine": 0.07168765773747675,
+          "query_ponder_cosine": 0.11087244574992283,
+          "query_alignment_delta": 0.039184788012446084
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "shift_score": 0.0,
+          "dominant_baseline": "",
+          "dominant_ponder": "",
+          "dominant_shift": "",
+          "top_gain": "",
+          "top_gain_delta": 0.0,
+          "top_drop": "",
+          "top_drop_delta": 0.0,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 0.0,
+            "conditionalization": 0.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 37,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 56,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 74,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 30,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 9,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 45,
+              "completion_tokens": 9,
+              "reasoning_tokens": 0,
+              "total_tokens": 297
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 11,
+            "ponder_question_tokens_est": 15,
+            "ponder_log_tokens_est": 7,
+            "keyword_tokens_est": 1,
+            "memory_block_chars": 848,
+            "memory_block_tokens_est": 173,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 551,
+              "completion_tokens": 35,
+              "reasoning_tokens": 0,
+              "total_tokens": 1503
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 80,
+              "completion_tokens": 7,
+              "reasoning_tokens": 0,
+              "total_tokens": 268
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 100,
+                "completion_tokens": 5,
+                "reasoning_tokens": 0,
+                "total_tokens": 256
+              },
+              "scaffold_condition": {
+                "calls": 1,
+                "prompt_tokens": 91,
+                "completion_tokens": 12,
+                "reasoning_tokens": 0,
+                "total_tokens": 447
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 191,
+              "completion_tokens": 17,
+              "reasoning_tokens": 0,
+              "total_tokens": 703
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 280,
+              "completion_tokens": 11,
+              "reasoning_tokens": 0,
+              "total_tokens": 532
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 2,
+            "external_scaffold_tokens_est": 196,
+            "api_prompt_tokens": 506,
+            "api_completion_tokens": 26,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 1206
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 596,
+            "completion_tokens": 44,
+            "reasoning_tokens": 0,
+            "total_tokens": 1800
+          }
+        }
+      }
+    },
+    {
+      "name": "isomorphic",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "When an answer is allowed to wander before deciding,",
+      "extras": {
+        "run_id": "af64c01cab5189a2",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:14:51Z",
+            "run_id": "af64c01cab5189a2",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "isomorphic",
+          "target_tokens": 180,
+          "source_tokens_est": 12,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "-8cyavWGM5a90-kPqKXEuAk",
+            "model": "gemini-3.5-flash",
+            "api_calls": 1,
+            "prompt_tokens": 200,
+            "completion_tokens": 13,
+            "reasoning_tokens": 0,
+            "total_tokens": 556,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 172,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 793,
+        "memory_block_est_tokens": 172,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 100,
+            "completion_tokens": 7,
+            "reasoning_tokens": 0,
+            "total_tokens": 256
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 200,
+            "completion_tokens": 13,
+            "reasoning_tokens": 0,
+            "total_tokens": 556
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "_scyaqiYMvCb0-kPjunhgAw",
+          "model": "gemini-3.5-flash",
+          "prompt_tokens": 275,
+          "completion_tokens": 10,
+          "reasoning_tokens": 0,
+          "total_tokens": 527,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 9.507382249999864,
+          "probe_s": 1.1624999388004653e-05,
+          "memory_remix_s": 1.958000211743638e-06,
+          "answer_s": 2.7588721249994705
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 180
+      },
+      "metrics": {
+        "answer_chars": 52,
+        "records": 1,
+        "elapsed_s": 9.507728874999884
+      },
+      "comparison": {
+        "baseline_chars": 37,
+        "ponder_chars": 52,
+        "answer_changed": true,
+        "char_delta": 15,
+        "diff_ratio": 0.8651685393258427,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_ponder_dominant": "conditionalization",
+        "stance_top_gain": "conditionalization",
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 9.0,
+        "budget_ponder_answer_tokens_est": 10.0,
+        "budget_external_scaffold_tokens_est": 197.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.07078604488832729,
+          "query_baseline_cosine": 0.05994329667504521,
+          "query_ponder_cosine": 0.8392032882330288,
+          "query_alignment_delta": 0.7792599915579836
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 1.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 1,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "conditionalization": [
+                {
+                  "term": "when ",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "",
+          "dominant_ponder": "conditionalization",
+          "dominant_shift": "->conditionalization",
+          "top_gain": "conditionalization",
+          "top_gain_delta": 1.0,
+          "top_drop": "",
+          "top_drop_delta": 0.0,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 0.0,
+            "conditionalization": 1.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 37,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 52,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 85,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 29,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 9,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 45,
+              "completion_tokens": 9,
+              "reasoning_tokens": 0,
+              "total_tokens": 297
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 10,
+            "ponder_question_tokens_est": 16,
+            "ponder_log_tokens_est": 7,
+            "keyword_tokens_est": 2,
+            "memory_block_chars": 793,
+            "memory_block_tokens_est": 172,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 656,
+              "completion_tokens": 37,
+              "reasoning_tokens": 0,
+              "total_tokens": 1608
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 81,
+              "completion_tokens": 7,
+              "reasoning_tokens": 0,
+              "total_tokens": 269
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 100,
+                "completion_tokens": 7,
+                "reasoning_tokens": 0,
+                "total_tokens": 256
+              },
+              "scaffold_condition": {
+                "calls": 1,
+                "prompt_tokens": 200,
+                "completion_tokens": 13,
+                "reasoning_tokens": 0,
+                "total_tokens": 556
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 300,
+              "completion_tokens": 20,
+              "reasoning_tokens": 0,
+              "total_tokens": 812
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 275,
+              "completion_tokens": 10,
+              "reasoning_tokens": 0,
+              "total_tokens": 527
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 1,
+            "external_scaffold_tokens_est": 197,
+            "api_prompt_tokens": 611,
+            "api_completion_tokens": 28,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 1311
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 701,
+            "completion_tokens": 46,
+            "reasoning_tokens": 0,
+            "total_tokens": 1905
+          }
+        }
+      }
+    }
+  ],
+  "artifacts": {
+    "out_label": "json_out",
+    "out": "artifacts/sweep_20260617_claude_gemini/gemini_wander_before_deciding.json",
+    "trace_out": "artifacts/sweep_20260617_claude_gemini/gemini_wander_before_deciding.trace.jsonl",
+    "trace_report_out": "artifacts/sweep_20260617_claude_gemini/gemini_wander_before_deciding.trace.html",
+    "matrix_report_out": "artifacts/sweep_20260617_claude_gemini/gemini_wander_before_deciding.matrix.html",
+    "out_dir": "",
+    "resume_from": ""
+  }
+}

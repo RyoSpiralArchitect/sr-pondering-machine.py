@@ -1,0 +1,111 @@
+[sr_ponder] backend=claude_cli provider=claude model='haiku' seed_method=self logprobs_top_n=0 lang=ja band_profile=single bands=profile objective=random_band diversity=off hops=1 answer_style=plain control=none pipeline=assoc memory=current_only/tail/off scaffold=assoc/180 write_memory=False
+
+=== PACK: baseline ===
+
+現実は、無限なものと有限なものの間のインターフェースだと考えます。
+
+意識や潜在的な可能性という無限の領域と、物質や時間という有限の現実世界を結ぶ翻訳層として機能しているのです。私たちの経験は、その両方が出会う場所です。
+
+別の見方をすれば、現実は観測者と被観測の間のインターフェースです。何かが「ある」と言える前に、それを認識する主体が必要です。物質的な世界と意識が相互作用するその接点こそが現実です。
+
+さらに言えば、現実は情報と経験の間のインターフェースとも言えます。宇宙の基本構造は情報的かもしれません。その情報が私たちの知覚を通じて現れるとき、それが現実という体験になるのです。
+
+つまり現実とは、一方向の映像ではなく、双方向の翻訳プロセスです。存在するものと、それを認識するもの、その相互作用によって常に生成されている動的なインターフェース。私たちは現実の中に住んでいるのではなく、現実というインターフェースそのものなのです。
+
+=== PACK: assoc ===
+
+現実は、意識と物理世界の間の翻訳膜だと思います。
+
+外界は無限の信号で満ちていますが、あなたの神経系はその一部だけを通します。その通った信号を脳が解釈して、「現実」という統一された体験に再構成する。その意味では現実は、内部プロセスと外部刺激を仲介するインターフェースです。
+
+Ponder Logで言及された「知覚フィルター」と「解釈層」はまさにこれを指しています。同じ物理的刺激でも、あなたの注意の向け方や心身の状態が変わると、まったく異なる「現実」が立ち現れる。夢と覚醒の違いさえ、どのフィルターが働いているかの違いに過ぎません。
+
+つまり現実とは、「どの周波数の信号をキャッチするか」を決めるチューナー装置です。あなたはいつも現実を「見ている」のではなく、現実という限定的なインターフェースを通して、無限のうち一部を「選んで見ている」。その選別の装置そのものが現実なのです。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=419->390 delta=-29 diff_ratio=0.8714
+records=1 unique_keywords=6 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.189281 query_base=0.130455 query_ponder=0.074969 align_delta=-0.055486
+stance[heuristic_lexicon] base=resolution ponder=framing shift=0.350000 gain=framing drop=conditionalization
+spatial[heuristic_lexicon] ans_density=2.387->0.000 log_density=18.605 q_density=27.778 groups=geometry->none log=path
+budget[api_usage_plus_visible_estimate] ans=411->376 scaffold=630 reason=0->0 completion=855->3568
+
+=== PACK: random ===
+
+Reality is an interface between intention and inattention.
+
+The ponder log marks a pattern: someone carefully folds a receipt, adjusts a water bottle cap, adds another small procedure—each gesture precise, layered with meaning. Yet these details pass unnoticed. Reality functions as the membrane where one consciousness tries to signal to another through small choreographies that mostly dissolve into background noise.
+
+Reality is the interface where we ask *what else is happening in the spaces we don't look*—where someone's careful folding lives alongside our indifference, where incremental procedures accumulate, where the lobby air moves forward while we stand still. It's the medium through which intention leaks through into a world that largely doesn't register it.
+
+The interface isn't neutral. It's the place where precision meets negligence, where patterns we didn't design keep emerging anyway, where a paper cup gets reassigned a new role each time someone bothers to rearrange it. Reality shows us not what is, but what *persists in trying to be noticed*.
+
+So reality is an interface to attention itself—or to its failure. It's where the deliberate gestures of existence meet the vast, indifferent substrate of what goes unseen.
+
+=== COMPARISON ===
+
+answers_changed=yes chars=419->1245 delta=+826 diff_ratio=0.9904
+records=1 unique_keywords=6 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.054983 query_base=0.174304 query_ponder=0.011222 align_delta=-0.163082
+stance[heuristic_lexicon] base=resolution ponder= shift=0.500000 gain= drop=resolution
+spatial[heuristic_lexicon] ans_density=2.387->0.803 log_density=2.825 q_density=0.000 groups=geometry->geometry log=path
+budget[api_usage_plus_visible_estimate] ans=411->237 scaffold=584 reason=0->0 completion=855->2390
+
+=== PACK: facts ===
+
+現実は、主観的な意識と客観的な物質世界の間のインターフェースです。
+
+インターフェースの定義に従えば、それは「異なる秩序をもつシステム間で相互作用を可能にする変換規則と接触面」です。現実は、私たちの内的な感覚・知覚（主観的秩序）と外部の物理的存在（客観的秩序）を仲介しています。
+
+感覚器官から脳まで、私たちの神経系は物理的刺激を神経信号に変換し、さらに経験や意味へと翻訳する。この変換こそが現実の本質です。
+
+重要なのは、複数の独立した観測者が同じ事象について一致した報告をなしうるという点です。これはインターフェースとしての現実の証拠であり、単なる個人的な幻想ではなく、何らかの共有可能な規則性が存在することを示しています。
+
+つまり現実とは、異なる主観性を持つ複数の観測者が接続し、相互に翻訳可能な世界です。それは私たち一人ひとりの内部モデルと、その外にある何かを繋ぐ変換領域──まさにインターフェースそのものなのです。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=419->413 delta=-6 diff_ratio=0.7885
+records=1 unique_keywords=6 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.215692 query_base=0.127152 query_ponder=0.104633 align_delta=-0.022519
+stance[heuristic_lexicon] base=resolution ponder=definition shift=0.466667 gain=definition drop=framing
+spatial[heuristic_lexicon] ans_density=2.387->2.421 log_density=2.584 q_density=0.000 groups=geometry->container log=geometry
+budget[api_usage_plus_visible_estimate] ans=411->405 scaffold=580 reason=0->0 completion=855->5886
+
+=== PACK: isomorphic ===
+
+加熱するたびに素材が変わる。でも変わらない部分があると感じる。そこに現実の正体がある気がします。
+
+現実とは、変換のインターフェースです。
+
+感覚は素材（光、音、温度）を受け取り、脳という調理器で化学変化させて、意識という「味わい」にする。その過程で何かが失われ、何かが生まれます。加熱によって素材の本質は変わるのか、それとも変わらない部分があるのか——その揺らぎこそが現実です。
+
+完全に同じことは二度起こらない。光が遅れて届き、配置だけが反復される。同じように見える食卓の現象も、毎回微かに異なっている。私たちは変化し続ける素材を、反復的なパターンとして認識することで、世界を「ある」と信じます。
+
+だから現実は、感覚から意識へ至る変換プロセスそのもので、インターフェースは単なる仲介役ではなく、その変換自体が現実を作ります。見えている世界は、私たちの知覚という調理法がこしらえたもの。本質と現象の間にある、その振動のことを「現実」と呼んでいるのだと思います。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=419->432 delta=+13 diff_ratio=0.9060
+records=1 unique_keywords=6 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.181395 query_base=0.128486 query_ponder=0.086283 align_delta=-0.042203
+stance[heuristic_lexicon] base=resolution ponder=definition shift=0.466667 gain=definition drop=framing
+spatial[heuristic_lexicon] ans_density=2.387->2.315 log_density=9.685 q_density=0.000 groups=geometry->container log=container
+budget[api_usage_plus_visible_estimate] ans=411->424 scaffold=634 reason=0->0 completion=855->8580
+
+=== PACK SUMMARY ===
+
+name        kind      control  chars  records  elapsed_s
+----------  --------  -------  -----  -------  ------------------
+baseline    baseline           419             10.53489562499999
+assoc       ponder    none     390    1        37.249842916999114
+random      ponder    none     1245   1        30.865808333999667
+facts       ponder    none     413    1        58.63714962499944
+isomorphic  ponder    none     432    1        80.9252498750011
+
+[json_out] wrote artifacts/sweep_20260617_claude_gemini/claude_reality_interface.json
+
+[matrix_report_out] wrote artifacts/sweep_20260617_claude_gemini/claude_reality_interface.matrix.html
+
+[trace_report_out] wrote artifacts/sweep_20260617_claude_gemini/claude_reality_interface.trace.html

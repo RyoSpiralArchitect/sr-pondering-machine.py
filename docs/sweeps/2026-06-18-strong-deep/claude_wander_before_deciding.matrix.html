@@ -1,0 +1,311 @@
+<!doctype html>
+<html><head><meta charset='utf-8'/>
+<title>sr_ponder matrix report</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:24px;color:#111;background:#fafafa;}h1,h2,h3{margin:0 0 12px 0;} .muted{color:#666;} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0;}.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 14px 0;padding:10px 12px;background:#fff;border:1px solid #ddd;border-radius:10px;}.toolbar label{font-size:13px;color:#333;display:flex;gap:6px;align-items:center;}.toolbar select,.toolbar button{font:inherit;padding:6px 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111;}.toolbar button{cursor:pointer;}.heatmap-wrap{margin:12px 0 20px 0;}.heatmap-cell{min-width:74px;text-align:center;font-variant-numeric:tabular-nums;}.heat-win{background:#e8f7ee;color:#0a5a2e;}.heat-loss{background:#fdecec;color:#8b1d1d;}.heat-tie,.heat-diag{background:#f3f3f3;color:#666;}.heat-missing{background:#fff8e6;color:#8a6d1f;}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #ddd;} th,td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:top;text-align:left;font-size:13px;}th{background:#f3f3f3;position:sticky;top:0;} code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}pre{white-space:pre-wrap;background:#fbfbfb;border:1px solid #eee;padding:12px;border-radius:8px;}.pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef4ff;color:#245; margin-right:6px;font-size:12px;}details{margin:12px 0;} .num{text-align:right;} .ok{color:#0a6;} .warn{color:#a60;}</style>
+</head><body>
+<h1>sr_ponder matrix report</h1>
+<div class='muted'>scaffold_abcd · claude / opus</div>
+<p><strong>Query:</strong> What changes when an answer is allowed to wander before deciding?</p>
+<div class='grid'>
+<div class='card'><div class='muted'>Items</div><div><strong>5</strong></div></div>
+<div class='card'><div class='muted'>Ponder items</div><div><strong>4</strong></div></div>
+<div class='card'><div class='muted'>Warnings</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Baseline</div><div><strong>baseline</strong></div></div>
+<div class='card'><div class='muted'>Max reasoning Δ</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Max stance shift</div><div><strong>0.5000</strong></div></div>
+<div class='card'><div class='muted'>Best align Δ</div><div><strong>0.0265</strong></div></div>
+</div>
+<h2>Pairwise heatmap</h2>
+<div class='toolbar'><strong>A/B/C/D win-loss heatmap</strong><label>Metric<select id='heatmap-metric-key'>
+<option value='query_alignment_delta' selected>Query align Δ</option>
+<option value='stance_shift'>Stance shift</option>
+<option value='budget_reasoning_delta'>Reasoning token Δ</option>
+<option value='budget_total_delta'>Total token Δ</option>
+</select></label><span class='muted'>Green means the row beats the column on the selected metric. Cost metrics use lower-is-better.</span></div>
+<div class='heatmap-wrap' data-heatmap-key='query_alignment_delta'><div class='muted'>Query align Δ · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>-0.0006 · 2W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0271</td>
+<td class='heatmap-cell heat-win'>0.0151</td>
+<td class='heatmap-cell heat-win'>0.0235</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.0265 · 3W</span></td>
+<td class='heatmap-cell heat-win'>0.0271</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0422</td>
+<td class='heatmap-cell heat-win'>0.0505</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>-0.0157 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0151</td>
+<td class='heatmap-cell heat-loss'>-0.0422</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0084</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>-0.0240 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0235</td>
+<td class='heatmap-cell heat-loss'>-0.0505</td>
+<td class='heatmap-cell heat-loss'>-0.0084</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='stance_shift' style='display:none'><div class='muted'>Stance shift · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.5000 · 3W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.2576</td>
+<td class='heatmap-cell heat-win'>0.1429</td>
+<td class='heatmap-cell heat-win'>0.3333</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.2424 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-0.2576</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1147</td>
+<td class='heatmap-cell heat-win'>0.0758</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>0.3571 · 2W</span></td>
+<td class='heatmap-cell heat-loss'>-0.1429</td>
+<td class='heatmap-cell heat-win'>0.1147</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.1905</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>0.1667 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-0.3333</td>
+<td class='heatmap-cell heat-loss'>-0.0758</td>
+<td class='heatmap-cell heat-loss'>-0.1905</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_reasoning_delta' style='display:none'><div class='muted'>Reasoning token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_total_delta' style='display:none'><div class='muted'>Total token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>6022.0000 · 2W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-13.0000</td>
+<td class='heatmap-cell heat-win'>3411.0000</td>
+<td class='heatmap-cell heat-win'>6805.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>6009.0000 · 3W</span></td>
+<td class='heatmap-cell heat-win'>13.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>3424.0000</td>
+<td class='heatmap-cell heat-win'>6818.0000</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>9433.0000 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-3411.0000</td>
+<td class='heatmap-cell heat-loss'>-3424.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>3394.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>12827.0000 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-6805.0000</td>
+<td class='heatmap-cell heat-loss'>-6818.0000</td>
+<td class='heatmap-cell heat-loss'>-3394.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<h2>Comparison table</h2>
+<div class='toolbar'><strong>Sort by baseline-relative metric</strong><label>Metric<select id='matrix-sort-key'><option value='judge_score_delta'>Judge score Δ</option><option value='judge_resolution_delta'>Judge resolution Δ</option><option value='query_alignment_delta'>Query align Δ</option><option value='stance_shift'>Stance shift</option><option value='budget_reasoning_delta'>Reasoning token Δ</option><option value='budget_completion_delta'>Completion token Δ</option><option value='budget_total_delta'>Total token Δ</option><option value='answer_cosine'>Answer cosine</option><option value='diff_ratio'>Diff ratio</option><option value='answer_chars'>Answer chars</option><option value='elapsed_s'>Elapsed seconds</option><option value='name'>Name</option></select></label><label>Direction<select id='matrix-sort-dir'><option value='desc'>Descending</option><option value='asc'>Ascending</option></select></label><button type='button' id='matrix-sort-apply'>Apply</button><span class='muted'>Baseline rows stay pinned to the top.</span></div>
+<table><thead><tr>
+<th>Item</th>
+<th>Kind</th>
+<th>Scaffold</th>
+<th>Chars</th>
+<th>Elapsed</th>
+<th>Semantic</th>
+<th>Judge</th>
+<th>Stance</th>
+<th>Budget</th>
+<th>Warnings</th>
+</tr></thead><tbody id='matrix-report-body'>
+<tr data-name='baseline' data-kind='baseline' data-answer-chars='2876' data-elapsed-s='26.050997291000385' data-diff-ratio='' data-answer-cosine='' data-query-alignment-delta='' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='' data-budget-scaffold-tokens='' data-budget-reasoning-delta='' data-budget-completion-delta='' data-budget-total-delta=''>
+<td><strong>baseline</strong><br/><span class='muted'></span></td>
+<td>baseline</td>
+<td>—</td>
+<td class='num'>2876</td>
+<td class='num'>26.05</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='assoc' data-kind='ponder' data-answer-chars='2689' data-elapsed-s='36.293691916998796' data-diff-ratio='0.9522012578616352' data-answer-cosine='0.7090842290605518' data-query-alignment-delta='-0.0005513156333405433' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.5' data-budget-scaffold-tokens='603' data-budget-reasoning-delta='0' data-budget-completion-delta='479' data-budget-total-delta='6022'>
+<td><strong>assoc</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>assoc/320</td>
+<td class='num'>2689</td>
+<td class='num'>36.29</td>
+<td>cos=0.7091 | Δalign=-0.0006</td>
+<td>—</td>
+<td>conditionalization→conditionalization | shift=0.5000</td>
+<td>scaf=603 | reasonΔ=0 | compΔ=479</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='random' data-kind='ponder' data-answer-chars='2524' data-elapsed-s='36.12698120800087' data-diff-ratio='0.9625925925925926' data-answer-cosine='0.676055255202937' data-query-alignment-delta='0.026513238945123196' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.2424242424242424' data-budget-scaffold-tokens='657' data-budget-reasoning-delta='0' data-budget-completion-delta='455' data-budget-total-delta='6009'>
+<td><strong>random</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>random/320</td>
+<td class='num'>2524</td>
+<td class='num'>36.13</td>
+<td>cos=0.6761 | Δalign=0.0265</td>
+<td>—</td>
+<td>conditionalization→conditionalization | shift=0.2424</td>
+<td>scaf=657 | reasonΔ=0 | compΔ=455</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts' data-kind='ponder' data-answer-chars='2998' data-elapsed-s='52.16468962500039' data-diff-ratio='0.9717398706162751' data-answer-cosine='0.693216703676507' data-query-alignment-delta='-0.015664425121626746' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.3571428571428571' data-budget-scaffold-tokens='686' data-budget-reasoning-delta='0' data-budget-completion-delta='1410' data-budget-total-delta='9433'>
+<td><strong>facts</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/320</td>
+<td class='num'>2998</td>
+<td class='num'>52.16</td>
+<td>cos=0.6932 | Δalign=-0.0157</td>
+<td>—</td>
+<td>conditionalization→conditionalization | shift=0.3571</td>
+<td>scaf=686 | reasonΔ=0 | compΔ=1410</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic' data-kind='ponder' data-answer-chars='3415' data-elapsed-s='93.23183654199966' data-diff-ratio='0.968208551899539' data-answer-cosine='0.7208354087287786' data-query-alignment-delta='-0.024028806026940297' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.16666666666666663' data-budget-scaffold-tokens='678' data-budget-reasoning-delta='0' data-budget-completion-delta='4433' data-budget-total-delta='12827'>
+<td><strong>isomorphic</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/320</td>
+<td class='num'>3415</td>
+<td class='num'>93.23</td>
+<td>cos=0.7208 | Δalign=-0.0240</td>
+<td>—</td>
+<td>conditionalization→conditionalization | shift=0.1667</td>
+<td>scaf=678 | reasonΔ=0 | compΔ=4433</td>
+<td class='ok'>0</td>
+</tr>
+</tbody></table>
+<h2>Item details</h2>
+<details>
+<summary><strong>baseline</strong> · baseline</summary>
+<div class='card'>
+<h3>answer</h3>
+<pre>When an answer is allowed to wander before deciding, the first thing that changes is the relationship between the conclusion and its reasons. A snap answer carries its justification as decoration—reasons assembled after the fact to defend a verdict already reached. An answer that wanders builds its reasons as load-bearing structure, so the conclusion can still move while it is being thought. The order reverses: instead of choosing, then explaining, you explore, then commit.
+
+The space of considered possibilities widens. A direct path visits only the options near the obvious one; wandering lets weaker, stranger candidates get a hearing before they are dismissed. Most of them deserve dismissal, but the value isn&#x27;t in the bad options themselves—it&#x27;s that having looked at them, you now know *why* the chosen answer beats them, not merely that it feels right. The final decision inherits the contrast set it was measured against.
+
+Error changes character, too. The cost of wandering is that you can talk yourself out of a correct first instinct, or rationalize your way into overconfidence by mistaking length of deliberation for quality of it. More thinking is not monotonically better; past …</pre>
+</div>
+</details>
+<details>
+<summary><strong>assoc</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9522 | changed=True</div>
+<h3>answer</h3>
+<pre>When an answer is allowed to wander first, the most immediate change is that the deciding stops being the same act as the thinking. Normally they collapse into one motion — you reach for a conclusion and the reasoning arrives already shaped to defend it. Wandering pries those apart. You get a stretch where claims stay provisional, where a frame can be tried on and discarded without cost, and only afterward does commitment happen. The decision becomes a separate, deliberate gesture rather than a reflex.
+
+What you lose is speed and the comfort of an early anchor. What you gain is a wider sampling of the space before the answer hardens. The first plausible response is rarely the best one; it&#x27;s just the nearest. Letting the answer drift means the nearest option has to compete with ones that were further away, and sometimes a better fit was sitting two steps past where you&#x27;d have stopped.
+
+There&#x27;s a subtler shift too. Wandering surfaces the assumptions that a fast answer would have smuggled in silently. When you let fragments sit next to each other without forcing a resolution, the gaps between them become visible — and those gaps are usually where the hidden premises live. You start t…</pre>
+</div>
+</details>
+<details>
+<summary><strong>random</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9626 | changed=True</div>
+<h3>answer</h3>
+<pre>When an answer is allowed to wander, the first thing that changes is what counts as a candidate. A direct route only considers the options already visible at the start; wandering lets the question pick up things it wasn&#x27;t looking for—the detail in the corner, the object that was only a prop a moment ago and now turns out to matter. The set of possible answers grows before the set narrows.
+
+The cost structure changes too. Deciding immediately is cheap but brittle: it commits to the framing you happened to arrive with. Wandering spends time in exchange for a chance to notice that the framing itself was wrong—that the steady rhythm was in the gutter, not the receipt; that nothing was actually starting even though the signal sounded like a beginning. Much of the value isn&#x27;t in finding a better answer to the question asked, but in catching the hidden assumption that made the question misleading.
+
+What also changes is the relationship between the wanderer and being wrong. A decision made fast treats its first hypothesis as the answer to defend. A decision made after wandering treats early hypotheses as scaffolding to discard. So you get less attachment, more willingness to let a tentati…</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9717 | changed=True</div>
+<h3>answer</h3>
+<pre>What changes is mostly the process, not automatically the product. Wandering widens the search path—tentative claims, detours, revisions—but a wider path only improves the final answer under specific conditions, and it can also degrade it.
+
+It helps when the question has a search space larger than a single forward pass can survey, and when the intermediate steps are actually checked against constraints rather than merely produced. Under those conditions, three things shift. Accuracy can rise, because more candidate answers are seen and weak ones get pruned before commitment. Calibration shifts, because hidden assumptions that a direct answer would silently fix get surfaced and named—you find out where the question was underspecified. And cost rises: more tokens, more latency, a later moment of commitment.
+
+These three don&#x27;t move together. You can buy better calibration while accuracy stays flat, or gain accuracy while confidence becomes falsely inflated by the sheer volume of reasoning. Worth separating them rather than treating &quot;it got better&quot; as one thing.
+
+It hurts, or does nothing, in the boundary cases. For lookup or recall, added wandering changes little and can introduce dr…</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9682 | changed=True</div>
+<h3>answer</h3>
+<pre>What changes is mostly the relationship between the answer and its own certainty.
+
+When a response must decide immediately, it commits to the first frame that fits. The earliest plausible reading becomes the whole map, and everything after it is justification rather than search. Wandering breaks that. It lets the first reading be treated as one sample among several instead of the verdict. The cost is time and a little vertigo; the gain is that the eventual decision has been tested against its own alternatives rather than merely asserted ahead of them.
+
+Three things in particular shift.
+
+First, hidden assumptions surface. A direct answer carries its premises silently — it can&#x27;t doubt the ground it&#x27;s standing on because it never steps off it. Wandering is what stepping off looks like. The detour into the counterexample, the &quot;but what if it&#x27;s reluctance, not patience&quot; turn, is where an unexamined framing gets named and either kept or dropped. You can&#x27;t revise an assumption you never made visible, and you rarely make it visible while moving in a straight line toward a conclusion.
+
+Second, the space of possible answers gets wider before it gets narrower. Deciding early prunes the tree …</pre>
+</div>
+</details>
+<script>(function(){const body=document.getElementById('matrix-report-body');const heatSel=document.getElementById('heatmap-metric-key');const keySel=document.getElementById('matrix-sort-key');const dirSel=document.getElementById('matrix-sort-dir');const applyBtn=document.getElementById('matrix-sort-apply');const heatmaps=Array.from(document.querySelectorAll('[data-heatmap-key]'));if(heatSel&&heatmaps.length){function syncHeatmap(){const wanted=heatSel.value||'';for(const node of heatmaps){node.style.display=(node.getAttribute('data-heatmap-key')===wanted)?'':'none';}}heatSel.addEventListener('change',syncHeatmap);syncHeatmap();}if(!body||!keySel||!dirSel||!applyBtn){return;}function metricValue(row,key){const attr='data-'+String(key||'').replace(/_/g,'-');const raw=row.getAttribute(attr)||'';if(key==='name'){return raw.toLowerCase();}const num=Number(raw);return Number.isFinite(num)?num:null;}function compareRows(a,b,key,dir){const av=metricValue(a,key);const bv=metricValue(b,key);if(typeof av==='string'||typeof bv==='string'){const as=String(av||'');const bs=String(bv||'');return dir==='asc'?as.localeCompare(bs):bs.localeCompare(as);}if(av===null&&bv===null){return 0;}if(av===null){return 1;}if(bv===null){return -1;}return dir==='asc'?(av-bv):(bv-av);}function sortRows(){const key=keySel.value||'query_alignment_delta';const dir=dirSel.value||'desc';const rows=Array.from(body.querySelectorAll('tr'));const pinned=rows.filter((row)=>row.getAttribute('data-kind')==='baseline');const sortable=rows.filter((row)=>row.getAttribute('data-kind')!=='baseline');sortable.sort((a,b)=>{const main=compareRows(a,b,key,dir);if(main!==0){return main;}return compareRows(a,b,'name','asc');});for(const row of pinned.concat(sortable)){body.appendChild(row);}}applyBtn.addEventListener('click',sortRows);keySel.addEventListener('change',sortRows);dirSel.addEventListener('change',sortRows);sortRows();})();</script>
+</body></html>

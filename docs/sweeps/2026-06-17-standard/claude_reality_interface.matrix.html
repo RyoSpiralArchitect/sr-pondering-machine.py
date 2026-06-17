@@ -1,0 +1,323 @@
+<!doctype html>
+<html><head><meta charset='utf-8'/>
+<title>sr_ponder matrix report</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:24px;color:#111;background:#fafafa;}h1,h2,h3{margin:0 0 12px 0;} .muted{color:#666;} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0;}.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 14px 0;padding:10px 12px;background:#fff;border:1px solid #ddd;border-radius:10px;}.toolbar label{font-size:13px;color:#333;display:flex;gap:6px;align-items:center;}.toolbar select,.toolbar button{font:inherit;padding:6px 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111;}.toolbar button{cursor:pointer;}.heatmap-wrap{margin:12px 0 20px 0;}.heatmap-cell{min-width:74px;text-align:center;font-variant-numeric:tabular-nums;}.heat-win{background:#e8f7ee;color:#0a5a2e;}.heat-loss{background:#fdecec;color:#8b1d1d;}.heat-tie,.heat-diag{background:#f3f3f3;color:#666;}.heat-missing{background:#fff8e6;color:#8a6d1f;}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #ddd;} th,td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:top;text-align:left;font-size:13px;}th{background:#f3f3f3;position:sticky;top:0;} code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}pre{white-space:pre-wrap;background:#fbfbfb;border:1px solid #eee;padding:12px;border-radius:8px;}.pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef4ff;color:#245; margin-right:6px;font-size:12px;}details{margin:12px 0;} .num{text-align:right;} .ok{color:#0a6;} .warn{color:#a60;}</style>
+</head><body>
+<h1>sr_ponder matrix report</h1>
+<div class='muted'>scaffold_abcd · claude / haiku</div>
+<p><strong>Query:</strong> 現実って何のインターフェース？</p>
+<div class='grid'>
+<div class='card'><div class='muted'>Items</div><div><strong>5</strong></div></div>
+<div class='card'><div class='muted'>Ponder items</div><div><strong>4</strong></div></div>
+<div class='card'><div class='muted'>Warnings</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Baseline</div><div><strong>baseline</strong></div></div>
+<div class='card'><div class='muted'>Max reasoning Δ</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Max stance shift</div><div><strong>0.5000</strong></div></div>
+<div class='card'><div class='muted'>Best align Δ</div><div><strong>-0.0225</strong></div></div>
+</div>
+<h2>Pairwise heatmap</h2>
+<div class='toolbar'><strong>A/B/C/D win-loss heatmap</strong><label>Metric<select id='heatmap-metric-key'>
+<option value='query_alignment_delta' selected>Query align Δ</option>
+<option value='stance_shift'>Stance shift</option>
+<option value='budget_reasoning_delta'>Reasoning token Δ</option>
+<option value='budget_total_delta'>Total token Δ</option>
+</select></label><span class='muted'>Green means the row beats the column on the selected metric. Cost metrics use lower-is-better.</span></div>
+<div class='heatmap-wrap' data-heatmap-key='query_alignment_delta'><div class='muted'>Query align Δ · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>-0.0555 · 1W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.1076</td>
+<td class='heatmap-cell heat-loss'>-0.0330</td>
+<td class='heatmap-cell heat-loss'>-0.0133</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>-0.1631 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-0.1076</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1406</td>
+<td class='heatmap-cell heat-loss'>-0.1209</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>-0.0225 · 3W</span></td>
+<td class='heatmap-cell heat-win'>0.0330</td>
+<td class='heatmap-cell heat-win'>0.1406</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0197</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>-0.0422 · 2W</span></td>
+<td class='heatmap-cell heat-win'>0.0133</td>
+<td class='heatmap-cell heat-win'>0.1209</td>
+<td class='heatmap-cell heat-loss'>-0.0197</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='stance_shift' style='display:none'><div class='muted'>Stance shift · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.3500 · 0W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1500</td>
+<td class='heatmap-cell heat-loss'>-0.1167</td>
+<td class='heatmap-cell heat-loss'>-0.1167</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.5000 · 3W</span></td>
+<td class='heatmap-cell heat-win'>0.1500</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0333</td>
+<td class='heatmap-cell heat-win'>0.0333</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>0.4667 · 1W</span></td>
+<td class='heatmap-cell heat-win'>0.1167</td>
+<td class='heatmap-cell heat-loss'>-0.0333</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>0.4667 · 1W</span></td>
+<td class='heatmap-cell heat-win'>0.1167</td>
+<td class='heatmap-cell heat-loss'>-0.0333</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_reasoning_delta' style='display:none'><div class='muted'>Reasoning token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_total_delta' style='display:none'><div class='muted'>Total token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>15680.0000 · 2W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-1192.0000</td>
+<td class='heatmap-cell heat-win'>8616.0000</td>
+<td class='heatmap-cell heat-win'>11929.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>14488.0000 · 3W</span></td>
+<td class='heatmap-cell heat-win'>1192.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>9808.0000</td>
+<td class='heatmap-cell heat-win'>13121.0000</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>24296.0000 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-8616.0000</td>
+<td class='heatmap-cell heat-loss'>-9808.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>3313.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>27609.0000 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-11929.0000</td>
+<td class='heatmap-cell heat-loss'>-13121.0000</td>
+<td class='heatmap-cell heat-loss'>-3313.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<h2>Comparison table</h2>
+<div class='toolbar'><strong>Sort by baseline-relative metric</strong><label>Metric<select id='matrix-sort-key'><option value='judge_score_delta'>Judge score Δ</option><option value='judge_resolution_delta'>Judge resolution Δ</option><option value='query_alignment_delta'>Query align Δ</option><option value='stance_shift'>Stance shift</option><option value='budget_reasoning_delta'>Reasoning token Δ</option><option value='budget_completion_delta'>Completion token Δ</option><option value='budget_total_delta'>Total token Δ</option><option value='answer_cosine'>Answer cosine</option><option value='diff_ratio'>Diff ratio</option><option value='answer_chars'>Answer chars</option><option value='elapsed_s'>Elapsed seconds</option><option value='name'>Name</option></select></label><label>Direction<select id='matrix-sort-dir'><option value='desc'>Descending</option><option value='asc'>Ascending</option></select></label><button type='button' id='matrix-sort-apply'>Apply</button><span class='muted'>Baseline rows stay pinned to the top.</span></div>
+<table><thead><tr>
+<th>Item</th>
+<th>Kind</th>
+<th>Scaffold</th>
+<th>Chars</th>
+<th>Elapsed</th>
+<th>Semantic</th>
+<th>Judge</th>
+<th>Stance</th>
+<th>Budget</th>
+<th>Warnings</th>
+</tr></thead><tbody id='matrix-report-body'>
+<tr data-name='baseline' data-kind='baseline' data-answer-chars='419' data-elapsed-s='10.53489562499999' data-diff-ratio='' data-answer-cosine='' data-query-alignment-delta='' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='' data-budget-scaffold-tokens='' data-budget-reasoning-delta='' data-budget-completion-delta='' data-budget-total-delta=''>
+<td><strong>baseline</strong><br/><span class='muted'></span></td>
+<td>baseline</td>
+<td>—</td>
+<td class='num'>419</td>
+<td class='num'>10.53</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='assoc' data-kind='ponder' data-answer-chars='390' data-elapsed-s='37.249842916999114' data-diff-ratio='0.8714462299134734' data-answer-cosine='0.18928109107171523' data-query-alignment-delta='-0.05548603845392738' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.35' data-budget-scaffold-tokens='630' data-budget-reasoning-delta='0' data-budget-completion-delta='2713' data-budget-total-delta='15680'>
+<td><strong>assoc</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>assoc/180</td>
+<td class='num'>390</td>
+<td class='num'>37.25</td>
+<td>cos=0.1893 | Δalign=-0.0555</td>
+<td>—</td>
+<td>resolution→framing | shift=0.3500</td>
+<td>scaf=630 | reasonΔ=0 | compΔ=2713</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='random' data-kind='ponder' data-answer-chars='1245' data-elapsed-s='30.865808333999667' data-diff-ratio='0.9903846153846154' data-answer-cosine='0.05498273737052816' data-query-alignment-delta='-0.16308216331884356' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.5' data-budget-scaffold-tokens='584' data-budget-reasoning-delta='0' data-budget-completion-delta='1535' data-budget-total-delta='14488'>
+<td><strong>random</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>random/180</td>
+<td class='num'>1245</td>
+<td class='num'>30.87</td>
+<td>cos=0.0550 | Δalign=-0.1631</td>
+<td>—</td>
+<td>resolution→— | shift=0.5000</td>
+<td>scaf=584 | reasonΔ=0 | compΔ=1535</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts' data-kind='ponder' data-answer-chars='413' data-elapsed-s='58.63714962499944' data-diff-ratio='0.7884615384615384' data-answer-cosine='0.21569171284866356' data-query-alignment-delta='-0.02251929629735415' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.4666666666666667' data-budget-scaffold-tokens='580' data-budget-reasoning-delta='0' data-budget-completion-delta='5031' data-budget-total-delta='24296'>
+<td><strong>facts</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/180</td>
+<td class='num'>413</td>
+<td class='num'>58.64</td>
+<td>cos=0.2157 | Δalign=-0.0225</td>
+<td>—</td>
+<td>resolution→definition | shift=0.4667</td>
+<td>scaf=580 | reasonΔ=0 | compΔ=5031</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic' data-kind='ponder' data-answer-chars='432' data-elapsed-s='80.9252498750011' data-diff-ratio='0.9059929494712103' data-answer-cosine='0.18139502112209893' data-query-alignment-delta='-0.04220322167941587' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.4666666666666667' data-budget-scaffold-tokens='634' data-budget-reasoning-delta='0' data-budget-completion-delta='7725' data-budget-total-delta='27609'>
+<td><strong>isomorphic</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/180</td>
+<td class='num'>432</td>
+<td class='num'>80.93</td>
+<td>cos=0.1814 | Δalign=-0.0422</td>
+<td>—</td>
+<td>resolution→definition | shift=0.4667</td>
+<td>scaf=634 | reasonΔ=0 | compΔ=7725</td>
+<td class='ok'>0</td>
+</tr>
+</tbody></table>
+<h2>Item details</h2>
+<details>
+<summary><strong>baseline</strong> · baseline</summary>
+<div class='card'>
+<h3>answer</h3>
+<pre>現実は、無限なものと有限なものの間のインターフェースだと考えます。
+
+意識や潜在的な可能性という無限の領域と、物質や時間という有限の現実世界を結ぶ翻訳層として機能しているのです。私たちの経験は、その両方が出会う場所です。
+
+別の見方をすれば、現実は観測者と被観測の間のインターフェースです。何かが「ある」と言える前に、それを認識する主体が必要です。物質的な世界と意識が相互作用するその接点こそが現実です。
+
+さらに言えば、現実は情報と経験の間のインターフェースとも言えます。宇宙の基本構造は情報的かもしれません。その情報が私たちの知覚を通じて現れるとき、それが現実という体験になるのです。
+
+つまり現実とは、一方向の映像ではなく、双方向の翻訳プロセスです。存在するものと、それを認識するもの、その相互作用によって常に生成されている動的なインターフェース。私たちは現実の中に住んでいるのではなく、現実というインターフェースそのものなのです。</pre>
+</div>
+</details>
+<details>
+<summary><strong>assoc</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8714 | changed=True</div>
+<h3>answer</h3>
+<pre>現実は、意識と物理世界の間の翻訳膜だと思います。
+
+外界は無限の信号で満ちていますが、あなたの神経系はその一部だけを通します。その通った信号を脳が解釈して、「現実」という統一された体験に再構成する。その意味では現実は、内部プロセスと外部刺激を仲介するインターフェースです。
+
+Ponder Logで言及された「知覚フィルター」と「解釈層」はまさにこれを指しています。同じ物理的刺激でも、あなたの注意の向け方や心身の状態が変わると、まったく異なる「現実」が立ち現れる。夢と覚醒の違いさえ、どのフィルターが働いているかの違いに過ぎません。
+
+つまり現実とは、「どの周波数の信号をキャッチするか」を決めるチューナー装置です。あなたはいつも現実を「見ている」のではなく、現実という限定的なインターフェースを通して、無限のうち一部を「選んで見ている」。その選別の装置そのものが現実なのです。</pre>
+</div>
+</details>
+<details>
+<summary><strong>random</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9904 | changed=True</div>
+<h3>answer</h3>
+<pre>Reality is an interface between intention and inattention.
+
+The ponder log marks a pattern: someone carefully folds a receipt, adjusts a water bottle cap, adds another small procedure—each gesture precise, layered with meaning. Yet these details pass unnoticed. Reality functions as the membrane where one consciousness tries to signal to another through small choreographies that mostly dissolve into background noise.
+
+Reality is the interface where we ask *what else is happening in the spaces we don&#x27;t look*—where someone&#x27;s careful folding lives alongside our indifference, where incremental procedures accumulate, where the lobby air moves forward while we stand still. It&#x27;s the medium through which intention leaks through into a world that largely doesn&#x27;t register it.
+
+The interface isn&#x27;t neutral. It&#x27;s the place where precision meets negligence, where patterns we didn&#x27;t design keep emerging anyway, where a paper cup gets reassigned a new role each time someone bothers to rearrange it. Reality shows us not what is, but what *persists in trying to be noticed*.
+
+So reality is an interface to attention itself—or to its failure. It&#x27;s where the deliberate gestures of existence meet the va…</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.7885 | changed=True</div>
+<h3>answer</h3>
+<pre>現実は、主観的な意識と客観的な物質世界の間のインターフェースです。
+
+インターフェースの定義に従えば、それは「異なる秩序をもつシステム間で相互作用を可能にする変換規則と接触面」です。現実は、私たちの内的な感覚・知覚（主観的秩序）と外部の物理的存在（客観的秩序）を仲介しています。
+
+感覚器官から脳まで、私たちの神経系は物理的刺激を神経信号に変換し、さらに経験や意味へと翻訳する。この変換こそが現実の本質です。
+
+重要なのは、複数の独立した観測者が同じ事象について一致した報告をなしうるという点です。これはインターフェースとしての現実の証拠であり、単なる個人的な幻想ではなく、何らかの共有可能な規則性が存在することを示しています。
+
+つまり現実とは、異なる主観性を持つ複数の観測者が接続し、相互に翻訳可能な世界です。それは私たち一人ひとりの内部モデルと、その外にある何かを繋ぐ変換領域──まさにインターフェースそのものなのです。</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9060 | changed=True</div>
+<h3>answer</h3>
+<pre>加熱するたびに素材が変わる。でも変わらない部分があると感じる。そこに現実の正体がある気がします。
+
+現実とは、変換のインターフェースです。
+
+感覚は素材（光、音、温度）を受け取り、脳という調理器で化学変化させて、意識という「味わい」にする。その過程で何かが失われ、何かが生まれます。加熱によって素材の本質は変わるのか、それとも変わらない部分があるのか——その揺らぎこそが現実です。
+
+完全に同じことは二度起こらない。光が遅れて届き、配置だけが反復される。同じように見える食卓の現象も、毎回微かに異なっている。私たちは変化し続ける素材を、反復的なパターンとして認識することで、世界を「ある」と信じます。
+
+だから現実は、感覚から意識へ至る変換プロセスそのもので、インターフェースは単なる仲介役ではなく、その変換自体が現実を作ります。見えている世界は、私たちの知覚という調理法がこしらえたもの。本質と現象の間にある、その振動のことを「現実」と呼んでいるのだと思います。</pre>
+</div>
+</details>
+<script>(function(){const body=document.getElementById('matrix-report-body');const heatSel=document.getElementById('heatmap-metric-key');const keySel=document.getElementById('matrix-sort-key');const dirSel=document.getElementById('matrix-sort-dir');const applyBtn=document.getElementById('matrix-sort-apply');const heatmaps=Array.from(document.querySelectorAll('[data-heatmap-key]'));if(heatSel&&heatmaps.length){function syncHeatmap(){const wanted=heatSel.value||'';for(const node of heatmaps){node.style.display=(node.getAttribute('data-heatmap-key')===wanted)?'':'none';}}heatSel.addEventListener('change',syncHeatmap);syncHeatmap();}if(!body||!keySel||!dirSel||!applyBtn){return;}function metricValue(row,key){const attr='data-'+String(key||'').replace(/_/g,'-');const raw=row.getAttribute(attr)||'';if(key==='name'){return raw.toLowerCase();}const num=Number(raw);return Number.isFinite(num)?num:null;}function compareRows(a,b,key,dir){const av=metricValue(a,key);const bv=metricValue(b,key);if(typeof av==='string'||typeof bv==='string'){const as=String(av||'');const bs=String(bv||'');return dir==='asc'?as.localeCompare(bs):bs.localeCompare(as);}if(av===null&&bv===null){return 0;}if(av===null){return 1;}if(bv===null){return -1;}return dir==='asc'?(av-bv):(bv-av);}function sortRows(){const key=keySel.value||'query_alignment_delta';const dir=dirSel.value||'desc';const rows=Array.from(body.querySelectorAll('tr'));const pinned=rows.filter((row)=>row.getAttribute('data-kind')==='baseline');const sortable=rows.filter((row)=>row.getAttribute('data-kind')!=='baseline');sortable.sort((a,b)=>{const main=compareRows(a,b,key,dir);if(main!==0){return main;}return compareRows(a,b,'name','asc');});for(const row of pinned.concat(sortable)){body.appendChild(row);}}applyBtn.addEventListener('click',sortRows);keySel.addEventListener('change',sortRows);dirSel.addEventListener('change',sortRows);sortRows();})();</script>
+</body></html>

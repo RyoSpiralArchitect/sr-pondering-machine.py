@@ -1,0 +1,131 @@
+[sr_ponder] backend=claude_cli provider=claude model='haiku' seed_method=self logprobs_top_n=0 lang=en band_profile=single bands=profile objective=random_band diversity=off hops=1 answer_style=plain control=none pipeline=assoc memory=current_only/tail/off scaffold=assoc/180 write_memory=False
+
+=== PACK: baseline ===
+
+When an answer is allowed to wander before deciding, several things shift:
+
+**The reasoning becomes visible.** Instead of jumping to a conclusion, the path of thinking emerges—false starts, course corrections, and self-doubt surface as part of the process rather than being hidden behind a final polished statement.
+
+**Error correction becomes possible.** Mistakes caught mid-thought can be addressed rather than baked into the final answer. The model can recognize when it's heading down a wrong path and backtrack.
+
+**Depth replaces confidence.** A rushed answer tends toward certainty because there's no time to encounter complications. Wandering reveals nuance—the places where the question is actually harder than it first appeared, where trade-offs exist, where the answer depends on unstated assumptions.
+
+**Specificity increases.** Generic answers crystallize quickly. Wandering forces engagement with particular details and edge cases that a shortcut would bypass.
+
+**The answer becomes calibrated to uncertainty.** When forced to think longer, an AI system is more likely to acknowledge what it doesn't know, where confidence is warranted, and where it's faking certainty.
+
+**Novelty emerges.** Sometimes the answer you reach by wandering differs from the obvious first answer. Exploration of the possibility space can reveal connections not available to linear reasoning.
+
+The tradeoff is obvious: wandering costs more compute and time. But what you gain is reasoning that's auditable, correctable, honest about uncertainty, and often more useful precisely because it isn't rushing to seem certain.
+
+=== PACK: assoc ===
+
+The question itself transforms. A direct path to "the answer" treats the problem as fixed and knowable in advance. Wandering reveals that the question was narrower than it appeared—the detours expose hidden assumptions baked into the original framing.
+
+When you delay deciding, you discover constraints that don't announce themselves. The musician with the broken synth didn't need to "find her voice"—she needed to fail at using someone else's. That failure was the information.
+
+Wandering also reframes certainty. A rushed answer feels conclusive; a wandering one accumulates caveats, edge cases, exceptions that were invisible from the direct path. This can feel like weakness—you're less sure—but it's actually fidelity. You've collided with complexity that a straight line would have missed.
+
+There's a shift in what changes hands. A direct answer transfers information. A wandered answer transfers a way of thinking—the paths matter as much as the destination. Someone following your route learns not just what you concluded, but *why* that route mattered, what you tested along the way, where the terrain broke assumptions.
+
+The cost is time and discomfort—you're lost before you're found. But something crucial happens: you stop confusing the shape of your explanation with the shape of the problem. The wandering reveals that they were never the same thing.
+
+=== COMPARISON ===
+
+answers_changed=yes chars=1609->1366 delta=-243 diff_ratio=0.9724
+records=1 unique_keywords=6 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.570392 query_base=0.308012 query_ponder=0.276326 align_delta=-0.031686
+stance[heuristic_lexicon] base=conditionalization ponder=framing shift=0.500000 gain=framing drop=conditionalization
+spatial[heuristic_lexicon] ans_density=2.486->4.392 log_density=0.000 q_density=0.000 groups=path->path log=none
+budget[api_usage_plus_visible_estimate] ans=309->270 scaffold=440 reason=0->0 completion=821->2463
+
+=== PACK: random ===
+
+When an answer is allowed to wander before deciding, several things shift:
+
+Hidden assumptions become visible. A direct answer obscures the terrain beneath it. Wandering reveals which premises actually hold and which ones don't, making the foundation visible to both the thinker and the listener.
+
+The answer gains resilience. An answer that has explored dead ends and backtracked understands its own boundaries and limitations. It knows not just what it claims, but why alternatives failed. This makes it harder to break.
+
+Confidence transforms from certainty into calibration. Instead of "I know this is right," you develop "I've tested this against these alternatives and here's why it holds." You become aware of the degrees of conviction rather than assuming all convictions are equal.
+
+The process becomes part of the payload. A wandering answer leaves traces—the work shows. This matters because it lets the questioner verify the reasoning, not just accept the conclusion. The path becomes evidence.
+
+Time enters the answer. Wandering introduces temporal texture—you can see how thinking evolved, what prompted course corrections, which questions emerged along the way. This matters because real decisions happen in time, and answers that ignore that often fail in practice.
+
+Finally, wandering clarifies the question itself. Often we don't truly know what we're asking until someone explores it. The wandering answer returns not just an answer but a refined understanding of what was actually being asked.
+
+=== COMPARISON ===
+
+answers_changed=yes chars=1609->1513 delta=-96 diff_ratio=0.9244
+records=1 unique_keywords=6 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.623554 query_base=0.304200 query_ponder=0.309423 align_delta=0.005223
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.500000 gain=resolution drop=conditionalization
+spatial[heuristic_lexicon] ans_density=2.486->1.322 log_density=1.803 q_density=0.000 groups=path->path log=geometry
+budget[api_usage_plus_visible_estimate] ans=309->279 scaffold=422 reason=0->0 completion=821->2557
+
+=== PACK: facts ===
+
+When an answer is allowed to wander before deciding, several things shift:
+
+**Hidden dependencies surface.** Exploring multiple branches reveals which premises feed into multiple conclusions and which collapse under scrutiny. A direct path commits before discovering these connections.
+
+**Robustness increases but certainty may decline.** Wandering tests the answer against alternatives, catching unstated assumptions and fragile logic. But the same exploration can expose the incommensurability of valid options, replacing false confidence with legitimate doubt.
+
+**The final answer carries implicit caveats.** Even abandoned branches shape the reasoning. A wandered conclusion implicitly acknowledges alternatives it considered and rejected. A direct answer never maps its choice against what it didn't explore.
+
+**Error sources change.** Direct paths fail through blind spots—premises you never questioned. Wandering fails through circular reasoning or decision paralysis when multiple branches seem equally strong. You trade one error risk for another.
+
+**Information state versus answer state diverge.** Your internal reasoning explores far more than you communicate. Wandering expands the information state (what you know about the problem) without necessarily expanding the final answer—you may conclude the same thing, but with deeper grounds.
+
+**The boundary of "viable alternative" becomes active.** Wandering only helps when genuine alternatives exist. If all branches lead to the same conclusion, wandering confirms rather than changes the answer. If branches are equally valid, wandering may expose a genuine indeterminacy that demands a decision rule rather than a discovery.
+
+In essence: wandering trades speed for resilience and awareness of alternatives.
+
+=== COMPARISON ===
+
+answers_changed=yes chars=1609->1771 delta=+162 diff_ratio=0.9201
+records=1 unique_keywords=6 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.586542 query_base=0.309361 query_ponder=0.311615 align_delta=0.002254
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.000000 gain= drop=
+spatial[heuristic_lexicon] ans_density=2.486->1.129 log_density=1.440 q_density=0.000 groups=path->path log=container
+budget[api_usage_plus_visible_estimate] ans=309->305 scaffold=467 reason=0->0 completion=821->5860
+
+=== PACK: isomorphic ===
+
+When an answer wanders before deciding, you expose what was latent in the question itself. The rush to closure locks you into your first instinct—which is often shaped by how you framed the problem initially. Wandering cracks that frame open.
+
+The texture changes. An answer that arrives after exploration carries the marks of the path: you see which alternatives you rejected and why, what assumptions held your reasoning, what possibilities only appeared partway through. That transparency becomes part of the answer's integrity.
+
+Speed trades for depth, but something else shifts too. The answer stops being a destination you're trying to reach and becomes something you're uncovering. Like the dyer who finds the fiber's true undertones only after letting the vat work—the color wasn't hidden; it was waiting to be revealed through process.
+
+Confidence transforms. If you decide immediately, you're committing to a first impression. If you wander, you're choosing deliberately, having seen alternatives. There's less self-doubt afterward because you didn't take the easy path; you took the honest one.
+
+The wandering also reveals what the question was actually asking beneath the surface. You often discover you misunderstood it initially, or that multiple coherent answers existed all along. That discovery alone reframes what "deciding" even means.
+
+So what changes: the answer becomes *owned* rather than defaulted to. It carries evidence of consideration. And you no longer confuse speed with clarity.
+
+=== COMPARISON ===
+
+answers_changed=yes chars=1609->1509 delta=-100 diff_ratio=0.9628
+records=1 unique_keywords=6 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.578234 query_base=0.309302 query_ponder=0.310977 align_delta=0.001675
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.000000 gain= drop=
+spatial[heuristic_lexicon] ans_density=2.486->1.988 log_density=0.751 q_density=0.000 groups=path->path log=geometry
+budget[api_usage_plus_visible_estimate] ans=309->288 scaffold=453 reason=0->0 completion=821->5761
+
+=== PACK SUMMARY ===
+
+name        kind      control  chars  records  elapsed_s
+----------  --------  -------  -----  -------  ------------------
+baseline    baseline           1609            11.355450916998961
+assoc       ponder    none     1366   1        33.74144083399915
+random      ponder    none     1513   1        34.415546707999965
+facts       ponder    none     1771   1        64.93113108300167
+isomorphic  ponder    none     1509   1        64.93279912500111
+
+[json_out] wrote artifacts/sweep_20260617_claude_gemini/claude_wander_before_deciding.json
+
+[matrix_report_out] wrote artifacts/sweep_20260617_claude_gemini/claude_wander_before_deciding.matrix.html
+
+[trace_report_out] wrote artifacts/sweep_20260617_claude_gemini/claude_wander_before_deciding.trace.html

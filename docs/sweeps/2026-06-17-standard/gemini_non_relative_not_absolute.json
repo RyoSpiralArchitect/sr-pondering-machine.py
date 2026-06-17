@@ -1,0 +1,1617 @@
+{
+  "ts": "2026-06-17T16:12:45Z",
+  "kind": "lab_matrix",
+  "provider": "custom",
+  "model": "gemini-3.5-flash",
+  "query": "非相対的ではあるが絶対的ではない状態とは？",
+  "pack": "lab_scaffold_abcd",
+  "pack_file": "",
+  "lab_matrix": "scaffold_abcd",
+  "preset": "none",
+  "config": "",
+  "env": {
+    "python": "3.13.13 (v3.13.13:01104ce1beb, Apr  7 2026, 14:43:30) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "platform": "darwin",
+    "torch": "2.11.0",
+    "transformers": "4.57.6"
+  },
+  "base_cfg": {
+    "model_path": "gemini-3.5-flash",
+    "memory_path": "ponder_logs.jsonl",
+    "backend": "openai_compat",
+    "provider": "custom",
+    "api_base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "api_chat_path": "/chat/completions",
+    "api_key_env": "GEMINI_API_KEY",
+    "api_key": "",
+    "api_headers": [],
+    "api_timeout": 180.0,
+    "api_max_retries": 1,
+    "api_reasoning_effort": "auto",
+    "api_seed_method": "auto",
+    "api_logprobs_top_n": 0,
+    "n_memory": 6,
+    "memory_policy": "current_only",
+    "memory_retrieve": "tail",
+    "memory_pool": 200,
+    "memory_mix_ratio": 0.5,
+    "memory_exclude_current_run": true,
+    "memory_remix": "off",
+    "memory_remix_keep_original": false,
+    "memory_remix_max_new_tokens": 240,
+    "memory_remix_temperature": 0.9,
+    "rejected": {
+      "top_k": 80,
+      "strategy": "outside_topk",
+      "exclude_top": 8,
+      "band_width": 256,
+      "n_keywords": 6
+    },
+    "band_profile": "single",
+    "bands": [],
+    "answer_style": "plain",
+    "answer_max_new_tokens": 256,
+    "ponder_max_new_tokens": 192,
+    "temperature": 0.7,
+    "top_p": 0.95,
+    "top_k": 0,
+    "repetition_penalty": 1.05,
+    "no_repeat_ngram_size": 0,
+    "seed": 1234,
+    "prompt_lang": "ja",
+    "ponder_mode": "assoc",
+    "ponder_pipeline": [],
+    "pipeline_context": "prev",
+    "pipeline_context_max_chars": 1200,
+    "n_ponder": 1,
+    "ponder_hops": 1,
+    "hop_keyword_source": "model",
+    "hop_context_max_chars": 900,
+    "keyword_refine": false,
+    "keyword_refine_max_new_tokens": 96,
+    "keyword_refine_temperature": 0.3,
+    "keyword_objective": "random_band",
+    "keyword_select_top": 128,
+    "keyword_diversity": "off",
+    "keyword_diversity_threshold": 0.82,
+    "dissonance_target": 0.9,
+    "dissonance_width": 0.6,
+    "dissonance_tail_k": 64,
+    "prompt_jitter": 0,
+    "prompt_jitter_include_original": true,
+    "prompt_jitter_max_new_tokens": 160,
+    "prompt_jitter_temperature": 0.6,
+    "probe_top_n": 0,
+    "probe_compare": false,
+    "probe_compare_stages": false,
+    "probe_compare_top_n": 32,
+    "compare_semantic": "hash",
+    "compare_judge": "off",
+    "compare_stance": "auto",
+    "compare_spatial_metaphor": "auto",
+    "compare_token_budget": "auto",
+    "compare_embed_model": "",
+    "scaffold_condition": "assoc",
+    "scaffold_token_target": 180,
+    "print_probe": false,
+    "interactive": false,
+    "interactive_candidates": 48,
+    "answer_per_band": false,
+    "answer_ensemble": false,
+    "answer_ensemble_max_new_tokens": 512,
+    "answer_ensemble_temperature": 0.2,
+    "control": "none",
+    "write_memory": false,
+    "device": "auto",
+    "dtype": "auto",
+    "allocator_warmup": "auto",
+    "trust_remote_code": false,
+    "use_chat_template": true,
+    "force_gemma_format": true,
+    "hf_local_files_only": true
+  },
+  "items": [
+    {
+      "name": "baseline",
+      "kind": "baseline",
+      "answer": "状態を探る。**\n\n    *   *候補",
+      "metrics": {
+        "answer_chars": 21,
+        "elapsed_s": 4.775080540999625
+      }
+    },
+    {
+      "name": "assoc",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "他との比較や関係性によって規定されるわけ",
+      "extras": {
+        "run_id": "6d31c6e6f631fe94",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:12:53Z",
+            "run_id": "6d31c6e6f631fe94",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "assoc",
+          "target_tokens": 180,
+          "source_tokens_est": 77,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": false,
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 162,
+          "normalized": true,
+          "strategy": "direct_memory_block"
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 257,
+        "memory_block_est_tokens": 162,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 7,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "hscyapVhtf_aug-N04TYAg",
+          "model": "gemini-3.5-flash",
+          "prompt_tokens": 258,
+          "completion_tokens": 10,
+          "reasoning_tokens": 0,
+          "total_tokens": 510,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 6.322775749998982,
+          "probe_s": 1.1042000551242381e-05,
+          "memory_remix_s": 6.375001248670742e-06,
+          "answer_s": 2.570486749998963
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "assoc",
+        "scaffold_token_target": 180
+      },
+      "metrics": {
+        "answer_chars": 20,
+        "records": 1,
+        "elapsed_s": 6.32310312500158
+      },
+      "comparison": {
+        "baseline_chars": 21,
+        "ponder_chars": 20,
+        "answer_changed": true,
+        "char_delta": -1,
+        "diff_ratio": 0.9512195121951219,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_baseline_dominant": "example_expansion",
+        "stance_top_drop": "example_expansion",
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 12.0,
+        "budget_ponder_answer_tokens_est": 20.0,
+        "budget_external_scaffold_tokens_est": 207.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.0,
+          "query_baseline_cosine": 0.014667484393407045,
+          "query_ponder_cosine": 0.012944071715390698,
+          "query_alignment_delta": -0.0017234126780163467
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.5,
+            "dominant": "example_expansion",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 1.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 1,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "example_expansion",
+          "dominant_ponder": "",
+          "dominant_shift": "example_expansion->",
+          "top_gain": "",
+          "top_gain_delta": 0.0,
+          "top_drop": "example_expansion",
+          "top_drop_delta": -1.0,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 0.0,
+            "conditionalization": 0.0,
+            "example_expansion": -1.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 21,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 20,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 38,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 12,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 12,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 53,
+              "completion_tokens": 11,
+              "reasoning_tokens": 0,
+              "total_tokens": 305
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 20,
+            "ponder_question_tokens_est": 30,
+            "ponder_log_tokens_est": 11,
+            "keyword_tokens_est": 4,
+            "memory_block_chars": 257,
+            "memory_block_tokens_est": 162,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 465,
+              "completion_tokens": 25,
+              "reasoning_tokens": 0,
+              "total_tokens": 1061
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 101,
+              "completion_tokens": 8,
+              "reasoning_tokens": 0,
+              "total_tokens": 289
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 106,
+                "completion_tokens": 7,
+                "reasoning_tokens": 0,
+                "total_tokens": 262
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 106,
+              "completion_tokens": 7,
+              "reasoning_tokens": 0,
+              "total_tokens": 262
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 258,
+              "completion_tokens": 10,
+              "reasoning_tokens": 0,
+              "total_tokens": 510
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 8,
+            "external_scaffold_tokens_est": 207,
+            "api_prompt_tokens": 412,
+            "api_completion_tokens": 14,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 756
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 518,
+            "completion_tokens": 36,
+            "reasoning_tokens": 0,
+            "total_tokens": 1366
+          }
+        }
+      }
+    },
+    {
+      "name": "random",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "*:\n        *   これらは「",
+      "extras": {
+        "run_id": "4bbff5a3948e28dc",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:13:00Z",
+            "run_id": "4bbff5a3948e28dc",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "random",
+          "target_tokens": 180,
+          "source_tokens_est": 547,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": false,
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 180,
+          "normalized": true,
+          "strategy": "local_random_sentences"
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 187,
+        "memory_block_est_tokens": 180,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 4,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "jMcyao-lGc6W0-kPv4LmsAU",
+          "model": "gemini-3.5-flash",
+          "prompt_tokens": 224,
+          "completion_tokens": 8,
+          "reasoning_tokens": 0,
+          "total_tokens": 476,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 5.968508957999802,
+          "probe_s": 1.1041000107070431e-05,
+          "memory_remix_s": 7.749998985673301e-06,
+          "answer_s": 2.140191374999631
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "random",
+        "scaffold_token_target": 180
+      },
+      "metrics": {
+        "answer_chars": 20,
+        "records": 1,
+        "elapsed_s": 5.968917166999745
+      },
+      "comparison": {
+        "baseline_chars": 21,
+        "ponder_chars": 20,
+        "answer_changed": true,
+        "char_delta": -1,
+        "diff_ratio": 0.5121951219512195,
+        "records": 1,
+        "unique_keywords": 0,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.0,
+        "stance_baseline_dominant": "example_expansion",
+        "stance_ponder_dominant": "example_expansion",
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 12.0,
+        "budget_ponder_answer_tokens_est": 8.0,
+        "budget_external_scaffold_tokens_est": 217.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.0,
+          "query_baseline_cosine": 0.014600417277440908,
+          "query_ponder_cosine": 0.0,
+          "query_alignment_delta": -0.014600417277440908
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.5,
+            "dominant": "example_expansion",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 1.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 1,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.5,
+            "dominant": "example_expansion",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 1.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 1,
+            "top_terms": {}
+          },
+          "shift_score": 0.0,
+          "dominant_baseline": "example_expansion",
+          "dominant_ponder": "example_expansion",
+          "dominant_shift": "example_expansion->example_expansion",
+          "top_gain": "",
+          "top_gain_delta": 0.0,
+          "top_drop": "",
+          "top_drop_delta": 0.0,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 0.0,
+            "conditionalization": 0.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 21,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 20,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 44,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 8,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 12,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 53,
+              "completion_tokens": 11,
+              "reasoning_tokens": 0,
+              "total_tokens": 305
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 8,
+            "ponder_question_tokens_est": 29,
+            "ponder_log_tokens_est": 8,
+            "keyword_tokens_est": 0,
+            "memory_block_chars": 187,
+            "memory_block_tokens_est": 180,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 429,
+              "completion_tokens": 17,
+              "reasoning_tokens": 0,
+              "total_tokens": 1025
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 99,
+              "completion_tokens": 5,
+              "reasoning_tokens": 0,
+              "total_tokens": 287
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 106,
+                "completion_tokens": 4,
+                "reasoning_tokens": 0,
+                "total_tokens": 262
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 106,
+              "completion_tokens": 4,
+              "reasoning_tokens": 0,
+              "total_tokens": 262
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 224,
+              "completion_tokens": 8,
+              "reasoning_tokens": 0,
+              "total_tokens": 476
+            }
+          },
+          "delta": {
+            "answer_tokens_est": -4,
+            "external_scaffold_tokens_est": 217,
+            "api_prompt_tokens": 376,
+            "api_completion_tokens": 6,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 720
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 482,
+            "completion_tokens": 28,
+            "reasoning_tokens": 0,
+            "total_tokens": 1330
+          }
+        }
+      }
+    },
+    {
+      "name": "facts",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "がある。\n   - 絶対的：いかなる",
+      "extras": {
+        "run_id": "c5a90ab348fbf04c",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:13:06Z",
+            "run_id": "c5a90ab348fbf04c",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "facts",
+          "target_tokens": 180,
+          "source_tokens_est": 15,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "kscyatOYDpPNrfcPp_6Y-QE",
+            "model": "gemini-3.5-flash",
+            "api_calls": 1,
+            "prompt_tokens": 118,
+            "completion_tokens": 12,
+            "reasoning_tokens": 0,
+            "total_tokens": 474,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 135,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 142,
+        "memory_block_est_tokens": 135,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 5,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 118,
+            "completion_tokens": 12,
+            "reasoning_tokens": 0,
+            "total_tokens": 474
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "lccyaoyJCv3NrfcPobH8mAY",
+          "model": "gemini-3.5-flash",
+          "prompt_tokens": 192,
+          "completion_tokens": 11,
+          "reasoning_tokens": 0,
+          "total_tokens": 444,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 10.905450959000518,
+          "probe_s": 8.791001164354384e-06,
+          "memory_remix_s": 4.208000973449089e-06,
+          "answer_s": 4.282561167001404
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 180
+      },
+      "metrics": {
+        "answer_chars": 18,
+        "records": 1,
+        "elapsed_s": 10.905757208000068
+      },
+      "comparison": {
+        "baseline_chars": 21,
+        "ponder_chars": 18,
+        "answer_changed": true,
+        "char_delta": -3,
+        "diff_ratio": 0.641025641025641,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.0,
+        "stance_baseline_dominant": "example_expansion",
+        "stance_ponder_dominant": "example_expansion",
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 12.0,
+        "budget_ponder_answer_tokens_est": 13.0,
+        "budget_external_scaffold_tokens_est": 173.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.020955889609286786,
+          "query_baseline_cosine": 0.015004873412041677,
+          "query_ponder_cosine": 0.05712645735439493,
+          "query_alignment_delta": 0.042121583942353255
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.5,
+            "dominant": "example_expansion",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 1.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 1,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.5,
+            "dominant": "example_expansion",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 1.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 1,
+            "top_terms": {}
+          },
+          "shift_score": 0.0,
+          "dominant_baseline": "example_expansion",
+          "dominant_ponder": "example_expansion",
+          "dominant_shift": "example_expansion->example_expansion",
+          "top_gain": "",
+          "top_gain_delta": 0.0,
+          "top_drop": "",
+          "top_drop_delta": 0.0,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 0.0,
+            "conditionalization": 0.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 21,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 18,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 35,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 11,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 12,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 53,
+              "completion_tokens": 11,
+              "reasoning_tokens": 0,
+              "total_tokens": 305
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 13,
+            "ponder_question_tokens_est": 27,
+            "ponder_log_tokens_est": 10,
+            "keyword_tokens_est": 1,
+            "memory_block_chars": 142,
+            "memory_block_tokens_est": 135,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 515,
+              "completion_tokens": 35,
+              "reasoning_tokens": 0,
+              "total_tokens": 1467
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 99,
+              "completion_tokens": 7,
+              "reasoning_tokens": 0,
+              "total_tokens": 287
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 106,
+                "completion_tokens": 5,
+                "reasoning_tokens": 0,
+                "total_tokens": 262
+              },
+              "scaffold_condition": {
+                "calls": 1,
+                "prompt_tokens": 118,
+                "completion_tokens": 12,
+                "reasoning_tokens": 0,
+                "total_tokens": 474
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 224,
+              "completion_tokens": 17,
+              "reasoning_tokens": 0,
+              "total_tokens": 736
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 192,
+              "completion_tokens": 11,
+              "reasoning_tokens": 0,
+              "total_tokens": 444
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 1,
+            "external_scaffold_tokens_est": 173,
+            "api_prompt_tokens": 462,
+            "api_completion_tokens": 24,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 1162
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 568,
+            "completion_tokens": 46,
+            "reasoning_tokens": 0,
+            "total_tokens": 1772
+          }
+        }
+      }
+    },
+    {
+      "name": "isomorphic",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "「非相対的ではあるが絶対的ではない状態",
+      "extras": {
+        "run_id": "a361628e2bd62fa0",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:13:16Z",
+            "run_id": "a361628e2bd62fa0",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "isomorphic",
+          "target_tokens": 180,
+          "source_tokens_est": 7,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "nccyaoGNB7up2roPx5W3mAQ",
+            "model": "gemini-3.5-flash",
+            "api_calls": 1,
+            "prompt_tokens": 240,
+            "completion_tokens": 14,
+            "reasoning_tokens": 0,
+            "total_tokens": 596,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 147,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 163,
+        "memory_block_est_tokens": 147,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 7,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 240,
+            "completion_tokens": 14,
+            "reasoning_tokens": 0,
+            "total_tokens": 596
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "n8cyau_ePLX_2roP_9KE2AI",
+          "model": "gemini-3.5-flash",
+          "prompt_tokens": 212,
+          "completion_tokens": 11,
+          "reasoning_tokens": 0,
+          "total_tokens": 464,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 8.94235425000079,
+          "probe_s": 6.8329991336213425e-06,
+          "memory_remix_s": 8.332999641424976e-06,
+          "answer_s": 2.4143890840005042
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 180
+      },
+      "metrics": {
+        "answer_chars": 19,
+        "records": 1,
+        "elapsed_s": 8.942767791000733
+      },
+      "comparison": {
+        "baseline_chars": 21,
+        "ponder_chars": 19,
+        "answer_changed": true,
+        "char_delta": -2,
+        "diff_ratio": 0.9,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_baseline_dominant": "example_expansion",
+        "stance_top_drop": "example_expansion",
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 12.0,
+        "budget_ponder_answer_tokens_est": 19.0,
+        "budget_external_scaffold_tokens_est": 202.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.012312415223340905,
+          "query_baseline_cosine": 0.011209353826566978,
+          "query_ponder_cosine": 0.9104106402549588,
+          "query_alignment_delta": 0.8992012864283918
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.5,
+            "dominant": "example_expansion",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 1.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 1,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "example_expansion",
+          "dominant_ponder": "",
+          "dominant_shift": "example_expansion->",
+          "top_gain": "",
+          "top_gain_delta": 0.0,
+          "top_drop": "example_expansion",
+          "top_drop_delta": -1.0,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 0.0,
+            "conditionalization": 0.0,
+            "example_expansion": -1.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 21,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 19,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 51,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 21,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 12,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 53,
+              "completion_tokens": 11,
+              "reasoning_tokens": 0,
+              "total_tokens": 305
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 19,
+            "ponder_question_tokens_est": 36,
+            "ponder_log_tokens_est": 9,
+            "keyword_tokens_est": 10,
+            "memory_block_chars": 163,
+            "memory_block_tokens_est": 147,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 663,
+              "completion_tokens": 40,
+              "reasoning_tokens": 0,
+              "total_tokens": 1615
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 105,
+              "completion_tokens": 8,
+              "reasoning_tokens": 0,
+              "total_tokens": 293
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 106,
+                "completion_tokens": 7,
+                "reasoning_tokens": 0,
+                "total_tokens": 262
+              },
+              "scaffold_condition": {
+                "calls": 1,
+                "prompt_tokens": 240,
+                "completion_tokens": 14,
+                "reasoning_tokens": 0,
+                "total_tokens": 596
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 346,
+              "completion_tokens": 21,
+              "reasoning_tokens": 0,
+              "total_tokens": 858
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 212,
+              "completion_tokens": 11,
+              "reasoning_tokens": 0,
+              "total_tokens": 464
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 7,
+            "external_scaffold_tokens_est": 202,
+            "api_prompt_tokens": 610,
+            "api_completion_tokens": 29,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 1310
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 716,
+            "completion_tokens": 51,
+            "reasoning_tokens": 0,
+            "total_tokens": 1920
+          }
+        }
+      }
+    }
+  ],
+  "artifacts": {
+    "out_label": "json_out",
+    "out": "artifacts/sweep_20260617_claude_gemini/gemini_non_relative_not_absolute.json",
+    "trace_out": "artifacts/sweep_20260617_claude_gemini/gemini_non_relative_not_absolute.trace.jsonl",
+    "trace_report_out": "artifacts/sweep_20260617_claude_gemini/gemini_non_relative_not_absolute.trace.html",
+    "matrix_report_out": "artifacts/sweep_20260617_claude_gemini/gemini_non_relative_not_absolute.matrix.html",
+    "out_dir": "",
+    "resume_from": ""
+  }
+}

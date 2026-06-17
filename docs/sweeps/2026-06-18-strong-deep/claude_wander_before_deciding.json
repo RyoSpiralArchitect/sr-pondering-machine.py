@@ -1,0 +1,2400 @@
+{
+  "ts": "2026-06-17T17:06:39Z",
+  "kind": "lab_matrix",
+  "provider": "claude",
+  "model": "opus",
+  "query": "What changes when an answer is allowed to wander before deciding?",
+  "pack": "lab_scaffold_abcd",
+  "pack_file": "",
+  "lab_matrix": "scaffold_abcd",
+  "preset": "none",
+  "config": "",
+  "env": {
+    "python": "3.13.13 (v3.13.13:01104ce1beb, Apr  7 2026, 14:43:30) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "platform": "darwin",
+    "torch": "2.11.0",
+    "transformers": "4.57.6"
+  },
+  "base_cfg": {
+    "model_path": "opus",
+    "memory_path": "ponder_logs.jsonl",
+    "backend": "claude_cli",
+    "provider": "claude",
+    "api_base_url": "https://api.openai.com/v1",
+    "api_chat_path": "/chat/completions",
+    "api_key_env": "OPENAI_API_KEY",
+    "api_key": "",
+    "api_headers": [],
+    "api_timeout": 900.0,
+    "api_max_retries": 1,
+    "api_reasoning_effort": "xhigh",
+    "api_seed_method": "auto",
+    "api_logprobs_top_n": 0,
+    "n_memory": 6,
+    "memory_policy": "current_only",
+    "memory_retrieve": "tail",
+    "memory_pool": 200,
+    "memory_mix_ratio": 0.5,
+    "memory_exclude_current_run": true,
+    "memory_remix": "off",
+    "memory_remix_keep_original": false,
+    "memory_remix_max_new_tokens": 240,
+    "memory_remix_temperature": 0.9,
+    "rejected": {
+      "top_k": 80,
+      "strategy": "outside_topk",
+      "exclude_top": 8,
+      "band_width": 256,
+      "n_keywords": 6
+    },
+    "band_profile": "single",
+    "bands": [],
+    "answer_style": "plain",
+    "answer_max_new_tokens": 2048,
+    "ponder_max_new_tokens": 1024,
+    "temperature": 0.7,
+    "top_p": 0.95,
+    "top_k": 0,
+    "repetition_penalty": 1.05,
+    "no_repeat_ngram_size": 0,
+    "seed": 1234,
+    "prompt_lang": "en",
+    "ponder_mode": "assoc",
+    "ponder_pipeline": [],
+    "pipeline_context": "prev",
+    "pipeline_context_max_chars": 1200,
+    "n_ponder": 1,
+    "ponder_hops": 1,
+    "hop_keyword_source": "model",
+    "hop_context_max_chars": 900,
+    "keyword_refine": false,
+    "keyword_refine_max_new_tokens": 96,
+    "keyword_refine_temperature": 0.3,
+    "keyword_objective": "random_band",
+    "keyword_select_top": 128,
+    "keyword_diversity": "off",
+    "keyword_diversity_threshold": 0.82,
+    "dissonance_target": 0.9,
+    "dissonance_width": 0.6,
+    "dissonance_tail_k": 64,
+    "prompt_jitter": 0,
+    "prompt_jitter_include_original": true,
+    "prompt_jitter_max_new_tokens": 160,
+    "prompt_jitter_temperature": 0.6,
+    "probe_top_n": 0,
+    "probe_compare": false,
+    "probe_compare_stages": false,
+    "probe_compare_top_n": 32,
+    "compare_semantic": "hash",
+    "compare_judge": "off",
+    "compare_stance": "auto",
+    "compare_spatial_metaphor": "auto",
+    "compare_token_budget": "auto",
+    "compare_embed_model": "",
+    "scaffold_condition": "assoc",
+    "scaffold_token_target": 320,
+    "print_probe": false,
+    "interactive": false,
+    "interactive_candidates": 48,
+    "answer_per_band": false,
+    "answer_ensemble": false,
+    "answer_ensemble_max_new_tokens": 512,
+    "answer_ensemble_temperature": 0.2,
+    "control": "none",
+    "write_memory": false,
+    "device": "auto",
+    "dtype": "auto",
+    "allocator_warmup": "auto",
+    "trust_remote_code": false,
+    "use_chat_template": true,
+    "force_gemma_format": true,
+    "hf_local_files_only": true
+  },
+  "items": [
+    {
+      "name": "baseline",
+      "kind": "baseline",
+      "answer": "When an answer is allowed to wander before deciding, the first thing that changes is the relationship between the conclusion and its reasons. A snap answer carries its justification as decoration—reasons assembled after the fact to defend a verdict already reached. An answer that wanders builds its reasons as load-bearing structure, so the conclusion can still move while it is being thought. The order reverses: instead of choosing, then explaining, you explore, then commit.\n\nThe space of considered possibilities widens. A direct path visits only the options near the obvious one; wandering lets weaker, stranger candidates get a hearing before they are dismissed. Most of them deserve dismissal, but the value isn't in the bad options themselves—it's that having looked at them, you now know *why* the chosen answer beats them, not merely that it feels right. The final decision inherits the contrast set it was measured against.\n\nError changes character, too. The cost of wandering is that you can talk yourself out of a correct first instinct, or rationalize your way into overconfidence by mistaking length of deliberation for quality of it. More thinking is not monotonically better; past some point it adds noise, anchors on early framings, and manufactures false nuance. So what wandering buys is not accuracy as such but *calibration*—a truer sense of how sure you should be, and where the answer is fragile. You come out knowing which parts would survive new information and which would collapse.\n\nIt also changes what counts as the answer. A decision reached immediately is a point. A decision reached by wandering is a point plus a map of the terrain around it—the assumptions it rests on, the conditions under which it would flip, the close alternatives it edged out. That surrounding structure is often more useful than the verdict, because it lets someone else (or a later version of you) update the conclusion without redoing the whole search.\n\nThere is a temporal cost that is real and not always worth paying. Wandering trades latency for depth. For reversible, low-stakes, or time-pressed decisions, the wandering is waste—the expected gain in quality doesn't repay the delay, and a fast good-enough answer dominates a slow optimal one. The discipline is knowing which kind of question you face: wandering is for decisions that are hard to reverse, where the reasons will be examined, or where your first framing is likely to be wrong.\n\nFinally, allowing the wander changes the thinker. It makes the reasoning legible—to others and to oneself—and legible reasoning can be corrected, taught, and trusted. An answer that simply arrives demands faith; an answer that shows its path invites scrutiny, and survives it better. What you lose in speed and in the comfort of certainty, you gain in the answer's ability to be questioned and to hold up when it is.",
+      "metrics": {
+        "answer_chars": 2876,
+        "elapsed_s": 26.050997291000385
+      }
+    },
+    {
+      "name": "assoc",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "When an answer is allowed to wander first, the most immediate change is that the deciding stops being the same act as the thinking. Normally they collapse into one motion — you reach for a conclusion and the reasoning arrives already shaped to defend it. Wandering pries those apart. You get a stretch where claims stay provisional, where a frame can be tried on and discarded without cost, and only afterward does commitment happen. The decision becomes a separate, deliberate gesture rather than a reflex.\n\nWhat you lose is speed and the comfort of an early anchor. What you gain is a wider sampling of the space before the answer hardens. The first plausible response is rarely the best one; it's just the nearest. Letting the answer drift means the nearest option has to compete with ones that were further away, and sometimes a better fit was sitting two steps past where you'd have stopped.\n\nThere's a subtler shift too. Wandering surfaces the assumptions that a fast answer would have smuggled in silently. When you let fragments sit next to each other without forcing a resolution, the gaps between them become visible — and those gaps are usually where the hidden premises live. You start to notice that the question itself was carrying freight: a definition you didn't choose, a threshold someone else set. The detour is how you catch that.\n\nBut wandering is not free, and it's not automatically wise. Motion alone isn't insight. A search that never converges is just as failed as one that converged too soon — it has only traded premature certainty for permanent deferral. The value is entirely in the eventual commitment; the wandering earns its keep only if it ends. An answer that wanders and never decides hasn't been thorough, it's been evasive, and it often dresses that evasion up as open-mindedness.\n\nSo what really changes is the relationship between exploration and confidence. With a fixed, immediate answer, confidence is borrowed from the speed of arrival — it feels certain because it came fast. With a wandering answer, confidence has to be built from having actually looked elsewhere and chosen to come back. That second kind of confidence is more expensive but more honest: you can say why you didn't go the other way, because you partly did.\n\nThe risk worth naming is that wandering can become its own comfort — a way to stay in the provisional, where nothing can be wrong yet. The discipline is to treat the detour as instrumental: explore widely, then close decisively, and let the closing be real. Allowed to wander well, an answer arrives later, holds fewer unexamined assumptions, and knows its own reasons. Allowed to wander badly, it just never arrives.",
+      "records": [
+        {
+          "ts": "2026-06-17T17:07:22Z",
+          "run_id": "1df7d02a048b62e8",
+          "query_sha": "d4f5cfadd642",
+          "prompt_lang": "en",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "latency drift",
+            "wandering threshold",
+            "deferred commitment",
+            "exploratory detour",
+            "convergence delay",
+            "provisional stance"
+          ],
+          "keywords": [
+            "latency drift",
+            "wandering threshold",
+            "deferred commitment",
+            "exploratory detour",
+            "convergence delay",
+            "provisional stance"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "latency drift",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "wandering threshold",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "deferred commitment",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "exploratory detour",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "convergence delay",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "provisional stance",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "end_turn",
+            "response_id": "f8e303a3-b539-4736-9def-08b6f4b608c8",
+            "model": "claude-opus-4-8",
+            "prompt_tokens": 2455,
+            "completion_tokens": 507,
+            "reasoning_tokens": 0,
+            "total_tokens": 2962,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "Let latency drift and wandering threshold collide. What images, questions, or fragments appear?",
+          "ponder_log": "- Assume latency drift is a slow tide, the threshold a buoy that keeps slipping its anchor.\n- Image: a metronome whose tempo loosens while the conductor edits the definition of \"on time.\"\n- Question: if the threshold wanders toward the drift, is anything ever late, or only relatively early?\n- Counterexample: a system that drifts but holds a fixed bar still misfires — so motion alone isn't the culprit.\n- Analogy: two clocks on a moving train, each correcting against the other, neither against the platform.\n- Fragment: \"we adapted to the lag\" — said proudly, said as confession.\n- Assume the wandering is not noise but a second signal we haven't learned to read.\n- Image: a shoreline redrawn after every wave, the map always one tide behind.\n- Question: does the collision produce a new equilibrium, or just a longer interval before surprise?\n- Counterexample: sometimes drift and threshold cancel — the user feels nothing, and that silence hides the fault.\n- Analogy: a thermostat chasing a temperature that itself depends on the thermostat's history.\n- Fragment: jitter remembered as rhythm; rhythm misheard as intent.\n- Question: who notices first — the measurement, the measured, or the one waiting?\n- Image: two wavefronts overlapping, the interference pattern brighter where uncertainty doubles.",
+          "gen_elapsed_s": 12.347181957999055
+        }
+      ],
+      "extras": {
+        "run_id": "1df7d02a048b62e8",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T17:07:22Z",
+            "run_id": "1df7d02a048b62e8",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "assoc",
+          "target_tokens": 320,
+          "source_tokens_est": 215,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": false,
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 311,
+          "normalized": true,
+          "strategy": "direct_memory_block"
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 1562,
+        "memory_block_est_tokens": 311,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 2484,
+            "completion_tokens": 42,
+            "reasoning_tokens": 0,
+            "total_tokens": 2526
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "end_turn",
+          "response_id": "12600d84-3884-4a71-9e06-e77ef545e0a9",
+          "model": "claude-opus-4-8",
+          "prompt_tokens": 2998,
+          "completion_tokens": 938,
+          "reasoning_tokens": 0,
+          "total_tokens": 3936,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 36.29316137499882,
+          "probe_s": 3.162500070175156e-05,
+          "memory_remix_s": 7.290998837561347e-06,
+          "answer_s": 19.86460283300039
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "assoc",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 2689,
+        "records": 1,
+        "elapsed_s": 36.293691916998796
+      },
+      "comparison": {
+        "baseline_chars": 2876,
+        "ponder_chars": 2689,
+        "answer_changed": true,
+        "char_delta": -187,
+        "diff_ratio": 0.9522012578616352,
+        "records": 1,
+        "unique_keywords": 6,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_baseline_dominant": "conditionalization",
+        "stance_ponder_dominant": "conditionalization",
+        "stance_top_gain": "conditionalization",
+        "stance_top_drop": "resolution",
+        "spatial_answer_density_delta": -0.9947548116237221,
+        "spatial_baseline_density": 1.7385257301808066,
+        "spatial_ponder_density": 0.7437709185570844,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 1.5325670498084292,
+        "spatial_log_question_density_delta": 1.5325670498084292,
+        "budget_baseline_answer_tokens_est": 564.0,
+        "budget_ponder_answer_tokens_est": 529.0,
+        "budget_external_scaffold_tokens_est": 603.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.7090842290605518,
+          "query_baseline_cosine": 0.32370564957190445,
+          "query_ponder_cosine": 0.3231543339385639,
+          "query_alignment_delta": -0.0005513156333405433
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 6.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.16666666666666666,
+              "conditionalization": 0.5,
+              "example_expansion": 0.0,
+              "resolution": 0.3333333333333333
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 1,
+              "conditionalization": 3,
+              "example_expansion": 0,
+              "resolution": 2
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "framing": [
+                {
+                  "term": "framing",
+                  "count": 1
+                }
+              ],
+              "conditionalization": [
+                {
+                  "term": "when ",
+                  "count": 2
+                },
+                {
+                  "term": "under",
+                  "count": 1
+                }
+              ],
+              "resolution": [
+                {
+                  "term": "the answer is",
+                  "count": 1
+                },
+                {
+                  "term": "should",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 3.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 1.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 3,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "conditionalization": [
+                {
+                  "term": "when ",
+                  "count": 2
+                },
+                {
+                  "term": "if ",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "conditionalization",
+          "dominant_ponder": "conditionalization",
+          "dominant_shift": "conditionalization->conditionalization",
+          "top_gain": "conditionalization",
+          "top_gain_delta": 0.5,
+          "top_drop": "resolution",
+          "top_drop_delta": -0.3333333333333333,
+          "deltas": {
+            "definition": 0.0,
+            "framing": -0.16666666666666666,
+            "conditionalization": 0.5,
+            "example_expansion": 0.0,
+            "resolution": -0.3333333333333333
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 2876,
+            "count": 5,
+            "density_per_1k_chars": 1.7385257301808066,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 2,
+              "stage": 0,
+              "container": 0,
+              "geometry": 3
+            },
+            "top_terms": [
+              {
+                "term": "path",
+                "count": 2
+              },
+              {
+                "term": "terrain",
+                "count": 1
+              },
+              {
+                "term": "map",
+                "count": 1
+              },
+              {
+                "term": "space",
+                "count": 1
+              }
+            ]
+          },
+          "ponder": {
+            "chars": 2689,
+            "count": 2,
+            "density_per_1k_chars": 0.7437709185570844,
+            "dominant_group": "container",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 1,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "frame",
+                "count": 1
+              },
+              {
+                "term": "space",
+                "count": 1
+              }
+            ]
+          },
+          "questions": {
+            "chars": 95,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 1305,
+            "count": 2,
+            "density_per_1k_chars": 1.5325670498084292,
+            "dominant_group": "path",
+            "group_counts": {
+              "path": 1,
+              "stage": 0,
+              "container": 0,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "platform",
+                "count": 1
+              },
+              {
+                "term": "map",
+                "count": 1
+              }
+            ]
+          },
+          "answer_density_delta": -0.9947548116237221,
+          "log_question_density_delta": 1.5325670498084292
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 564,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 2394,
+              "completion_tokens": 1008,
+              "reasoning_tokens": 0,
+              "total_tokens": 3402
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 529,
+            "ponder_question_tokens_est": 17,
+            "ponder_log_tokens_est": 263,
+            "keyword_tokens_est": 12,
+            "memory_block_chars": 1562,
+            "memory_block_tokens_est": 311,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 7937,
+              "completion_tokens": 1487,
+              "reasoning_tokens": 0,
+              "total_tokens": 9424
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 2455,
+              "completion_tokens": 507,
+              "reasoning_tokens": 0,
+              "total_tokens": 2962
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 2484,
+                "completion_tokens": 42,
+                "reasoning_tokens": 0,
+                "total_tokens": 2526
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 2484,
+              "completion_tokens": 42,
+              "reasoning_tokens": 0,
+              "total_tokens": 2526
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 2998,
+              "completion_tokens": 938,
+              "reasoning_tokens": 0,
+              "total_tokens": 3936
+            }
+          },
+          "delta": {
+            "answer_tokens_est": -35,
+            "external_scaffold_tokens_est": 603,
+            "api_prompt_tokens": 5543,
+            "api_completion_tokens": 479,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 6022
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 10331,
+            "completion_tokens": 2495,
+            "reasoning_tokens": 0,
+            "total_tokens": 12826
+          }
+        }
+      }
+    },
+    {
+      "name": "random",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "When an answer is allowed to wander, the first thing that changes is what counts as a candidate. A direct route only considers the options already visible at the start; wandering lets the question pick up things it wasn't looking for—the detail in the corner, the object that was only a prop a moment ago and now turns out to matter. The set of possible answers grows before the set narrows.\n\nThe cost structure changes too. Deciding immediately is cheap but brittle: it commits to the framing you happened to arrive with. Wandering spends time in exchange for a chance to notice that the framing itself was wrong—that the steady rhythm was in the gutter, not the receipt; that nothing was actually starting even though the signal sounded like a beginning. Much of the value isn't in finding a better answer to the question asked, but in catching the hidden assumption that made the question misleading.\n\nWhat also changes is the relationship between the wanderer and being wrong. A decision made fast treats its first hypothesis as the answer to defend. A decision made after wandering treats early hypotheses as scaffolding to discard. So you get less attachment, more willingness to let a tentative conclusion drift into a new role rather than forcing the destination to match the first guess.\n\nBut wandering is not free or automatically better. It can multiply tiny procedures that look like progress and aren't—motion mistaken for movement. It can loop, returning to the same observation as if repetition were confirmation. It can fold the small things too carefully, polishing detail while the real rhythm goes unattended. And it can defer the decision indefinitely, so that \"allowed to wander\" quietly becomes \"never required to land.\" The benefit only materializes if the wandering is still pointed at eventually deciding—if the exploration is bounded by a commitment to converge.\n\nSo the honest answer is: wandering trades certainty-of-process for quality-of-framing. It changes a search over known answers into a search over possible questions. When the question is well-posed and the answer is mechanical, wandering mostly adds cost and risk of drift. When the question is subtly mis-posed—when the thing that matters is something you haven't yet thought to name—wandering is what lets the answer arrive at the right problem before it commits to a solution. The decision at the end is better not because more was computed, but because what got decided is more likely to be the thing that actually needed deciding.",
+      "records": [
+        {
+          "ts": "2026-06-17T17:08:00Z",
+          "run_id": "21690c005d77636d",
+          "query_sha": "d4f5cfadd642",
+          "prompt_lang": "en",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "latency drift",
+            "scenic detours",
+            "commitment decay",
+            "wander tax",
+            "emergent forks",
+            "deferred collapse"
+          ],
+          "keywords": [
+            "latency drift",
+            "scenic detours",
+            "commitment decay",
+            "wander tax",
+            "emergent forks",
+            "deferred collapse"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "latency drift",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "scenic detours",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "commitment decay",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "wander tax",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "emergent forks",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "deferred collapse",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "end_turn",
+            "response_id": "d98e921d-21a1-419c-902c-9cf287867085",
+            "model": "claude-opus-4-8",
+            "prompt_tokens": 2454,
+            "completion_tokens": 594,
+            "reasoning_tokens": 0,
+            "total_tokens": 3048,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "Let latency drift and scenic detours collide. What images, questions, or fragments appear?",
+          "ponder_log": "- Assume \"latency drift\" means the slow, unannounced widening of the gap between intention and arrival — a signal that keeps almost catching up to itself.\n- Image: a train timetable melting at the edges, while the passenger has already wandered off to photograph a field.\n- Question: is a scenic detour a failure of latency, or its secret purpose — the lag dressed up as a choice?\n- Analogy: like light from a dead star, the message arrives faithful to a moment that no longer exists.\n- Counterexample: yet jazz musicians court delay deliberately; the dragged beat is not drift but pocket, lateness made structural.\n- Fragment: \"the long way is also a way,\" half-remembered, possibly invented.\n- Assume the detour and the drift are the same phenomenon seen from two ends — one spatial, one temporal.\n- Image: a river that takes the meander not because it is slow, but because the land asked a longer question.\n- Counterexample: but some latency is pure friction, the buffering wheel, no scenery at all, just gray waiting.\n- Question: who decides which delays become anecdotes and which become complaints?\n- Analogy: postcards arriving after the sender has returned home — the trip narrated to people who already heard it live.\n- Fragment: a GPS voice saying \"recalculating\" with what almost sounds like relief.\n- Assume attention itself drifts at a different rate than the signal it tracks, so the two never quite synchronize.\n- Image: two clocks on a moving ship, one bolted down, one swinging free, gradually disagreeing about noon.",
+          "gen_elapsed_s": 14.17460249999931
+        }
+      ],
+      "extras": {
+        "run_id": "21690c005d77636d",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T17:08:00Z",
+            "run_id": "21690c005d77636d",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "random",
+          "target_tokens": 320,
+          "source_tokens_est": 271,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": false,
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 317,
+          "normalized": true,
+          "strategy": "local_random_sentences"
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 1489,
+        "memory_block_est_tokens": 317,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 2484,
+            "completion_tokens": 39,
+            "reasoning_tokens": 0,
+            "total_tokens": 2523
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "end_turn",
+          "response_id": "59fda468-9ed3-4733-9049-f2002870890a",
+          "model": "claude-opus-4-8",
+          "prompt_tokens": 3010,
+          "completion_tokens": 830,
+          "reasoning_tokens": 0,
+          "total_tokens": 3840,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 36.12656950000019,
+          "probe_s": 1.650000012887176e-05,
+          "memory_remix_s": 3.416000254219398e-06,
+          "answer_s": 17.52501829100038
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "random",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 2524,
+        "records": 1,
+        "elapsed_s": 36.12698120800087
+      },
+      "comparison": {
+        "baseline_chars": 2876,
+        "ponder_chars": 2524,
+        "answer_changed": true,
+        "char_delta": -352,
+        "diff_ratio": 0.9625925925925926,
+        "records": 1,
+        "unique_keywords": 6,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.2424242424242424,
+        "stance_baseline_dominant": "conditionalization",
+        "stance_ponder_dominant": "conditionalization",
+        "stance_top_gain": "conditionalization",
+        "stance_top_drop": "resolution",
+        "spatial_answer_density_delta": -1.342329216710125,
+        "spatial_baseline_density": 1.7385257301808066,
+        "spatial_ponder_density": 0.39619651347068147,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.651890482398957,
+        "spatial_log_question_density_delta": 0.651890482398957,
+        "budget_baseline_answer_tokens_est": 564.0,
+        "budget_ponder_answer_tokens_est": 486.0,
+        "budget_external_scaffold_tokens_est": 657.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.676055255202937,
+          "query_baseline_cosine": 0.3199664376734734,
+          "query_ponder_cosine": 0.3464796766185966,
+          "query_alignment_delta": 0.026513238945123196
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 6.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.16666666666666666,
+              "conditionalization": 0.5,
+              "example_expansion": 0.0,
+              "resolution": 0.3333333333333333
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 1,
+              "conditionalization": 3,
+              "example_expansion": 0,
+              "resolution": 2
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "framing": [
+                {
+                  "term": "framing",
+                  "count": 1
+                }
+              ],
+              "conditionalization": [
+                {
+                  "term": "when ",
+                  "count": 2
+                },
+                {
+                  "term": "under",
+                  "count": 1
+                }
+              ],
+              "resolution": [
+                {
+                  "term": "the answer is",
+                  "count": 1
+                },
+                {
+                  "term": "should",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 11.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.2727272727272727,
+              "conditionalization": 0.6363636363636364,
+              "example_expansion": 0.0,
+              "resolution": 0.09090909090909091
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 3,
+              "conditionalization": 7,
+              "example_expansion": 0,
+              "resolution": 1
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "framing": [
+                {
+                  "term": "framing",
+                  "count": 3
+                }
+              ],
+              "conditionalization": [
+                {
+                  "term": "when ",
+                  "count": 4
+                },
+                {
+                  "term": "if ",
+                  "count": 3
+                }
+              ],
+              "resolution": [
+                {
+                  "term": "the answer is",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.2424242424242424,
+          "dominant_baseline": "conditionalization",
+          "dominant_ponder": "conditionalization",
+          "dominant_shift": "conditionalization->conditionalization",
+          "top_gain": "conditionalization",
+          "top_gain_delta": 0.13636363636363635,
+          "top_drop": "resolution",
+          "top_drop_delta": -0.2424242424242424,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 0.10606060606060605,
+            "conditionalization": 0.13636363636363635,
+            "example_expansion": 0.0,
+            "resolution": -0.2424242424242424
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 2876,
+            "count": 5,
+            "density_per_1k_chars": 1.7385257301808066,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 2,
+              "stage": 0,
+              "container": 0,
+              "geometry": 3
+            },
+            "top_terms": [
+              {
+                "term": "path",
+                "count": 2
+              },
+              {
+                "term": "terrain",
+                "count": 1
+              },
+              {
+                "term": "map",
+                "count": 1
+              },
+              {
+                "term": "space",
+                "count": 1
+              }
+            ]
+          },
+          "ponder": {
+            "chars": 2524,
+            "count": 1,
+            "density_per_1k_chars": 0.39619651347068147,
+            "dominant_group": "path",
+            "group_counts": {
+              "path": 1,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": [
+              {
+                "term": "route",
+                "count": 1
+              }
+            ]
+          },
+          "questions": {
+            "chars": 90,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 1534,
+            "count": 1,
+            "density_per_1k_chars": 0.651890482398957,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "field",
+                "count": 1
+              }
+            ]
+          },
+          "answer_density_delta": -1.342329216710125,
+          "log_question_density_delta": 0.651890482398957
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 564,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 2394,
+              "completion_tokens": 1008,
+              "reasoning_tokens": 0,
+              "total_tokens": 3402
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 486,
+            "ponder_question_tokens_est": 17,
+            "ponder_log_tokens_est": 311,
+            "keyword_tokens_est": 12,
+            "memory_block_chars": 1489,
+            "memory_block_tokens_est": 317,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 7948,
+              "completion_tokens": 1463,
+              "reasoning_tokens": 0,
+              "total_tokens": 9411
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 2454,
+              "completion_tokens": 594,
+              "reasoning_tokens": 0,
+              "total_tokens": 3048
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 2484,
+                "completion_tokens": 39,
+                "reasoning_tokens": 0,
+                "total_tokens": 2523
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 2484,
+              "completion_tokens": 39,
+              "reasoning_tokens": 0,
+              "total_tokens": 2523
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 3010,
+              "completion_tokens": 830,
+              "reasoning_tokens": 0,
+              "total_tokens": 3840
+            }
+          },
+          "delta": {
+            "answer_tokens_est": -78,
+            "external_scaffold_tokens_est": 657,
+            "api_prompt_tokens": 5554,
+            "api_completion_tokens": 455,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 6009
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 10342,
+            "completion_tokens": 2471,
+            "reasoning_tokens": 0,
+            "total_tokens": 12813
+          }
+        }
+      }
+    },
+    {
+      "name": "facts",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "What changes is mostly the process, not automatically the product. Wandering widens the search path—tentative claims, detours, revisions—but a wider path only improves the final answer under specific conditions, and it can also degrade it.\n\nIt helps when the question has a search space larger than a single forward pass can survey, and when the intermediate steps are actually checked against constraints rather than merely produced. Under those conditions, three things shift. Accuracy can rise, because more candidate answers are seen and weak ones get pruned before commitment. Calibration shifts, because hidden assumptions that a direct answer would silently fix get surfaced and named—you find out where the question was underspecified. And cost rises: more tokens, more latency, a later moment of commitment.\n\nThese three don't move together. You can buy better calibration while accuracy stays flat, or gain accuracy while confidence becomes falsely inflated by the sheer volume of reasoning. Worth separating them rather than treating \"it got better\" as one thing.\n\nIt hurts, or does nothing, in the boundary cases. For lookup or recall, added wandering changes little and can introduce drift—the answer was already a single hop away, and detours only add chances to w6ander off it. For a constrained arithmetic step, the right answer needs no wandering at all. And the sharpest failure: an early tentative error, if treated as established rather than provisional, propagates and corrupts everything downstream. Wandering only pays when the exploration stays explicitly tentative—when revisiting and discarding earlier steps remains permitted, not when the first guess silently hardens into a premise.\n\nThe deeper change is in commitment timing. Deferring the decision keeps options open, but it introduces its own risks: indecision, and anchoring on whichever branch happened to be considered last. The thing that finally fixes the answer may be a token budget or deadline rather than a reason—and when the cutoff determines the output, the cutoff has quietly become part of the method. So \"allowed to wander\" smuggles in a second question: allowed to wander until what?\n\nOne distinction the framing tends to hide: exploration that is retained and shown is different from exploration that is discarded before the answer is stated. If the wandering is thrown away, what changes for the reader is only the final claim's quality; if it's kept, the wandering itself becomes part of the product—now legible, auditable, and also longer.\n\nSo the honest summary: allowing an answer to wander changes the odds, not the outcome. It trades cost and latency for a chance at better coverage and surfaced assumptions, conditional on the steps being checked and kept provisional. On well-posed or recall tasks it mostly adds expense and drift. The value lives almost entirely in the verification and the pruning—not in the wandering itself, which is just the raw material that those operations work on.",
+      "records": [
+        {
+          "ts": "2026-06-17T17:08:35Z",
+          "run_id": "049a70cfc960f0a7",
+          "query_sha": "d4f5cfadd642",
+          "prompt_lang": "en",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "meandering inference",
+            "provisional commitment",
+            "drift tolerance",
+            "deferred convergence",
+            "exploratory latency",
+            "path dependence"
+          ],
+          "keywords": [
+            "meandering inference",
+            "provisional commitment",
+            "drift tolerance",
+            "deferred convergence",
+            "exploratory latency",
+            "path dependence"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "meandering inference",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "provisional commitment",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "drift tolerance",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "deferred convergence",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "exploratory latency",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "path dependence",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "end_turn",
+            "response_id": "aa77b38f-c2b5-40e7-b1f0-953623cf5612",
+            "model": "claude-opus-4-8",
+            "prompt_tokens": 2456,
+            "completion_tokens": 604,
+            "reasoning_tokens": 0,
+            "total_tokens": 3060,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "Let meandering inference and provisional commitment collide. What images, questions, or fragments appear?",
+          "ponder_log": "- Assume meandering inference is a river without banks, finding low ground by feeling rather than aim.\n- Then provisional commitment is the stepping stone dropped mid-stream — placed before the far shore is known.\n- Image: a chess player who touches a piece and must move it, yet keeps her eyes wandering the whole board.\n- Question: does committing prematurely cut off the wander, or does it merely give the wander a pivot to circle back to?\n- Counterexample: the scientist who fixes a hypothesis early, then spends years gathering evidence that loosens it — commitment as bait for drift.\n- Analogy: a sketch artist laying down a confident line, knowing it will be erased, using its wrongness to see the right one.\n- Fragment: \"I'll say yes for now so I can find out what I actually think.\"\n- Assume the two need each other — pure meandering never lands, pure commitment never learns.\n- But what if collision means friction, not partnership? The stone you placed now blocks the channel you wanted to follow.\n- Image: a hiker who marks a trail in chalk, then watches rain blur it as she keeps walking anyway.\n- Question: is a provisional commitment a memory or a wager — does it record where you were or bet on where you'll go?\n- Counterexample: jazz, where the held note is both a decision and an invitation to deviate from it.\n- Fragment: a bookmark in a book you are still arguing with.\n- Analogy: tacking a sail — committing to a heading you know is not the destination, only because the wind allows nothing straighter.\n- Question: when the two collide, which one flinches first, and is the flinch itself the thought?",
+          "gen_elapsed_s": 13.443861707999531
+        }
+      ],
+      "extras": {
+        "run_id": "049a70cfc960f0a7",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T17:08:35Z",
+            "run_id": "049a70cfc960f0a7",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "facts",
+          "target_tokens": 320,
+          "source_tokens_est": 344,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "end_turn",
+            "response_id": "b85243c1-af7a-4085-aa69-99f4afe91095",
+            "model": "claude-opus-4-8",
+            "api_calls": 1,
+            "prompt_tokens": 2471,
+            "completion_tokens": 733,
+            "reasoning_tokens": 0,
+            "total_tokens": 3204,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 318,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 1745,
+        "memory_block_est_tokens": 318,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 2484,
+            "completion_tokens": 43,
+            "reasoning_tokens": 0,
+            "total_tokens": 2527
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 2471,
+            "completion_tokens": 733,
+            "reasoning_tokens": 0,
+            "total_tokens": 3204
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "end_turn",
+          "response_id": "d2930d06-d0a7-4abd-8c2d-ebad8343ccf4",
+          "model": "claude-opus-4-8",
+          "prompt_tokens": 3006,
+          "completion_tokens": 1038,
+          "reasoning_tokens": 0,
+          "total_tokens": 4044,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 52.164329541999905,
+          "probe_s": 1.0334000762668438e-05,
+          "memory_remix_s": 3.29100112139713e-06,
+          "answer_s": 18.99120129199946
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 2998,
+        "records": 1,
+        "elapsed_s": 52.16468962500039
+      },
+      "comparison": {
+        "baseline_chars": 2876,
+        "ponder_chars": 2998,
+        "answer_changed": true,
+        "char_delta": 122,
+        "diff_ratio": 0.9717398706162751,
+        "records": 1,
+        "unique_keywords": 6,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.3571428571428571,
+        "stance_baseline_dominant": "conditionalization",
+        "stance_ponder_dominant": "conditionalization",
+        "stance_top_gain": "conditionalization",
+        "stance_top_drop": "resolution",
+        "spatial_answer_density_delta": -0.4043029149706665,
+        "spatial_baseline_density": 1.7385257301808066,
+        "spatial_ponder_density": 1.33422281521014,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 564.0,
+        "budget_ponder_answer_tokens_est": 558.0,
+        "budget_external_scaffold_tokens_est": 686.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.693216703676507,
+          "query_baseline_cosine": 0.3249856060550957,
+          "query_ponder_cosine": 0.30932118093346894,
+          "query_alignment_delta": -0.015664425121626746
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 6.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.16666666666666666,
+              "conditionalization": 0.5,
+              "example_expansion": 0.0,
+              "resolution": 0.3333333333333333
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 1,
+              "conditionalization": 3,
+              "example_expansion": 0,
+              "resolution": 2
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "framing": [
+                {
+                  "term": "framing",
+                  "count": 1
+                }
+              ],
+              "conditionalization": [
+                {
+                  "term": "when ",
+                  "count": 2
+                },
+                {
+                  "term": "under",
+                  "count": 1
+                }
+              ],
+              "resolution": [
+                {
+                  "term": "the answer is",
+                  "count": 1
+                },
+                {
+                  "term": "should",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 14.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.07142857142857142,
+              "conditionalization": 0.8571428571428571,
+              "example_expansion": 0.0,
+              "resolution": 0.07142857142857142
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 1,
+              "conditionalization": 12,
+              "example_expansion": 0,
+              "resolution": 1
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "framing": [
+                {
+                  "term": "framing",
+                  "count": 1
+                }
+              ],
+              "conditionalization": [
+                {
+                  "term": "when ",
+                  "count": 6
+                },
+                {
+                  "term": "if ",
+                  "count": 3
+                },
+                {
+                  "term": "under",
+                  "count": 2
+                },
+                {
+                  "term": "conditional",
+                  "count": 1
+                }
+              ],
+              "resolution": [
+                {
+                  "term": "the answer is",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.3571428571428571,
+          "dominant_baseline": "conditionalization",
+          "dominant_ponder": "conditionalization",
+          "dominant_shift": "conditionalization->conditionalization",
+          "top_gain": "conditionalization",
+          "top_gain_delta": 0.3571428571428571,
+          "top_drop": "resolution",
+          "top_drop_delta": -0.26190476190476186,
+          "deltas": {
+            "definition": 0.0,
+            "framing": -0.09523809523809523,
+            "conditionalization": 0.3571428571428571,
+            "example_expansion": 0.0,
+            "resolution": -0.26190476190476186
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 2876,
+            "count": 5,
+            "density_per_1k_chars": 1.7385257301808066,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 2,
+              "stage": 0,
+              "container": 0,
+              "geometry": 3
+            },
+            "top_terms": [
+              {
+                "term": "path",
+                "count": 2
+              },
+              {
+                "term": "terrain",
+                "count": 1
+              },
+              {
+                "term": "map",
+                "count": 1
+              },
+              {
+                "term": "space",
+                "count": 1
+              }
+            ]
+          },
+          "ponder": {
+            "chars": 2998,
+            "count": 4,
+            "density_per_1k_chars": 1.33422281521014,
+            "dominant_group": "path",
+            "group_counts": {
+              "path": 2,
+              "stage": 0,
+              "container": 0,
+              "geometry": 2
+            },
+            "top_terms": [
+              {
+                "term": "path",
+                "count": 2
+              },
+              {
+                "term": "space",
+                "count": 1
+              },
+              {
+                "term": "boundary",
+                "count": 1
+              }
+            ]
+          },
+          "questions": {
+            "chars": 105,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 1621,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": -0.4043029149706665,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 564,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 2394,
+              "completion_tokens": 1008,
+              "reasoning_tokens": 0,
+              "total_tokens": 3402
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 558,
+            "ponder_question_tokens_est": 17,
+            "ponder_log_tokens_est": 339,
+            "keyword_tokens_est": 12,
+            "memory_block_chars": 1745,
+            "memory_block_tokens_est": 318,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 10417,
+              "completion_tokens": 2418,
+              "reasoning_tokens": 0,
+              "total_tokens": 12835
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 2456,
+              "completion_tokens": 604,
+              "reasoning_tokens": 0,
+              "total_tokens": 3060
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 2484,
+                "completion_tokens": 43,
+                "reasoning_tokens": 0,
+                "total_tokens": 2527
+              },
+              "scaffold_condition": {
+                "calls": 1,
+                "prompt_tokens": 2471,
+                "completion_tokens": 733,
+                "reasoning_tokens": 0,
+                "total_tokens": 3204
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 4955,
+              "completion_tokens": 776,
+              "reasoning_tokens": 0,
+              "total_tokens": 5731
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 3006,
+              "completion_tokens": 1038,
+              "reasoning_tokens": 0,
+              "total_tokens": 4044
+            }
+          },
+          "delta": {
+            "answer_tokens_est": -6,
+            "external_scaffold_tokens_est": 686,
+            "api_prompt_tokens": 8023,
+            "api_completion_tokens": 1410,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 9433
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 12811,
+            "completion_tokens": 3426,
+            "reasoning_tokens": 0,
+            "total_tokens": 16237
+          }
+        }
+      }
+    },
+    {
+      "name": "isomorphic",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "What changes is mostly the relationship between the answer and its own certainty.\n\nWhen a response must decide immediately, it commits to the first frame that fits. The earliest plausible reading becomes the whole map, and everything after it is justification rather than search. Wandering breaks that. It lets the first reading be treated as one sample among several instead of the verdict. The cost is time and a little vertigo; the gain is that the eventual decision has been tested against its own alternatives rather than merely asserted ahead of them.\n\nThree things in particular shift.\n\nFirst, hidden assumptions surface. A direct answer carries its premises silently — it can't doubt the ground it's standing on because it never steps off it. Wandering is what stepping off looks like. The detour into the counterexample, the \"but what if it's reluctance, not patience\" turn, is where an unexamined framing gets named and either kept or dropped. You can't revise an assumption you never made visible, and you rarely make it visible while moving in a straight line toward a conclusion.\n\nSecond, the space of possible answers gets wider before it gets narrower. Deciding early prunes the tree at the root; you never see the branches you cut. Letting the answer roam first means more candidate framings are alive at once, so the final choice is a selection from a real set rather than a default. This is why wandering tends to find the non-obvious answer — not because drift is wise, but because the obvious answer is simply the one that arrives first, and arriving first is not the same as being right.\n\nThird, and most subtly, the answer changes its mind about what the question was. Questions are rarely as fixed as they look. A wandering pass often discovers that the real question sitting under the asked one is different — that \"should I do X\" was actually \"what am I afraid X commits me to.\" A straight-line answer solves the literal question and misses this; the meander is where the question itself gets re-read.\n\nBut there is a cost that the romance of wandering hides, and it's worth being honest about: drift is not free, and it is not always patience. Sometimes circling is just reluctance wearing the dignified name of thoroughness — holding the cask sealed not because the wine needs another season but because committing is frightening. Wandering that never lands doesn't preserve options; it abandons the question. The value isn't in the wandering itself but in the wandering *closing*. An answer allowed to roam still has to return and decide, and a decision deferred indefinitely is a worse answer than a flawed one made on time. The freedom to wander is only valuable when it remains in service of eventually choosing.\n\nSo what actually changes, in one line: the answer stops being the first thing that fit and becomes the thing that survived its own alternatives — provided you still make it answer.\n\nThe practical version is a discipline, not a mood. Let the response branch, name what it's assuming, chase one or two genuine counterexamples, notice if the question underneath has shifted — and then commit, on a clock, treating the wandering as evidence-gathering rather than as a place to live. Done that way, wandering doesn't make answers slower so much as it makes them load-bearing: when the decision finally seats home, it holds, because it already knows what it ruled out and why.",
+      "records": [
+        {
+          "ts": "2026-06-17T17:09:30Z",
+          "run_id": "4e63682172946bb7",
+          "query_sha": "d4f5cfadd642",
+          "prompt_lang": "en",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "meandering inference",
+            "deferred commitment",
+            "latent drift",
+            "exploratory detours",
+            "provisional stance",
+            "wandering threshold"
+          ],
+          "keywords": [
+            "meandering inference",
+            "deferred commitment",
+            "latent drift",
+            "exploratory detours",
+            "provisional stance",
+            "wandering threshold"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "meandering inference",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "deferred commitment",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "latent drift",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "exploratory detours",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "provisional stance",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "wandering threshold",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "end_turn",
+            "response_id": "59028d04-9f80-47ed-8d89-c82dc0cabc9f",
+            "model": "claude-opus-4-8",
+            "prompt_tokens": 2456,
+            "completion_tokens": 626,
+            "reasoning_tokens": 0,
+            "total_tokens": 3082,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "Let meandering inference and deferred commitment collide. What images, questions, or fragments appear?",
+          "ponder_log": "- Assume meandering inference is a river that prefers deltas to destinations, forking before it ever names the sea.\n- Deferred commitment, then, is the hand hovering over a chessboard — fingers warm on a piece never lifted.\n- Counterexample: a spider does not meander; its web is committed geometry, yet it waits, suspended, for arrival.\n- What if wandering *is* the commitment — to stay unfinished, to keep the aperture open one more frame?\n- An image: footprints in snow that loop back, cross themselves, and the snow keeps falling to erase the loops.\n- Question: does the inference meander because the answer is far, or because the answerer fears the door clicking shut?\n- Analogy: jazz, where the deferred resolution of a chord is not indecision but the whole pleasure of the line.\n- But counter to that — a verdict postponed indefinitely is also a quiet kind of cruelty to whoever waits on it.\n- Fragment: \"almost,\" repeated, a word that leans toward arrival and never sets its foot down.\n- Assume the two collide and produce not a spark but a fog — visibility low, every shape still possible.\n- Image: a librarian shelving a book in the air between two stacks, both correct, neither chosen.\n- Question: is a held breath an action or its absence? And does the holder know which?\n- Counterexample: lightning commits absolutely and instantly — yet it, too, branches, searching the ground for where to land.\n- Analogy: the cursor blinking on an empty line, a small heartbeat of postponement that is itself a kind of thinking.\n- Fragment: maybe the collision leaves only a hum — the sound of a question deciding it would rather stay a question.",
+          "gen_elapsed_s": 15.596498707998762
+        }
+      ],
+      "extras": {
+        "run_id": "4e63682172946bb7",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T17:09:30Z",
+            "run_id": "4e63682172946bb7",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "isomorphic",
+          "target_tokens": 320,
+          "source_tokens_est": 309,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "end_turn",
+            "response_id": "e2bf71c6-dfbd-4531-bca5-9746cb4e8307",
+            "model": "claude-opus-4-8",
+            "api_calls": 1,
+            "prompt_tokens": 2863,
+            "completion_tokens": 3680,
+            "reasoning_tokens": 0,
+            "total_tokens": 6543,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 309,
+          "normalized": false
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 1398,
+        "memory_block_est_tokens": 309,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 2484,
+            "completion_tokens": 42,
+            "reasoning_tokens": 0,
+            "total_tokens": 2526
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 2863,
+            "completion_tokens": 3680,
+            "reasoning_tokens": 0,
+            "total_tokens": 6543
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "end_turn",
+          "response_id": "347dd358-6fa9-4444-a42d-cc36a565aa88",
+          "model": "claude-opus-4-8",
+          "prompt_tokens": 2985,
+          "completion_tokens": 1093,
+          "reasoning_tokens": 0,
+          "total_tokens": 4078,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 93.23145120799927,
+          "probe_s": 9.958999726222828e-06,
+          "memory_remix_s": 3.3750002330634743e-06,
+          "answer_s": 23.835674040999947
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 3415,
+        "records": 1,
+        "elapsed_s": 93.23183654199966
+      },
+      "comparison": {
+        "baseline_chars": 2876,
+        "ponder_chars": 3415,
+        "answer_changed": true,
+        "char_delta": 539,
+        "diff_ratio": 0.968208551899539,
+        "records": 1,
+        "unique_keywords": 6,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.16666666666666663,
+        "stance_baseline_dominant": "conditionalization",
+        "stance_ponder_dominant": "conditionalization",
+        "stance_top_gain": "conditionalization",
+        "stance_top_drop": "resolution",
+        "spatial_answer_density_delta": -0.5672226555102355,
+        "spatial_baseline_density": 1.7385257301808066,
+        "spatial_ponder_density": 1.171303074670571,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 1.21580547112462,
+        "spatial_log_question_density_delta": 1.21580547112462,
+        "budget_baseline_answer_tokens_est": 564.0,
+        "budget_ponder_answer_tokens_est": 679.0,
+        "budget_external_scaffold_tokens_est": 678.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.7208354087287786,
+          "query_baseline_cosine": 0.3264425371609201,
+          "query_ponder_cosine": 0.3024137311339798,
+          "query_alignment_delta": -0.024028806026940297
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 6.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.16666666666666666,
+              "conditionalization": 0.5,
+              "example_expansion": 0.0,
+              "resolution": 0.3333333333333333
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 1,
+              "conditionalization": 3,
+              "example_expansion": 0,
+              "resolution": 2
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "framing": [
+                {
+                  "term": "framing",
+                  "count": 1
+                }
+              ],
+              "conditionalization": [
+                {
+                  "term": "when ",
+                  "count": 2
+                },
+                {
+                  "term": "under",
+                  "count": 1
+                }
+              ],
+              "resolution": [
+                {
+                  "term": "the answer is",
+                  "count": 1
+                },
+                {
+                  "term": "should",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 9.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.1111111111111111,
+              "conditionalization": 0.6666666666666666,
+              "example_expansion": 0.0,
+              "resolution": 0.2222222222222222
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 1,
+              "conditionalization": 6,
+              "example_expansion": 0,
+              "resolution": 2
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "framing": [
+                {
+                  "term": "framing",
+                  "count": 1
+                }
+              ],
+              "conditionalization": [
+                {
+                  "term": "when ",
+                  "count": 3
+                },
+                {
+                  "term": "if ",
+                  "count": 2
+                },
+                {
+                  "term": "under",
+                  "count": 1
+                }
+              ],
+              "resolution": [
+                {
+                  "term": "should",
+                  "count": 1
+                },
+                {
+                  "term": "must",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.16666666666666663,
+          "dominant_baseline": "conditionalization",
+          "dominant_ponder": "conditionalization",
+          "dominant_shift": "conditionalization->conditionalization",
+          "top_gain": "conditionalization",
+          "top_gain_delta": 0.16666666666666663,
+          "top_drop": "resolution",
+          "top_drop_delta": -0.1111111111111111,
+          "deltas": {
+            "definition": 0.0,
+            "framing": -0.05555555555555555,
+            "conditionalization": 0.16666666666666663,
+            "example_expansion": 0.0,
+            "resolution": -0.1111111111111111
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 2876,
+            "count": 5,
+            "density_per_1k_chars": 1.7385257301808066,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 2,
+              "stage": 0,
+              "container": 0,
+              "geometry": 3
+            },
+            "top_terms": [
+              {
+                "term": "path",
+                "count": 2
+              },
+              {
+                "term": "terrain",
+                "count": 1
+              },
+              {
+                "term": "map",
+                "count": 1
+              },
+              {
+                "term": "space",
+                "count": 1
+              }
+            ]
+          },
+          "ponder": {
+            "chars": 3415,
+            "count": 4,
+            "density_per_1k_chars": 1.171303074670571,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 1,
+              "geometry": 3
+            },
+            "top_terms": [
+              {
+                "term": "frame",
+                "count": 1
+              },
+              {
+                "term": "map",
+                "count": 1
+              },
+              {
+                "term": "space",
+                "count": 1
+              },
+              {
+                "term": "place",
+                "count": 1
+              }
+            ]
+          },
+          "questions": {
+            "chars": 102,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 1645,
+            "count": 2,
+            "density_per_1k_chars": 1.21580547112462,
+            "dominant_group": "path",
+            "group_counts": {
+              "path": 1,
+              "stage": 0,
+              "container": 1,
+              "geometry": 0
+            },
+            "top_terms": [
+              {
+                "term": "door",
+                "count": 1
+              },
+              {
+                "term": "frame",
+                "count": 1
+              }
+            ]
+          },
+          "answer_density_delta": -0.5672226555102355,
+          "log_question_density_delta": 1.21580547112462
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 564,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 2394,
+              "completion_tokens": 1008,
+              "reasoning_tokens": 0,
+              "total_tokens": 3402
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 679,
+            "ponder_question_tokens_est": 17,
+            "ponder_log_tokens_est": 340,
+            "keyword_tokens_est": 12,
+            "memory_block_chars": 1398,
+            "memory_block_tokens_est": 309,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 10788,
+              "completion_tokens": 5441,
+              "reasoning_tokens": 0,
+              "total_tokens": 16229
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 2456,
+              "completion_tokens": 626,
+              "reasoning_tokens": 0,
+              "total_tokens": 3082
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 2484,
+                "completion_tokens": 42,
+                "reasoning_tokens": 0,
+                "total_tokens": 2526
+              },
+              "scaffold_condition": {
+                "calls": 1,
+                "prompt_tokens": 2863,
+                "completion_tokens": 3680,
+                "reasoning_tokens": 0,
+                "total_tokens": 6543
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 5347,
+              "completion_tokens": 3722,
+              "reasoning_tokens": 0,
+              "total_tokens": 9069
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 2985,
+              "completion_tokens": 1093,
+              "reasoning_tokens": 0,
+              "total_tokens": 4078
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 115,
+            "external_scaffold_tokens_est": 678,
+            "api_prompt_tokens": 8394,
+            "api_completion_tokens": 4433,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 12827
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 13182,
+            "completion_tokens": 6449,
+            "reasoning_tokens": 0,
+            "total_tokens": 19631
+          }
+        }
+      }
+    }
+  ],
+  "artifacts": {
+    "out_label": "json_out",
+    "out": "artifacts/sweep_20260618_strong_deep/claude_wander_before_deciding.json",
+    "trace_out": "artifacts/sweep_20260618_strong_deep/claude_wander_before_deciding.trace.jsonl",
+    "trace_report_out": "artifacts/sweep_20260618_strong_deep/claude_wander_before_deciding.trace.html",
+    "matrix_report_out": "artifacts/sweep_20260618_strong_deep/claude_wander_before_deciding.matrix.html",
+    "out_dir": "",
+    "resume_from": ""
+  }
+}

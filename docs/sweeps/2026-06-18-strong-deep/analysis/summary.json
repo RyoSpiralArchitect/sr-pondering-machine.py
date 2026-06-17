@@ -1,0 +1,133 @@
+{
+  "run_count": 6,
+  "ponder_item_count": 24,
+  "by_provider": {
+    "claude": {
+      "ponder_items": 12,
+      "answer_chars_mean": 1714.6666666666667,
+      "diff_ratio_mean": 0.9504757130379393,
+      "query_alignment_delta_mean": -0.015911461272519207,
+      "stance_shift_mean": 0.271725723988655,
+      "spatial_log_density_mean": 3.8264880115091646,
+      "api_total_delta_mean": 8493.083333333334,
+      "external_scaffold_tokens_mean": 905.8333333333334,
+      "all_api_total_tokens_mean": 16793.083333333332
+    },
+    "gemini": {
+      "ponder_items": 12,
+      "answer_chars_mean": 407.1666666666667,
+      "diff_ratio_mean": 0.8835306443060317,
+      "query_alignment_delta_mean": 0.032153696194813834,
+      "stance_shift_mean": 0.41865079365079366,
+      "spatial_log_density_mean": 11.662533194073442,
+      "api_total_delta_mean": 2098.3333333333335,
+      "external_scaffold_tokens_mean": 423.4166666666667,
+      "all_api_total_tokens_mean": 5397.0
+    }
+  },
+  "run_summary": {
+    "claude": {
+      "runs": 3,
+      "elapsed_s_mean": 331.82096756933305,
+      "elapsed_s_min": 247.92180799999915,
+      "elapsed_s_max": 378.4218503329994
+    },
+    "gemini": {
+      "runs": 3,
+      "elapsed_s_mean": 172.11084216666617,
+      "elapsed_s_min": 129.38235716599957,
+      "elapsed_s_max": 197.83224762499958
+    }
+  },
+  "condition_summary": [
+    {
+      "provider": "claude",
+      "condition": "assoc",
+      "answer_chars_mean": 1781.3333333333333,
+      "query_alignment_delta_mean": 0.0028125934239169315,
+      "api_total_delta_mean": 5892.666666666667,
+      "stance_shift_mean": 0.25005224660397074,
+      "diff_ratio_mean": 0.9417613178474312
+    },
+    {
+      "provider": "claude",
+      "condition": "facts",
+      "answer_chars_mean": 1542.6666666666667,
+      "query_alignment_delta_mean": -0.027712459858672368,
+      "api_total_delta_mean": 9217.0,
+      "stance_shift_mean": 0.26435786435786435,
+      "diff_ratio_mean": 0.9611500409269036
+    },
+    {
+      "provider": "claude",
+      "condition": "isomorphic",
+      "answer_chars_mean": 1779.3333333333333,
+      "query_alignment_delta_mean": -0.02182544329762536,
+      "api_total_delta_mean": 12486.333333333334,
+      "stance_shift_mean": 0.3111111111111111,
+      "diff_ratio_mean": 0.9428175331791787
+    },
+    {
+      "provider": "claude",
+      "condition": "random",
+      "answer_chars_mean": 1755.3333333333333,
+      "query_alignment_delta_mean": -0.01692053535769603,
+      "api_total_delta_mean": 6376.333333333333,
+      "stance_shift_mean": 0.2613816738816739,
+      "diff_ratio_mean": 0.9561739601982436
+    },
+    {
+      "provider": "gemini",
+      "condition": "assoc",
+      "answer_chars_mean": 518.6666666666666,
+      "query_alignment_delta_mean": 0.02610532885543646,
+      "api_total_delta_mean": 1688.0,
+      "stance_shift_mean": 0.5,
+      "diff_ratio_mean": 0.917865722074647
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts",
+      "answer_chars_mean": 193.0,
+      "query_alignment_delta_mean": 0.020205108023533924,
+      "api_total_delta_mean": 2427.0,
+      "stance_shift_mean": 0.25,
+      "diff_ratio_mean": 0.8260063092748934
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic",
+      "answer_chars_mean": 436.3333333333333,
+      "query_alignment_delta_mean": 0.004408204369478269,
+      "api_total_delta_mean": 2623.6666666666665,
+      "stance_shift_mean": 0.47222222222222215,
+      "diff_ratio_mean": 0.8640943734866483
+    },
+    {
+      "provider": "gemini",
+      "condition": "random",
+      "answer_chars_mean": 480.6666666666667,
+      "query_alignment_delta_mean": 0.07789614353080669,
+      "api_total_delta_mean": 1654.6666666666667,
+      "stance_shift_mean": 0.4523809523809524,
+      "diff_ratio_mean": 0.9261561723879382
+    }
+  ],
+  "pca": {
+    "doc_count": 30,
+    "feature_dim": 768,
+    "explained_variance_ratio": [
+      0.27083262654953827,
+      0.09920614960693061
+    ],
+    "provider_centroid_distance": 0.18976072764785562,
+    "csv": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-18-strong-deep/analysis/answer_pca.csv"
+  },
+  "charts": {
+    "runtime": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-18-strong-deep/analysis/charts/runtime_by_provider.png",
+    "alignment": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-18-strong-deep/analysis/charts/alignment_by_condition.png",
+    "token_overhead": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-18-strong-deep/analysis/charts/token_overhead_by_condition.png",
+    "answer_length": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-18-strong-deep/analysis/charts/answer_length_by_condition.png",
+    "answer_pca": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-18-strong-deep/analysis/charts/answer_pca_by_provider_condition.png"
+  }
+}

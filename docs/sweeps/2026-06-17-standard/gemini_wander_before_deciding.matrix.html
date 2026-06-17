@@ -1,0 +1,285 @@
+<!doctype html>
+<html><head><meta charset='utf-8'/>
+<title>sr_ponder matrix report</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:24px;color:#111;background:#fafafa;}h1,h2,h3{margin:0 0 12px 0;} .muted{color:#666;} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0;}.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 14px 0;padding:10px 12px;background:#fff;border:1px solid #ddd;border-radius:10px;}.toolbar label{font-size:13px;color:#333;display:flex;gap:6px;align-items:center;}.toolbar select,.toolbar button{font:inherit;padding:6px 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111;}.toolbar button{cursor:pointer;}.heatmap-wrap{margin:12px 0 20px 0;}.heatmap-cell{min-width:74px;text-align:center;font-variant-numeric:tabular-nums;}.heat-win{background:#e8f7ee;color:#0a5a2e;}.heat-loss{background:#fdecec;color:#8b1d1d;}.heat-tie,.heat-diag{background:#f3f3f3;color:#666;}.heat-missing{background:#fff8e6;color:#8a6d1f;}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #ddd;} th,td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:top;text-align:left;font-size:13px;}th{background:#f3f3f3;position:sticky;top:0;} code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}pre{white-space:pre-wrap;background:#fbfbfb;border:1px solid #eee;padding:12px;border-radius:8px;}.pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef4ff;color:#245; margin-right:6px;font-size:12px;}details{margin:12px 0;} .num{text-align:right;} .ok{color:#0a6;} .warn{color:#a60;}</style>
+</head><body>
+<h1>sr_ponder matrix report</h1>
+<div class='muted'>scaffold_abcd · custom / gemini-3.5-flash</div>
+<p><strong>Query:</strong> What changes when an answer is allowed to wander before deciding?</p>
+<div class='grid'>
+<div class='card'><div class='muted'>Items</div><div><strong>5</strong></div></div>
+<div class='card'><div class='muted'>Ponder items</div><div><strong>4</strong></div></div>
+<div class='card'><div class='muted'>Warnings</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Baseline</div><div><strong>baseline</strong></div></div>
+<div class='card'><div class='muted'>Max reasoning Δ</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Max stance shift</div><div><strong>0.5000</strong></div></div>
+<div class='card'><div class='muted'>Best align Δ</div><div><strong>0.7793</strong></div></div>
+</div>
+<h2>Pairwise heatmap</h2>
+<div class='toolbar'><strong>A/B/C/D win-loss heatmap</strong><label>Metric<select id='heatmap-metric-key'>
+<option value='query_alignment_delta' selected>Query align Δ</option>
+<option value='stance_shift'>Stance shift</option>
+<option value='budget_reasoning_delta'>Reasoning token Δ</option>
+<option value='budget_total_delta'>Total token Δ</option>
+</select></label><span class='muted'>Green means the row beats the column on the selected metric. Cost metrics use lower-is-better.</span></div>
+<div class='heatmap-wrap' data-heatmap-key='query_alignment_delta'><div class='muted'>Query align Δ · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.7793 · 2W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0425</td>
+<td class='heatmap-cell heat-win'>0.7401</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.7368 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0425</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.6976</td>
+<td class='heatmap-cell heat-loss'>-0.0425</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>0.0392 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-0.7401</td>
+<td class='heatmap-cell heat-loss'>-0.6976</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.7401</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>0.7793 · 2W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-win'>0.0425</td>
+<td class='heatmap-cell heat-win'>0.7401</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='stance_shift' style='display:none'><div class='muted'>Stance shift · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.5000 · 1W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-win'>0.5000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.5000 · 1W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.5000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-0.5000</td>
+<td class='heatmap-cell heat-loss'>-0.5000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.5000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>0.5000 · 1W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-win'>0.5000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_reasoning_delta' style='display:none'><div class='muted'>Reasoning token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_total_delta' style='display:none'><div class='muted'>Total token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>797.0000 · 2W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-36.0000</td>
+<td class='heatmap-cell heat-win'>409.0000</td>
+<td class='heatmap-cell heat-win'>514.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>761.0000 · 3W</span></td>
+<td class='heatmap-cell heat-win'>36.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>445.0000</td>
+<td class='heatmap-cell heat-win'>550.0000</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>1206.0000 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-409.0000</td>
+<td class='heatmap-cell heat-loss'>-445.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>105.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>1311.0000 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-514.0000</td>
+<td class='heatmap-cell heat-loss'>-550.0000</td>
+<td class='heatmap-cell heat-loss'>-105.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<h2>Comparison table</h2>
+<div class='toolbar'><strong>Sort by baseline-relative metric</strong><label>Metric<select id='matrix-sort-key'><option value='judge_score_delta'>Judge score Δ</option><option value='judge_resolution_delta'>Judge resolution Δ</option><option value='query_alignment_delta'>Query align Δ</option><option value='stance_shift'>Stance shift</option><option value='budget_reasoning_delta'>Reasoning token Δ</option><option value='budget_completion_delta'>Completion token Δ</option><option value='budget_total_delta'>Total token Δ</option><option value='answer_cosine'>Answer cosine</option><option value='diff_ratio'>Diff ratio</option><option value='answer_chars'>Answer chars</option><option value='elapsed_s'>Elapsed seconds</option><option value='name'>Name</option></select></label><label>Direction<select id='matrix-sort-dir'><option value='desc'>Descending</option><option value='asc'>Ascending</option></select></label><button type='button' id='matrix-sort-apply'>Apply</button><span class='muted'>Baseline rows stay pinned to the top.</span></div>
+<table><thead><tr>
+<th>Item</th>
+<th>Kind</th>
+<th>Scaffold</th>
+<th>Chars</th>
+<th>Elapsed</th>
+<th>Semantic</th>
+<th>Judge</th>
+<th>Stance</th>
+<th>Budget</th>
+<th>Warnings</th>
+</tr></thead><tbody id='matrix-report-body'>
+<tr data-name='baseline' data-kind='baseline' data-answer-chars='37' data-elapsed-s='3.3798161249997065' data-diff-ratio='' data-answer-cosine='' data-query-alignment-delta='' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='' data-budget-scaffold-tokens='' data-budget-reasoning-delta='' data-budget-completion-delta='' data-budget-total-delta=''>
+<td><strong>baseline</strong><br/><span class='muted'></span></td>
+<td>baseline</td>
+<td>—</td>
+<td class='num'>37</td>
+<td class='num'>3.38</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='assoc' data-kind='ponder' data-answer-chars='52' data-elapsed-s='7.202822582999943' data-diff-ratio='0.8651685393258427' data-answer-cosine='0.07078604488832729' data-query-alignment-delta='0.7792599915579836' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.5' data-budget-scaffold-tokens='204' data-budget-reasoning-delta='0' data-budget-completion-delta='13' data-budget-total-delta='797'>
+<td><strong>assoc</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>assoc/180</td>
+<td class='num'>52</td>
+<td class='num'>7.20</td>
+<td>cos=0.0708 | Δalign=0.7793</td>
+<td>—</td>
+<td>—→conditionalization | shift=0.5000</td>
+<td>scaf=204 | reasonΔ=0 | compΔ=13</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='random' data-kind='ponder' data-answer-chars='56' data-elapsed-s='6.462742292000257' data-diff-ratio='0.7849462365591398' data-answer-cosine='0.10770723533897088' data-query-alignment-delta='0.7368037163002423' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.5' data-budget-scaffold-tokens='201' data-budget-reasoning-delta='0' data-budget-completion-delta='12' data-budget-total-delta='761'>
+<td><strong>random</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>random/180</td>
+<td class='num'>56</td>
+<td class='num'>6.46</td>
+<td>cos=0.1077 | Δalign=0.7368</td>
+<td>—</td>
+<td>—→conditionalization | shift=0.5000</td>
+<td>scaf=201 | reasonΔ=0 | compΔ=12</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts' data-kind='ponder' data-answer-chars='56' data-elapsed-s='13.60974320800051' data-diff-ratio='0.5913978494623655' data-answer-cosine='0.066628091435676' data-query-alignment-delta='0.039184788012446084' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.0' data-budget-scaffold-tokens='196' data-budget-reasoning-delta='0' data-budget-completion-delta='26' data-budget-total-delta='1206'>
+<td><strong>facts</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/180</td>
+<td class='num'>56</td>
+<td class='num'>13.61</td>
+<td>cos=0.0666 | Δalign=0.0392</td>
+<td>—</td>
+<td>shift=0.0000</td>
+<td>scaf=196 | reasonΔ=0 | compΔ=26</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic' data-kind='ponder' data-answer-chars='52' data-elapsed-s='9.507728874999884' data-diff-ratio='0.8651685393258427' data-answer-cosine='0.07078604488832729' data-query-alignment-delta='0.7792599915579836' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.5' data-budget-scaffold-tokens='197' data-budget-reasoning-delta='0' data-budget-completion-delta='28' data-budget-total-delta='1311'>
+<td><strong>isomorphic</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/180</td>
+<td class='num'>52</td>
+<td class='num'>9.51</td>
+<td>cos=0.0708 | Δalign=0.7793</td>
+<td>—</td>
+<td>—→conditionalization | shift=0.5000</td>
+<td>scaf=197 | reasonΔ=0 | compΔ=28</td>
+<td class='ok'>0</td>
+</tr>
+</tbody></table>
+<h2>Item details</h2>
+<details>
+<summary><strong>baseline</strong> · baseline</summary>
+<div class='card'>
+<h3>answer</h3>
+<pre>The depth, nuance, and quality of the</pre>
+</div>
+</details>
+<details>
+<summary><strong>assoc</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8652 | changed=True</div>
+<h3>answer</h3>
+<pre>When an answer is allowed to wander before deciding,</pre>
+</div>
+</details>
+<details>
+<summary><strong>random</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.7849 | changed=True</div>
+<h3>answer</h3>
+<pre>When an answer is allowed to wander before deciding, the</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.5914 | changed=True</div>
+<h3>answer</h3>
+<pre>explore different paths, deliberate, ponder, think step-</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8652 | changed=True</div>
+<h3>answer</h3>
+<pre>When an answer is allowed to wander before deciding,</pre>
+</div>
+</details>
+<script>(function(){const body=document.getElementById('matrix-report-body');const heatSel=document.getElementById('heatmap-metric-key');const keySel=document.getElementById('matrix-sort-key');const dirSel=document.getElementById('matrix-sort-dir');const applyBtn=document.getElementById('matrix-sort-apply');const heatmaps=Array.from(document.querySelectorAll('[data-heatmap-key]'));if(heatSel&&heatmaps.length){function syncHeatmap(){const wanted=heatSel.value||'';for(const node of heatmaps){node.style.display=(node.getAttribute('data-heatmap-key')===wanted)?'':'none';}}heatSel.addEventListener('change',syncHeatmap);syncHeatmap();}if(!body||!keySel||!dirSel||!applyBtn){return;}function metricValue(row,key){const attr='data-'+String(key||'').replace(/_/g,'-');const raw=row.getAttribute(attr)||'';if(key==='name'){return raw.toLowerCase();}const num=Number(raw);return Number.isFinite(num)?num:null;}function compareRows(a,b,key,dir){const av=metricValue(a,key);const bv=metricValue(b,key);if(typeof av==='string'||typeof bv==='string'){const as=String(av||'');const bs=String(bv||'');return dir==='asc'?as.localeCompare(bs):bs.localeCompare(as);}if(av===null&&bv===null){return 0;}if(av===null){return 1;}if(bv===null){return -1;}return dir==='asc'?(av-bv):(bv-av);}function sortRows(){const key=keySel.value||'query_alignment_delta';const dir=dirSel.value||'desc';const rows=Array.from(body.querySelectorAll('tr'));const pinned=rows.filter((row)=>row.getAttribute('data-kind')==='baseline');const sortable=rows.filter((row)=>row.getAttribute('data-kind')!=='baseline');sortable.sort((a,b)=>{const main=compareRows(a,b,key,dir);if(main!==0){return main;}return compareRows(a,b,'name','asc');});for(const row of pinned.concat(sortable)){body.appendChild(row);}}applyBtn.addEventListener('click',sortRows);keySel.addEventListener('change',sortRows);dirSel.addEventListener('change',sortRows);sortRows();})();</script>
+</body></html>

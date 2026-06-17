@@ -1,0 +1,112 @@
+[sr_ponder] backend=claude_cli provider=claude model='haiku' seed_method=self logprobs_top_n=0 lang=ja band_profile=single bands=profile objective=random_band diversity=off hops=1 answer_style=plain control=none pipeline=assoc memory=current_only/tail/off scaffold=assoc/180 write_memory=False
+
+=== PACK: baseline ===
+
+それは、特定の対象や文脈に固有でありながら、同時に普遍的必然性を持たない状態です。
+
+例えば、一個の物体の現在の温度は、他の物体との相対比較ではなく、その物体自体に内在する非相対的な性質です。しかし同時に、その温度は絶対不変ではなく、条件が変われば変化します。
+
+あるいは、個人の意識状態も同様です。その人固有の意識は自分自身に属する非相対的な現象ですが、普遍的・永遠的な絶対状態ではなく、脳の活動に依存し、時間とともに変化する偶然的な状態です。
+
+つまり、**その対象に内在し、外部との比較によらない性質を持ちながら、しかし必然的でなく、条件に依存し変化する—そうした状態が、非相対的ではあるが絶対的ではない状態です**。このような状態は、具体的で個別的であると同時に、本質的には有限で偶然的なものなのです。
+
+=== PACK: assoc ===
+
+条件付き必然と有限普遍性の分岐を眺めると、同じことばが条件で質感を変える、という指摘が核心に見える。
+
+非相対的ではあるが絶対的ではない状態とは、**構造が保たれるが実装が変わる領域**だ。
+
+たとえば言語の文法規則は、話者によらず（非相対的）一定の構造を保つが、方言や時代で変異する（絶対的ではない）。数学の群論の公理も然り。あるいは生態系で「捕食者と被食者の比率」という関係構造は安定的に機能するが、具体的な種は環境で入れ替わる。
+
+ポイントは、変わらないのは「もの」ではなく「かたち」「関係」「制約の枠組み」。個別の値は相対的に変動するが、それら相互の関係律は非相対的に保持される。
+
+条件が変わると語の手触りが変わるのは、この構造が露出するから。構造そのものは条件を超えて作用していても、その現れ方は条件に限定される。つまり非相対性と相対性の境界線は、具体的な内容ではなく、成り立つための最小限の条件の中にある。
+
+その状態は「相対的自由度の中の非相対的制約」ともいえる——絶対ではないが、ここから先は自由に変わらせられない基本的な構造。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=355->473 delta=+118 diff_ratio=0.9275
+records=1 unique_keywords=6 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.148936 query_base=0.173390 query_ponder=0.190897 align_delta=0.017507
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.166667 gain=definition drop=example_expansion
+spatial[heuristic_lexicon] ans_density=0.000->4.228 log_density=9.524 q_density=0.000 groups=none->container log=path
+budget[api_usage_plus_visible_estimate] ans=349->463 scaffold=637 reason=0->0 completion=806->2626
+
+=== PACK: random ===
+
+非相対的ではあるが絶対的ではない状態とは、**部分的な自律性を持ちながら、全体から切り離せない状態**です。
+
+Ponder Logの例で言えば、レシートの折り方や雨どいの規則性は、それ自体の固有の秩序を持っています（非相対的）。しかし、その秩序は駅前という文脈の中にのみ存在し、切り出されると意味を失います（絶対的ではない）。
+
+これは多くの現象に当てはまります。生物の臓器は独自の機能を持ちながら、生体全体から独立して機能することはできません。音楽の調は固有の法則性を持ちながら、曲全体との関係の中でしか響きません。個人の意識や選択も、社会や環境との相互作用の中でのみ存在します。
+
+つまり、**ローカルな法則性とグローバルな依存性の共存**——部分が部分自体の論理を持ちながら、全体から独立できない、そうした状態です。完全に相対的（他者によってのみ定義される）でもなく、完全に絶対的（自己完結的）でもない、中間的で動的な在り方。それが非相対的ではあるが絶対的ではない状態の本質です。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=355->444 delta=+89 diff_ratio=0.8648
+records=1 unique_keywords=6 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.184668 query_base=0.175549 query_ponder=0.228298 align_delta=0.052749
+stance[heuristic_lexicon] base=conditionalization ponder=definition shift=0.541667 gain=definition drop=conditionalization
+spatial[heuristic_lexicon] ans_density=0.000->4.505 log_density=5.319 q_density=0.000 groups=none->path log=container
+budget[api_usage_plus_visible_estimate] ans=349->430 scaffold=613 reason=0->0 completion=806->2736
+
+=== PACK: facts ===
+
+非相対的ではあるが絶対的ではない状態とは、**対象の内在的性質として記述可能でありながら、その実現には特定の条件や前提が必要な状態**です。
+
+例えば：
+
+**水の「湿性」** — 水という物質の本質的な特性として、他の物質との比較なしに記述できます。しかし常温常圧という条件があって初めて「液体として湿性を示す」のであり、極低温では同じ水でも振る舞いが変わります。
+
+**生物の「適応」** — 各生物に内在する傾向として、他の個体との相対比較なく認識できます。しかし環境が存在することが前提であり、完全に変わらない環境下では適応は概念として成立しません。
+
+**システムの「複雑性」** — 構成要素の相互作用パターンから生じる内在的性質で、「Aより複雑」といった二項判断を経ずに描写可能です。しかし複雑性そのものは観測者の視点や定義に依存し、真理のような絶対性はありません。
+
+共通点は、**特定の関係性には依存しないが、何らかの実現条件には依存している**こと。内在性と条件依存性の両立が、この状態の特徴です。それは世界の大部分の現象を説明します。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=355->478 delta=+123 diff_ratio=0.8727
+records=1 unique_keywords=6 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.171576 query_base=0.175783 query_ponder=0.139873 align_delta=-0.035910
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.230769 gain=definition drop=resolution
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=2.710 q_density=0.000 groups=none->none log=path
+budget[api_usage_plus_visible_estimate] ans=349->462 scaffold=583 reason=0->0 completion=806->6544
+
+=== PACK: isomorphic ===
+
+根の成長を考えると、先端の細胞分裂は土壌の密度に応じて変わります。つまり外部条件に依存している。しかし同時に、その根個体は他の根との比較で動くわけではなく、内在的な成長プログラムに従っています。これが「非相対的ではあるが絶対的ではない状態」です。
+
+**条件付き普遍性**と言えるでしょう。特定の環境下では必然的に成立する規則性を持ちながら、その規則自体は環境によって変わる。根が「下へ」向かうのは物理法則による必然ですが、その成長速度は絶対値ではなく、与えられた条件に内在する。
+
+相対的ではない＝他者との比較ではなく自己完結的
+絶対的ではない＝外的条件に規定されている
+
+このような中間領域は、生命現象そのものが占める場所です。規則がありながら融通性があり、条件に応じて表現が変わりながらも、その変わり方そのものは決まっている状態。システムの自律性と環境応答性が共存している領域です。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=355->394 delta=+39 diff_ratio=0.9413
+records=1 unique_keywords=6 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.212488 query_base=0.168752 query_ponder=0.162977 align_delta=-0.005775
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.250000 gain=conditionalization drop=example_expansion
+spatial[heuristic_lexicon] ans_density=0.000->2.538 log_density=13.158 q_density=0.000 groups=none->geometry log=geometry
+budget[api_usage_plus_visible_estimate] ans=349->387 scaffold=592 reason=0->0 completion=806->8100
+
+=== PACK SUMMARY ===
+
+name        kind      control  chars  records  elapsed_s
+----------  --------  -------  -----  -------  ------------------
+baseline    baseline           355             11.40675604199896
+assoc       ponder    none     473    1        32.34378020800068
+random      ponder    none     444    1        31.132722707998255
+facts       ponder    none     478    1        64.85154562500065
+isomorphic  ponder    none     394    1        75.71141562500088
+
+[json_out] wrote artifacts/sweep_20260617_claude_gemini/claude_non_relative_not_absolute.json
+
+[matrix_report_out] wrote artifacts/sweep_20260617_claude_gemini/claude_non_relative_not_absolute.matrix.html
+
+[trace_report_out] wrote artifacts/sweep_20260617_claude_gemini/claude_non_relative_not_absolute.trace.html

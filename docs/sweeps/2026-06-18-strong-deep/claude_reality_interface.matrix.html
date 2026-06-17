@@ -1,0 +1,339 @@
+<!doctype html>
+<html><head><meta charset='utf-8'/>
+<title>sr_ponder matrix report</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:24px;color:#111;background:#fafafa;}h1,h2,h3{margin:0 0 12px 0;} .muted{color:#666;} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0;}.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 14px 0;padding:10px 12px;background:#fff;border:1px solid #ddd;border-radius:10px;}.toolbar label{font-size:13px;color:#333;display:flex;gap:6px;align-items:center;}.toolbar select,.toolbar button{font:inherit;padding:6px 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111;}.toolbar button{cursor:pointer;}.heatmap-wrap{margin:12px 0 20px 0;}.heatmap-cell{min-width:74px;text-align:center;font-variant-numeric:tabular-nums;}.heat-win{background:#e8f7ee;color:#0a5a2e;}.heat-loss{background:#fdecec;color:#8b1d1d;}.heat-tie,.heat-diag{background:#f3f3f3;color:#666;}.heat-missing{background:#fff8e6;color:#8a6d1f;}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #ddd;} th,td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:top;text-align:left;font-size:13px;}th{background:#f3f3f3;position:sticky;top:0;} code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}pre{white-space:pre-wrap;background:#fbfbfb;border:1px solid #eee;padding:12px;border-radius:8px;}.pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef4ff;color:#245; margin-right:6px;font-size:12px;}details{margin:12px 0;} .num{text-align:right;} .ok{color:#0a6;} .warn{color:#a60;}</style>
+</head><body>
+<h1>sr_ponder matrix report</h1>
+<div class='muted'>scaffold_abcd · claude / opus</div>
+<p><strong>Query:</strong> 現実って何のインターフェース？</p>
+<div class='grid'>
+<div class='card'><div class='muted'>Items</div><div><strong>5</strong></div></div>
+<div class='card'><div class='muted'>Ponder items</div><div><strong>4</strong></div></div>
+<div class='card'><div class='muted'>Warnings</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Baseline</div><div><strong>baseline</strong></div></div>
+<div class='card'><div class='muted'>Max reasoning Δ</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Max stance shift</div><div><strong>0.3333</strong></div></div>
+<div class='card'><div class='muted'>Best align Δ</div><div><strong>0.0076</strong></div></div>
+</div>
+<h2>Pairwise heatmap</h2>
+<div class='toolbar'><strong>A/B/C/D win-loss heatmap</strong><label>Metric<select id='heatmap-metric-key'>
+<option value='query_alignment_delta' selected>Query align Δ</option>
+<option value='stance_shift'>Stance shift</option>
+<option value='budget_reasoning_delta'>Reasoning token Δ</option>
+<option value='budget_total_delta'>Total token Δ</option>
+</select></label><span class='muted'>Green means the row beats the column on the selected metric. Cost metrics use lower-is-better.</span></div>
+<div class='heatmap-wrap' data-heatmap-key='query_alignment_delta'><div class='muted'>Query align Δ · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.0076 · 3W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0244</td>
+<td class='heatmap-cell heat-win'>0.0240</td>
+<td class='heatmap-cell heat-win'>0.0096</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>-0.0168 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0244</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0003</td>
+<td class='heatmap-cell heat-loss'>-0.0147</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>-0.0164 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0240</td>
+<td class='heatmap-cell heat-win'>0.0003</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0144</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>-0.0020 · 2W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0096</td>
+<td class='heatmap-cell heat-win'>0.0147</td>
+<td class='heatmap-cell heat-win'>0.0144</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='stance_shift' style='display:none'><div class='muted'>Stance shift · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.1364 · 0W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1429</td>
+<td class='heatmap-cell heat-loss'>-0.0758</td>
+<td class='heatmap-cell heat-loss'>-0.1970</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.2792 · 2W</span></td>
+<td class='heatmap-cell heat-win'>0.1429</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0671</td>
+<td class='heatmap-cell heat-loss'>-0.0541</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>0.2121 · 1W</span></td>
+<td class='heatmap-cell heat-win'>0.0758</td>
+<td class='heatmap-cell heat-loss'>-0.0671</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1212</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>0.3333 · 3W</span></td>
+<td class='heatmap-cell heat-win'>0.1970</td>
+<td class='heatmap-cell heat-win'>0.0541</td>
+<td class='heatmap-cell heat-win'>0.1212</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_reasoning_delta' style='display:none'><div class='muted'>Reasoning token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_total_delta' style='display:none'><div class='muted'>Total token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>6105.0000 · 3W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>268.0000</td>
+<td class='heatmap-cell heat-win'>3673.0000</td>
+<td class='heatmap-cell heat-win'>6387.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>6373.0000 · 2W</span></td>
+<td class='heatmap-cell heat-loss'>-268.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>3405.0000</td>
+<td class='heatmap-cell heat-win'>6119.0000</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>9778.0000 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-3673.0000</td>
+<td class='heatmap-cell heat-loss'>-3405.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>2714.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>12492.0000 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-6387.0000</td>
+<td class='heatmap-cell heat-loss'>-6119.0000</td>
+<td class='heatmap-cell heat-loss'>-2714.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<h2>Comparison table</h2>
+<div class='toolbar'><strong>Sort by baseline-relative metric</strong><label>Metric<select id='matrix-sort-key'><option value='judge_score_delta'>Judge score Δ</option><option value='judge_resolution_delta'>Judge resolution Δ</option><option value='query_alignment_delta'>Query align Δ</option><option value='stance_shift'>Stance shift</option><option value='budget_reasoning_delta'>Reasoning token Δ</option><option value='budget_completion_delta'>Completion token Δ</option><option value='budget_total_delta'>Total token Δ</option><option value='answer_cosine'>Answer cosine</option><option value='diff_ratio'>Diff ratio</option><option value='answer_chars'>Answer chars</option><option value='elapsed_s'>Elapsed seconds</option><option value='name'>Name</option></select></label><label>Direction<select id='matrix-sort-dir'><option value='desc'>Descending</option><option value='asc'>Ascending</option></select></label><button type='button' id='matrix-sort-apply'>Apply</button><span class='muted'>Baseline rows stay pinned to the top.</span></div>
+<table><thead><tr>
+<th>Item</th>
+<th>Kind</th>
+<th>Scaffold</th>
+<th>Chars</th>
+<th>Elapsed</th>
+<th>Semantic</th>
+<th>Judge</th>
+<th>Stance</th>
+<th>Budget</th>
+<th>Warnings</th>
+</tr></thead><tbody id='matrix-report-body'>
+<tr data-name='baseline' data-kind='baseline' data-answer-chars='1768' data-elapsed-s='41.13111395899978' data-diff-ratio='' data-answer-cosine='' data-query-alignment-delta='' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='' data-budget-scaffold-tokens='' data-budget-reasoning-delta='' data-budget-completion-delta='' data-budget-total-delta=''>
+<td><strong>baseline</strong><br/><span class='muted'></span></td>
+<td>baseline</td>
+<td>—</td>
+<td class='num'>1768</td>
+<td class='num'>41.13</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='assoc' data-kind='ponder' data-answer-chars='1318' data-elapsed-s='62.477199375000055' data-diff-ratio='0.9384316267012314' data-answer-cosine='0.33757574342403146' data-query-alignment-delta='0.00760176172391458' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.13636363636363635' data-budget-scaffold-tokens='1145' data-budget-reasoning-delta='0' data-budget-completion-delta='703' data-budget-total-delta='6105'>
+<td><strong>assoc</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>assoc/320</td>
+<td class='num'>1318</td>
+<td class='num'>62.48</td>
+<td>cos=0.3376 | Δalign=0.0076</td>
+<td>—</td>
+<td>resolution→framing | shift=0.1364</td>
+<td>scaf=1145 | reasonΔ=0 | compΔ=703</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='random' data-kind='ponder' data-answer-chars='1489' data-elapsed-s='69.40057337500002' data-diff-ratio='0.9643844028246853' data-answer-cosine='0.34321282022364547' data-query-alignment-delta='-0.01676384602019365' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.2792207792207792' data-budget-scaffold-tokens='1000' data-budget-reasoning-delta='0' data-budget-completion-delta='986' data-budget-total-delta='6373'>
+<td><strong>random</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>random/320</td>
+<td class='num'>1489</td>
+<td class='num'>69.40</td>
+<td>cos=0.3432 | Δalign=-0.0168</td>
+<td>—</td>
+<td>resolution→resolution | shift=0.2792</td>
+<td>scaf=1000 | reasonΔ=0 | compΔ=986</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts' data-kind='ponder' data-answer-chars='850' data-elapsed-s='85.14088583300145' data-diff-ratio='0.9564553093964858' data-answer-cosine='0.2861413401259212' data-query-alignment-delta='-0.016448229949062393' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.21212121212121215' data-budget-scaffold-tokens='1035' data-budget-reasoning-delta='0' data-budget-completion-delta='1938' data-budget-total-delta='9778'>
+<td><strong>facts</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/320</td>
+<td class='num'>850</td>
+<td class='num'>85.14</td>
+<td>cos=0.2861 | Δalign=-0.0164</td>
+<td>—</td>
+<td>resolution→definition | shift=0.2121</td>
+<td>scaf=1035 | reasonΔ=0 | compΔ=1938</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic' data-kind='ponder' data-answer-chars='1079' data-elapsed-s='107.48622450000039' data-diff-ratio='0.9065683175272217' data-answer-cosine='0.34192514873008234' data-query-alignment-delta='-0.0020198944878068725' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.33333333333333337' data-budget-scaffold-tokens='1066' data-budget-reasoning-delta='0' data-budget-completion-delta='3718' data-budget-total-delta='12492'>
+<td><strong>isomorphic</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/320</td>
+<td class='num'>1079</td>
+<td class='num'>107.49</td>
+<td>cos=0.3419 | Δalign=-0.0020</td>
+<td>—</td>
+<td>resolution→example_expansion | shift=0.3333</td>
+<td>scaf=1066 | reasonΔ=0 | compΔ=3718</td>
+<td class='ok'>0</td>
+</tr>
+</tbody></table>
+<h2>Item details</h2>
+<details>
+<summary><strong>baseline</strong> · baseline</summary>
+<div class='card'>
+<h3>answer</h3>
+<pre>インターフェースという言葉を真に受けてみる。インターフェースとは、複雑すぎて直接触れられない何かと、それを扱う側とのあいだに置かれた、薄い変換層のことだ。デスクトップのアイコンはファイルシステムの実体ではないし、ハンドルは内燃機関の爆発そのものではない。インターフェースは常に「下にある何か」を隠しながら、扱える形に翻訳する。隠蔽こそがその仕事だ。
+
+そう考えると、この問いは二段構えになっている。現実がインターフェースだと仮にして、では何を隠し、誰のために翻訳しているのか。
+
+寄り道する。網膜は毎秒膨大な光子を受けるのに、意識に上がるのはごく一部だ。色は波長そのものではなく脳が割り当てたラベルで、痛みは組織損傷の「実体」ではなく行動を促す警告アイコンだ。空腹も、恐怖も、美しさも、世界の物理的な内訳ではなく、その内訳を扱うためのつまみとして進化が彫り込んだ表示にすぎない。つまり私たちが現実と呼んでいるものの大半は、すでに一段の翻訳を経ている。だとすればここで言う「現実」は、物理世界そのものではなく、物理世界を生存可能な解像度に圧縮した表示画面のことだ。
+
+ではその画面は何のインターフェースなのか。素朴な答えは「物理法則」「客観的世界」だろう。だが立ち止まる。インターフェースは扱う主体を前提にする。ハンドルは運転者のために、アイコンは操作者のためにある。現実というインターフェースに向き合っている主体は誰か。それは私だ。経験している私。とすると現実は、世界が私に差し出した画面であると同時に、私が世界を操作するための画面でもある。入力と出力が同じ一枚の膜で起きている。見ることと触れることが分離していない。
+
+ここで答えが反転しはじめる。インターフェースは普通、その先にある「本体」を指し示す。だが現実の場合、その先を覗こうとするたびに、また別の現実が現れるだけだ。原子の先に素粒子、その先に場、その先に数式。どこまで掘っても、出てくるのはいつも「私が扱える形に翻訳されたもの」であって、翻訳前の生の何かには決して手が届かない。これはインターフェースの限界ではなく、もしかすると本性かもしれない。本体に到達しないことこそ、インターフェースがインターフェースである条件だ。
+
+もうひとつ寄り道。プログラムにおけるインターフェースは、実装を隠して「契約」だけを見せる。何ができるか、どう呼び出せるかを定め、内部がどうなっているかは問わせない。現実もこの意味で契約に似ている。落とせば落ちる、押せば動く、明日も太陽は昇る。この約束ごとの集合が安定して返ってくるから、私は世界を信頼して生きられる。だが契約の裏側、なぜその約束が成り立つのかという実装は、原理的に開示されない。物理学はより精密な契約書を書き続けるが、契約書はどこまでいっても契約書だ。
+
+そろそろ熟考をたたむ。問いの形そのものが…</pre>
+</div>
+</details>
+<details>
+<summary><strong>assoc</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9384 | changed=True</div>
+<h3>answer</h3>
+<pre>現実は「何か」のインターフェースだと問う時点で、すでに答えの半分が隠れている。インターフェースとは、触れられない実体と、触れたい者のあいだに立つ翻訳面のことだ。つまりこの問いは、現実の向こうに別の本体があると前提している。けれど少し寄り道して考えると、現実が何かのインターフェースなのではなく、インターフェースであることそのものが現実なのかもしれない、と思えてくる。
+
+握手の比喩が示していたように、合意とは確認ではなく温度の交換だった。同じ言葉でも条件が変われば手触りが変わる。とすれば現実とは、固定された対象を映す窓ではなく、こちらの問い方・触れ方によって応答が変わる、双方向の境界面だ。APIに喩えるなら、現実は読み取り専用のデータベースではなく、リクエストの仕方で返ってくるものが変わるエンドポイントに近い。観測が応答を呼び、応答がまた次の観測を形づくる。
+
+では何と何のあいだのインターフェースか。three通りの言い方ができる。
+
+一つ目。現実は、複数の意識が互いをすり合わせるためのインターフェースだ。私の感覚器が拾った振動と、あなたの感覚器が拾った振動が、たまたま同じ「机」という名前で握手できる。その握手が成立し続ける領域を、私たちは現実と呼んでいる。だから現実は単独では立たない。共有された幻覚というより、共有が成立した分だけ硬くなる幻覚——握り返してくれる手の数だけ実在性が増す。
+
+二つ目。現実は、内側と外側をつなぐ変換器のインターフェースだ。光は光のまま入ってくるのではなく、色という形式に変換されて届く。時間ですら、連続した変化を「いま」という幅に切り出す境界面の効果かもしれない。感覚器は世界を写すレンズではなく、世界を扱える形式に翻訳するトランスデューサーだ。とすれば私たちが現実と呼ぶものは、すでに一度レンダリングされた表示層で、生のデータそのものではない。ディスプレイを見て電子を見ていると思い込むように。
+
+三つ目、そしてこれが核心だ。現実は、結局「何のインターフェースでもない」という可能性。インターフェースは普通、背後の本体を指し示す。だが現実の背後を覗こうとして手に入るのは、また別の現実——別の表示層でしかない。剥がしても剥がしても表示層が出てくるなら、背後の本体という概念自体が、インターフェースという比喩を使ったがゆえに生まれた幻だったことになる。地図の裏に領土があるのではなく、地図しかない。ただしその地図は、私たちがそこを歩くと書き換わる地図だ。
+
+だから答えはこうなる。現実は「私と世界」「私とあなた」「観測と応答」という、互いに相手を生み出し合う関係そのもののインターフェースだ。何か固い本体への窓口ではなく、触れる行為と触れられる手応えが同時に立ち上がる接触面。あなたがそれを問い、世界がその問いに形を返す——その往復が起きている薄い膜こ…</pre>
+</div>
+</details>
+<details>
+<summary><strong>random</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9644 | changed=True</div>
+<h3>answer</h3>
+<pre>現実は「何かそのもの」ではなく、何かを扱えるようにするための握りだ、という見立てがいちばんしっくりくる。
+
+たとえば机の上のアイコン。あの小さな四角は、内部の電圧の配置でも磁気の模様でもない。けれど私たちはそれをつまんで動かし、捨て、開く。アイコンが嘘だとは誰も言わない。むしろ、扱える形に翻訳されているからこそ役に立つ。現実もこれに近い。光や圧力や濃度勾配といった「向こう側」を、つかめる手触り・押せる重さ・避けられる輪郭へと変換した表層——それが私たちの言う「現実」だと思う。
+
+だから問いを「現実は何のインターフェース？」と立てたとき、答えは一つに定まらない。少なくとも三つの層を指せる。
+
+ひとつは、世界そのものへのインターフェース。物理的な何かは確かにあるのだろうが、私たちはそれを直接には触れず、扱える縮約として受け取っている。痛みは組織損傷の真実ではなく「やめろ」という操作指示で、色は波長の事実ではなく「見分けろ」という整理棚だ。真実への窓ではなく、生き延びるための操作盤。
+
+ふたつめは、行為へのインターフェース。さっきのポンダーログの断片——レシートの端だけが妙に丁寧に折られている、雨どいだけが規則正しい、紙コップがそのたびに別の役を持つ——あれは、現実が「全体として整っている」のではなく「掴める箇所だけが妙にくっきりしている」感覚をよく写している。私たちが現実だと感じるのは、たいてい手をかけられる部分だ。折れる端、ずらせる蓋の位置、増えていく小さな手順。意味の通らない全景の中で、操作可能な突起だけが解像度を上げて立ち上がってくる。インターフェースとは要するに「ここを押せ」と差し出された突起の集合で、現実はその突起をやたらと豊かに供給してくる場だ。
+
+みっつめは、自分へのインターフェース。現実は外側だけにあるのではなく、こちらの状態を読み取って返ってくる。同じロビーの空気が「少し先へ進んでいる」と感じるのは、空気が進んだのではなく、こちらの注意の速度がそう描かせている。現実は鏡ではないが、入力に応じて出力が変わる対話的な面ではある。だから何を押すかで、押し返してくるものが変わる。
+
+ここで大事なのは、インターフェースだからといって現実が「偽物」になるわけではない、ということ。地図は土地ではないが、地図なしには歩けない。アイコンは回路ではないが、アイコンを捨てればファイルは本当に消える。表層を操作した結果は、向こう側にちゃんと届く。現実が翻訳・縮約された層だとしても、その操作には反作用がともなう。だから「ただの見かけ」と切り捨てるのも、また現実を読み違えることになる。
+
+では、結局それは「何の」インターフェースなのか。私はこう言いたい——名前のつかない連続体と、それを扱おうとする有限な存在との、あいだの面。向こう側には言い切れないほど多くの差異が広がっ…</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9565 | changed=True</div>
+<h3>answer</h3>
+<pre>「何の」と問う形そのものに、すでに答えの半分が含まれている気がします。インターフェースと呼べるためには、媒介される二項が独立に存在しなければならない（さもなければ接面ではなく同一になる）。つまりこの問いは暗に、「現実」の向こう側に、現実とは別の&quot;本体&quot;があると仮定している。
+
+ところが厄介なのは、その向こう側を名指そうとした瞬間、それもまた現実として立ち現れてしまうことです。物理過程、世界それ自体、他者の心——どれを「背後にあるもの」として指差しても、私たちはそれを現実の中の対象として経験するしかない。背後を見ようとして引いたカーテンの向こうに、また別のスクリーンがあるようなもの。だから「現実は◯◯のインターフェースだ」と固有名を入れる答えは、どれも一段ずらされて無効化される。
+
+では成り立たないかというと、そうでもない。インターフェースを定義するもう一つの条件は操作可能性——表面を押すと、隠された側が予測可能に押し返してくること。この条件の方は、向こう側の正体を知らなくても満たせます。私はリンゴが何で「できているか」を知らなくても、手を伸ばせば掴め、放せば落ちる。アイコンの背後のバイナリを知らなくてもファイルは開く。
+
+だから私の答えはこうです。現実は「何か」という名詞へのインターフェースではなく、行為と帰結が出会う表面そのもの。媒介されている二項は、〈操作できる私〉と〈その操作に応答してくる、汲み尽くせない何か〉。後者は中身を特定できないからこそ&quot;隠された側&quot;であり、にもかかわらず安定して応答するからこそ&quot;インターフェース&quot;たりうる。正体不明であることはバグではなく、インターフェースの定義そのものです。
+
+言い換えれば——現実とは、私が自分の認知や身体では完全には見通せない世界に対して、それでも触れ・動かし・予測できるという関係が成り立つ、その接面の名前。「何の」と固有名で埋めたくなるその空欄こそが、隠蔽されたままでも操作だけは通る、という構造の証拠なのだと思います。</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9066 | changed=True</div>
+<h3>answer</h3>
+<pre>現実は「いま手で触れて操作できること」のインターフェースだと思う。インターフェースとは、裏側の仕組みを全部見せずに、操作可能な手触りだけを差し出す膜のことだ。だとすれば現実は、何か根底にある膨大な過程——可能性の沸き立ち、まだ確定していないものの揺れ——を、私たちが掴める粒度に翻訳して見せている表面なのだと思う。
+
+発酵の比喩がここで効いてくる。私たちが舌で受け取る甘さは、すでに何かが手放された後の結果であって、糖そのものでも菌の代謝そのものでもない。同じように、私たちが「現実」と呼んで触れているものは、世界の生のプロセスではなく、それが一度作り変えられて表に滲み出てきた香りのほうだ。原料には直接触れられない。インターフェースの向こう側は常に隠れている。そして時々、温度の取りこぼしのように、想定した返事が返ってこない——そこで初めて、表面の下に勝手に進行している何かの存在に気づく。バグや手応えのなさこそが、インターフェースの背後を逆照射する。
+
+ただ、インターフェースには必ず二つの側がある。片側だけでは成り立たない。では現実は「何」と「誰」をつないでいるのか。素朴には〈世界そのもの〉と〈それを操作する私〉だと言いたくなるけれど、面白いのは、その私の側もまた現実によって描画されていることだ。手で掴もうとするその手も、現実というレンダリングの一部として立ち上がっている。だから現実は、外にある実体への窓というより、観測する側とされる側が同時に成形される接触面に近い。発酵の合議という言葉で言えば、樽の中身を測る濡れた布巾であると同時に、その布巾が当たることで中身の傾きが決まってしまう——測定と生成が分かれていない膜だ。
+
+そう考えると、現実が何のインターフェースかという問いには、層になった答えしか返せない。表層では、可能性を操作可能な行為へと変換するインターフェース。一段下では、私という主体と世界という客体を切り分けて初めて立ち上がらせるインターフェース。さらに下では、本当は連続している一つの過程に、敢えて「内」と「外」「自」と「他」の縫い目を入れて、そこにやりとりが起きているように見せている錯覚装置。
+
+だから私の答えはこうだ。現実は何か別の実体への入口ではなく、「触れることと触れられること」「測ることと変えること」が分離できないという事実そのものを、あたかも分離しているかのように差し出す膜だ。向こう側にある“本物”を覗くための窓ではなく、その窓を覗く者と覗かれる景色を同時に切り出している、手触りのある裏地のほうなのだと思う。</pre>
+</div>
+</details>
+<script>(function(){const body=document.getElementById('matrix-report-body');const heatSel=document.getElementById('heatmap-metric-key');const keySel=document.getElementById('matrix-sort-key');const dirSel=document.getElementById('matrix-sort-dir');const applyBtn=document.getElementById('matrix-sort-apply');const heatmaps=Array.from(document.querySelectorAll('[data-heatmap-key]'));if(heatSel&&heatmaps.length){function syncHeatmap(){const wanted=heatSel.value||'';for(const node of heatmaps){node.style.display=(node.getAttribute('data-heatmap-key')===wanted)?'':'none';}}heatSel.addEventListener('change',syncHeatmap);syncHeatmap();}if(!body||!keySel||!dirSel||!applyBtn){return;}function metricValue(row,key){const attr='data-'+String(key||'').replace(/_/g,'-');const raw=row.getAttribute(attr)||'';if(key==='name'){return raw.toLowerCase();}const num=Number(raw);return Number.isFinite(num)?num:null;}function compareRows(a,b,key,dir){const av=metricValue(a,key);const bv=metricValue(b,key);if(typeof av==='string'||typeof bv==='string'){const as=String(av||'');const bs=String(bv||'');return dir==='asc'?as.localeCompare(bs):bs.localeCompare(as);}if(av===null&&bv===null){return 0;}if(av===null){return 1;}if(bv===null){return -1;}return dir==='asc'?(av-bv):(bv-av);}function sortRows(){const key=keySel.value||'query_alignment_delta';const dir=dirSel.value||'desc';const rows=Array.from(body.querySelectorAll('tr'));const pinned=rows.filter((row)=>row.getAttribute('data-kind')==='baseline');const sortable=rows.filter((row)=>row.getAttribute('data-kind')!=='baseline');sortable.sort((a,b)=>{const main=compareRows(a,b,key,dir);if(main!==0){return main;}return compareRows(a,b,'name','asc');});for(const row of pinned.concat(sortable)){body.appendChild(row);}}applyBtn.addEventListener('click',sortRows);keySel.addEventListener('change',sortRows);dirSel.addEventListener('change',sortRows);sortRows();})();</script>
+</body></html>

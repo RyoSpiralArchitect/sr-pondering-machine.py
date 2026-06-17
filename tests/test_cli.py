@@ -98,6 +98,60 @@ class TestArtifactsAndTrace(unittest.TestCase):
 
 
 class TestProbeCompare(unittest.TestCase):
+    def test_claude_cli_model_extracts_result_payload(self) -> None:
+        payload = [
+            {"type": "system", "subtype": "init", "model": "claude-haiku-4-5-20251001"},
+            {
+                "type": "assistant",
+                "message": {
+                    "model": "claude-haiku-4-5-20251001",
+                    "content": [{"type": "text", "text": "fallback"}],
+                },
+            },
+            {
+                "type": "result",
+                "subtype": "success",
+                "uuid": "u1",
+                "result": "OK",
+                "stop_reason": "end_turn",
+                "total_cost_usd": 0.01,
+                "usage": {
+                    "input_tokens": 3,
+                    "cache_creation_input_tokens": 5,
+                    "cache_read_input_tokens": 7,
+                    "output_tokens": 11,
+                },
+            },
+        ]
+        with patch.object(sp.shutil, "which", return_value="/bin/claude"):
+            model = sp.ClaudeCliModel(model="haiku")
+        text, meta = model._extract_text_and_meta(payload)
+        self.assertEqual(text, "OK")
+        self.assertEqual(meta.get("prompt_tokens"), 15)
+        self.assertEqual(meta.get("completion_tokens"), 11)
+        self.assertEqual(meta.get("total_tokens"), 26)
+        self.assertEqual(meta.get("total_cost_usd"), 0.01)
+
+    def test_claude_cli_model_forwards_effort(self) -> None:
+        seen_cmds = []
+
+        def _fake_run(cmd, **kwargs):
+            seen_cmds.append(list(cmd))
+            return SimpleNamespace(
+                returncode=0,
+                stdout=json.dumps({"type": "result", "result": "OK", "stop_reason": "end_turn", "usage": {}}),
+                stderr="",
+            )
+
+        with patch.object(sp.shutil, "which", return_value="/bin/claude"):
+            model = sp.ClaudeCliModel(model="opus", effort="xhigh")
+        with patch.object(sp.subprocess, "run", side_effect=_fake_run):
+            text = model.generate_text("hi", max_new_tokens=32)
+
+        self.assertEqual(text, "OK")
+        self.assertIn("--effort", seen_cmds[0])
+        self.assertEqual(seen_cmds[0][seen_cmds[0].index("--effort") + 1], "xhigh")
+
     def test_build_probe_compare_tracks_rank_flips(self) -> None:
         before = [
             {"token": "alpha", "token_id": 1, "rank": 0, "prob": 0.60},
@@ -472,6 +526,25 @@ class TestOpenAICompat(unittest.TestCase):
         self.assertEqual(seen_payloads[1].get("max_completion_tokens"), 32)
         self.assertEqual(seen_payloads[2].get("temperature"), 1.0)
         self.assertNotIn("top_p", seen_payloads[3])
+
+    def test_gemini_openai_compat_forwards_explicit_reasoning_effort(self) -> None:
+        hf = sp.OpenAICompatModel(
+            model="gemini-3.1-pro-preview",
+            api_base_url="https://generativelanguage.googleapis.com/v1beta/openai",
+            api_key="test",
+            api_reasoning_effort="high",
+        )
+        seen_payloads: list[dict] = []
+
+        def _fake_post(_url, *, headers, payload, timeout, max_retries):
+            seen_payloads.append(dict(payload))
+            return {"choices": [{"finish_reason": "stop", "message": {"content": "ok"}}]}
+
+        with patch.object(sp, "_http_post_json", side_effect=_fake_post):
+            text = hf.generate_text("hi", max_new_tokens=32, temperature=0.7, top_p=0.95)
+
+        self.assertEqual(text, "ok")
+        self.assertEqual(seen_payloads[0].get("reasoning_effort"), "high")
 
     def test_empty_final_answer_rescue_trims_scaffold_and_recovers_visible_text(self) -> None:
         hf = sp.OpenAICompatModel(

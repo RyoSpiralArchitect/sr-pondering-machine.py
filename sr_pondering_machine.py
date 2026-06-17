@@ -48,6 +48,8 @@ import os
 import random
 import re
 import secrets
+import shutil
+import subprocess
 import sys
 import threading
 import time
@@ -1188,6 +1190,7 @@ _PROVIDER_PRESETS: Dict[str, Dict[str, str]] = {
         "api_chat_path": "/chat/completions",
         "api_key_env": "DEEPSEEK_API_KEY",
     },
+    "claude": {"backend": "claude_cli"},
     "custom": {"backend": "openai_compat"},
 }
 
@@ -1196,6 +1199,8 @@ def infer_provider_name(*, backend: str, base_url: str) -> str:
     backend_s = str(backend or "hf").strip().lower()
     if backend_s == "hf":
         return "hf"
+    if backend_s == "claude_cli":
+        return "claude"
     s = (base_url or "").strip().lower()
     if "api.openai.com" in s:
         return "openai"
@@ -2046,7 +2051,7 @@ def synthesize_scaffold_block(
     max_new_tokens = max(160, int(token_target) * 2 if int(token_target) > 0 else 320)
     temperature = 0.2 if cond == "facts" else 0.6
     try:
-        if isinstance(hf, OpenAICompatModel):
+        if _is_api_generation_model(hf):
             candidate, gen_meta = _generate_api_text_with_reasoning_retry(
                 hf,
                 provider=provider,
@@ -4139,7 +4144,7 @@ def build_judge_compare(
     api_meta: Dict[str, Any] = {}
     raw_text = ""
     try:
-        if isinstance(hf, OpenAICompatModel):
+        if _is_api_generation_model(hf):
             raw_text, api_meta = _generate_api_text_with_reasoning_retry(
                 hf,
                 provider=str(getattr(cfg, "provider", "custom") or "custom"),
@@ -4173,7 +4178,7 @@ def build_judge_compare(
         }
         if warnings:
             out["warnings"] = list(warnings)
-        if isinstance(hf, OpenAICompatModel):
+        if _is_api_generation_model(hf):
             out["provider"] = str(getattr(cfg, "provider", "") or "")
             out["model"] = str(getattr(hf, "model", "") or "")
         elif isinstance(hf, LocalHFModel):
@@ -4192,7 +4197,7 @@ def build_judge_compare(
             out["api_generation"] = api_meta
         if warnings:
             out["warnings"] = list(warnings)
-        if isinstance(hf, OpenAICompatModel):
+        if _is_api_generation_model(hf):
             out["provider"] = str(getattr(cfg, "provider", "") or "")
             out["model"] = str(getattr(hf, "model", "") or "")
         elif isinstance(hf, LocalHFModel):
@@ -4270,7 +4275,7 @@ def build_judge_compare(
         out["api_generation"] = api_meta
     if warnings:
         out["warnings"] = list(warnings)
-    if isinstance(hf, OpenAICompatModel):
+    if _is_api_generation_model(hf):
         out["provider"] = str(getattr(cfg, "provider", "") or "")
         out["model"] = str(getattr(hf, "model", "") or "")
     elif isinstance(hf, LocalHFModel):
@@ -4933,6 +4938,10 @@ def _is_openai_official_base(base_url: str) -> bool:
     return s.startswith("https://api.openai.com/") or s == "https://api.openai.com"
 
 
+def _is_gemini_openai_compat_base(base_url: str) -> bool:
+    return "generativelanguage.googleapis.com" in (base_url or "").strip().lower()
+
+
 def _default_reasoning_effort_for_model(model: str) -> str:
     m = (model or "").strip().lower()
     if not m:
@@ -5014,11 +5023,13 @@ class OpenAICompatModel:
         self.url = _join_url(self.api_base_url, self.api_chat_path)
 
     def _apply_openai_compat_defaults(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        if not _is_openai_official_base(self.api_base_url):
+        is_openai_base = _is_openai_official_base(self.api_base_url)
+        is_gemini_base = _is_gemini_openai_compat_base(self.api_base_url)
+        if not (is_openai_base or is_gemini_base):
             return payload
         effort = self.api_reasoning_effort
         if effort == "auto":
-            effort = _default_reasoning_effort_for_model(self.model)
+            effort = _default_reasoning_effort_for_model(self.model) if is_openai_base else ""
         if effort and "reasoning_effort" not in payload:
             payload["reasoning_effort"] = effort
         return payload
@@ -5247,6 +5258,171 @@ class OpenAICompatModel:
         for i, d in enumerate(top_items):
             d["rank"] = i
         return top_items[:n]
+
+
+class ClaudeCliModel:
+    """Claude Code CLI adapter with the same minimal surface as OpenAICompatModel.
+
+    It intentionally disables tools and session persistence for repeatable artifact
+    sweeps. The CLI does not expose next-token logprobs, so probe methods return
+    an empty distribution and the normal self-seeding fallback is used.
+    """
+
+    def __init__(
+        self,
+        *,
+        model: str,
+        command: str = "claude",
+        timeout: float = 120.0,
+        max_retries: int = 1,
+        max_budget_usd: str = "",
+        effort: str = "auto",
+    ) -> None:
+        self.model = (model or "").strip()
+        self.command = (command or "claude").strip()
+        self.timeout = float(timeout)
+        self.max_retries = int(max_retries)
+        self.max_budget_usd = str(max_budget_usd or "").strip()
+        self.effort = (effort or "auto").strip().lower()
+        self.last_response_meta: Dict[str, Any] = {}
+
+        if not shutil.which(self.command):
+            raise RuntimeError(f"Claude CLI command not found: {self.command!r}")
+
+    def _apply_chat(self, prompt: str, *, system_text: Optional[str]) -> str:
+        if system_text:
+            return f"{system_text.strip()}\n\n{prompt}"
+        return prompt
+
+    def _extract_text_and_meta(self, payload: Any) -> Tuple[str, Dict[str, Any]]:
+        result_obj: Dict[str, Any] = {}
+        assistant_texts: List[str] = []
+        model_name = self.model
+
+        events: List[Any]
+        if isinstance(payload, list):
+            events = payload
+        else:
+            events = [payload]
+
+        for ev in events:
+            if not isinstance(ev, dict):
+                continue
+            if ev.get("type") == "result":
+                result_obj = ev
+            msg = ev.get("message")
+            if isinstance(msg, dict):
+                model_name = str(msg.get("model") or model_name)
+                content = msg.get("content")
+                if isinstance(content, list):
+                    for part in content:
+                        if isinstance(part, dict) and part.get("type") == "text":
+                            txt = str(part.get("text") or "").strip()
+                            if txt:
+                                assistant_texts.append(txt)
+
+        text = str(result_obj.get("result") or "").strip()
+        if not text and assistant_texts:
+            text = "\n".join(assistant_texts).strip()
+
+        usage = result_obj.get("usage") if isinstance(result_obj.get("usage"), dict) else {}
+
+        def _usage_int(key: str) -> int:
+            try:
+                return int((usage or {}).get(key) or 0)
+            except Exception:
+                return 0
+
+        input_tokens = _usage_int("input_tokens")
+        output_tokens = _usage_int("output_tokens")
+        cache_creation = _usage_int("cache_creation_input_tokens")
+        cache_read = _usage_int("cache_read_input_tokens")
+        meta: Dict[str, Any] = {
+            "response_id": result_obj.get("uuid"),
+            "request_id": result_obj.get("request_id"),
+            "model": model_name,
+            "finish_reason": result_obj.get("stop_reason"),
+            "usage": usage if usage else None,
+            "prompt_tokens": input_tokens + cache_creation + cache_read,
+            "completion_tokens": output_tokens,
+            "reasoning_tokens": 0,
+            "total_tokens": input_tokens + cache_creation + cache_read + output_tokens,
+            "total_cost_usd": result_obj.get("total_cost_usd"),
+            "duration_ms": result_obj.get("duration_ms"),
+            "duration_api_ms": result_obj.get("duration_api_ms"),
+            "terminal_reason": result_obj.get("terminal_reason"),
+            "empty_output": not bool(text),
+        }
+        return text, meta
+
+    def generate_text(
+        self,
+        prompt: str,
+        *,
+        max_new_tokens: int = 768,
+        temperature: float = 0.8,
+        top_p: float = 0.95,
+        top_k: int = 0,
+        repetition_penalty: float = 1.05,
+        no_repeat_ngram_size: int = 0,
+        seed: Optional[int] = None,
+    ) -> str:
+        _ = (temperature, top_p, top_k, repetition_penalty, no_repeat_ngram_size, seed)
+        prompt2 = str(prompt or "")
+        if max_new_tokens > 0:
+            prompt2 = f"{prompt2}\n\nKeep the response under about {int(max_new_tokens)} tokens."
+
+        cmd = [
+            self.command,
+            "-p",
+            "--output-format",
+            "json",
+            "--model",
+            self.model,
+            "--tools",
+            "",
+            "--no-session-persistence",
+        ]
+        if self.effort in {"low", "medium", "high", "xhigh", "max"}:
+            cmd.extend(["--effort", self.effort])
+        budget = self.max_budget_usd or os.environ.get("SR_CLAUDE_MAX_BUDGET_USD", "").strip()
+        if budget:
+            cmd.extend(["--max-budget-usd", budget])
+        cmd.append(prompt2)
+
+        attempts = max(1, self.max_retries + 1)
+        last_err = ""
+        for attempt in range(attempts):
+            proc = subprocess.run(
+                cmd,
+                text=True,
+                capture_output=True,
+                timeout=self.timeout,
+                check=False,
+            )
+            if proc.returncode == 0:
+                raw = (proc.stdout or "").strip()
+                try:
+                    payload = json.loads(raw)
+                    text, meta = self._extract_text_and_meta(payload)
+                except Exception:
+                    text = raw
+                    meta = {"model": self.model, "empty_output": not bool(text), "raw_parse_failed": True}
+                self.last_response_meta = meta
+                return text
+            last_err = (proc.stderr or proc.stdout or "").strip()
+            if attempt + 1 < attempts:
+                time.sleep(min(2.0, 0.5 * (attempt + 1)))
+
+        raise RuntimeError(f"Claude CLI request failed: {last_err or 'unknown error'}")
+
+    def probe_top_logprobs(self, prompt: str, *, top_n: int) -> List[Dict[str, Any]]:
+        _ = (prompt, top_n)
+        return []
+
+
+def _is_api_generation_model(hf: Any) -> bool:
+    return isinstance(hf, (OpenAICompatModel, ClaudeCliModel))
 
 
 # -----------------------------
@@ -5515,8 +5691,8 @@ class LocalHFModel:
 class RunConfig:
     model_path: str
     memory_path: Path
-    backend: str = "hf"  # hf|openai_compat
-    provider: str = "hf"  # hf|openai|mistral|groq|openrouter|deepseek|custom
+    backend: str = "hf"  # hf|openai_compat|claude_cli
+    provider: str = "hf"  # hf|openai|mistral|groq|openrouter|deepseek|claude|custom
 
     # API backend (OpenAI-compatible)
     api_base_url: str = "https://api.openai.com/v1"
@@ -6188,7 +6364,7 @@ def run_baseline(
         build_prompt_for_answer(query, memory_block=None, lang=cfg.prompt_lang, style=cfg.answer_style),
         system_text=None,
     )
-    if isinstance(hf, OpenAICompatModel):
+    if _is_api_generation_model(hf):
         ans, _baseline_meta = _generate_api_text_with_reasoning_retry(
             hf,
             provider=cfg.provider,
@@ -7413,7 +7589,7 @@ def run_ponder_api(
             "ponder_start",
             run_id=run_id,
             pack_item=pack_item,
-            backend="openai_compat",
+            backend=str(cfg.backend),
             query_sha=query_sha,
             objective=objective,
             control=control,
@@ -8403,7 +8579,7 @@ def run_ponder_dispatch(
     trace: Optional[TraceWriter] = None,
     pack_item: Optional[str] = None,
 ) -> Tuple[str, List[Dict[str, Any]], Dict[str, Any]]:
-    if (cfg.backend or "hf").strip() == "openai_compat":
+    if (cfg.backend or "hf").strip() in ("openai_compat", "claude_cli"):
         return run_ponder_api(hf, cfg, query, trace=trace, pack_item=pack_item)
     return run_ponder(hf, cfg, query, trace=trace, pack_item=pack_item)
 
@@ -8468,20 +8644,20 @@ def main() -> None:
 
     g_core.add_argument(
         "--provider",
-        choices=["auto", "hf", "openai", "mistral", "groq", "openrouter", "deepseek", "custom"],
+        choices=["auto", "hf", "openai", "mistral", "groq", "openrouter", "deepseek", "claude", "custom"],
         default="auto",
-        help="High-level provider preset; API presets auto-fill base URL and key env",
+        help="High-level provider preset; API presets auto-fill base URL and key env; claude uses the Claude CLI",
     )
     g_core.add_argument(
         "--backend",
-        choices=["hf", "openai_compat"],
+        choices=["hf", "openai_compat", "claude_cli"],
         default="hf",
         help="Low-level backend override (usually unnecessary when --provider is set)",
     )
     g_core.add_argument(
         "--model",
         required=True,
-        help="hf/provider=hf: local model dir (cache roots auto-resolve latest snapshot); API providers: model name",
+        help="hf/provider=hf: local model dir (cache roots auto-resolve latest snapshot); API/CLI providers: model name",
     )
     g_core.add_argument("--query", required=True, help="User query (main question)")
     g_core.add_argument("--memory", default="ponder_logs.jsonl", help="Path to JSONL memory log")
@@ -9122,6 +9298,31 @@ def main() -> None:
                     f"largest band end ({band_end_max}); some API bands will fall back to self-seeded keywords.",
                     file=sys.stderr,
                 )
+    elif cfg.backend == "claude_cli":
+        try:
+            hf = ClaudeCliModel(
+                model=cfg.model_path,
+                timeout=cfg.api_timeout,
+                max_retries=cfg.api_max_retries,
+                effort=cfg.api_reasoning_effort,
+            )
+        except RuntimeError as e:
+            raise SystemExit(f"[sr_ponder] ERROR: {e}") from e
+        print(
+            f"[sr_ponder] backend=claude_cli provider={cfg.provider} model={cfg.model_path!r} "
+            f"effort={cfg.api_reasoning_effort} seed_method=self logprobs_top_n=0 lang={cfg.prompt_lang} "
+            f"band_profile={cfg.band_profile} bands={len(cfg.bands) if cfg.bands else 'profile'} "
+            f"objective={cfg.keyword_objective} diversity={cfg.keyword_diversity} hops={cfg.ponder_hops} answer_style={cfg.answer_style} control={cfg.control} "
+            f"pipeline={','.join(cfg.ponder_pipeline) if cfg.ponder_pipeline else cfg.ponder_mode} "
+            f"memory={cfg.memory_policy}/{cfg.memory_retrieve}/{cfg.memory_remix} "
+            f"scaffold={cfg.scaffold_condition}/{cfg.scaffold_token_target or 'source'} "
+            f"write_memory={cfg.write_memory}"
+        )
+        if cfg.api_seed_method in ("auto", "logprobs") or cfg.api_logprobs_top_n:
+            print(
+                "[sr_ponder] NOTE: claude_cli does not expose next-token logprobs; using self-seeded keywords.",
+                file=sys.stderr,
+            )
     else:
         raise SystemExit(f"[sr_ponder] ERROR: unknown backend: {cfg.backend!r}")
 
@@ -9386,7 +9587,7 @@ def main() -> None:
                 results["items"].append(item)
                 baseline_reference_answer = ans
                 baseline_reference_meta = (
-                    summarize_api_generation_meta(getattr(hf, "last_response_meta", {})) if isinstance(hf, OpenAICompatModel) else None
+                    summarize_api_generation_meta(getattr(hf, "last_response_meta", {})) if _is_api_generation_model(hf) else None
                 )
                 if trace:
                     trace.event("pack_item_end", pack=pack_id, item=name, elapsed_s=float(time.perf_counter() - t0))
@@ -9401,7 +9602,7 @@ def main() -> None:
                 fn=lambda: run_ponder_dispatch(hf, cfg2, item_query, trace=trace, pack_item=name),
             )
             print(ans)
-            item = {"name": name, "kind": "ponder", "control": cfg2.control, "answer": ans, "extras": extras}
+            item = {"name": name, "kind": "ponder", "control": cfg2.control, "answer": ans, "records": recs, "extras": extras}
             if item_query != args.query:
                 item["query"] = item_query
             if cfg_overrides:

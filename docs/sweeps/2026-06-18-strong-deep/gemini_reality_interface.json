@@ -1,0 +1,2011 @@
+{
+  "ts": "2026-06-17T16:48:44Z",
+  "kind": "lab_matrix",
+  "provider": "custom",
+  "model": "gemini-3.1-pro-preview",
+  "query": "現実って何のインターフェース？",
+  "pack": "lab_scaffold_abcd",
+  "pack_file": "",
+  "lab_matrix": "scaffold_abcd",
+  "preset": "none",
+  "config": "",
+  "env": {
+    "python": "3.13.13 (v3.13.13:01104ce1beb, Apr  7 2026, 14:43:30) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "platform": "darwin",
+    "torch": "2.11.0",
+    "transformers": "4.57.6"
+  },
+  "base_cfg": {
+    "model_path": "gemini-3.1-pro-preview",
+    "memory_path": "ponder_logs.jsonl",
+    "backend": "openai_compat",
+    "provider": "custom",
+    "api_base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "api_chat_path": "/chat/completions",
+    "api_key_env": "GEMINI_API_KEY",
+    "api_key": "",
+    "api_headers": [],
+    "api_timeout": 900.0,
+    "api_max_retries": 1,
+    "api_reasoning_effort": "high",
+    "api_seed_method": "auto",
+    "api_logprobs_top_n": 0,
+    "n_memory": 6,
+    "memory_policy": "current_only",
+    "memory_retrieve": "tail",
+    "memory_pool": 200,
+    "memory_mix_ratio": 0.5,
+    "memory_exclude_current_run": true,
+    "memory_remix": "off",
+    "memory_remix_keep_original": false,
+    "memory_remix_max_new_tokens": 240,
+    "memory_remix_temperature": 0.9,
+    "rejected": {
+      "top_k": 80,
+      "strategy": "outside_topk",
+      "exclude_top": 8,
+      "band_width": 256,
+      "n_keywords": 6
+    },
+    "band_profile": "single",
+    "bands": [],
+    "answer_style": "plain",
+    "answer_max_new_tokens": 2048,
+    "ponder_max_new_tokens": 1024,
+    "temperature": 0.7,
+    "top_p": 0.95,
+    "top_k": 0,
+    "repetition_penalty": 1.05,
+    "no_repeat_ngram_size": 0,
+    "seed": 1234,
+    "prompt_lang": "ja",
+    "ponder_mode": "assoc",
+    "ponder_pipeline": [],
+    "pipeline_context": "prev",
+    "pipeline_context_max_chars": 1200,
+    "n_ponder": 1,
+    "ponder_hops": 1,
+    "hop_keyword_source": "model",
+    "hop_context_max_chars": 900,
+    "keyword_refine": false,
+    "keyword_refine_max_new_tokens": 96,
+    "keyword_refine_temperature": 0.3,
+    "keyword_objective": "random_band",
+    "keyword_select_top": 128,
+    "keyword_diversity": "off",
+    "keyword_diversity_threshold": 0.82,
+    "dissonance_target": 0.9,
+    "dissonance_width": 0.6,
+    "dissonance_tail_k": 64,
+    "prompt_jitter": 0,
+    "prompt_jitter_include_original": true,
+    "prompt_jitter_max_new_tokens": 160,
+    "prompt_jitter_temperature": 0.6,
+    "probe_top_n": 0,
+    "probe_compare": false,
+    "probe_compare_stages": false,
+    "probe_compare_top_n": 32,
+    "compare_semantic": "hash",
+    "compare_judge": "off",
+    "compare_stance": "auto",
+    "compare_spatial_metaphor": "auto",
+    "compare_token_budget": "auto",
+    "compare_embed_model": "",
+    "scaffold_condition": "assoc",
+    "scaffold_token_target": 320,
+    "print_probe": false,
+    "interactive": false,
+    "interactive_candidates": 48,
+    "answer_per_band": false,
+    "answer_ensemble": false,
+    "answer_ensemble_max_new_tokens": 512,
+    "answer_ensemble_temperature": 0.2,
+    "control": "none",
+    "write_memory": false,
+    "device": "auto",
+    "dtype": "auto",
+    "allocator_warmup": "auto",
+    "trust_remote_code": false,
+    "use_chat_template": true,
+    "force_gemma_format": true,
+    "hf_local_files_only": true
+  },
+  "items": [
+    {
+      "name": "baseline",
+      "kind": "baseline",
+      "answer": "パソコンの画面に並んでいる青いフォルダのアイコンを思い浮かべてみてください。私たちはその青い四角形の中に大切な写真や書類が入っていると信じて疑いませんが、物理的なハードディスクの中に青い四角形が存在しているわけではありません。そこにあるのは、微小な電圧の変化と、0と1の膨大な羅列だけです。もし私たちがその電子",
+      "metrics": {
+        "answer_chars": 155,
+        "elapsed_s": 25.19823220899889
+      }
+    },
+    {
+      "name": "assoc",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "「、」という唐突な空白から始まる文字列を見たときのように、私たちが普段疑いもしない「現実の文法」から少しだけ逸脱して考えてみます。\n\n哲学の部屋の扉を開け、認知科学のレンズを通し、SF的な想像力を借りてこの世界を眺め直すと、ひとつの仮説が浮かび上がります。私たちが触れているこの硬い机も、流れる時間も、決して世界の「真の姿（ソースコード）」ではありません。\n\n認知科学におけるユーザーインターフェース理論が示唆するように、それはデスクトップパソコンのアイコンのようなものです。複雑すぎる量子の振る舞いや膨大な情報処理をそのまま見せられては、私たちは圧倒されて生存できません。だからこそ進化は、私たちに「リンゴ」や「崖」といった、直感的に操作して危険を回避できる分かりやすい3Dアイコンを与えました。\n\nここに「空（Emptiness）」という概念を重ね合わせると、さらに別の手触りが生まれます。背後にあるのは実体のない確率の海や、名指しできない何かであり、断片どうしの距離――すなわち「私」と「世界」の隔たりすらも、このシステムが便宜上作り出した空間的な幻覚（ユーザーエクスペリエンス）にすぎないという前提が見えてきます。もし私たちの知覚の条件が変われば、世界はまったく別の法則と手触りを持つはずです。\n\nしかし、言い切る直前にまだ別の枠組みが残っていないかを見つめ直すなら、現実は単なる「偽り」や「隠れ蓑」ではありません。それは私たちが決して直接触れることのできない深淵に対して、唯一アクセスを可能にする機能的な接点でもあります。\n\nこれらの熟考の末に、最後に質問へ答えます。\n\n現実とは、「処理不可能なほどの無（あるいは複雑すぎる真理）」を、人間の意識が生存し、意味を見出し、操作できる形へと翻訳するための「未知と意識を繋ぐユーザーインターフェース」です。",
+      "records": [
+        {
+          "ts": "2026-06-17T16:49:23Z",
+          "run_id": "4b5e15198352f14e",
+          "query_sha": "75680b2ee5a7",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "、哲学、SF、認知科学"
+          ],
+          "keywords": [
+            "、哲学、SF、認知科学"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "、哲学、SF、認知科学",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "CNAyav2uM-vC0-kP-oSp8As",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 105,
+            "completion_tokens": 38,
+            "reasoning_tokens": 0,
+            "total_tokens": 1125,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「、哲学、SF、認知科学」と「Emptiness」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "- 「、」という唐突な空白から始まる文字列自体が、すでに現実の文法から逸脱していることに気づく。\n- 哲学の部屋の扉を開けると",
+          "gen_elapsed_s": 11.36103912499857
+        }
+      ],
+      "extras": {
+        "run_id": "4b5e15198352f14e",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:49:23Z",
+            "run_id": "4b5e15198352f14e",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "assoc",
+          "target_tokens": 320,
+          "source_tokens_est": 138,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": false,
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 308,
+          "normalized": true,
+          "strategy": "direct_memory_block"
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 413,
+        "memory_block_est_tokens": 308,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 102,
+            "completion_tokens": 7,
+            "reasoning_tokens": 0,
+            "total_tokens": 258
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "stop",
+          "response_id": "FNAyaq-yDv7N2roPx-yJyQU",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 343,
+          "completion_tokens": 427,
+          "reasoning_tokens": 0,
+          "total_tokens": 2301,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 36.173824708999746,
+          "probe_s": 8.625000191386789e-06,
+          "memory_remix_s": 4.499999704421498e-06,
+          "answer_s": 21.745497791998787
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "assoc",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 780,
+        "records": 1,
+        "elapsed_s": 36.17412662499919
+      },
+      "comparison": {
+        "baseline_chars": 155,
+        "ponder_chars": 780,
+        "answer_changed": true,
+        "char_delta": 625,
+        "diff_ratio": 0.9401069518716577,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_ponder_dominant": "framing",
+        "stance_top_gain": "framing",
+        "spatial_answer_density_delta": 6.410256410256411,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 6.410256410256411,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 31.746031746031747,
+        "spatial_log_question_density_delta": 31.746031746031747,
+        "budget_baseline_answer_tokens_est": 155.0,
+        "budget_ponder_answer_tokens_est": 758.0,
+        "budget_external_scaffold_tokens_est": 414.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.11488575666559174,
+          "query_baseline_cosine": 0.005960330343018636,
+          "query_ponder_cosine": 0.07561132678705401,
+          "query_alignment_delta": 0.06965099644403537
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 7.0,
+            "dominant": "framing",
+            "scores": {
+              "definition": 0.14285714285714285,
+              "framing": 0.2857142857142857,
+              "conditionalization": 0.2857142857142857,
+              "example_expansion": 0.14285714285714285,
+              "resolution": 0.14285714285714285
+            },
+            "raw_counts": {
+              "definition": 1,
+              "framing": 2,
+              "conditionalization": 2,
+              "example_expansion": 1,
+              "resolution": 1
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "definition": [
+                {
+                  "term": "とは",
+                  "count": 1
+                }
+              ],
+              "framing": [
+                {
+                  "term": "枠組み",
+                  "count": 1
+                },
+                {
+                  "term": "概念",
+                  "count": 1
+                }
+              ],
+              "conditionalization": [
+                {
+                  "term": "なら",
+                  "count": 1
+                },
+                {
+                  "term": "条件",
+                  "count": 1
+                }
+              ],
+              "example_expansion": [
+                {
+                  "term": "のように",
+                  "count": 1
+                }
+              ],
+              "resolution": [
+                {
+                  "term": "だから",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "",
+          "dominant_ponder": "framing",
+          "dominant_shift": "->framing",
+          "top_gain": "framing",
+          "top_gain_delta": 0.2857142857142857,
+          "top_drop": "",
+          "top_drop_delta": 0.0,
+          "deltas": {
+            "definition": 0.14285714285714285,
+            "framing": 0.2857142857142857,
+            "conditionalization": 0.2857142857142857,
+            "example_expansion": 0.14285714285714285,
+            "resolution": 0.14285714285714285
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 155,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 780,
+            "count": 5,
+            "density_per_1k_chars": 6.410256410256411,
+            "dominant_group": "container",
+            "group_counts": {
+              "path": 1,
+              "stage": 0,
+              "container": 2,
+              "geometry": 2
+            },
+            "top_terms": [
+              {
+                "term": "扉",
+                "count": 1
+              },
+              {
+                "term": "部屋",
+                "count": 1
+              },
+              {
+                "term": "枠",
+                "count": 1
+              },
+              {
+                "term": "距離",
+                "count": 1
+              },
+              {
+                "term": "空間",
+                "count": 1
+              }
+            ]
+          },
+          "questions": {
+            "chars": 45,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 63,
+            "count": 2,
+            "density_per_1k_chars": 31.746031746031747,
+            "dominant_group": "path",
+            "group_counts": {
+              "path": 1,
+              "stage": 0,
+              "container": 1,
+              "geometry": 0
+            },
+            "top_terms": [
+              {
+                "term": "扉",
+                "count": 1
+              },
+              {
+                "term": "部屋",
+                "count": 1
+              }
+            ]
+          },
+          "answer_density_delta": 6.410256410256411,
+          "log_question_density_delta": 31.746031746031747
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 155,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 48,
+              "completion_tokens": 81,
+              "reasoning_tokens": 0,
+              "total_tokens": 2092
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 758,
+            "ponder_question_tokens_est": 36,
+            "ponder_log_tokens_est": 60,
+            "keyword_tokens_est": 10,
+            "memory_block_chars": 413,
+            "memory_block_tokens_est": 308,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 550,
+              "completion_tokens": 472,
+              "reasoning_tokens": 0,
+              "total_tokens": 3684
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 105,
+              "completion_tokens": 38,
+              "reasoning_tokens": 0,
+              "total_tokens": 1125
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 102,
+                "completion_tokens": 7,
+                "reasoning_tokens": 0,
+                "total_tokens": 258
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 102,
+              "completion_tokens": 7,
+              "reasoning_tokens": 0,
+              "total_tokens": 258
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 343,
+              "completion_tokens": 427,
+              "reasoning_tokens": 0,
+              "total_tokens": 2301
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 603,
+            "external_scaffold_tokens_est": 414,
+            "api_prompt_tokens": 502,
+            "api_completion_tokens": 391,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 1592
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 598,
+            "completion_tokens": 553,
+            "reasoning_tokens": 0,
+            "total_tokens": 5776
+          }
+        }
+      }
+    },
+    {
+      "name": "random",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "私たちが触れている「現実」とは、人間の意識と、その背後で沈黙のまま演算を続ける不可知の宇宙（物自体やエントロピー）とをつなぐ、翻訳レイヤーとしてのGUI（グラフィカル・ユーザー・インターフェース）です。\n\n私たちは五感というデバイスを通じて、素粒子の振る舞いや途方もない物理",
+      "records": [
+        {
+          "ts": "2026-06-17T16:50:03Z",
+          "run_id": "a1aa67addd994a7d",
+          "query_sha": "75680b2ee5a7",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "role名は禁止"
+          ],
+          "keywords": [
+            "role名は禁止"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "role名は禁止",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "LdAyarO1JPfJrfcPr5_VwAM",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 101,
+            "completion_tokens": 40,
+            "reasoning_tokens": 0,
+            "total_tokens": 1121,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「role名は禁止」と「Emptiness」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "- 役割（role）を名乗れない空間、それは名札が静かに溶けていく劇場のクロークのような場所だろうか。\n- Emptinessが合図なら",
+          "gen_elapsed_s": 13.715648249999504
+        }
+      ],
+      "extras": {
+        "run_id": "a1aa67addd994a7d",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:50:03Z",
+            "run_id": "a1aa67addd994a7d",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "random",
+          "target_tokens": 320,
+          "source_tokens_est": 547,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": false,
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 316,
+          "normalized": true,
+          "strategy": "local_random_sentences"
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 329,
+        "memory_block_est_tokens": 316,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 102,
+            "completion_tokens": 5,
+            "reasoning_tokens": 0,
+            "total_tokens": 257
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "O9AyarWSFKbY2roP8MatoQ4",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 308,
+          "completion_tokens": 79,
+          "reasoning_tokens": 0,
+          "total_tokens": 2352,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 39.66213220800091,
+          "probe_s": 8.291999620269053e-06,
+          "memory_remix_s": 4.124998667975888e-06,
+          "answer_s": 22.134561458000462
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "random",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 137,
+        "records": 1,
+        "elapsed_s": 39.66264091599987
+      },
+      "comparison": {
+        "baseline_chars": 155,
+        "ponder_chars": 137,
+        "answer_changed": true,
+        "char_delta": -18,
+        "diff_ratio": 0.8835616438356164,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_ponder_dominant": "definition",
+        "stance_top_gain": "definition",
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 44.11764705882353,
+        "spatial_log_question_density_delta": 44.11764705882353,
+        "budget_baseline_answer_tokens_est": 155.0,
+        "budget_ponder_answer_tokens_est": 133.0,
+        "budget_external_scaffold_tokens_est": 406.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.05044463375844744,
+          "query_baseline_cosine": 0.007266625558581066,
+          "query_ponder_cosine": 0.11340661789119023,
+          "query_alignment_delta": 0.10613999233260916
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.0,
+            "dominant": "definition",
+            "scores": {
+              "definition": 1.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 1,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "definition": [
+                {
+                  "term": "とは",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "",
+          "dominant_ponder": "definition",
+          "dominant_shift": "->definition",
+          "top_gain": "definition",
+          "top_gain_delta": 1.0,
+          "top_drop": "",
+          "top_drop_delta": 0.0,
+          "deltas": {
+            "definition": 1.0,
+            "framing": 0.0,
+            "conditionalization": 0.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 155,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 137,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 42,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 68,
+            "count": 3,
+            "density_per_1k_chars": 44.11764705882353,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 1,
+              "container": 0,
+              "geometry": 2
+            },
+            "top_terms": [
+              {
+                "term": "劇場",
+                "count": 1
+              },
+              {
+                "term": "空間",
+                "count": 1
+              },
+              {
+                "term": "場所",
+                "count": 1
+              }
+            ]
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 44.11764705882353
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 155,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 48,
+              "completion_tokens": 81,
+              "reasoning_tokens": 0,
+              "total_tokens": 2092
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 133,
+            "ponder_question_tokens_est": 31,
+            "ponder_log_tokens_est": 54,
+            "keyword_tokens_est": 5,
+            "memory_block_chars": 329,
+            "memory_block_tokens_est": 316,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 511,
+              "completion_tokens": 124,
+              "reasoning_tokens": 0,
+              "total_tokens": 3730
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 101,
+              "completion_tokens": 40,
+              "reasoning_tokens": 0,
+              "total_tokens": 1121
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 102,
+                "completion_tokens": 5,
+                "reasoning_tokens": 0,
+                "total_tokens": 257
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 102,
+              "completion_tokens": 5,
+              "reasoning_tokens": 0,
+              "total_tokens": 257
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 308,
+              "completion_tokens": 79,
+              "reasoning_tokens": 0,
+              "total_tokens": 2352
+            }
+          },
+          "delta": {
+            "answer_tokens_est": -22,
+            "external_scaffold_tokens_est": 406,
+            "api_prompt_tokens": 463,
+            "api_completion_tokens": 43,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 1638
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 559,
+            "completion_tokens": 205,
+            "reasoning_tokens": 0,
+            "total_tokens": 5822
+          }
+        }
+      }
+    },
+    {
+      "name": "facts",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "現実をインターフェースと見なすという問いは、私たちが普段「そこにある」と信じて疑わないこの世界が、究極的な真理そのものではなく、何らかの変換を経た仮の姿であるという前提に立っています。この問いが成立するためには、情報を受け取る「主体（私たちの意識）」と、その背後に隠された「変換",
+      "records": [
+        {
+          "ts": "2026-06-17T16:50:41Z",
+          "run_id": "058f38784d558989",
+          "query_sha": "75680b2ee5a7",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [],
+          "keywords": [],
+          "token_ids": [],
+          "selected_tokens": [],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "VNAyaoLoNO_22roPzvidmAo",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 99,
+            "completion_tokens": 38,
+            "reasoning_tokens": 0,
+            "total_tokens": 1119,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「 Unknown」と「Not-defined」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "- 「Unknown」の標識が夢の入り口にあるとしたら、それは文字化けした案内板のように点滅しているのだろうか。\n- いや、むしろ真っ白な",
+          "gen_elapsed_s": 12.666498041999148
+        }
+      ],
+      "extras": {
+        "run_id": "058f38784d558989",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:50:41Z",
+            "run_id": "058f38784d558989",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "facts",
+          "target_tokens": 320,
+          "source_tokens_est": 42,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "YdAyaq_nH62r0-kPz_7DkAw",
+            "model": "gemini-3.1-pro-preview",
+            "api_calls": 1,
+            "prompt_tokens": 114,
+            "completion_tokens": 26,
+            "reasoning_tokens": 0,
+            "total_tokens": 750,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 308,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 323,
+        "memory_block_est_tokens": 308,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 102,
+            "completion_tokens": 4,
+            "reasoning_tokens": 0,
+            "total_tokens": 258
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 114,
+            "completion_tokens": 26,
+            "reasoning_tokens": 0,
+            "total_tokens": 750
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "adAyasnFJN7JrfcPjvyy2A4",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 286,
+          "completion_tokens": 79,
+          "reasoning_tokens": 0,
+          "total_tokens": 2330,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 48.180027374999554,
+          "probe_s": 6.708000000799075e-06,
+          "memory_remix_s": 5.249999958323315e-06,
+          "answer_s": 24.045615667000675
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 139,
+        "records": 1,
+        "elapsed_s": 48.180541542000356
+      },
+      "comparison": {
+        "baseline_chars": 155,
+        "ponder_chars": 139,
+        "answer_changed": true,
+        "char_delta": -16,
+        "diff_ratio": 0.8231292517006803,
+        "records": 1,
+        "unique_keywords": 0,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_ponder_dominant": "framing",
+        "stance_top_gain": "framing",
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 155.0,
+        "budget_ponder_answer_tokens_est": 139.0,
+        "budget_external_scaffold_tokens_est": 397.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.07811561838529195,
+          "query_baseline_cosine": 0.005677614713194176,
+          "query_ponder_cosine": 0.11514320329192075,
+          "query_alignment_delta": 0.10946558857872657
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 2.0,
+            "dominant": "framing",
+            "scores": {
+              "definition": 0.0,
+              "framing": 1.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 2,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "framing": [
+                {
+                  "term": "問い",
+                  "count": 2
+                }
+              ]
+            }
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "",
+          "dominant_ponder": "framing",
+          "dominant_shift": "->framing",
+          "top_gain": "framing",
+          "top_gain_delta": 1.0,
+          "top_drop": "",
+          "top_drop_delta": 0.0,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 1.0,
+            "conditionalization": 0.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 155,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 139,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 44,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 69,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 155,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 48,
+              "completion_tokens": 81,
+              "reasoning_tokens": 0,
+              "total_tokens": 2092
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 139,
+            "ponder_question_tokens_est": 29,
+            "ponder_log_tokens_est": 60,
+            "keyword_tokens_est": 0,
+            "memory_block_chars": 323,
+            "memory_block_tokens_est": 308,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 601,
+              "completion_tokens": 147,
+              "reasoning_tokens": 0,
+              "total_tokens": 4457
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 99,
+              "completion_tokens": 38,
+              "reasoning_tokens": 0,
+              "total_tokens": 1119
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 102,
+                "completion_tokens": 4,
+                "reasoning_tokens": 0,
+                "total_tokens": 258
+              },
+              "scaffold_condition": {
+                "calls": 1,
+                "prompt_tokens": 114,
+                "completion_tokens": 26,
+                "reasoning_tokens": 0,
+                "total_tokens": 750
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 216,
+              "completion_tokens": 30,
+              "reasoning_tokens": 0,
+              "total_tokens": 1008
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 286,
+              "completion_tokens": 79,
+              "reasoning_tokens": 0,
+              "total_tokens": 2330
+            }
+          },
+          "delta": {
+            "answer_tokens_est": -16,
+            "external_scaffold_tokens_est": 397,
+            "api_prompt_tokens": 553,
+            "api_completion_tokens": 66,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 2365
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 649,
+            "completion_tokens": 228,
+            "reasoning_tokens": 0,
+            "total_tokens": 6549
+          }
+        }
+      }
+    },
+    {
+      "name": "isomorphic",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "樽の中で静かに進む発酵のように、表面上は静止しているように見えても、その奥底では無数の微小な変化が絶え間なくうごめいている領域があります。また、温室のガラスを透過する光がほんの少し遅れて届き、そこに意味ではなくただ物理的な配置だけが反復される光景を思い浮かべてみてください。私たちが日々「ここにある」と信じている世界も、実はそうした直接触れることのできない膨大なプロセスを、どうにか知覚できる形に変換したスクリーンにすぎないのかもしれません。\n\nそのように熟考していくと、現実とは人間の五感や脳の処理能力をはるかに超えた「無秩序で高次元な情報の海」や「無限に重なり合う可能性のネットワーク」にアクセスするためのインターフェースであるという答えに行き着きます。\n\n私たちは、宇宙の真の姿である量子のカオスや、絶え間なく流転するエネルギーの奔流を、そのままの形では到底受け止めることができません。まともに直視すれば、圧倒的な情報量に認識が焼き切れてしまうでしょう。だからこそ、それらの生のデータは「時間」という遅延を伴い、「空間」という配置の反復に整理され、「触れることのできる物質」へとレンダリングされます。そこには最初から意味が用意されているわけではなく、ただ操作可能な配置が反復されているだけです。\n\nつまり現実とは、私たちが「認識不可能な宇宙の根源的カオス」を安全に処理し、そこに自らの意識で意味を与えながら生きていく体験を味わうために用意された、人間専用の操作画面なのです。",
+      "records": [
+        {
+          "ts": "2026-06-17T16:51:30Z",
+          "run_id": "e0c6cacc62476eef",
+          "query_sha": "75680b2ee5a7",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "知覚の"
+          ],
+          "keywords": [
+            "知覚の"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "知覚の",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "hdAyauWwMbKA2roPh5Cs6A0",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 101,
+            "completion_tokens": 113,
+            "reasoning_tokens": 0,
+            "total_tokens": 1121,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「知覚の」と「Emptiness」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "- 「知覚の」という形容詞が宙吊りになっている状態、それはまるで輪郭線だけで描かれたリンゴを齧るような感覚だろうか。\n- そのリンゴの味が「Emptiness」だとしたら、舌の上で甘さの代わりに無音がじわじわと広がるのかもしれない。\n- 夢の中でふと「あ、今、触覚が空洞だ」と気づく瞬間、それは明晰夢への扉なのか、それとも自我の消失への落とし穴なのか。",
+          "gen_elapsed_s": 12.848593042001085
+        }
+      ],
+      "extras": {
+        "run_id": "e0c6cacc62476eef",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:51:30Z",
+            "run_id": "e0c6cacc62476eef",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "isomorphic",
+          "target_tokens": 320,
+          "source_tokens_est": 35,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "ktAyaoCeJ5nPrfcP4I-RiA8",
+            "model": "gemini-3.1-pro-preview",
+            "api_calls": 1,
+            "prompt_tokens": 331,
+            "completion_tokens": 21,
+            "reasoning_tokens": 0,
+            "total_tokens": 967,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 315,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 332,
+        "memory_block_est_tokens": 315,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 102,
+            "completion_tokens": 7,
+            "reasoning_tokens": 0,
+            "total_tokens": 258
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 331,
+            "completion_tokens": 21,
+            "reasoning_tokens": 0,
+            "total_tokens": 967
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "stop",
+          "response_id": "mtAyas2sIbid2roPtLSy0QU",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 306,
+          "completion_tokens": 361,
+          "reasoning_tokens": 0,
+          "total_tokens": 2225,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 45.458369375000984,
+          "probe_s": 5.45900002180133e-06,
+          "memory_remix_s": 3.749999450519681e-06,
+          "answer_s": 20.57346545799919
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 640,
+        "records": 1,
+        "elapsed_s": 45.45881720899888
+      },
+      "comparison": {
+        "baseline_chars": 155,
+        "ponder_chars": 640,
+        "answer_changed": true,
+        "char_delta": 485,
+        "diff_ratio": 0.8918238993710692,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_ponder_dominant": "definition",
+        "stance_top_gain": "definition",
+        "spatial_answer_density_delta": 1.5625,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 1.5625,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 5.681818181818182,
+        "spatial_log_question_density_delta": 5.681818181818182,
+        "budget_baseline_answer_tokens_est": 155.0,
+        "budget_ponder_answer_tokens_est": 634.0,
+        "budget_external_scaffold_tokens_est": 510.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.1472206180598976,
+          "query_baseline_cosine": 0.008038462799651173,
+          "query_ponder_cosine": 0.06735825043786858,
+          "query_alignment_delta": 0.05931978763821741
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 6.0,
+            "dominant": "definition",
+            "scores": {
+              "definition": 0.3333333333333333,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.3333333333333333,
+              "resolution": 0.3333333333333333
+            },
+            "raw_counts": {
+              "definition": 2,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 2,
+              "resolution": 2
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "definition": [
+                {
+                  "term": "とは",
+                  "count": 2
+                }
+              ],
+              "example_expansion": [
+                {
+                  "term": "のように",
+                  "count": 2
+                }
+              ],
+              "resolution": [
+                {
+                  "term": "つまり",
+                  "count": 1
+                },
+                {
+                  "term": "だから",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "",
+          "dominant_ponder": "definition",
+          "dominant_shift": "->definition",
+          "top_gain": "definition",
+          "top_gain_delta": 0.3333333333333333,
+          "top_drop": "",
+          "top_drop_delta": 0.0,
+          "deltas": {
+            "definition": 0.3333333333333333,
+            "framing": 0.0,
+            "conditionalization": 0.0,
+            "example_expansion": 0.3333333333333333,
+            "resolution": 0.3333333333333333
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 155,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 640,
+            "count": 1,
+            "density_per_1k_chars": 1.5625,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "空間",
+                "count": 1
+              }
+            ]
+          },
+          "questions": {
+            "chars": 37,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 176,
+            "count": 1,
+            "density_per_1k_chars": 5.681818181818182,
+            "dominant_group": "path",
+            "group_counts": {
+              "path": 1,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": [
+              {
+                "term": "扉",
+                "count": 1
+              }
+            ]
+          },
+          "answer_density_delta": 1.5625,
+          "log_question_density_delta": 5.681818181818182
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 155,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 48,
+              "completion_tokens": 81,
+              "reasoning_tokens": 0,
+              "total_tokens": 2092
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 634,
+            "ponder_question_tokens_est": 29,
+            "ponder_log_tokens_est": 163,
+            "keyword_tokens_est": 3,
+            "memory_block_chars": 332,
+            "memory_block_tokens_est": 315,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 840,
+              "completion_tokens": 502,
+              "reasoning_tokens": 0,
+              "total_tokens": 4571
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 101,
+              "completion_tokens": 113,
+              "reasoning_tokens": 0,
+              "total_tokens": 1121
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 102,
+                "completion_tokens": 7,
+                "reasoning_tokens": 0,
+                "total_tokens": 258
+              },
+              "scaffold_condition": {
+                "calls": 1,
+                "prompt_tokens": 331,
+                "completion_tokens": 21,
+                "reasoning_tokens": 0,
+                "total_tokens": 967
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 433,
+              "completion_tokens": 28,
+              "reasoning_tokens": 0,
+              "total_tokens": 1225
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 306,
+              "completion_tokens": 361,
+              "reasoning_tokens": 0,
+              "total_tokens": 2225
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 479,
+            "external_scaffold_tokens_est": 510,
+            "api_prompt_tokens": 792,
+            "api_completion_tokens": 421,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 2479
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 888,
+            "completion_tokens": 583,
+            "reasoning_tokens": 0,
+            "total_tokens": 6663
+          }
+        }
+      }
+    }
+  ],
+  "artifacts": {
+    "out_label": "json_out",
+    "out": "artifacts/sweep_20260618_strong_deep/gemini_reality_interface.json",
+    "trace_out": "artifacts/sweep_20260618_strong_deep/gemini_reality_interface.trace.jsonl",
+    "trace_report_out": "artifacts/sweep_20260618_strong_deep/gemini_reality_interface.trace.html",
+    "matrix_report_out": "artifacts/sweep_20260618_strong_deep/gemini_reality_interface.matrix.html",
+    "out_dir": "",
+    "resume_from": ""
+  }
+}

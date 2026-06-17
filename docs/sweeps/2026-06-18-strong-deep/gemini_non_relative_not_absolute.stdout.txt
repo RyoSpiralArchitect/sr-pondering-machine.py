@@ -1,0 +1,79 @@
+[sr_ponder] backend=openai_compat provider=custom model='gemini-3.1-pro-preview' base_url=https://generativelanguage.googleapis.com/v1beta/openai reasoning_effort=high seed_method=auto logprobs_top_n=0 lang=ja band_profile=single bands=profile objective=random_band diversity=off hops=1 answer_style=plain control=none pipeline=assoc memory=current_only/tail/off scaffold=assoc/320 write_memory=False
+
+=== PACK: baseline ===
+
+言葉の前提を疑うところから、少し思考を歩かせてみます。私たちは通常、「相対的」と「絶対的」を対義語として、コインの裏表のように捉えがちです。相対的とは、他との比較や関係性によってその性質や価値が定まること。対して絶対的とは、他に依存せず、それ自体で普遍
+
+=== PACK: assoc ===
+
+昼と夜の境界である黄昏時は、昼の明るさや夜の暗さと比較されることで成り立つ相対的なものではなく、ただ「空が青でも赤でもない両方である」という独自の瞬間としてそこに存在します。しかし、それは永遠に続く不変の真理ではなく、時間が経てば移ろうため絶対的なものでもありません。このような境界領域や、観
+
+=== COMPARISON ===
+
+answers_changed=yes chars=126->146 delta=+20 diff_ratio=0.8750
+records=1 unique_keywords=2 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.052385 query_base=0.038186 query_ponder=0.045398 align_delta=0.007211
+stance[heuristic_lexicon] base=definition ponder= shift=0.500000 gain= drop=definition
+spatial[heuristic_lexicon] ans_density=0.000->13.699 log_density=19.608 q_density=27.778 groups=none->geometry log=geometry
+budget[api_usage_plus_visible_estimate] ans=126->146 scaffold=397 reason=0->0 completion=79->124
+
+=== PACK: random ===
+
+駅前で妙に丁寧に折られているレシートの端や、美術館のロビーに置き去りにされた紙コップ。それらは、他の何かと比較してその形を保っているわけではありません。周囲の環境との関係において「より美しい」とか「より意味がある」といった相対的な評価の網目からは抜け落ちています。しかし同時に、それが宇宙の真理のように永遠不変であるわけでも、いかなる条件にも縛られない絶対的な存在であるわけでもありません。ただその瞬間、その場所で、それ自身の小さな論理によって完結してそこにあるだけです。
+
+このような情景を思い浮かべると、非相対的ではあるが絶対的ではない状態の輪郭が自然と浮かび上がってきます。
+
+何かと比べることで価値や意味が決まる相対的な文脈から切り離され、それ自体で独立して成立している。しかし、すべての制約を超越した永遠不変の絶対的なものでもなく、やがては風に飛ばされたり、誰かに片付けられたりする有限なものである。
+
+つまりその状態とは、他者や外部の基準に依存せずに自己完結していながらも、普遍性や永遠性を持たない「局所的な固有性」を指します。特定の時間と空間の中でのみ一意に存在する、一過性でありながらも独立したあり方です。比較されることも、永遠を約束されることもなく、ただその瞬間にそのように存在しているという完結した有限性こそが、非相対的でありながら絶対的ではない状態の正体です。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=126->591 delta=+465 diff_ratio=0.9191
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.099047 query_base=0.041798 query_ponder=0.186671 align_delta=0.144874
+stance[heuristic_lexicon] base=definition ponder=conditionalization shift=0.357143 gain=conditionalization drop=definition
+spatial[heuristic_lexicon] ans_density=0.000->5.076 log_density=0.000 q_density=0.000 groups=none->geometry log=none
+budget[api_usage_plus_visible_estimate] ans=126->585 scaffold=404 reason=0->0 completion=79->369
+
+=== PACK: facts ===
+
+「相対的」と「絶対的」という言葉の定義について思索を巡らせてみる。相対的とは、対象の性質や価値が他者との比較や外部の基準、観測者の視点に依存して決まる状態を指す。したがって「非相対的」とは、他との比較や関係性に依存せず、それ自体で性質が定まっている自
+
+=== COMPARISON ===
+
+answers_changed=yes chars=126->125 delta=-1 diff_ratio=0.6813
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.288253 query_base=0.038296 query_ponder=0.045151 align_delta=0.006855
+stance[heuristic_lexicon] base=definition ponder=definition shift=0.250000 gain=resolution drop=example_expansion
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=15.385 q_density=0.000 groups=none->none log=geometry
+budget[api_usage_plus_visible_estimate] ans=126->125 scaffold=405 reason=0->0 completion=79->148
+
+=== PACK: isomorphic ===
+
+相対的であるとは、他者や周囲の環境との比較や関係性のなかに意味を見出すことである。枯れることと潤うことの対比のように、自然の周期はまさに相対的な変化の連続だ。しかし、その関係性が静かに崩れ去り、外部との繋がりが断たれた空間を想像してみる。たとえば、外界から切り離された温
+
+=== COMPARISON ===
+
+answers_changed=yes chars=126->135 delta=+9 diff_ratio=0.8008
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.092446 query_base=0.041720 query_ponder=0.046201 align_delta=0.004481
+stance[heuristic_lexicon] base=definition ponder=example_expansion shift=0.416667 gain=example_expansion drop=conditionalization
+spatial[heuristic_lexicon] ans_density=0.000->7.407 log_density=10.490 q_density=0.000 groups=none->geometry log=container
+budget[api_usage_plus_visible_estimate] ans=126->135 scaffold=621 reason=0->0 completion=79->291
+
+=== PACK SUMMARY ===
+
+name        kind      control  chars  records  elapsed_s
+----------  --------  -------  -----  -------  ------------------
+baseline    baseline           126             23.42548133300079
+assoc       ponder    none     146    1        40.508026167000935
+random      ponder    none     591    1        32.143420209000396
+facts       ponder    none     125    1        43.85227550000127
+isomorphic  ponder    none     135    1        45.79279758300072
+
+[json_out] wrote artifacts/sweep_20260618_strong_deep/gemini_non_relative_not_absolute.json
+
+[matrix_report_out] wrote artifacts/sweep_20260618_strong_deep/gemini_non_relative_not_absolute.matrix.html
+
+[trace_report_out] wrote artifacts/sweep_20260618_strong_deep/gemini_non_relative_not_absolute.trace.html
