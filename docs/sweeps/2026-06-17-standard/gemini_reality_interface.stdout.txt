@@ -1,0 +1,73 @@
+[sr_ponder] backend=openai_compat provider=custom model='gemini-3.5-flash' base_url=https://generativelanguage.googleapis.com/v1beta/openai reasoning_effort=auto seed_method=auto logprobs_top_n=0 lang=ja band_profile=single bands=profile objective=random_band diversity=off hops=1 answer_style=plain control=none pipeline=assoc memory=current_only/tail/off scaffold=assoc/180 write_memory=False
+
+=== PACK: baseline ===
+
+現実とは何か。私たちが五感で捉
+
+=== PACK: assoc ===
+
+」や「最後に」として質問への回答を記述
+
+=== COMPARISON ===
+
+answers_changed=yes chars=15->19 delta=+4 diff_ratio=0.9412
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.000000 query_base=0.012382 query_ponder=0.000000 align_delta=-0.012382
+stance[heuristic_lexicon] base=definition ponder= shift=0.500000 gain= drop=definition
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
+budget[api_usage_plus_visible_estimate] ans=15->19 scaffold=215 reason=0->0 completion=10->23
+
+=== PACK: random ===
+
+の折れ）が自律的に動いている
+
+=== COMPARISON ===
+
+answers_changed=yes chars=15->14 delta=-1 diff_ratio=0.9310
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.012436 query_base=0.012436 query_ponder=0.000000 align_delta=-0.012436
+stance[heuristic_lexicon] base=definition ponder= shift=0.500000 gain= drop=definition
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
+budget[api_usage_plus_visible_estimate] ans=15->14 scaffold=222 reason=0->0 completion=10->23
+
+=== PACK: facts ===
+
+ドナルド・ホフマンの
+
+=== COMPARISON ===
+
+answers_changed=yes chars=15->10 delta=-5 diff_ratio=1.0000
+records=1 unique_keywords=0 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.000000 query_base=0.012382 query_ponder=0.000000 align_delta=-0.012382
+stance[heuristic_lexicon] base=definition ponder= shift=0.500000 gain= drop=definition
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
+budget[api_usage_plus_visible_estimate] ans=15->10 scaffold=220 reason=0->0 completion=10->34
+
+=== PACK: isomorphic ===
+
+現実という言葉を前にして、私はまず、あの
+
+=== COMPARISON ===
+
+answers_changed=yes chars=15->20 delta=+5 diff_ratio=0.7714
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.039949 query_base=0.007613 query_ponder=0.006389 align_delta=-0.001224
+stance[heuristic_lexicon] base=definition ponder= shift=0.500000 gain= drop=definition
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
+budget[api_usage_plus_visible_estimate] ans=15->20 scaffold=189 reason=0->0 completion=10->38
+
+=== PACK SUMMARY ===
+
+name        kind      control  chars  records  elapsed_s
+----------  --------  -------  -----  -------  ------------------
+baseline    baseline           15              3.593146749999505
+assoc       ponder    none     19     1        5.9921528340000805
+random      ponder    none     14     1        8.940301750000799
+facts       ponder    none     10     1        13.798020082998846
+isomorphic  ponder    none     20     1        14.626629000000321
+
+[json_out] wrote artifacts/sweep_20260617_claude_gemini/gemini_reality_interface.json
+
+[matrix_report_out] wrote artifacts/sweep_20260617_claude_gemini/gemini_reality_interface.matrix.html
+
+[trace_report_out] wrote artifacts/sweep_20260617_claude_gemini/gemini_reality_interface.trace.html

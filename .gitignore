@@ -51,6 +51,9 @@ coverage.xml
 .pytest_cache/
 cover/
 
+# Local generated experiment outputs. Curated report bundles live under docs/sweeps/.
+artifacts/
+
 # Translations
 *.mo
 *.pot

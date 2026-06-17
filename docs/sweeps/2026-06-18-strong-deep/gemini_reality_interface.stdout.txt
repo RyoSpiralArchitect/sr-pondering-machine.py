@@ -1,0 +1,93 @@
+[sr_ponder] backend=openai_compat provider=custom model='gemini-3.1-pro-preview' base_url=https://generativelanguage.googleapis.com/v1beta/openai reasoning_effort=high seed_method=auto logprobs_top_n=0 lang=ja band_profile=single bands=profile objective=random_band diversity=off hops=1 answer_style=plain control=none pipeline=assoc memory=current_only/tail/off scaffold=assoc/320 write_memory=False
+
+=== PACK: baseline ===
+
+パソコンの画面に並んでいる青いフォルダのアイコンを思い浮かべてみてください。私たちはその青い四角形の中に大切な写真や書類が入っていると信じて疑いませんが、物理的なハードディスクの中に青い四角形が存在しているわけではありません。そこにあるのは、微小な電圧の変化と、0と1の膨大な羅列だけです。もし私たちがその電子
+
+=== PACK: assoc ===
+
+「、」という唐突な空白から始まる文字列を見たときのように、私たちが普段疑いもしない「現実の文法」から少しだけ逸脱して考えてみます。
+
+哲学の部屋の扉を開け、認知科学のレンズを通し、SF的な想像力を借りてこの世界を眺め直すと、ひとつの仮説が浮かび上がります。私たちが触れているこの硬い机も、流れる時間も、決して世界の「真の姿（ソースコード）」ではありません。
+
+認知科学におけるユーザーインターフェース理論が示唆するように、それはデスクトップパソコンのアイコンのようなものです。複雑すぎる量子の振る舞いや膨大な情報処理をそのまま見せられては、私たちは圧倒されて生存できません。だからこそ進化は、私たちに「リンゴ」や「崖」といった、直感的に操作して危険を回避できる分かりやすい3Dアイコンを与えました。
+
+ここに「空（Emptiness）」という概念を重ね合わせると、さらに別の手触りが生まれます。背後にあるのは実体のない確率の海や、名指しできない何かであり、断片どうしの距離――すなわち「私」と「世界」の隔たりすらも、このシステムが便宜上作り出した空間的な幻覚（ユーザーエクスペリエンス）にすぎないという前提が見えてきます。もし私たちの知覚の条件が変われば、世界はまったく別の法則と手触りを持つはずです。
+
+しかし、言い切る直前にまだ別の枠組みが残っていないかを見つめ直すなら、現実は単なる「偽り」や「隠れ蓑」ではありません。それは私たちが決して直接触れることのできない深淵に対して、唯一アクセスを可能にする機能的な接点でもあります。
+
+これらの熟考の末に、最後に質問へ答えます。
+
+現実とは、「処理不可能なほどの無（あるいは複雑すぎる真理）」を、人間の意識が生存し、意味を見出し、操作できる形へと翻訳するための「未知と意識を繋ぐユーザーインターフェース」です。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=155->780 delta=+625 diff_ratio=0.9401
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.114886 query_base=0.005960 query_ponder=0.075611 align_delta=0.069651
+stance[heuristic_lexicon] base= ponder=framing shift=0.500000 gain=framing drop=
+spatial[heuristic_lexicon] ans_density=0.000->6.410 log_density=31.746 q_density=0.000 groups=none->container log=path
+budget[api_usage_plus_visible_estimate] ans=155->758 scaffold=414 reason=0->0 completion=81->472
+
+=== PACK: random ===
+
+私たちが触れている「現実」とは、人間の意識と、その背後で沈黙のまま演算を続ける不可知の宇宙（物自体やエントロピー）とをつなぐ、翻訳レイヤーとしてのGUI（グラフィカル・ユーザー・インターフェース）です。
+
+私たちは五感というデバイスを通じて、素粒子の振る舞いや途方もない物理
+
+=== COMPARISON ===
+
+answers_changed=yes chars=155->137 delta=-18 diff_ratio=0.8836
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.050445 query_base=0.007267 query_ponder=0.113407 align_delta=0.106140
+stance[heuristic_lexicon] base= ponder=definition shift=0.500000 gain=definition drop=
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=44.118 q_density=0.000 groups=none->none log=geometry
+budget[api_usage_plus_visible_estimate] ans=155->133 scaffold=406 reason=0->0 completion=81->124
+
+=== PACK: facts ===
+
+現実をインターフェースと見なすという問いは、私たちが普段「そこにある」と信じて疑わないこの世界が、究極的な真理そのものではなく、何らかの変換を経た仮の姿であるという前提に立っています。この問いが成立するためには、情報を受け取る「主体（私たちの意識）」と、その背後に隠された「変換
+
+=== COMPARISON ===
+
+answers_changed=yes chars=155->139 delta=-16 diff_ratio=0.8231
+records=1 unique_keywords=0 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.078116 query_base=0.005678 query_ponder=0.115143 align_delta=0.109466
+stance[heuristic_lexicon] base= ponder=framing shift=0.500000 gain=framing drop=
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
+budget[api_usage_plus_visible_estimate] ans=155->139 scaffold=397 reason=0->0 completion=81->147
+
+=== PACK: isomorphic ===
+
+樽の中で静かに進む発酵のように、表面上は静止しているように見えても、その奥底では無数の微小な変化が絶え間なくうごめいている領域があります。また、温室のガラスを透過する光がほんの少し遅れて届き、そこに意味ではなくただ物理的な配置だけが反復される光景を思い浮かべてみてください。私たちが日々「ここにある」と信じている世界も、実はそうした直接触れることのできない膨大なプロセスを、どうにか知覚できる形に変換したスクリーンにすぎないのかもしれません。
+
+そのように熟考していくと、現実とは人間の五感や脳の処理能力をはるかに超えた「無秩序で高次元な情報の海」や「無限に重なり合う可能性のネットワーク」にアクセスするためのインターフェースであるという答えに行き着きます。
+
+私たちは、宇宙の真の姿である量子のカオスや、絶え間なく流転するエネルギーの奔流を、そのままの形では到底受け止めることができません。まともに直視すれば、圧倒的な情報量に認識が焼き切れてしまうでしょう。だからこそ、それらの生のデータは「時間」という遅延を伴い、「空間」という配置の反復に整理され、「触れることのできる物質」へとレンダリングされます。そこには最初から意味が用意されているわけではなく、ただ操作可能な配置が反復されているだけです。
+
+つまり現実とは、私たちが「認識不可能な宇宙の根源的カオス」を安全に処理し、そこに自らの意識で意味を与えながら生きていく体験を味わうために用意された、人間専用の操作画面なのです。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=155->640 delta=+485 diff_ratio=0.8918
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.147221 query_base=0.008038 query_ponder=0.067358 align_delta=0.059320
+stance[heuristic_lexicon] base= ponder=definition shift=0.500000 gain=definition drop=
+spatial[heuristic_lexicon] ans_density=0.000->1.562 log_density=5.682 q_density=0.000 groups=none->geometry log=path
+budget[api_usage_plus_visible_estimate] ans=155->634 scaffold=510 reason=0->0 completion=81->502
+
+=== PACK SUMMARY ===
+
+name        kind      control  chars  records  elapsed_s
+----------  --------  -------  -----  -------  ------------------
+baseline    baseline           155             25.19823220899889
+assoc       ponder    none     780    1        36.17412662499919
+random      ponder    none     137    1        39.66264091599987
+facts       ponder    none     139    1        48.180541542000356
+isomorphic  ponder    none     640    1        45.45881720899888
+
+[json_out] wrote artifacts/sweep_20260618_strong_deep/gemini_reality_interface.json
+
+[matrix_report_out] wrote artifacts/sweep_20260618_strong_deep/gemini_reality_interface.matrix.html
+
+[trace_report_out] wrote artifacts/sweep_20260618_strong_deep/gemini_reality_interface.trace.html

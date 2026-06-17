@@ -1,0 +1,160 @@
+provider,query_id,model,condition,kind,answer_chars,answer,pc1,pc2
+claude,non_relative_not_absolute,haiku,baseline,baseline,355,"それは、特定の対象や文脈に固有でありながら、同時に普遍的必然性を持たない状態です。
+
+例えば、一個の物体の現在の温度は、他の物体との相対比較ではなく、その物体自体に内在する非相対的な性質です。しかし同時に、その温度は絶対不変ではなく、条件が変われば変化します。
+
+あるいは、個人の意識状態も同様です。その人固有の意識は自分自身に属する非相対的な現象ですが、普遍的・永遠的な絶対状態ではなく、脳の活動に依存し、時間とともに変化する偶然的な状態です。
+
+つまり、**その対象に内在し、外部との比較によらない性質を持ちながら、しかし必然的でなく、条件に依存し変化する—そうした状態が、非相対的ではあるが絶対的ではない状態です**。このような状態は、具体的で個別的であると同時に、本質的には有限で偶然的なものなのです。",0.0288832523675816,-0.3552685407983365
+claude,non_relative_not_absolute,haiku,assoc,ponder,473,"条件付き必然と有限普遍性の分岐を眺めると、同じことばが条件で質感を変える、という指摘が核心に見える。
+
+非相対的ではあるが絶対的ではない状態とは、**構造が保たれるが実装が変わる領域**だ。
+
+たとえば言語の文法規則は、話者によらず（非相対的）一定の構造を保つが、方言や時代で変異する（絶対的ではない）。数学の群論の公理も然り。あるいは生態系で「捕食者と被食者の比率」という関係構造は安定的に機能するが、具体的な種は環境で入れ替わる。
+
+ポイントは、変わらないのは「もの」ではなく「かたち」「関係」「制約の枠組み」。個別の値は相対的に変動するが、それら相互の関係律は非相対的に保持される。
+
+条件が変わると語の手触りが変わるのは、この構造が露出するから。構造そのものは条件を超えて作用していても、その現れ方は条件に限定される。つまり非相対性と相対性の境界線は、具体的な内容ではなく、成り立つための最小限の条件の中にある。
+
+その状態は「相対的自由度の中の非相対的制約」ともいえる——絶対ではないが、ここから先は自由に変わらせられない基本的な構造。",0.05116127370064315,-0.38553950365062845
+claude,non_relative_not_absolute,haiku,random,ponder,444,"非相対的ではあるが絶対的ではない状態とは、**部分的な自律性を持ちながら、全体から切り離せない状態**です。
+
+Ponder Logの例で言えば、レシートの折り方や雨どいの規則性は、それ自体の固有の秩序を持っています（非相対的）。しかし、その秩序は駅前という文脈の中にのみ存在し、切り出されると意味を失います（絶対的ではない）。
+
+これは多くの現象に当てはまります。生物の臓器は独自の機能を持ちながら、生体全体から独立して機能することはできません。音楽の調は固有の法則性を持ちながら、曲全体との関係の中でしか響きません。個人の意識や選択も、社会や環境との相互作用の中でのみ存在します。
+
+つまり、**ローカルな法則性とグローバルな依存性の共存**——部分が部分自体の論理を持ちながら、全体から独立できない、そうした状態です。完全に相対的（他者によってのみ定義される）でもなく、完全に絶対的（自己完結的）でもない、中間的で動的な在り方。それが非相対的ではあるが絶対的ではない状態の本質です。",0.018036817124341648,-0.3484280529707
+claude,non_relative_not_absolute,haiku,facts,ponder,478,"非相対的ではあるが絶対的ではない状態とは、**対象の内在的性質として記述可能でありながら、その実現には特定の条件や前提が必要な状態**です。
+
+例えば：
+
+**水の「湿性」** — 水という物質の本質的な特性として、他の物質との比較なしに記述できます。しかし常温常圧という条件があって初めて「液体として湿性を示す」のであり、極低温では同じ水でも振る舞いが変わります。
+
+**生物の「適応」** — 各生物に内在する傾向として、他の個体との相対比較なく認識できます。しかし環境が存在することが前提であり、完全に変わらない環境下では適応は概念として成立しません。
+
+**システムの「複雑性」** — 構成要素の相互作用パターンから生じる内在的性質で、「Aより複雑」といった二項判断を経ずに描写可能です。しかし複雑性そのものは観測者の視点や定義に依存し、真理のような絶対性はありません。
+
+共通点は、**特定の関係性には依存しないが、何らかの実現条件には依存している**こと。内在性と条件依存性の両立が、この状態の特徴です。それは世界の大部分の現象を説明します。",0.01327730326566515,-0.3792551880773911
+claude,non_relative_not_absolute,haiku,isomorphic,ponder,394,"根の成長を考えると、先端の細胞分裂は土壌の密度に応じて変わります。つまり外部条件に依存している。しかし同時に、その根個体は他の根との比較で動くわけではなく、内在的な成長プログラムに従っています。これが「非相対的ではあるが絶対的ではない状態」です。
+
+**条件付き普遍性**と言えるでしょう。特定の環境下では必然的に成立する規則性を持ちながら、その規則自体は環境によって変わる。根が「下へ」向かうのは物理法則による必然ですが、その成長速度は絶対値ではなく、与えられた条件に内在する。
+
+相対的ではない＝他者との比較ではなく自己完結的
+絶対的ではない＝外的条件に規定されている
+
+このような中間領域は、生命現象そのものが占める場所です。規則がありながら融通性があり、条件に応じて表現が変わりながらも、その変わり方そのものは決まっている状態。システムの自律性と環境応答性が共存している領域です。",0.01625478752631186,-0.35946365251376744
+claude,reality_interface,haiku,baseline,baseline,419,"現実は、無限なものと有限なものの間のインターフェースだと考えます。
+
+意識や潜在的な可能性という無限の領域と、物質や時間という有限の現実世界を結ぶ翻訳層として機能しているのです。私たちの経験は、その両方が出会う場所です。
+
+別の見方をすれば、現実は観測者と被観測の間のインターフェースです。何かが「ある」と言える前に、それを認識する主体が必要です。物質的な世界と意識が相互作用するその接点こそが現実です。
+
+さらに言えば、現実は情報と経験の間のインターフェースとも言えます。宇宙の基本構造は情報的かもしれません。その情報が私たちの知覚を通じて現れるとき、それが現実という体験になるのです。
+
+つまり現実とは、一方向の映像ではなく、双方向の翻訳プロセスです。存在するものと、それを認識するもの、その相互作用によって常に生成されている動的なインターフェース。私たちは現実の中に住んでいるのではなく、現実というインターフェースそのものなのです。",0.018099973477106884,-0.36584792213953077
+claude,reality_interface,haiku,assoc,ponder,390,"現実は、意識と物理世界の間の翻訳膜だと思います。
+
+外界は無限の信号で満ちていますが、あなたの神経系はその一部だけを通します。その通った信号を脳が解釈して、「現実」という統一された体験に再構成する。その意味では現実は、内部プロセスと外部刺激を仲介するインターフェースです。
+
+Ponder Logで言及された「知覚フィルター」と「解釈層」はまさにこれを指しています。同じ物理的刺激でも、あなたの注意の向け方や心身の状態が変わると、まったく異なる「現実」が立ち現れる。夢と覚醒の違いさえ、どのフィルターが働いているかの違いに過ぎません。
+
+つまり現実とは、「どの周波数の信号をキャッチするか」を決めるチューナー装置です。あなたはいつも現実を「見ている」のではなく、現実という限定的なインターフェースを通して、無限のうち一部を「選んで見ている」。その選別の装置そのものが現実なのです。",0.053788263637084485,-0.33460077431658497
+claude,reality_interface,haiku,random,ponder,1245,"Reality is an interface between intention and inattention.
+
+The ponder log marks a pattern: someone carefully folds a receipt, adjusts a water bottle cap, adds another small procedure—each gesture precise, layered with meaning. Yet these details pass unnoticed. Reality functions as the membrane where one consciousness tries to signal to another through small choreographies that mostly dissolve into background noise.
+
+Reality is the interface where we ask *what else is happening in the spaces we don't look*—where someone's careful folding lives alongside our indifference, where incremental procedures accumulate, where the lobby air moves forward while we stand still. It's the medium through which intention leaks through into a world that largely doesn't register it.
+
+The interface isn't neutral. It's the place where precision meets negligence, where patterns we didn't design keep emerging anyway, where a paper cup gets reassigned a new role each time someone bothers to rearrange it. Reality shows us not what is, but what *persists in trying to be noticed*.
+
+So reality is an interface to attention itself—or to its failure. It's where the deliberate gestures of existence meet the vas",0.35574579432029374,-0.08713929203185639
+claude,reality_interface,haiku,facts,ponder,413,"現実は、主観的な意識と客観的な物質世界の間のインターフェースです。
+
+インターフェースの定義に従えば、それは「異なる秩序をもつシステム間で相互作用を可能にする変換規則と接触面」です。現実は、私たちの内的な感覚・知覚（主観的秩序）と外部の物理的存在（客観的秩序）を仲介しています。
+
+感覚器官から脳まで、私たちの神経系は物理的刺激を神経信号に変換し、さらに経験や意味へと翻訳する。この変換こそが現実の本質です。
+
+重要なのは、複数の独立した観測者が同じ事象について一致した報告をなしうるという点です。これはインターフェースとしての現実の証拠であり、単なる個人的な幻想ではなく、何らかの共有可能な規則性が存在することを示しています。
+
+つまり現実とは、異なる主観性を持つ複数の観測者が接続し、相互に翻訳可能な世界です。それは私たち一人ひとりの内部モデルと、その外にある何かを繋ぐ変換領域──まさにインターフェースそのものなのです。",0.012041759413679694,-0.3707336113443758
+claude,reality_interface,haiku,isomorphic,ponder,432,"加熱するたびに素材が変わる。でも変わらない部分があると感じる。そこに現実の正体がある気がします。
+
+現実とは、変換のインターフェースです。
+
+感覚は素材（光、音、温度）を受け取り、脳という調理器で化学変化させて、意識という「味わい」にする。その過程で何かが失われ、何かが生まれます。加熱によって素材の本質は変わるのか、それとも変わらない部分があるのか——その揺らぎこそが現実です。
+
+完全に同じことは二度起こらない。光が遅れて届き、配置だけが反復される。同じように見える食卓の現象も、毎回微かに異なっている。私たちは変化し続ける素材を、反復的なパターンとして認識することで、世界を「ある」と信じます。
+
+だから現実は、感覚から意識へ至る変換プロセスそのもので、インターフェースは単なる仲介役ではなく、その変換自体が現実を作ります。見えている世界は、私たちの知覚という調理法がこしらえたもの。本質と現象の間にある、その振動のことを「現実」と呼んでいるのだと思います。",0.027030247631233732,-0.3766632213487061
+claude,wander_before_deciding,haiku,baseline,baseline,1609,"When an answer is allowed to wander before deciding, several things shift:
+
+**The reasoning becomes visible.** Instead of jumping to a conclusion, the path of thinking emerges—false starts, course corrections, and self-doubt surface as part of the process rather than being hidden behind a final polished statement.
+
+**Error correction becomes possible.** Mistakes caught mid-thought can be addressed rather than baked into the final answer. The model can recognize when it's heading down a wrong path and backtrack.
+
+**Depth replaces confidence.** A rushed answer tends toward certainty because there's no time to encounter complications. Wandering reveals nuance—the places where the question is actually harder than it first appeared, where trade-offs exist, where the answer depends on unstated assumptions.
+
+**Specificity increases.** Generic answers crystallize quickly. Wandering forces engagement with particular details and edge cases that a shortcut would bypass.
+
+**The answer becomes calibrated to uncertainty.** When forced to think longer, an AI system is more likely to acknowledge what it doesn't know, where confidence is warranted, and where it's faking certainty.
+
+**Novelty emerge",0.41271666822592523,-0.026629834896598696
+claude,wander_before_deciding,haiku,assoc,ponder,1366,"The question itself transforms. A direct path to ""the answer"" treats the problem as fixed and knowable in advance. Wandering reveals that the question was narrower than it appeared—the detours expose hidden assumptions baked into the original framing.
+
+When you delay deciding, you discover constraints that don't announce themselves. The musician with the broken synth didn't need to ""find her voice""—she needed to fail at using someone else's. That failure was the information.
+
+Wandering also reframes certainty. A rushed answer feels conclusive; a wandering one accumulates caveats, edge cases, exceptions that were invisible from the direct path. This can feel like weakness—you're less sure—but it's actually fidelity. You've collided with complexity that a straight line would have missed.
+
+There's a shift in what changes hands. A direct answer transfers information. A wandered answer transfers a way of thinking—the paths matter as much as the destination. Someone following your route learns not just what you concluded, but *why* that route mattered, what you tested along the way, where the terrain broke assumptions.
+
+The cost is time and discomfort—you're lost before you're found. But",0.3830382984225138,-0.053422251849400124
+claude,wander_before_deciding,haiku,random,ponder,1513,"When an answer is allowed to wander before deciding, several things shift:
+
+Hidden assumptions become visible. A direct answer obscures the terrain beneath it. Wandering reveals which premises actually hold and which ones don't, making the foundation visible to both the thinker and the listener.
+
+The answer gains resilience. An answer that has explored dead ends and backtracked understands its own boundaries and limitations. It knows not just what it claims, but why alternatives failed. This makes it harder to break.
+
+Confidence transforms from certainty into calibration. Instead of ""I know this is right,"" you develop ""I've tested this against these alternatives and here's why it holds."" You become aware of the degrees of conviction rather than assuming all convictions are equal.
+
+The process becomes part of the payload. A wandering answer leaves traces—the work shows. This matters because it lets the questioner verify the reasoning, not just accept the conclusion. The path becomes evidence.
+
+Time enters the answer. Wandering introduces temporal texture—you can see how thinking evolved, what prompted course corrections, which questions emerged along the way. This matters because re",0.4243873894277725,-0.012616617816753604
+claude,wander_before_deciding,haiku,facts,ponder,1771,"When an answer is allowed to wander before deciding, several things shift:
+
+**Hidden dependencies surface.** Exploring multiple branches reveals which premises feed into multiple conclusions and which collapse under scrutiny. A direct path commits before discovering these connections.
+
+**Robustness increases but certainty may decline.** Wandering tests the answer against alternatives, catching unstated assumptions and fragile logic. But the same exploration can expose the incommensurability of valid options, replacing false confidence with legitimate doubt.
+
+**The final answer carries implicit caveats.** Even abandoned branches shape the reasoning. A wandered conclusion implicitly acknowledges alternatives it considered and rejected. A direct answer never maps its choice against what it didn't explore.
+
+**Error sources change.** Direct paths fail through blind spots—premises you never questioned. Wandering fails through circular reasoning or decision paralysis when multiple branches seem equally strong. You trade one error risk for another.
+
+**Information state versus answer state diverge.** Your internal reasoning explores far more than you communicate. Wandering expands the infor",0.40167379240494594,-0.0337191301292836
+claude,wander_before_deciding,haiku,isomorphic,ponder,1509,"When an answer wanders before deciding, you expose what was latent in the question itself. The rush to closure locks you into your first instinct—which is often shaped by how you framed the problem initially. Wandering cracks that frame open.
+
+The texture changes. An answer that arrives after exploration carries the marks of the path: you see which alternatives you rejected and why, what assumptions held your reasoning, what possibilities only appeared partway through. That transparency becomes part of the answer's integrity.
+
+Speed trades for depth, but something else shifts too. The answer stops being a destination you're trying to reach and becomes something you're uncovering. Like the dyer who finds the fiber's true undertones only after letting the vat work—the color wasn't hidden; it was waiting to be revealed through process.
+
+Confidence transforms. If you decide immediately, you're committing to a first impression. If you wander, you're choosing deliberately, having seen alternatives. There's less self-doubt afterward because you didn't take the easy path; you took the honest one.
+
+The wandering also reveals what the question was actually asking beneath the surface. You oft",0.4081756954389755,-0.015014418095085726
+gemini,non_relative_not_absolute,gemini-3.5-flash,baseline,baseline,21,"状態を探る。**
+
+    *   *候補",-0.44450455830749336,0.1719281480147268
+gemini,non_relative_not_absolute,gemini-3.5-flash,assoc,ponder,20,他との比較や関係性によって規定されるわけ,-0.30223607290324145,0.08821833327856106
+gemini,non_relative_not_absolute,gemini-3.5-flash,random,ponder,20,"*:
+        *   これらは「",-0.4369243424107497,0.20188249725562957
+gemini,non_relative_not_absolute,gemini-3.5-flash,facts,ponder,18,"がある。
+   - 絶対的：いかなる",-0.4651920424471613,0.07690319853240897
+gemini,non_relative_not_absolute,gemini-3.5-flash,isomorphic,ponder,19,「非相対的ではあるが絶対的ではない状態,-0.3236090526311854,-0.0019045341185006965
+gemini,reality_interface,gemini-3.5-flash,baseline,baseline,15,現実とは何か。私たちが五感で捉,-0.34634013657170243,0.13557300960441565
+gemini,reality_interface,gemini-3.5-flash,assoc,ponder,19,」や「最後に」として質問への回答を記述,-0.27045783824972175,0.18817717758336142
+gemini,reality_interface,gemini-3.5-flash,random,ponder,14,の折れ）が自律的に動いている,-0.38040121887702694,0.1766785039101598
+gemini,reality_interface,gemini-3.5-flash,facts,ponder,10,ドナルド・ホフマンの,-0.47513107794592546,0.20094094071940435
+gemini,reality_interface,gemini-3.5-flash,isomorphic,ponder,20,現実という言葉を前にして、私はまず、あの,-0.38357697725576584,0.07611660340216794
+gemini,wander_before_deciding,gemini-3.5-flash,baseline,baseline,37,"The depth, nuance, and quality of the",0.013446994827232182,0.20440652760437827
+gemini,wander_before_deciding,gemini-3.5-flash,assoc,ponder,52,"When an answer is allowed to wander before deciding,",0.36443649711235154,0.6115062993871829
+gemini,wander_before_deciding,gemini-3.5-flash,random,ponder,56,"When an answer is allowed to wander before deciding, the",0.38613394732560563,0.5924426800977245
+gemini,wander_before_deciding,gemini-3.5-flash,facts,ponder,56,"explore different paths, deliberate, ponder, think step-",0.07560806483835869,0.1699663273201955
+gemini,wander_before_deciding,gemini-3.5-flash,isomorphic,ponder,52,"When an answer is allowed to wander before deciding,",0.36443649711235154,0.6115062993871829

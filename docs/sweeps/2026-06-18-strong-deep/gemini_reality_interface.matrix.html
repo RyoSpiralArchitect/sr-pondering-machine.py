@@ -1,0 +1,305 @@
+<!doctype html>
+<html><head><meta charset='utf-8'/>
+<title>sr_ponder matrix report</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:24px;color:#111;background:#fafafa;}h1,h2,h3{margin:0 0 12px 0;} .muted{color:#666;} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0;}.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 14px 0;padding:10px 12px;background:#fff;border:1px solid #ddd;border-radius:10px;}.toolbar label{font-size:13px;color:#333;display:flex;gap:6px;align-items:center;}.toolbar select,.toolbar button{font:inherit;padding:6px 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111;}.toolbar button{cursor:pointer;}.heatmap-wrap{margin:12px 0 20px 0;}.heatmap-cell{min-width:74px;text-align:center;font-variant-numeric:tabular-nums;}.heat-win{background:#e8f7ee;color:#0a5a2e;}.heat-loss{background:#fdecec;color:#8b1d1d;}.heat-tie,.heat-diag{background:#f3f3f3;color:#666;}.heat-missing{background:#fff8e6;color:#8a6d1f;}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #ddd;} th,td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:top;text-align:left;font-size:13px;}th{background:#f3f3f3;position:sticky;top:0;} code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}pre{white-space:pre-wrap;background:#fbfbfb;border:1px solid #eee;padding:12px;border-radius:8px;}.pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef4ff;color:#245; margin-right:6px;font-size:12px;}details{margin:12px 0;} .num{text-align:right;} .ok{color:#0a6;} .warn{color:#a60;}</style>
+</head><body>
+<h1>sr_ponder matrix report</h1>
+<div class='muted'>scaffold_abcd · custom / gemini-3.1-pro-preview</div>
+<p><strong>Query:</strong> 現実って何のインターフェース？</p>
+<div class='grid'>
+<div class='card'><div class='muted'>Items</div><div><strong>5</strong></div></div>
+<div class='card'><div class='muted'>Ponder items</div><div><strong>4</strong></div></div>
+<div class='card'><div class='muted'>Warnings</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Baseline</div><div><strong>baseline</strong></div></div>
+<div class='card'><div class='muted'>Max reasoning Δ</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Max stance shift</div><div><strong>0.5000</strong></div></div>
+<div class='card'><div class='muted'>Best align Δ</div><div><strong>0.1095</strong></div></div>
+</div>
+<h2>Pairwise heatmap</h2>
+<div class='toolbar'><strong>A/B/C/D win-loss heatmap</strong><label>Metric<select id='heatmap-metric-key'>
+<option value='query_alignment_delta' selected>Query align Δ</option>
+<option value='stance_shift'>Stance shift</option>
+<option value='budget_reasoning_delta'>Reasoning token Δ</option>
+<option value='budget_total_delta'>Total token Δ</option>
+</select></label><span class='muted'>Green means the row beats the column on the selected metric. Cost metrics use lower-is-better.</span></div>
+<div class='heatmap-wrap' data-heatmap-key='query_alignment_delta'><div class='muted'>Query align Δ · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.0697 · 1W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0365</td>
+<td class='heatmap-cell heat-loss'>-0.0398</td>
+<td class='heatmap-cell heat-win'>0.0103</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.1061 · 2W</span></td>
+<td class='heatmap-cell heat-win'>0.0365</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0033</td>
+<td class='heatmap-cell heat-win'>0.0468</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>0.1095 · 3W</span></td>
+<td class='heatmap-cell heat-win'>0.0398</td>
+<td class='heatmap-cell heat-win'>0.0033</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0501</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>0.0593 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0103</td>
+<td class='heatmap-cell heat-loss'>-0.0468</td>
+<td class='heatmap-cell heat-loss'>-0.0501</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='stance_shift' style='display:none'><div class='muted'>Stance shift · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.5000 · 0W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.5000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>0.5000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>0.5000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_reasoning_delta' style='display:none'><div class='muted'>Reasoning token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_total_delta' style='display:none'><div class='muted'>Total token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>assoc</th>
+<th>random</th>
+<th>facts</th>
+<th>isomorphic</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>assoc</strong><br/><span class='muted'>1592.0000 · 3W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>46.0000</td>
+<td class='heatmap-cell heat-win'>773.0000</td>
+<td class='heatmap-cell heat-win'>887.0000</td>
+</tr>
+<tr>
+<td><strong>random</strong><br/><span class='muted'>1638.0000 · 2W</span></td>
+<td class='heatmap-cell heat-loss'>-46.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>727.0000</td>
+<td class='heatmap-cell heat-win'>841.0000</td>
+</tr>
+<tr>
+<td><strong>facts</strong><br/><span class='muted'>2365.0000 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-773.0000</td>
+<td class='heatmap-cell heat-loss'>-727.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>114.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic</strong><br/><span class='muted'>2479.0000 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-887.0000</td>
+<td class='heatmap-cell heat-loss'>-841.0000</td>
+<td class='heatmap-cell heat-loss'>-114.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<h2>Comparison table</h2>
+<div class='toolbar'><strong>Sort by baseline-relative metric</strong><label>Metric<select id='matrix-sort-key'><option value='judge_score_delta'>Judge score Δ</option><option value='judge_resolution_delta'>Judge resolution Δ</option><option value='query_alignment_delta'>Query align Δ</option><option value='stance_shift'>Stance shift</option><option value='budget_reasoning_delta'>Reasoning token Δ</option><option value='budget_completion_delta'>Completion token Δ</option><option value='budget_total_delta'>Total token Δ</option><option value='answer_cosine'>Answer cosine</option><option value='diff_ratio'>Diff ratio</option><option value='answer_chars'>Answer chars</option><option value='elapsed_s'>Elapsed seconds</option><option value='name'>Name</option></select></label><label>Direction<select id='matrix-sort-dir'><option value='desc'>Descending</option><option value='asc'>Ascending</option></select></label><button type='button' id='matrix-sort-apply'>Apply</button><span class='muted'>Baseline rows stay pinned to the top.</span></div>
+<table><thead><tr>
+<th>Item</th>
+<th>Kind</th>
+<th>Scaffold</th>
+<th>Chars</th>
+<th>Elapsed</th>
+<th>Semantic</th>
+<th>Judge</th>
+<th>Stance</th>
+<th>Budget</th>
+<th>Warnings</th>
+</tr></thead><tbody id='matrix-report-body'>
+<tr data-name='baseline' data-kind='baseline' data-answer-chars='155' data-elapsed-s='25.19823220899889' data-diff-ratio='' data-answer-cosine='' data-query-alignment-delta='' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='' data-budget-scaffold-tokens='' data-budget-reasoning-delta='' data-budget-completion-delta='' data-budget-total-delta=''>
+<td><strong>baseline</strong><br/><span class='muted'></span></td>
+<td>baseline</td>
+<td>—</td>
+<td class='num'>155</td>
+<td class='num'>25.20</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='assoc' data-kind='ponder' data-answer-chars='780' data-elapsed-s='36.17412662499919' data-diff-ratio='0.9401069518716577' data-answer-cosine='0.11488575666559174' data-query-alignment-delta='0.06965099644403537' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.5' data-budget-scaffold-tokens='414' data-budget-reasoning-delta='0' data-budget-completion-delta='391' data-budget-total-delta='1592'>
+<td><strong>assoc</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>assoc/320</td>
+<td class='num'>780</td>
+<td class='num'>36.17</td>
+<td>cos=0.1149 | Δalign=0.0697</td>
+<td>—</td>
+<td>—→framing | shift=0.5000</td>
+<td>scaf=414 | reasonΔ=0 | compΔ=391</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='random' data-kind='ponder' data-answer-chars='137' data-elapsed-s='39.66264091599987' data-diff-ratio='0.8835616438356164' data-answer-cosine='0.05044463375844744' data-query-alignment-delta='0.10613999233260916' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.5' data-budget-scaffold-tokens='406' data-budget-reasoning-delta='0' data-budget-completion-delta='43' data-budget-total-delta='1638'>
+<td><strong>random</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>random/320</td>
+<td class='num'>137</td>
+<td class='num'>39.66</td>
+<td>cos=0.0504 | Δalign=0.1061</td>
+<td>—</td>
+<td>—→definition | shift=0.5000</td>
+<td>scaf=406 | reasonΔ=0 | compΔ=43</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts' data-kind='ponder' data-answer-chars='139' data-elapsed-s='48.180541542000356' data-diff-ratio='0.8231292517006803' data-answer-cosine='0.07811561838529195' data-query-alignment-delta='0.10946558857872657' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.5' data-budget-scaffold-tokens='397' data-budget-reasoning-delta='0' data-budget-completion-delta='66' data-budget-total-delta='2365'>
+<td><strong>facts</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/320</td>
+<td class='num'>139</td>
+<td class='num'>48.18</td>
+<td>cos=0.0781 | Δalign=0.1095</td>
+<td>—</td>
+<td>—→framing | shift=0.5000</td>
+<td>scaf=397 | reasonΔ=0 | compΔ=66</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic' data-kind='ponder' data-answer-chars='640' data-elapsed-s='45.45881720899888' data-diff-ratio='0.8918238993710692' data-answer-cosine='0.1472206180598976' data-query-alignment-delta='0.05931978763821741' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.5' data-budget-scaffold-tokens='510' data-budget-reasoning-delta='0' data-budget-completion-delta='421' data-budget-total-delta='2479'>
+<td><strong>isomorphic</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/320</td>
+<td class='num'>640</td>
+<td class='num'>45.46</td>
+<td>cos=0.1472 | Δalign=0.0593</td>
+<td>—</td>
+<td>—→definition | shift=0.5000</td>
+<td>scaf=510 | reasonΔ=0 | compΔ=421</td>
+<td class='ok'>0</td>
+</tr>
+</tbody></table>
+<h2>Item details</h2>
+<details>
+<summary><strong>baseline</strong> · baseline</summary>
+<div class='card'>
+<h3>answer</h3>
+<pre>パソコンの画面に並んでいる青いフォルダのアイコンを思い浮かべてみてください。私たちはその青い四角形の中に大切な写真や書類が入っていると信じて疑いませんが、物理的なハードディスクの中に青い四角形が存在しているわけではありません。そこにあるのは、微小な電圧の変化と、0と1の膨大な羅列だけです。もし私たちがその電子</pre>
+</div>
+</details>
+<details>
+<summary><strong>assoc</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9401 | changed=True</div>
+<h3>answer</h3>
+<pre>「、」という唐突な空白から始まる文字列を見たときのように、私たちが普段疑いもしない「現実の文法」から少しだけ逸脱して考えてみます。
+
+哲学の部屋の扉を開け、認知科学のレンズを通し、SF的な想像力を借りてこの世界を眺め直すと、ひとつの仮説が浮かび上がります。私たちが触れているこの硬い机も、流れる時間も、決して世界の「真の姿（ソースコード）」ではありません。
+
+認知科学におけるユーザーインターフェース理論が示唆するように、それはデスクトップパソコンのアイコンのようなものです。複雑すぎる量子の振る舞いや膨大な情報処理をそのまま見せられては、私たちは圧倒されて生存できません。だからこそ進化は、私たちに「リンゴ」や「崖」といった、直感的に操作して危険を回避できる分かりやすい3Dアイコンを与えました。
+
+ここに「空（Emptiness）」という概念を重ね合わせると、さらに別の手触りが生まれます。背後にあるのは実体のない確率の海や、名指しできない何かであり、断片どうしの距離――すなわち「私」と「世界」の隔たりすらも、このシステムが便宜上作り出した空間的な幻覚（ユーザーエクスペリエンス）にすぎないという前提が見えてきます。もし私たちの知覚の条件が変われば、世界はまったく別の法則と手触りを持つはずです。
+
+しかし、言い切る直前にまだ別の枠組みが残っていないかを見つめ直すなら、現実は単なる「偽り」や「隠れ蓑」ではありません。それは私たちが決して直接触れることのできない深淵に対して、唯一アクセスを可能にする機能的な接点でもあります。
+
+これらの熟考の末に、最後に質問へ答えます。
+
+現実とは、「処理不可能なほどの無（あるいは複雑すぎる真理）」を、人間の意識が生存し、意味を見出し、操作できる形へと翻訳するための「未知と意識を繋ぐユーザーインターフェース」です。</pre>
+</div>
+</details>
+<details>
+<summary><strong>random</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8836 | changed=True</div>
+<h3>answer</h3>
+<pre>私たちが触れている「現実」とは、人間の意識と、その背後で沈黙のまま演算を続ける不可知の宇宙（物自体やエントロピー）とをつなぐ、翻訳レイヤーとしてのGUI（グラフィカル・ユーザー・インターフェース）です。
+
+私たちは五感というデバイスを通じて、素粒子の振る舞いや途方もない物理</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8231 | changed=True</div>
+<h3>answer</h3>
+<pre>現実をインターフェースと見なすという問いは、私たちが普段「そこにある」と信じて疑わないこの世界が、究極的な真理そのものではなく、何らかの変換を経た仮の姿であるという前提に立っています。この問いが成立するためには、情報を受け取る「主体（私たちの意識）」と、その背後に隠された「変換</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8918 | changed=True</div>
+<h3>answer</h3>
+<pre>樽の中で静かに進む発酵のように、表面上は静止しているように見えても、その奥底では無数の微小な変化が絶え間なくうごめいている領域があります。また、温室のガラスを透過する光がほんの少し遅れて届き、そこに意味ではなくただ物理的な配置だけが反復される光景を思い浮かべてみてください。私たちが日々「ここにある」と信じている世界も、実はそうした直接触れることのできない膨大なプロセスを、どうにか知覚できる形に変換したスクリーンにすぎないのかもしれません。
+
+そのように熟考していくと、現実とは人間の五感や脳の処理能力をはるかに超えた「無秩序で高次元な情報の海」や「無限に重なり合う可能性のネットワーク」にアクセスするためのインターフェースであるという答えに行き着きます。
+
+私たちは、宇宙の真の姿である量子のカオスや、絶え間なく流転するエネルギーの奔流を、そのままの形では到底受け止めることができません。まともに直視すれば、圧倒的な情報量に認識が焼き切れてしまうでしょう。だからこそ、それらの生のデータは「時間」という遅延を伴い、「空間」という配置の反復に整理され、「触れることのできる物質」へとレンダリングされます。そこには最初から意味が用意されているわけではなく、ただ操作可能な配置が反復されているだけです。
+
+つまり現実とは、私たちが「認識不可能な宇宙の根源的カオス」を安全に処理し、そこに自らの意識で意味を与えながら生きていく体験を味わうために用意された、人間専用の操作画面なのです。</pre>
+</div>
+</details>
+<script>(function(){const body=document.getElementById('matrix-report-body');const heatSel=document.getElementById('heatmap-metric-key');const keySel=document.getElementById('matrix-sort-key');const dirSel=document.getElementById('matrix-sort-dir');const applyBtn=document.getElementById('matrix-sort-apply');const heatmaps=Array.from(document.querySelectorAll('[data-heatmap-key]'));if(heatSel&&heatmaps.length){function syncHeatmap(){const wanted=heatSel.value||'';for(const node of heatmaps){node.style.display=(node.getAttribute('data-heatmap-key')===wanted)?'':'none';}}heatSel.addEventListener('change',syncHeatmap);syncHeatmap();}if(!body||!keySel||!dirSel||!applyBtn){return;}function metricValue(row,key){const attr='data-'+String(key||'').replace(/_/g,'-');const raw=row.getAttribute(attr)||'';if(key==='name'){return raw.toLowerCase();}const num=Number(raw);return Number.isFinite(num)?num:null;}function compareRows(a,b,key,dir){const av=metricValue(a,key);const bv=metricValue(b,key);if(typeof av==='string'||typeof bv==='string'){const as=String(av||'');const bs=String(bv||'');return dir==='asc'?as.localeCompare(bs):bs.localeCompare(as);}if(av===null&&bv===null){return 0;}if(av===null){return 1;}if(bv===null){return -1;}return dir==='asc'?(av-bv):(bv-av);}function sortRows(){const key=keySel.value||'query_alignment_delta';const dir=dirSel.value||'desc';const rows=Array.from(body.querySelectorAll('tr'));const pinned=rows.filter((row)=>row.getAttribute('data-kind')==='baseline');const sortable=rows.filter((row)=>row.getAttribute('data-kind')!=='baseline');sortable.sort((a,b)=>{const main=compareRows(a,b,key,dir);if(main!==0){return main;}return compareRows(a,b,'name','asc');});for(const row of pinned.concat(sortable)){body.appendChild(row);}}applyBtn.addEventListener('click',sortRows);keySel.addEventListener('change',sortRows);dirSel.addEventListener('change',sortRows);sortRows();})();</script>
+</body></html>

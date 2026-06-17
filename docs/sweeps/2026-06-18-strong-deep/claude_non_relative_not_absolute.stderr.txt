@@ -1,0 +1,1 @@
+[sr_ponder] NOTE: claude_cli does not expose next-token logprobs; using self-seeded keywords.

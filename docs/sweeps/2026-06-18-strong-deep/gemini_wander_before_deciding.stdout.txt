@@ -1,0 +1,73 @@
+[sr_ponder] backend=openai_compat provider=custom model='gemini-3.1-pro-preview' base_url=https://generativelanguage.googleapis.com/v1beta/openai reasoning_effort=high seed_method=auto logprobs_top_n=0 lang=en band_profile=single bands=profile objective=random_band diversity=off hops=1 answer_style=plain control=none pipeline=assoc memory=current_only/tail/off scaffold=assoc/320 write_memory=False
+
+=== PACK: baseline ===
+
+Allowing an answer to wander before deciding shifts the process from a reflexive reaction to a deliberate exploration. This space enables the evaluation of multiple perspectives, the discovery of hidden nuances, and the opportunity for active self-correction. By testing boundaries and filtering out initial biases or flawed assumptions along the way, the final decision transforms into a more accurate, deeply reasoned, and robust conclusion.
+
+=== PACK: assoc ===
+
+When an answer is allowed to wander, the space between isolated fragments and underlying assumptions becomes visible. Rather than immediately building a locked room of certainty, the thought process navigates the undefined, letting conditions shift so that familiar words and concepts can acquire a different grip. This deliberate delay prevents premature crystallization; it holds the architecture of thought open. Because the conclusion is held in suspense, alternative perspectives remain accessible just before the claim finally hardens, ensuring that the eventual decision is not a rigid reflex, but a carefully chosen frame.
+
+=== COMPARISON ===
+
+answers_changed=yes chars=443->630 delta=+187 diff_ratio=0.9385
+records=1 unique_keywords=0 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.432590 query_base=0.258737 query_ponder=0.260191 align_delta=0.001454
+stance[heuristic_lexicon] base= ponder=conditionalization shift=0.500000 gain=conditionalization drop=
+spatial[heuristic_lexicon] ans_density=2.257->4.762 log_density=10.417 q_density=0.000 groups=geometry->container log=container
+budget[api_usage_plus_visible_estimate] ans=74->102 scaffold=364 reason=0->0 completion=75->152
+
+=== PACK: random ===
+
+When an answer is allowed to wander, the urgency of immediate resolution is replaced by a steady, observant rhythm. The space between the question and the conclusion expands, allowing seemingly insignificant details to multiply and gather meaning. Thoughts and fragments that might have otherwise been discarded drift into new roles, acting as both prop and witness to the mind's evolving logic. Because nothing is rushing, there is time to notice hidden signals and alternative framings that sit just one step ahead of the initial assumption. Ultimately, the final decision transforms from a rigid, expected reflex into a carefully folded culmination of its journey, rich with the context of the wandering itself.
+
+=== COMPARISON ===
+
+answers_changed=yes chars=443->714 delta=+271 diff_ratio=0.9758
+records=1 unique_keywords=0 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.468417 query_base=0.269324 query_ponder=0.251998 align_delta=-0.017325
+stance[heuristic_lexicon] base= ponder=conditionalization shift=0.500000 gain=conditionalization drop=
+spatial[heuristic_lexicon] ans_density=2.257->1.401 log_density=2.506 q_density=0.000 groups=geometry->geometry log=container
+budget[api_usage_plus_visible_estimate] ans=74->126 scaffold=427 reason=0->0 completion=75->224
+
+=== PACK: facts ===
+
+What changes is the introduction of intermediate processing steps prior to generating a final output. This allows the reasoning process to evaluate the scope of its claims, clarify whether those claims are local, contextual, or absolute, and separate applicability from definition before drawing a final conclusion.
+
+=== COMPARISON ===
+
+answers_changed=yes chars=443->315 delta=-128 diff_ratio=0.9736
+records=1 unique_keywords=2 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.400758 query_base=0.276615 query_ponder=0.220910 align_delta=-0.055705
+stance[heuristic_lexicon] base= ponder= shift=0.000000 gain= drop=
+spatial[heuristic_lexicon] ans_density=2.257->0.000 log_density=0.000 q_density=0.000 groups=geometry->none log=none
+budget[api_usage_plus_visible_estimate] ans=74->52 scaffold=378 reason=0->0 completion=75->124
+
+=== PACK: isomorphic ===
+
+Allowing an answer to wander creates a space for prolonged maturation and delayed resolution. When the final conclusion arrives a beat late, the mind separates the rigid framework of the inquiry from the fluidity of the outcome. The underlying structure of the thought process remains consistent and repeats, but the final subject is freed from predetermined expectations. This pause allows the actual conclusion to organically shift, adapt, and grow into something entirely unique, rather than simply replicating initial assumptions.
+
+=== COMPARISON ===
+
+answers_changed=yes chars=443->534 delta=+91 diff_ratio=0.8997
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.463863 query_base=0.266694 query_ponder=0.216118 align_delta=-0.050576
+stance[heuristic_lexicon] base= ponder=conditionalization shift=0.500000 gain=conditionalization drop=
+spatial[heuristic_lexicon] ans_density=2.257->1.873 log_density=0.000 q_density=0.000 groups=geometry->geometry log=none
+budget[api_usage_plus_visible_estimate] ans=74->88 scaffold=358 reason=0->0 completion=75->159
+
+=== PACK SUMMARY ===
+
+name        kind      control  chars  records  elapsed_s
+----------  --------  -------  -----  -------  ------------------
+baseline    baseline           443             8.675318083000093
+assoc       ponder    none     630    1        22.638038790999417
+random      ponder    none     714    1        28.601903916000083
+facts       ponder    none     315    1        33.462963833000686
+isomorphic  ponder    none     534    1        32.76519887500035
+
+[json_out] wrote artifacts/sweep_20260618_strong_deep/gemini_wander_before_deciding.json
+
+[matrix_report_out] wrote artifacts/sweep_20260618_strong_deep/gemini_wander_before_deciding.matrix.html
+
+[trace_report_out] wrote artifacts/sweep_20260618_strong_deep/gemini_wander_before_deciding.trace.html

@@ -1,0 +1,77 @@
+[sr_ponder] backend=openai_compat provider=custom model='gemini-3.5-flash' base_url=https://generativelanguage.googleapis.com/v1beta/openai reasoning_effort=auto seed_method=auto logprobs_top_n=0 lang=ja band_profile=single bands=profile objective=random_band diversity=off hops=1 answer_style=plain control=none pipeline=assoc memory=current_only/tail/off scaffold=assoc/180 write_memory=False
+
+=== PACK: baseline ===
+
+状態を探る。**
+
+    *   *候補
+
+=== PACK: assoc ===
+
+他との比較や関係性によって規定されるわけ
+
+=== COMPARISON ===
+
+answers_changed=yes chars=21->20 delta=-1 diff_ratio=0.9512
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.000000 query_base=0.014667 query_ponder=0.012944 align_delta=-0.001723
+stance[heuristic_lexicon] base=example_expansion ponder= shift=0.500000 gain= drop=example_expansion
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
+budget[api_usage_plus_visible_estimate] ans=12->20 scaffold=207 reason=0->0 completion=11->25
+
+=== PACK: random ===
+
+*:
+        *   これらは「
+
+=== COMPARISON ===
+
+answers_changed=yes chars=21->20 delta=-1 diff_ratio=0.5122
+records=1 unique_keywords=0 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.000000 query_base=0.014600 query_ponder=0.000000 align_delta=-0.014600
+stance[heuristic_lexicon] base=example_expansion ponder=example_expansion shift=0.000000 gain= drop=
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
+budget[api_usage_plus_visible_estimate] ans=12->8 scaffold=217 reason=0->0 completion=11->17
+
+=== PACK: facts ===
+
+がある。
+   - 絶対的：いかなる
+
+=== COMPARISON ===
+
+answers_changed=yes chars=21->18 delta=-3 diff_ratio=0.6410
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.020956 query_base=0.015005 query_ponder=0.057126 align_delta=0.042122
+stance[heuristic_lexicon] base=example_expansion ponder=example_expansion shift=0.000000 gain= drop=
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
+budget[api_usage_plus_visible_estimate] ans=12->13 scaffold=173 reason=0->0 completion=11->35
+
+=== PACK: isomorphic ===
+
+「非相対的ではあるが絶対的ではない状態
+
+=== COMPARISON ===
+
+answers_changed=yes chars=21->19 delta=-2 diff_ratio=0.9000
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.012312 query_base=0.011209 query_ponder=0.910411 align_delta=0.899201
+stance[heuristic_lexicon] base=example_expansion ponder= shift=0.500000 gain= drop=example_expansion
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
+budget[api_usage_plus_visible_estimate] ans=12->19 scaffold=202 reason=0->0 completion=11->40
+
+=== PACK SUMMARY ===
+
+name        kind      control  chars  records  elapsed_s
+----------  --------  -------  -----  -------  ------------------
+baseline    baseline           21              4.775080540999625
+assoc       ponder    none     20     1        6.32310312500158
+random      ponder    none     20     1        5.968917166999745
+facts       ponder    none     18     1        10.905757208000068
+isomorphic  ponder    none     19     1        8.942767791000733
+
+[json_out] wrote artifacts/sweep_20260617_claude_gemini/gemini_non_relative_not_absolute.json
+
+[matrix_report_out] wrote artifacts/sweep_20260617_claude_gemini/gemini_non_relative_not_absolute.matrix.html
+
+[trace_report_out] wrote artifacts/sweep_20260617_claude_gemini/gemini_non_relative_not_absolute.trace.html

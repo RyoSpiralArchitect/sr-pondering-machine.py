@@ -1,0 +1,1955 @@
+{
+  "ts": "2026-06-17T16:52:02Z",
+  "kind": "lab_matrix",
+  "provider": "custom",
+  "model": "gemini-3.1-pro-preview",
+  "query": "What changes when an answer is allowed to wander before deciding?",
+  "pack": "lab_scaffold_abcd",
+  "pack_file": "",
+  "lab_matrix": "scaffold_abcd",
+  "preset": "none",
+  "config": "",
+  "env": {
+    "python": "3.13.13 (v3.13.13:01104ce1beb, Apr  7 2026, 14:43:30) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "platform": "darwin",
+    "torch": "2.11.0",
+    "transformers": "4.57.6"
+  },
+  "base_cfg": {
+    "model_path": "gemini-3.1-pro-preview",
+    "memory_path": "ponder_logs.jsonl",
+    "backend": "openai_compat",
+    "provider": "custom",
+    "api_base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "api_chat_path": "/chat/completions",
+    "api_key_env": "GEMINI_API_KEY",
+    "api_key": "",
+    "api_headers": [],
+    "api_timeout": 900.0,
+    "api_max_retries": 1,
+    "api_reasoning_effort": "high",
+    "api_seed_method": "auto",
+    "api_logprobs_top_n": 0,
+    "n_memory": 6,
+    "memory_policy": "current_only",
+    "memory_retrieve": "tail",
+    "memory_pool": 200,
+    "memory_mix_ratio": 0.5,
+    "memory_exclude_current_run": true,
+    "memory_remix": "off",
+    "memory_remix_keep_original": false,
+    "memory_remix_max_new_tokens": 240,
+    "memory_remix_temperature": 0.9,
+    "rejected": {
+      "top_k": 80,
+      "strategy": "outside_topk",
+      "exclude_top": 8,
+      "band_width": 256,
+      "n_keywords": 6
+    },
+    "band_profile": "single",
+    "bands": [],
+    "answer_style": "plain",
+    "answer_max_new_tokens": 2048,
+    "ponder_max_new_tokens": 1024,
+    "temperature": 0.7,
+    "top_p": 0.95,
+    "top_k": 0,
+    "repetition_penalty": 1.05,
+    "no_repeat_ngram_size": 0,
+    "seed": 1234,
+    "prompt_lang": "en",
+    "ponder_mode": "assoc",
+    "ponder_pipeline": [],
+    "pipeline_context": "prev",
+    "pipeline_context_max_chars": 1200,
+    "n_ponder": 1,
+    "ponder_hops": 1,
+    "hop_keyword_source": "model",
+    "hop_context_max_chars": 900,
+    "keyword_refine": false,
+    "keyword_refine_max_new_tokens": 96,
+    "keyword_refine_temperature": 0.3,
+    "keyword_objective": "random_band",
+    "keyword_select_top": 128,
+    "keyword_diversity": "off",
+    "keyword_diversity_threshold": 0.82,
+    "dissonance_target": 0.9,
+    "dissonance_width": 0.6,
+    "dissonance_tail_k": 64,
+    "prompt_jitter": 0,
+    "prompt_jitter_include_original": true,
+    "prompt_jitter_max_new_tokens": 160,
+    "prompt_jitter_temperature": 0.6,
+    "probe_top_n": 0,
+    "probe_compare": false,
+    "probe_compare_stages": false,
+    "probe_compare_top_n": 32,
+    "compare_semantic": "hash",
+    "compare_judge": "off",
+    "compare_stance": "auto",
+    "compare_spatial_metaphor": "auto",
+    "compare_token_budget": "auto",
+    "compare_embed_model": "",
+    "scaffold_condition": "assoc",
+    "scaffold_token_target": 320,
+    "print_probe": false,
+    "interactive": false,
+    "interactive_candidates": 48,
+    "answer_per_band": false,
+    "answer_ensemble": false,
+    "answer_ensemble_max_new_tokens": 512,
+    "answer_ensemble_temperature": 0.2,
+    "control": "none",
+    "write_memory": false,
+    "device": "auto",
+    "dtype": "auto",
+    "allocator_warmup": "auto",
+    "trust_remote_code": false,
+    "use_chat_template": true,
+    "force_gemma_format": true,
+    "hf_local_files_only": true
+  },
+  "items": [
+    {
+      "name": "baseline",
+      "kind": "baseline",
+      "answer": "Allowing an answer to wander before deciding shifts the process from a reflexive reaction to a deliberate exploration. This space enables the evaluation of multiple perspectives, the discovery of hidden nuances, and the opportunity for active self-correction. By testing boundaries and filtering out initial biases or flawed assumptions along the way, the final decision transforms into a more accurate, deeply reasoned, and robust conclusion.",
+      "metrics": {
+        "answer_chars": 443,
+        "elapsed_s": 8.675318083000093
+      }
+    },
+    {
+      "name": "assoc",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "When an answer is allowed to wander, the space between isolated fragments and underlying assumptions becomes visible. Rather than immediately building a locked room of certainty, the thought process navigates the undefined, letting conditions shift so that familiar words and concepts can acquire a different grip. This deliberate delay prevents premature crystallization; it holds the architecture of thought open. Because the conclusion is held in suspense, alternative perspectives remain accessible just before the claim finally hardens, ensuring that the eventual decision is not a rigid reflex, but a carefully chosen frame.",
+      "records": [
+        {
+          "ts": "2026-06-17T16:52:25Z",
+          "run_id": "bdca344c8b87a03f",
+          "query_sha": "d4f5cfadd642",
+          "prompt_lang": "en",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [],
+          "keywords": [],
+          "token_ids": [],
+          "selected_tokens": [],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "vtAyap3oEMKx0-kPrZeXiAw",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 81,
+            "completion_tokens": 41,
+            "reasoning_tokens": 0,
+            "total_tokens": 1101,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "Let  Unknown and Not-defined collide. What images, questions, or fragments appear?",
+          "ponder_log": "- Assume the Unknown is a locked room, while the Not-defined is the absence of architecture altogether.\n- If they collide, does the room lose its walls, or does the absence suddenly manifest a",
+          "gen_elapsed_s": 11.612826124999629
+        }
+      ],
+      "extras": {
+        "run_id": "bdca344c8b87a03f",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:52:25Z",
+            "run_id": "bdca344c8b87a03f",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "assoc",
+          "target_tokens": 320,
+          "source_tokens_est": 89,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": false,
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 307,
+          "normalized": true,
+          "strategy": "direct_memory_block"
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 1591,
+        "memory_block_est_tokens": 307,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 100,
+            "completion_tokens": 7,
+            "reasoning_tokens": 0,
+            "total_tokens": 256
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "stop",
+          "response_id": "ydAyaofXNf7N2roPx-yJyQU",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 457,
+          "completion_tokens": 104,
+          "reasoning_tokens": 0,
+          "total_tokens": 1205,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 22.63779912499922,
+          "probe_s": 5.249999958323315e-06,
+          "memory_remix_s": 3.249999281251803e-06,
+          "answer_s": 7.803795292000359
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "assoc",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 630,
+        "records": 1,
+        "elapsed_s": 22.638038790999417
+      },
+      "comparison": {
+        "baseline_chars": 443,
+        "ponder_chars": 630,
+        "answer_changed": true,
+        "char_delta": 187,
+        "diff_ratio": 0.9384902143522833,
+        "records": 1,
+        "unique_keywords": 0,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_ponder_dominant": "conditionalization",
+        "stance_top_gain": "conditionalization",
+        "spatial_answer_density_delta": 2.5045684187896375,
+        "spatial_baseline_density": 2.2573363431151243,
+        "spatial_ponder_density": 4.761904761904762,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 10.416666666666666,
+        "spatial_log_question_density_delta": 10.416666666666666,
+        "budget_baseline_answer_tokens_est": 74.0,
+        "budget_ponder_answer_tokens_est": 102.0,
+        "budget_external_scaffold_tokens_est": 364.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.43258977943163585,
+          "query_baseline_cosine": 0.25873741128638644,
+          "query_ponder_cosine": 0.2601909825134283,
+          "query_alignment_delta": 0.0014535712270418721
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 1.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 1,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "conditionalization": [
+                {
+                  "term": "when ",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "",
+          "dominant_ponder": "conditionalization",
+          "dominant_shift": "->conditionalization",
+          "top_gain": "conditionalization",
+          "top_gain_delta": 1.0,
+          "top_drop": "",
+          "top_drop_delta": 0.0,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 0.0,
+            "conditionalization": 1.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 443,
+            "count": 1,
+            "density_per_1k_chars": 2.2573363431151243,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "space",
+                "count": 1
+              }
+            ]
+          },
+          "ponder": {
+            "chars": 630,
+            "count": 3,
+            "density_per_1k_chars": 4.761904761904762,
+            "dominant_group": "container",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 2,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "room",
+                "count": 1
+              },
+              {
+                "term": "frame",
+                "count": 1
+              },
+              {
+                "term": "space",
+                "count": 1
+              }
+            ]
+          },
+          "questions": {
+            "chars": 82,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 192,
+            "count": 2,
+            "density_per_1k_chars": 10.416666666666666,
+            "dominant_group": "container",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 2,
+              "geometry": 0
+            },
+            "top_terms": [
+              {
+                "term": "room",
+                "count": 2
+              }
+            ]
+          },
+          "answer_density_delta": 2.5045684187896375,
+          "log_question_density_delta": 10.416666666666666
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 74,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 45,
+              "completion_tokens": 75,
+              "reasoning_tokens": 0,
+              "total_tokens": 759
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 102,
+            "ponder_question_tokens_est": 17,
+            "ponder_log_tokens_est": 40,
+            "keyword_tokens_est": 0,
+            "memory_block_chars": 1591,
+            "memory_block_tokens_est": 307,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 638,
+              "completion_tokens": 152,
+              "reasoning_tokens": 0,
+              "total_tokens": 2562
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 81,
+              "completion_tokens": 41,
+              "reasoning_tokens": 0,
+              "total_tokens": 1101
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 100,
+                "completion_tokens": 7,
+                "reasoning_tokens": 0,
+                "total_tokens": 256
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 100,
+              "completion_tokens": 7,
+              "reasoning_tokens": 0,
+              "total_tokens": 256
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 457,
+              "completion_tokens": 104,
+              "reasoning_tokens": 0,
+              "total_tokens": 1205
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 28,
+            "external_scaffold_tokens_est": 364,
+            "api_prompt_tokens": 593,
+            "api_completion_tokens": 77,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 1803
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 683,
+            "completion_tokens": 227,
+            "reasoning_tokens": 0,
+            "total_tokens": 3321
+          }
+        }
+      }
+    },
+    {
+      "name": "random",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "When an answer is allowed to wander, the urgency of immediate resolution is replaced by a steady, observant rhythm. The space between the question and the conclusion expands, allowing seemingly insignificant details to multiply and gather meaning. Thoughts and fragments that might have otherwise been discarded drift into new roles, acting as both prop and witness to the mind's evolving logic. Because nothing is rushing, there is time to notice hidden signals and alternative framings that sit just one step ahead of the initial assumption. Ultimately, the final decision transforms from a rigid, expected reflex into a carefully folded culmination of its journey, rich with the context of the wandering itself.",
+      "records": [
+        {
+          "ts": "2026-06-17T16:52:48Z",
+          "run_id": "c55e7e6ee7cf39b6",
+          "query_sha": "d4f5cfadd642",
+          "prompt_lang": "en",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [],
+          "keywords": [],
+          "token_ids": [],
+          "selected_tokens": [],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "1dAyaoDFM5jt2roPlaSiuQ0",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 81,
+            "completion_tokens": 95,
+            "reasoning_tokens": 0,
+            "total_tokens": 1101,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "Let  Unknown and Not-defined collide. What images, questions, or fragments appear?",
+          "ponder_log": "- If the Unknown is a locked box, perhaps Not-defined is a key made of smoke that cannot turn the lock.\n- I assume the Unknown holds a specific, hidden value waiting to be found, but what if it is just as hollow as the Not-defined?\n- Imagine a shadow (Unknown) cast upon a mirror that has no glass (Not-defined); where does the darkness actually fall?\n- We often treat the undefined as an empty void",
+          "gen_elapsed_s": 10.545293208000658
+        }
+      ],
+      "extras": {
+        "run_id": "c55e7e6ee7cf39b6",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:52:48Z",
+            "run_id": "c55e7e6ee7cf39b6",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "random",
+          "target_tokens": 320,
+          "source_tokens_est": 271,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": false,
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 317,
+          "normalized": true,
+          "strategy": "local_random_sentences"
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 1489,
+        "memory_block_est_tokens": 317,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 100,
+            "completion_tokens": 3,
+            "reasoning_tokens": 0,
+            "total_tokens": 256
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "stop",
+          "response_id": "4NAyauibHOTN2roP08acgQw",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 425,
+          "completion_tokens": 126,
+          "reasoning_tokens": 0,
+          "total_tokens": 1350,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 28.601614291999795,
+          "probe_s": 7.58399983169511e-06,
+          "memory_remix_s": 5.1249990065116435e-06,
+          "answer_s": 13.881432750000386
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "random",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 714,
+        "records": 1,
+        "elapsed_s": 28.601903916000083
+      },
+      "comparison": {
+        "baseline_chars": 443,
+        "ponder_chars": 714,
+        "answer_changed": true,
+        "char_delta": 271,
+        "diff_ratio": 0.975799481417459,
+        "records": 1,
+        "unique_keywords": 0,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_ponder_dominant": "conditionalization",
+        "stance_top_gain": "conditionalization",
+        "spatial_answer_density_delta": -0.8567761190254886,
+        "spatial_baseline_density": 2.2573363431151243,
+        "spatial_ponder_density": 1.4005602240896358,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 2.506265664160401,
+        "spatial_log_question_density_delta": 2.506265664160401,
+        "budget_baseline_answer_tokens_est": 74.0,
+        "budget_ponder_answer_tokens_est": 126.0,
+        "budget_external_scaffold_tokens_est": 427.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.46841691623650106,
+          "query_baseline_cosine": 0.2693237334490867,
+          "query_ponder_cosine": 0.25199835104388385,
+          "query_alignment_delta": -0.01732538240520287
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 2.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 1.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 2,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "conditionalization": [
+                {
+                  "term": "when ",
+                  "count": 1
+                },
+                {
+                  "term": "context",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "",
+          "dominant_ponder": "conditionalization",
+          "dominant_shift": "->conditionalization",
+          "top_gain": "conditionalization",
+          "top_gain_delta": 1.0,
+          "top_drop": "",
+          "top_drop_delta": 0.0,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 0.0,
+            "conditionalization": 1.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 443,
+            "count": 1,
+            "density_per_1k_chars": 2.2573363431151243,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "space",
+                "count": 1
+              }
+            ]
+          },
+          "ponder": {
+            "chars": 714,
+            "count": 1,
+            "density_per_1k_chars": 1.4005602240896358,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "space",
+                "count": 1
+              }
+            ]
+          },
+          "questions": {
+            "chars": 82,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 399,
+            "count": 1,
+            "density_per_1k_chars": 2.506265664160401,
+            "dominant_group": "container",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 1,
+              "geometry": 0
+            },
+            "top_terms": [
+              {
+                "term": "box",
+                "count": 1
+              }
+            ]
+          },
+          "answer_density_delta": -0.8567761190254886,
+          "log_question_density_delta": 2.506265664160401
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 74,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 45,
+              "completion_tokens": 75,
+              "reasoning_tokens": 0,
+              "total_tokens": 759
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 126,
+            "ponder_question_tokens_est": 17,
+            "ponder_log_tokens_est": 93,
+            "keyword_tokens_est": 0,
+            "memory_block_chars": 1489,
+            "memory_block_tokens_est": 317,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 606,
+              "completion_tokens": 224,
+              "reasoning_tokens": 0,
+              "total_tokens": 2707
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 81,
+              "completion_tokens": 95,
+              "reasoning_tokens": 0,
+              "total_tokens": 1101
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 100,
+                "completion_tokens": 3,
+                "reasoning_tokens": 0,
+                "total_tokens": 256
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 100,
+              "completion_tokens": 3,
+              "reasoning_tokens": 0,
+              "total_tokens": 256
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 425,
+              "completion_tokens": 126,
+              "reasoning_tokens": 0,
+              "total_tokens": 1350
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 52,
+            "external_scaffold_tokens_est": 427,
+            "api_prompt_tokens": 561,
+            "api_completion_tokens": 149,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 1948
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 651,
+            "completion_tokens": 299,
+            "reasoning_tokens": 0,
+            "total_tokens": 3466
+          }
+        }
+      }
+    },
+    {
+      "name": "facts",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "What changes is the introduction of intermediate processing steps prior to generating a final output. This allows the reasoning process to evaluate the scope of its claims, clarify whether those claims are local, contextual, or absolute, and separate applicability from definition before drawing a final conclusion.",
+      "records": [
+        {
+          "ts": "2026-06-17T16:53:18Z",
+          "run_id": "2b8d36b978b0c8fe",
+          "query_sha": "d4f5cfadd642",
+          "prompt_lang": "en",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "cognitive drift",
+            "delayed convergence"
+          ],
+          "keywords": [
+            "cognitive drift",
+            "delayed convergence"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "cognitive drift",
+              "rank": null,
+              "prob": null
+            },
+            {
+              "token_id": null,
+              "token": "delayed convergence",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "8tAyavGZA5Gk0-kP-qHYkA4",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 80,
+            "completion_tokens": 41,
+            "reasoning_tokens": 0,
+            "total_tokens": 1100,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "Let cognitive drift and delayed convergence collide. What images, questions, or fragments appear?",
+          "ponder_log": "- Like two tectonic plates colliding, one made of wandering mist and the other of slow-cooling magma.\n- I assume cognitive drift implies a loss of focus, but what if it is actually an unconscious",
+          "gen_elapsed_s": 12.68594766699971
+        }
+      ],
+      "extras": {
+        "run_id": "2b8d36b978b0c8fe",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:53:18Z",
+            "run_id": "2b8d36b978b0c8fe",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "facts",
+          "target_tokens": 320,
+          "source_tokens_est": 23,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "_tAyatLeLLbIrfcP8tWC8QQ",
+            "model": "gemini-3.1-pro-preview",
+            "api_calls": 1,
+            "prompt_tokens": 91,
+            "completion_tokens": 24,
+            "reasoning_tokens": 0,
+            "total_tokens": 727,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 317,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 1570,
+        "memory_block_est_tokens": 317,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 100,
+            "completion_tokens": 7,
+            "reasoning_tokens": 0,
+            "total_tokens": 256
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 91,
+            "completion_tokens": 24,
+            "reasoning_tokens": 0,
+            "total_tokens": 727
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "stop",
+          "response_id": "CNEyauevD5yM0-kPvJD18As",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 432,
+          "completion_tokens": 52,
+          "reasoning_tokens": 0,
+          "total_tokens": 1208,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 33.46272512499854,
+          "probe_s": 9.16600038181059e-06,
+          "memory_remix_s": 6.250000296859071e-06,
+          "answer_s": 7.522739416001059
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 315,
+        "records": 1,
+        "elapsed_s": 33.462963833000686
+      },
+      "comparison": {
+        "baseline_chars": 443,
+        "ponder_chars": 315,
+        "answer_changed": true,
+        "char_delta": -128,
+        "diff_ratio": 0.9736147757255936,
+        "records": 1,
+        "unique_keywords": 2,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.0,
+        "spatial_answer_density_delta": -2.2573363431151243,
+        "spatial_baseline_density": 2.2573363431151243,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 74.0,
+        "budget_ponder_answer_tokens_est": 52.0,
+        "budget_external_scaffold_tokens_est": 378.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.4007579069739694,
+          "query_baseline_cosine": 0.2766147355740446,
+          "query_ponder_cosine": 0.22090973925207952,
+          "query_alignment_delta": -0.05570499632196507
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "shift_score": 0.0,
+          "dominant_baseline": "",
+          "dominant_ponder": "",
+          "dominant_shift": "",
+          "top_gain": "",
+          "top_gain_delta": 0.0,
+          "top_drop": "",
+          "top_drop_delta": 0.0,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 0.0,
+            "conditionalization": 0.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 443,
+            "count": 1,
+            "density_per_1k_chars": 2.2573363431151243,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "space",
+                "count": 1
+              }
+            ]
+          },
+          "ponder": {
+            "chars": 315,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 97,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 195,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": -2.2573363431151243,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 74,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 45,
+              "completion_tokens": 75,
+              "reasoning_tokens": 0,
+              "total_tokens": 759
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 52,
+            "ponder_question_tokens_est": 17,
+            "ponder_log_tokens_est": 40,
+            "keyword_tokens_est": 4,
+            "memory_block_chars": 1570,
+            "memory_block_tokens_est": 317,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 703,
+              "completion_tokens": 124,
+              "reasoning_tokens": 0,
+              "total_tokens": 3291
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 80,
+              "completion_tokens": 41,
+              "reasoning_tokens": 0,
+              "total_tokens": 1100
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 100,
+                "completion_tokens": 7,
+                "reasoning_tokens": 0,
+                "total_tokens": 256
+              },
+              "scaffold_condition": {
+                "calls": 1,
+                "prompt_tokens": 91,
+                "completion_tokens": 24,
+                "reasoning_tokens": 0,
+                "total_tokens": 727
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 191,
+              "completion_tokens": 31,
+              "reasoning_tokens": 0,
+              "total_tokens": 983
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 432,
+              "completion_tokens": 52,
+              "reasoning_tokens": 0,
+              "total_tokens": 1208
+            }
+          },
+          "delta": {
+            "answer_tokens_est": -22,
+            "external_scaffold_tokens_est": 378,
+            "api_prompt_tokens": 658,
+            "api_completion_tokens": 49,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 2532
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 748,
+            "completion_tokens": 199,
+            "reasoning_tokens": 0,
+            "total_tokens": 4050
+          }
+        }
+      }
+    },
+    {
+      "name": "isomorphic",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "Allowing an answer to wander creates a space for prolonged maturation and delayed resolution. When the final conclusion arrives a beat late, the mind separates the rigid framework of the inquiry from the fluidity of the outcome. The underlying structure of the thought process remains consistent and repeats, but the final subject is freed from predetermined expectations. This pause allows the actual conclusion to organically shift, adapt, and grow into something entirely unique, rather than simply replicating initial assumptions.",
+      "records": [
+        {
+          "ts": "2026-06-17T16:53:51Z",
+          "run_id": "b2408938a0011b69",
+          "query_sha": "d4f5cfadd642",
+          "prompt_lang": "en",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "delayed resolution"
+          ],
+          "keywords": [
+            "delayed resolution"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "delayed resolution",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "E9EyaunSPKbY2roP8MatoQ4",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 81,
+            "completion_tokens": 39,
+            "reasoning_tokens": 0,
+            "total_tokens": 1101,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "Let delayed resolution and Emptiness collide. What images, questions, or fragments appear?",
+          "ponder_log": "- I initially assume that delayed resolution meeting emptiness would neutralize the tension, like dropping a heavy stone into a bottomless pit.\n- Yet, what if the void acts as an acoustic chamber,",
+          "gen_elapsed_s": 12.274923166998633
+        }
+      ],
+      "extras": {
+        "run_id": "b2408938a0011b69",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:53:51Z",
+            "run_id": "b2408938a0011b69",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "isomorphic",
+          "target_tokens": 320,
+          "source_tokens_est": 23,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "INEyapGUBYKT0-kP7qqjiAw",
+            "model": "gemini-3.1-pro-preview",
+            "api_calls": 1,
+            "prompt_tokens": 235,
+            "completion_tokens": 26,
+            "reasoning_tokens": 0,
+            "total_tokens": 871,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 303,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 1426,
+        "memory_block_est_tokens": 303,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 100,
+            "completion_tokens": 5,
+            "reasoning_tokens": 0,
+            "total_tokens": 255
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 235,
+            "completion_tokens": 26,
+            "reasoning_tokens": 0,
+            "total_tokens": 871
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "stop",
+          "response_id": "J9EyapfGG5mhrfcPrvuK0Qw",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 414,
+          "completion_tokens": 89,
+          "reasoning_tokens": 0,
+          "total_tokens": 1238,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 32.76470412500021,
+          "probe_s": 8.916998922359198e-06,
+          "memory_remix_s": 3.249999281251803e-06,
+          "answer_s": 9.086460291000549
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 320
+      },
+      "metrics": {
+        "answer_chars": 534,
+        "records": 1,
+        "elapsed_s": 32.76519887500035
+      },
+      "comparison": {
+        "baseline_chars": 443,
+        "ponder_chars": 534,
+        "answer_changed": true,
+        "char_delta": 91,
+        "diff_ratio": 0.8996929375639713,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_ponder_dominant": "conditionalization",
+        "stance_top_gain": "conditionalization",
+        "spatial_answer_density_delta": -0.38467716708516186,
+        "spatial_baseline_density": 2.2573363431151243,
+        "spatial_ponder_density": 1.8726591760299625,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 74.0,
+        "budget_ponder_answer_tokens_est": 88.0,
+        "budget_external_scaffold_tokens_est": 358.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.46386345176607613,
+          "query_baseline_cosine": 0.26669384366222704,
+          "query_ponder_cosine": 0.21611764070508488,
+          "query_alignment_delta": -0.05057620295714216
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "ponder": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.0,
+            "dominant": "conditionalization",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 1.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 1,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "conditionalization": [
+                {
+                  "term": "when ",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "",
+          "dominant_ponder": "conditionalization",
+          "dominant_shift": "->conditionalization",
+          "top_gain": "conditionalization",
+          "top_gain_delta": 1.0,
+          "top_drop": "",
+          "top_drop_delta": 0.0,
+          "deltas": {
+            "definition": 0.0,
+            "framing": 0.0,
+            "conditionalization": 1.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 443,
+            "count": 1,
+            "density_per_1k_chars": 2.2573363431151243,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "space",
+                "count": 1
+              }
+            ]
+          },
+          "ponder": {
+            "chars": 534,
+            "count": 1,
+            "density_per_1k_chars": 1.8726591760299625,
+            "dominant_group": "geometry",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 1
+            },
+            "top_terms": [
+              {
+                "term": "space",
+                "count": 1
+              }
+            ]
+          },
+          "questions": {
+            "chars": 90,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 196,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": -0.38467716708516186,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 74,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 45,
+              "completion_tokens": 75,
+              "reasoning_tokens": 0,
+              "total_tokens": 759
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 88,
+            "ponder_question_tokens_est": 16,
+            "ponder_log_tokens_est": 37,
+            "keyword_tokens_est": 2,
+            "memory_block_chars": 1426,
+            "memory_block_tokens_est": 303,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 830,
+              "completion_tokens": 159,
+              "reasoning_tokens": 0,
+              "total_tokens": 3465
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 81,
+              "completion_tokens": 39,
+              "reasoning_tokens": 0,
+              "total_tokens": 1101
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 100,
+                "completion_tokens": 5,
+                "reasoning_tokens": 0,
+                "total_tokens": 255
+              },
+              "scaffold_condition": {
+                "calls": 1,
+                "prompt_tokens": 235,
+                "completion_tokens": 26,
+                "reasoning_tokens": 0,
+                "total_tokens": 871
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 335,
+              "completion_tokens": 31,
+              "reasoning_tokens": 0,
+              "total_tokens": 1126
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 414,
+              "completion_tokens": 89,
+              "reasoning_tokens": 0,
+              "total_tokens": 1238
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 14,
+            "external_scaffold_tokens_est": 358,
+            "api_prompt_tokens": 785,
+            "api_completion_tokens": 84,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 2706
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 875,
+            "completion_tokens": 234,
+            "reasoning_tokens": 0,
+            "total_tokens": 4224
+          }
+        }
+      }
+    }
+  ],
+  "artifacts": {
+    "out_label": "json_out",
+    "out": "artifacts/sweep_20260618_strong_deep/gemini_wander_before_deciding.json",
+    "trace_out": "artifacts/sweep_20260618_strong_deep/gemini_wander_before_deciding.trace.jsonl",
+    "trace_report_out": "artifacts/sweep_20260618_strong_deep/gemini_wander_before_deciding.trace.html",
+    "matrix_report_out": "artifacts/sweep_20260618_strong_deep/gemini_wander_before_deciding.matrix.html",
+    "out_dir": "",
+    "resume_from": ""
+  }
+}

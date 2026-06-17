@@ -1,0 +1,1645 @@
+{
+  "ts": "2026-06-17T16:13:25Z",
+  "kind": "lab_matrix",
+  "provider": "custom",
+  "model": "gemini-3.5-flash",
+  "query": "現実って何のインターフェース？",
+  "pack": "lab_scaffold_abcd",
+  "pack_file": "",
+  "lab_matrix": "scaffold_abcd",
+  "preset": "none",
+  "config": "",
+  "env": {
+    "python": "3.13.13 (v3.13.13:01104ce1beb, Apr  7 2026, 14:43:30) [Clang 16.0.0 (clang-1600.0.26.6)]",
+    "platform": "darwin",
+    "torch": "2.11.0",
+    "transformers": "4.57.6"
+  },
+  "base_cfg": {
+    "model_path": "gemini-3.5-flash",
+    "memory_path": "ponder_logs.jsonl",
+    "backend": "openai_compat",
+    "provider": "custom",
+    "api_base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "api_chat_path": "/chat/completions",
+    "api_key_env": "GEMINI_API_KEY",
+    "api_key": "",
+    "api_headers": [],
+    "api_timeout": 180.0,
+    "api_max_retries": 1,
+    "api_reasoning_effort": "auto",
+    "api_seed_method": "auto",
+    "api_logprobs_top_n": 0,
+    "n_memory": 6,
+    "memory_policy": "current_only",
+    "memory_retrieve": "tail",
+    "memory_pool": 200,
+    "memory_mix_ratio": 0.5,
+    "memory_exclude_current_run": true,
+    "memory_remix": "off",
+    "memory_remix_keep_original": false,
+    "memory_remix_max_new_tokens": 240,
+    "memory_remix_temperature": 0.9,
+    "rejected": {
+      "top_k": 80,
+      "strategy": "outside_topk",
+      "exclude_top": 8,
+      "band_width": 256,
+      "n_keywords": 6
+    },
+    "band_profile": "single",
+    "bands": [],
+    "answer_style": "plain",
+    "answer_max_new_tokens": 256,
+    "ponder_max_new_tokens": 192,
+    "temperature": 0.7,
+    "top_p": 0.95,
+    "top_k": 0,
+    "repetition_penalty": 1.05,
+    "no_repeat_ngram_size": 0,
+    "seed": 1234,
+    "prompt_lang": "ja",
+    "ponder_mode": "assoc",
+    "ponder_pipeline": [],
+    "pipeline_context": "prev",
+    "pipeline_context_max_chars": 1200,
+    "n_ponder": 1,
+    "ponder_hops": 1,
+    "hop_keyword_source": "model",
+    "hop_context_max_chars": 900,
+    "keyword_refine": false,
+    "keyword_refine_max_new_tokens": 96,
+    "keyword_refine_temperature": 0.3,
+    "keyword_objective": "random_band",
+    "keyword_select_top": 128,
+    "keyword_diversity": "off",
+    "keyword_diversity_threshold": 0.82,
+    "dissonance_target": 0.9,
+    "dissonance_width": 0.6,
+    "dissonance_tail_k": 64,
+    "prompt_jitter": 0,
+    "prompt_jitter_include_original": true,
+    "prompt_jitter_max_new_tokens": 160,
+    "prompt_jitter_temperature": 0.6,
+    "probe_top_n": 0,
+    "probe_compare": false,
+    "probe_compare_stages": false,
+    "probe_compare_top_n": 32,
+    "compare_semantic": "hash",
+    "compare_judge": "off",
+    "compare_stance": "auto",
+    "compare_spatial_metaphor": "auto",
+    "compare_token_budget": "auto",
+    "compare_embed_model": "",
+    "scaffold_condition": "assoc",
+    "scaffold_token_target": 180,
+    "print_probe": false,
+    "interactive": false,
+    "interactive_candidates": 48,
+    "answer_per_band": false,
+    "answer_ensemble": false,
+    "answer_ensemble_max_new_tokens": 512,
+    "answer_ensemble_temperature": 0.2,
+    "control": "none",
+    "write_memory": false,
+    "device": "auto",
+    "dtype": "auto",
+    "allocator_warmup": "auto",
+    "trust_remote_code": false,
+    "use_chat_template": true,
+    "force_gemma_format": true,
+    "hf_local_files_only": true
+  },
+  "items": [
+    {
+      "name": "baseline",
+      "kind": "baseline",
+      "answer": "現実とは何か。私たちが五感で捉",
+      "metrics": {
+        "answer_chars": 15,
+        "elapsed_s": 3.593146749999505
+      }
+    },
+    {
+      "name": "assoc",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "」や「最後に」として質問への回答を記述",
+      "extras": {
+        "run_id": "71e03f9529e2f2a2",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:13:32Z",
+            "run_id": "71e03f9529e2f2a2",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "assoc",
+          "target_tokens": 180,
+          "source_tokens_est": 68,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": false,
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 179,
+          "normalized": true,
+          "strategy": "direct_memory_block"
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 283,
+        "memory_block_est_tokens": 179,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 102,
+            "completion_tokens": 7,
+            "reasoning_tokens": 0,
+            "total_tokens": 258
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "rMcyarThNZnPrfcP4I-RiA8",
+          "model": "gemini-3.5-flash",
+          "prompt_tokens": 263,
+          "completion_tokens": 11,
+          "reasoning_tokens": 0,
+          "total_tokens": 515,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 5.991830167000444,
+          "probe_s": 1.5916999473120086e-05,
+          "memory_remix_s": 5.833999239257537e-06,
+          "answer_s": 2.2422963330009225
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "assoc",
+        "scaffold_token_target": 180
+      },
+      "metrics": {
+        "answer_chars": 19,
+        "records": 1,
+        "elapsed_s": 5.9921528340000805
+      },
+      "comparison": {
+        "baseline_chars": 15,
+        "ponder_chars": 19,
+        "answer_changed": true,
+        "char_delta": 4,
+        "diff_ratio": 0.9411764705882353,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_baseline_dominant": "definition",
+        "stance_top_drop": "definition",
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 15.0,
+        "budget_ponder_answer_tokens_est": 19.0,
+        "budget_external_scaffold_tokens_est": 215.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.0,
+          "query_baseline_cosine": 0.012381909006430304,
+          "query_ponder_cosine": 0.0,
+          "query_alignment_delta": -0.012381909006430304
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.0,
+            "dominant": "definition",
+            "scores": {
+              "definition": 1.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 1,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "definition": [
+                {
+                  "term": "とは",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "ponder": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "definition",
+          "dominant_ponder": "",
+          "dominant_shift": "definition->",
+          "top_gain": "",
+          "top_gain_delta": 0.0,
+          "top_drop": "definition",
+          "top_drop_delta": -1.0,
+          "deltas": {
+            "definition": -1.0,
+            "framing": 0.0,
+            "conditionalization": 0.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 15,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 19,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 38,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 10,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 15,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 48,
+              "completion_tokens": 10,
+              "reasoning_tokens": 0,
+              "total_tokens": 300
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 19,
+            "ponder_question_tokens_est": 27,
+            "ponder_log_tokens_est": 8,
+            "keyword_tokens_est": 1,
+            "memory_block_chars": 283,
+            "memory_block_tokens_est": 179,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 464,
+              "completion_tokens": 23,
+              "reasoning_tokens": 0,
+              "total_tokens": 1059
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 99,
+              "completion_tokens": 5,
+              "reasoning_tokens": 0,
+              "total_tokens": 286
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 102,
+                "completion_tokens": 7,
+                "reasoning_tokens": 0,
+                "total_tokens": 258
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 102,
+              "completion_tokens": 7,
+              "reasoning_tokens": 0,
+              "total_tokens": 258
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 263,
+              "completion_tokens": 11,
+              "reasoning_tokens": 0,
+              "total_tokens": 515
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 4,
+            "external_scaffold_tokens_est": 215,
+            "api_prompt_tokens": 416,
+            "api_completion_tokens": 13,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 759
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 512,
+            "completion_tokens": 33,
+            "reasoning_tokens": 0,
+            "total_tokens": 1359
+          }
+        }
+      }
+    },
+    {
+      "name": "random",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "の折れ）が自律的に動いている",
+      "extras": {
+        "run_id": "a2814982fd2cf419",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:13:38Z",
+            "run_id": "a2814982fd2cf419",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "random",
+          "target_tokens": 180,
+          "source_tokens_est": 547,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": false,
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 180,
+          "normalized": true,
+          "strategy": "local_random_sentences"
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 187,
+        "memory_block_est_tokens": 180,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 102,
+            "completion_tokens": 5,
+            "reasoning_tokens": 0,
+            "total_tokens": 257
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "s8cyaqX6CJvM0-kPobnmiAg",
+          "model": "gemini-3.5-flash",
+          "prompt_tokens": 219,
+          "completion_tokens": 10,
+          "reasoning_tokens": 0,
+          "total_tokens": 471,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 8.940045416999055,
+          "probe_s": 1.6582998796366155e-05,
+          "memory_remix_s": 8.66699883772526e-06,
+          "answer_s": 4.872857333000866
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "random",
+        "scaffold_token_target": 180
+      },
+      "metrics": {
+        "answer_chars": 14,
+        "records": 1,
+        "elapsed_s": 8.940301750000799
+      },
+      "comparison": {
+        "baseline_chars": 15,
+        "ponder_chars": 14,
+        "answer_changed": true,
+        "char_delta": -1,
+        "diff_ratio": 0.9310344827586207,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_baseline_dominant": "definition",
+        "stance_top_drop": "definition",
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 15.0,
+        "budget_ponder_answer_tokens_est": 14.0,
+        "budget_external_scaffold_tokens_est": 222.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.012435898569677046,
+          "query_baseline_cosine": 0.012435898569677046,
+          "query_ponder_cosine": 0.0,
+          "query_alignment_delta": -0.012435898569677046
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.0,
+            "dominant": "definition",
+            "scores": {
+              "definition": 1.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 1,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "definition": [
+                {
+                  "term": "とは",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "ponder": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "definition",
+          "dominant_ponder": "",
+          "dominant_shift": "definition->",
+          "top_gain": "",
+          "top_gain_delta": 0.0,
+          "top_drop": "definition",
+          "top_drop_delta": -1.0,
+          "deltas": {
+            "definition": -1.0,
+            "framing": 0.0,
+            "conditionalization": 0.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 15,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 14,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 37,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 11,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 15,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 48,
+              "completion_tokens": 10,
+              "reasoning_tokens": 0,
+              "total_tokens": 300
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 14,
+            "ponder_question_tokens_est": 29,
+            "ponder_log_tokens_est": 10,
+            "keyword_tokens_est": 3,
+            "memory_block_chars": 187,
+            "memory_block_tokens_est": 180,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 421,
+              "completion_tokens": 23,
+              "reasoning_tokens": 0,
+              "total_tokens": 1016
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 100,
+              "completion_tokens": 8,
+              "reasoning_tokens": 0,
+              "total_tokens": 288
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 102,
+                "completion_tokens": 5,
+                "reasoning_tokens": 0,
+                "total_tokens": 257
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 102,
+              "completion_tokens": 5,
+              "reasoning_tokens": 0,
+              "total_tokens": 257
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 219,
+              "completion_tokens": 10,
+              "reasoning_tokens": 0,
+              "total_tokens": 471
+            }
+          },
+          "delta": {
+            "answer_tokens_est": -1,
+            "external_scaffold_tokens_est": 222,
+            "api_prompt_tokens": 373,
+            "api_completion_tokens": 13,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 716
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 469,
+            "completion_tokens": 33,
+            "reasoning_tokens": 0,
+            "total_tokens": 1316
+          }
+        }
+      }
+    },
+    {
+      "name": "facts",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "ドナルド・ホフマンの",
+      "extras": {
+        "run_id": "3d7665ded27c7efc",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:13:49Z",
+            "run_id": "3d7665ded27c7efc",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "facts",
+          "target_tokens": 180,
+          "source_tokens_est": 17,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "vccyasTnN-7B0-kPwerLgQw",
+            "model": "gemini-3.5-flash",
+            "api_calls": 1,
+            "prompt_tokens": 114,
+            "completion_tokens": 14,
+            "reasoning_tokens": 0,
+            "total_tokens": 470,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 180,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 189,
+        "memory_block_est_tokens": 180,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 102,
+            "completion_tokens": 4,
+            "reasoning_tokens": 0,
+            "total_tokens": 258
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 114,
+            "completion_tokens": 14,
+            "reasoning_tokens": 0,
+            "total_tokens": 470
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "w8cyatiUGJnPrfcP4I-RiA8",
+          "model": "gemini-3.5-flash",
+          "prompt_tokens": 210,
+          "completion_tokens": 8,
+          "reasoning_tokens": 0,
+          "total_tokens": 462,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 13.797550083001624,
+          "probe_s": 5.83300061407499e-06,
+          "memory_remix_s": 5.6249991757795215e-06,
+          "answer_s": 2.408492708000267
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 180
+      },
+      "metrics": {
+        "answer_chars": 10,
+        "records": 1,
+        "elapsed_s": 13.798020082998846
+      },
+      "comparison": {
+        "baseline_chars": 15,
+        "ponder_chars": 10,
+        "answer_changed": true,
+        "char_delta": -5,
+        "diff_ratio": 1.0,
+        "records": 1,
+        "unique_keywords": 0,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_baseline_dominant": "definition",
+        "stance_top_drop": "definition",
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 15.0,
+        "budget_ponder_answer_tokens_est": 10.0,
+        "budget_external_scaffold_tokens_est": 220.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.0,
+          "query_baseline_cosine": 0.012381909006430304,
+          "query_ponder_cosine": 0.0,
+          "query_alignment_delta": -0.012381909006430304
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.0,
+            "dominant": "definition",
+            "scores": {
+              "definition": 1.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 1,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "definition": [
+                {
+                  "term": "とは",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "ponder": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "definition",
+          "dominant_ponder": "",
+          "dominant_shift": "definition->",
+          "top_gain": "",
+          "top_gain_delta": 0.0,
+          "top_drop": "definition",
+          "top_drop_delta": -1.0,
+          "deltas": {
+            "definition": -1.0,
+            "framing": 0.0,
+            "conditionalization": 0.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 15,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 10,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 44,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 18,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 15,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 48,
+              "completion_tokens": 10,
+              "reasoning_tokens": 0,
+              "total_tokens": 300
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 10,
+            "ponder_question_tokens_est": 29,
+            "ponder_log_tokens_est": 11,
+            "keyword_tokens_est": 0,
+            "memory_block_chars": 189,
+            "memory_block_tokens_est": 180,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 525,
+              "completion_tokens": 34,
+              "reasoning_tokens": 0,
+              "total_tokens": 1477
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 99,
+              "completion_tokens": 8,
+              "reasoning_tokens": 0,
+              "total_tokens": 287
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 102,
+                "completion_tokens": 4,
+                "reasoning_tokens": 0,
+                "total_tokens": 258
+              },
+              "scaffold_condition": {
+                "calls": 1,
+                "prompt_tokens": 114,
+                "completion_tokens": 14,
+                "reasoning_tokens": 0,
+                "total_tokens": 470
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 216,
+              "completion_tokens": 18,
+              "reasoning_tokens": 0,
+              "total_tokens": 728
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 210,
+              "completion_tokens": 8,
+              "reasoning_tokens": 0,
+              "total_tokens": 462
+            }
+          },
+          "delta": {
+            "answer_tokens_est": -5,
+            "external_scaffold_tokens_est": 220,
+            "api_prompt_tokens": 477,
+            "api_completion_tokens": 24,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 1177
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 573,
+            "completion_tokens": 44,
+            "reasoning_tokens": 0,
+            "total_tokens": 1777
+          }
+        }
+      }
+    },
+    {
+      "name": "isomorphic",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "現実という言葉を前にして、私はまず、あの",
+      "extras": {
+        "run_id": "18ce8a04cbea1125",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-17T16:14:03Z",
+            "run_id": "18ce8a04cbea1125",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "isomorphic",
+          "target_tokens": 180,
+          "source_tokens_est": 7,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "zMcyateSBO622roPwcqNoAI",
+            "model": "gemini-3.5-flash",
+            "api_calls": 1,
+            "prompt_tokens": 225,
+            "completion_tokens": 15,
+            "reasoning_tokens": 0,
+            "total_tokens": 581,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 147,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 164,
+        "memory_block_est_tokens": 147,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 102,
+            "completion_tokens": 7,
+            "reasoning_tokens": 0,
+            "total_tokens": 258
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 225,
+            "completion_tokens": 15,
+            "reasoning_tokens": 0,
+            "total_tokens": 581
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "0scyarWeE--H0-kP6bC08QU",
+          "model": "gemini-3.5-flash",
+          "prompt_tokens": 208,
+          "completion_tokens": 11,
+          "reasoning_tokens": 0,
+          "total_tokens": 460,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 14.626302208998823,
+          "probe_s": 9.41600046644453e-06,
+          "memory_remix_s": 1.7083000784623437e-05,
+          "answer_s": 2.1471614170004614
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 180
+      },
+      "metrics": {
+        "answer_chars": 20,
+        "records": 1,
+        "elapsed_s": 14.626629000000321
+      },
+      "comparison": {
+        "baseline_chars": 15,
+        "ponder_chars": 20,
+        "answer_changed": true,
+        "char_delta": 5,
+        "diff_ratio": 0.7714285714285715,
+        "records": 1,
+        "unique_keywords": 1,
+        "max_hop_ix": 0,
+        "memory_selected": 1,
+        "stance_shift_score": 0.5,
+        "stance_baseline_dominant": "definition",
+        "stance_top_drop": "definition",
+        "spatial_answer_density_delta": 0.0,
+        "spatial_baseline_density": 0.0,
+        "spatial_ponder_density": 0.0,
+        "spatial_question_density": 0.0,
+        "spatial_log_density": 0.0,
+        "spatial_log_question_density_delta": 0.0,
+        "budget_baseline_answer_tokens_est": 15.0,
+        "budget_ponder_answer_tokens_est": 20.0,
+        "budget_external_scaffold_tokens_est": 189.0,
+        "budget_delta_reasoning_tokens": 0.0,
+        "semantic": {
+          "status": "ok",
+          "method": "hashed_char_ngrams_tfidf",
+          "answer_cosine": 0.039949365543213045,
+          "query_baseline_cosine": 0.007613453110249969,
+          "query_ponder_cosine": 0.006389233420547408,
+          "query_alignment_delta": -0.001224219689702561
+        },
+        "stance": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "status": "ok",
+            "method": "heuristic_lexicon",
+            "signal_mass": 1.0,
+            "dominant": "definition",
+            "scores": {
+              "definition": 1.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 1,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {
+              "definition": [
+                {
+                  "term": "とは",
+                  "count": 1
+                }
+              ]
+            }
+          },
+          "ponder": {
+            "status": "weak",
+            "method": "heuristic_lexicon",
+            "signal_mass": 0.0,
+            "dominant": "",
+            "scores": {
+              "definition": 0.0,
+              "framing": 0.0,
+              "conditionalization": 0.0,
+              "example_expansion": 0.0,
+              "resolution": 0.0
+            },
+            "raw_counts": {
+              "definition": 0,
+              "framing": 0,
+              "conditionalization": 0,
+              "example_expansion": 0,
+              "resolution": 0
+            },
+            "bullet_lines": 0,
+            "top_terms": {}
+          },
+          "shift_score": 0.5,
+          "dominant_baseline": "definition",
+          "dominant_ponder": "",
+          "dominant_shift": "definition->",
+          "top_gain": "",
+          "top_gain_delta": 0.0,
+          "top_drop": "definition",
+          "top_drop_delta": -1.0,
+          "deltas": {
+            "definition": -1.0,
+            "framing": 0.0,
+            "conditionalization": 0.0,
+            "example_expansion": 0.0,
+            "resolution": 0.0
+          }
+        },
+        "spatial_metaphor": {
+          "status": "ok",
+          "method": "heuristic_lexicon",
+          "baseline": {
+            "chars": 15,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "ponder": {
+            "chars": 20,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "questions": {
+            "chars": 38,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "logs": {
+            "chars": 9,
+            "count": 0,
+            "density_per_1k_chars": 0.0,
+            "dominant_group": "",
+            "group_counts": {
+              "path": 0,
+              "stage": 0,
+              "container": 0,
+              "geometry": 0
+            },
+            "top_terms": []
+          },
+          "answer_density_delta": 0.0,
+          "log_question_density_delta": 0.0
+        },
+        "token_budget": {
+          "status": "ok",
+          "method": "api_usage_plus_visible_estimate",
+          "visible_estimate_method": "heuristic_mixed_script_v1",
+          "baseline": {
+            "answer_tokens_est": 15,
+            "api_usage": {
+              "calls": 1,
+              "prompt_tokens": 48,
+              "completion_tokens": 10,
+              "reasoning_tokens": 0,
+              "total_tokens": 300
+            }
+          },
+          "ponder": {
+            "answer_tokens_est": 20,
+            "ponder_question_tokens_est": 30,
+            "ponder_log_tokens_est": 8,
+            "keyword_tokens_est": 4,
+            "memory_block_chars": 164,
+            "memory_block_tokens_est": 147,
+            "record_count": 1,
+            "api_usage": {
+              "calls": 10,
+              "prompt_tokens": 636,
+              "completion_tokens": 38,
+              "reasoning_tokens": 0,
+              "total_tokens": 1587
+            },
+            "api_stage_usage": {
+              "calls": 1,
+              "prompt_tokens": 101,
+              "completion_tokens": 5,
+              "reasoning_tokens": 0,
+              "total_tokens": 288
+            },
+            "api_aux_usage_by_phase": {
+              "seed": {
+                "calls": 1,
+                "prompt_tokens": 102,
+                "completion_tokens": 7,
+                "reasoning_tokens": 0,
+                "total_tokens": 258
+              },
+              "scaffold_condition": {
+                "calls": 1,
+                "prompt_tokens": 225,
+                "completion_tokens": 15,
+                "reasoning_tokens": 0,
+                "total_tokens": 581
+              }
+            },
+            "api_aux_usage": {
+              "calls": 8,
+              "prompt_tokens": 327,
+              "completion_tokens": 22,
+              "reasoning_tokens": 0,
+              "total_tokens": 839
+            },
+            "api_final_usage": {
+              "calls": 1,
+              "prompt_tokens": 208,
+              "completion_tokens": 11,
+              "reasoning_tokens": 0,
+              "total_tokens": 460
+            }
+          },
+          "delta": {
+            "answer_tokens_est": 5,
+            "external_scaffold_tokens_est": 189,
+            "api_prompt_tokens": 588,
+            "api_completion_tokens": 28,
+            "api_reasoning_tokens": 0,
+            "api_total_tokens": 1287
+          },
+          "all_api_usage": {
+            "calls": 11,
+            "prompt_tokens": 684,
+            "completion_tokens": 48,
+            "reasoning_tokens": 0,
+            "total_tokens": 1887
+          }
+        }
+      }
+    }
+  ],
+  "artifacts": {
+    "out_label": "json_out",
+    "out": "artifacts/sweep_20260617_claude_gemini/gemini_reality_interface.json",
+    "trace_out": "artifacts/sweep_20260617_claude_gemini/gemini_reality_interface.trace.jsonl",
+    "trace_report_out": "artifacts/sweep_20260617_claude_gemini/gemini_reality_interface.trace.html",
+    "matrix_report_out": "artifacts/sweep_20260617_claude_gemini/gemini_reality_interface.matrix.html",
+    "out_dir": "",
+    "resume_from": ""
+  }
+}
