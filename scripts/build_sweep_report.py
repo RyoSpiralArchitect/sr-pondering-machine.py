@@ -85,10 +85,59 @@ def save_fig(fig: Any, path: Path) -> None:
 
 
 def safe_float(value: Any) -> Optional[float]:
-    if isinstance(value, (int, float)) and not isinstance(value, bool):
-        if math.isfinite(float(value)):
-            return float(value)
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return None
+    if math.isfinite(parsed):
+        return parsed
     return None
+
+
+def safe_int(value: Any) -> Optional[int]:
+    number = safe_float(value)
+    if number is None:
+        return None
+    return int(number)
+
+
+def infer_scaffold_meta(item: Dict[str, Any]) -> tuple[str, Optional[int]]:
+    name = str(item.get("name") or "").strip()
+    cfg = item.get("cfg_overrides") if isinstance(item.get("cfg_overrides"), dict) else {}
+    extras = item.get("extras") if isinstance(item.get("extras"), dict) else {}
+    scaffold = extras.get("scaffold") if isinstance(extras.get("scaffold"), dict) else {}
+
+    condition = str(cfg.get("scaffold_condition") or scaffold.get("condition") or "").strip()
+    dose = safe_int(cfg.get("scaffold_token_target"))
+    if dose is None:
+        dose = safe_int(scaffold.get("target_tokens"))
+
+    match = re.match(r"^(?P<condition>[A-Za-z0-9_-]+)_dose_(?P<dose>\d+)$", name)
+    if match:
+        condition = condition or match.group("condition")
+        dose = dose if dose is not None else int(match.group("dose"))
+
+    if not condition and name in {"assoc", "random", "facts", "isomorphic"}:
+        condition = name
+    return condition, dose
+
+
+def palette_for(values: Iterable[Any]) -> Dict[str, str]:
+    color_values = [
+        COLOR_FAMILIES["blue"]["base"],
+        COLOR_FAMILIES["gold"]["base"],
+        COLOR_FAMILIES["orange"]["base"],
+        COLOR_FAMILIES["olive"]["base"],
+        COLOR_FAMILIES["pink"]["base"],
+        COLOR_FAMILIES["blue"]["mid"],
+        COLOR_FAMILIES["gold"]["mid"],
+        COLOR_FAMILIES["orange"]["mid"],
+        COLOR_FAMILIES["olive"]["mid"],
+    ]
+    labels = unique_texts(values)
+    return {label: color_values[ix % len(color_values)] for ix, label in enumerate(labels)}
 
 
 def read_json(path: Path) -> Dict[str, Any]:
@@ -153,12 +202,15 @@ def extract_rows(sweep_dir: Path) -> tuple[List[Dict[str, Any]], List[Dict[str, 
             all_usage = budget.get("all_api_usage") if isinstance(budget.get("all_api_usage"), dict) else {}
             extras = item.get("extras") if isinstance(item.get("extras"), dict) else {}
             warnings = extras.get("api_warnings") if isinstance(extras.get("api_warnings"), list) else []
+            scaffold_condition, scaffold_dose = infer_scaffold_meta(item)
             item_rows.append(
                 {
                     "provider": provider,
                     "query_id": query_id,
                     "model": result.get("model"),
                     "condition": str(item.get("name") or ""),
+                    "scaffold_condition": scaffold_condition,
+                    "scaffold_dose": scaffold_dose,
                     "answer_chars": safe_float(metrics.get("answer_chars")),
                     "elapsed_s": safe_float(metrics.get("elapsed_s")),
                     "diff_ratio": safe_float(comp.get("diff_ratio")),
@@ -199,26 +251,34 @@ def mean(series: Iterable[Any]) -> float:
 def build_charts(run_df: pd.DataFrame, item_df: pd.DataFrame, chart_dir: Path) -> Dict[str, str]:
     use_chart_theme()
     charts: Dict[str, str] = {}
-    provider_palette = {"gemini": COLOR_FAMILIES["blue"]["base"], "claude": COLOR_FAMILIES["gold"]["base"]}
-    provider_edges = {"gemini": COLOR_FAMILIES["blue"]["dark"], "claude": COLOR_FAMILIES["gold"]["dark"]}
+    provider_palette = palette_for(run_df.get("provider", pd.Series(dtype=str)).tolist())
 
     fig, ax = plt.subplots(figsize=(8.5, 4.6))
     sns.barplot(data=run_df, x="provider", y="elapsed_s", hue="provider", palette=provider_palette, legend=False, ax=ax, edgecolor=TOKENS["ink"])
     sns.stripplot(data=run_df, x="provider", y="elapsed_s", ax=ax, color=COLOR_FAMILIES["orange"]["dark"], size=5, jitter=0.08)
-    for patch, provider in zip(ax.patches, ["claude", "gemini"] if list(run_df["provider"].unique())[0] == "claude" else list(run_df["provider"].unique())):
-        patch.set_edgecolor(provider_edges.get(provider, TOKENS["ink"]))
+    for patch in ax.patches:
+        patch.set_edgecolor(TOKENS["ink"])
     ax.set_xlabel("")
     ax.set_ylabel("Seconds per lab-matrix run")
-    add_chart_header(fig, ax, "Runtime by provider", "Three query runs per provider; bars show mean elapsed seconds and dots show individual runs.")
+    add_chart_header(fig, ax, "Runtime by provider", "Selected query runs per provider; bars show mean elapsed seconds and dots show individual runs.")
     charts["runtime"] = str(chart_dir / "runtime_by_provider.png")
     save_fig(fig, Path(charts["runtime"]))
 
-    condition_order = ["assoc", "random", "facts", "isomorphic"]
+    condition_field = "condition"
+    if "scaffold_condition" in item_df.columns:
+        non_empty_conditions = item_df["scaffold_condition"].fillna("").astype(str).str.len() > 0
+        if bool(non_empty_conditions.any()):
+            condition_field = "scaffold_condition"
+    preferred_order = ["assoc", "random", "facts", "isomorphic"]
+    seen_conditions = unique_texts(item_df.get(condition_field, pd.Series(dtype=str)).tolist())
+    condition_order = [x for x in preferred_order if x in seen_conditions] + [x for x in seen_conditions if x not in preferred_order]
+    plot_df = item_df[item_df.get(condition_field, pd.Series(dtype=str)).fillna("").astype(str).str.len() > 0].copy()
+    plot_df["condition_group"] = plot_df[condition_field].astype(str)
+
     fig, ax = plt.subplots(figsize=(9.6, 4.8))
-    plot_df = item_df[item_df["condition"].isin(condition_order)].copy()
     sns.barplot(
         data=plot_df,
-        x="condition",
+        x="condition_group",
         y="query_alignment_delta",
         hue="provider",
         order=condition_order,
@@ -238,7 +298,7 @@ def build_charts(run_df: pd.DataFrame, item_df: pd.DataFrame, chart_dir: Path) -
     fig, ax = plt.subplots(figsize=(9.6, 4.8))
     sns.barplot(
         data=plot_df,
-        x="condition",
+        x="condition_group",
         y="api_total_delta",
         hue="provider",
         order=condition_order,
@@ -259,7 +319,7 @@ def build_charts(run_df: pd.DataFrame, item_df: pd.DataFrame, chart_dir: Path) -
     fig, ax = plt.subplots(figsize=(9.6, 4.8))
     sns.barplot(
         data=plot_df,
-        x="condition",
+        x="condition_group",
         y="answer_chars",
         hue="provider",
         order=condition_order,
@@ -292,6 +352,30 @@ def char_ngrams(text: str, min_n: int = 2, max_n: int = 5) -> List[str]:
 def stable_bucket(text: str, dim: int) -> int:
     digest = hashlib.blake2b(text.encode("utf-8"), digest_size=8).digest()
     return int.from_bytes(digest, "big") % dim
+
+
+def hashed_text_vector(text: str, dim: int = 768) -> np.ndarray:
+    vec = np.zeros(dim, dtype=float)
+    for gram in char_ngrams(text):
+        vec[stable_bucket(gram, dim)] += 1.0
+    norm = float(np.linalg.norm(vec))
+    if norm > 0:
+        vec = vec / norm
+    return vec
+
+
+def cosine_vectors(a: np.ndarray, b: np.ndarray) -> Optional[float]:
+    if a.size == 0 or b.size == 0:
+        return None
+    a_norm = float(np.linalg.norm(a))
+    b_norm = float(np.linalg.norm(b))
+    if a_norm <= 0 or b_norm <= 0:
+        return None
+    return float(np.dot(a, b) / (a_norm * b_norm))
+
+
+def cosine_texts(a: str, b: str) -> Optional[float]:
+    return cosine_vectors(hashed_text_vector(a), hashed_text_vector(b))
 
 
 def collect_answer_docs(run_df: pd.DataFrame) -> List[Dict[str, Any]]:
@@ -405,7 +489,246 @@ def build_answer_pca(run_df: pd.DataFrame, analysis_dir: Path, chart_dir: Path) 
     }
 
 
-def summarize(run_df: pd.DataFrame, item_df: pd.DataFrame) -> Dict[str, Any]:
+def classify_attractor(step_drift: Any, origin_drift: Any, recurrence: Any, query_relevance: Any) -> str:
+    step = safe_float(step_drift)
+    origin = safe_float(origin_drift)
+    recur = safe_float(recurrence)
+    relevance = safe_float(query_relevance)
+    if relevance is not None and relevance < 0.04 and origin is not None and origin > 0.55:
+        return "off_track"
+    if recur is not None and recur >= 0.88 and step is not None and step <= 0.12:
+        return "loop_or_convergence"
+    if origin is not None and origin >= 0.45 and (recur is None or recur < 0.72):
+        return "divergence"
+    if recur is not None and recur >= 0.78 and origin is not None and origin >= 0.25:
+        return "recurring_shift"
+    if origin is not None and origin <= 0.18 and step is not None and step <= 0.18:
+        return "convergence"
+    return "mixed"
+
+
+def build_attractor_rows(run_df: pd.DataFrame, item_df: pd.DataFrame) -> List[Dict[str, Any]]:
+    metrics_by_item: Dict[tuple[str, str, str], Dict[str, Any]] = {}
+    for _, row in item_df.iterrows():
+        metrics_by_item[(str(row["provider"]), str(row["query_id"]), str(row["condition"]))] = dict(row)
+
+    rows: List[Dict[str, Any]] = []
+    for _, run in run_df.sort_values(["provider", "query_id"]).iterrows():
+        provider = str(run["provider"])
+        query_id = str(run["query_id"])
+        query_text = str(run.get("query") or "")
+        result_path = Path(str(run.get("json_out") or ""))
+        if not result_path.exists():
+            continue
+        result = read_json(result_path)
+        trace_summary = load_trace_summary(Path(str(run.get("trace_out") or "")))
+        items = [it for it in result.get("items", []) if isinstance(it, dict)]
+        baseline = next((it for it in items if str(it.get("kind") or "") == "baseline"), None)
+        baseline_answer = str((baseline or {}).get("answer") or "")
+        baseline_vec = hashed_text_vector(baseline_answer)
+        query_vec = hashed_text_vector(query_text)
+
+        previous: List[tuple[str, np.ndarray]] = []
+        if baseline_answer.strip():
+            previous.append(("baseline", baseline_vec))
+
+        for item in items:
+            if str(item.get("kind") or "") != "ponder":
+                continue
+            name = str(item.get("name") or "")
+            answer = str(item.get("answer") or "")
+            answer_vec = hashed_text_vector(answer)
+            metric_row = metrics_by_item.get((provider, query_id, name), {})
+            scaffold_condition, scaffold_dose = infer_scaffold_meta(item)
+            trace = trace_summary.get(name, {})
+            scaffold_text = "\n\n".join(
+                unique_texts(list(trace.get("scaffold_previews") or []) + record_texts(item))
+            )
+
+            origin_similarity = cosine_vectors(answer_vec, baseline_vec)
+            origin_drift = None if origin_similarity is None else 1.0 - origin_similarity
+            query_relevance = cosine_vectors(answer_vec, query_vec)
+            scaffold_leakage = cosine_texts(answer, scaffold_text) if scaffold_text.strip() else None
+
+            prior_name = ""
+            step_drift = None
+            recurrence = None
+            if previous:
+                prior_name, prior_vec = previous[-1]
+                step_similarity = cosine_vectors(answer_vec, prior_vec)
+                step_drift = None if step_similarity is None else 1.0 - step_similarity
+                recurrence_values = [cosine_vectors(answer_vec, vec) for _, vec in previous]
+                recurrence_values = [x for x in recurrence_values if x is not None]
+                recurrence = max(recurrence_values) if recurrence_values else None
+
+            alignment_delta = safe_float(metric_row.get("query_alignment_delta"))
+            coil_index = None
+            if recurrence is not None and query_relevance is not None and alignment_delta is not None:
+                coil_index = max(0.0, recurrence) * max(0.0, query_relevance) * max(0.0, alignment_delta)
+
+            rows.append(
+                {
+                    "provider": provider,
+                    "query_id": query_id,
+                    "model": str(result.get("model") or run.get("model") or ""),
+                    "condition": name,
+                    "scaffold_condition": scaffold_condition,
+                    "scaffold_dose": scaffold_dose,
+                    "prior_item": prior_name,
+                    "step_drift": step_drift,
+                    "origin_drift": origin_drift,
+                    "recurrence": recurrence,
+                    "query_relevance": query_relevance,
+                    "scaffold_leakage": scaffold_leakage,
+                    "coil_index": coil_index,
+                    "attractor_class": classify_attractor(step_drift, origin_drift, recurrence, query_relevance),
+                    "query_alignment_delta": alignment_delta,
+                    "answer_chars": safe_float(metric_row.get("answer_chars")),
+                }
+            )
+            previous.append((name, answer_vec))
+    return rows
+
+
+def build_dose_response_rows(run_df: pd.DataFrame, item_df: pd.DataFrame, attractor_rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    attractor_by_item = {
+        (str(row.get("provider")), str(row.get("query_id")), str(row.get("condition"))): row for row in attractor_rows
+    }
+    rows: List[Dict[str, Any]] = []
+    if item_df.empty or "scaffold_dose" not in item_df.columns:
+        return rows
+
+    for _, item in item_df.iterrows():
+        dose = safe_int(item.get("scaffold_dose"))
+        condition = str(item.get("scaffold_condition") or "").strip()
+        if dose is None or dose <= 0 or not condition:
+            continue
+        key = (str(item.get("provider")), str(item.get("query_id")), str(item.get("condition")))
+        attractor = attractor_by_item.get(key, {})
+        rows.append(
+            {
+                "provider": str(item.get("provider")),
+                "query_id": str(item.get("query_id")),
+                "model": str(item.get("model") or ""),
+                "condition": str(item.get("condition") or ""),
+                "scaffold_condition": condition,
+                "scaffold_dose": dose,
+                "answer_chars": safe_float(item.get("answer_chars")),
+                "query_alignment_delta": safe_float(item.get("query_alignment_delta")),
+                "diff_ratio": safe_float(item.get("diff_ratio")),
+                "stance_shift": safe_float(item.get("stance_shift")),
+                "spatial_log_density": safe_float(item.get("spatial_log_density")),
+                "api_total_delta": safe_float(item.get("api_total_delta")),
+                "origin_drift": safe_float(attractor.get("origin_drift")),
+                "recurrence": safe_float(attractor.get("recurrence")),
+                "query_relevance": safe_float(attractor.get("query_relevance")),
+                "scaffold_leakage": safe_float(attractor.get("scaffold_leakage")),
+                "coil_index": safe_float(attractor.get("coil_index")),
+                "attractor_class": str(attractor.get("attractor_class") or ""),
+                "is_baseline_reference": False,
+            }
+        )
+
+    present = {(row["provider"], row["query_id"], row["scaffold_condition"]) for row in rows}
+    run_lookup = {(str(row["provider"]), str(row["query_id"])): dict(row) for _, row in run_df.iterrows()}
+    for provider, query_id, condition in sorted(present):
+        run = run_lookup.get((provider, query_id), {})
+        rows.append(
+            {
+                "provider": provider,
+                "query_id": query_id,
+                "model": str(run.get("model") or ""),
+                "condition": "baseline",
+                "scaffold_condition": condition,
+                "scaffold_dose": 0,
+                "answer_chars": safe_float(run.get("baseline_answer_chars")),
+                "query_alignment_delta": 0.0,
+                "diff_ratio": 0.0,
+                "stance_shift": 0.0,
+                "spatial_log_density": None,
+                "api_total_delta": 0.0,
+                "origin_drift": 0.0,
+                "recurrence": 1.0,
+                "query_relevance": None,
+                "scaffold_leakage": None,
+                "coil_index": 0.0,
+                "attractor_class": "baseline_reference",
+                "is_baseline_reference": True,
+            }
+        )
+    return sorted(rows, key=lambda r: (str(r["provider"]), str(r["query_id"]), str(r["scaffold_condition"]), int(r["scaffold_dose"])))
+
+
+def build_dose_charts(dose_df: pd.DataFrame, chart_dir: Path) -> Dict[str, str]:
+    charts: Dict[str, str] = {}
+    if dose_df.empty or "scaffold_dose" not in dose_df.columns:
+        return charts
+    plot_df = dose_df[dose_df["scaffold_dose"].notna()].copy()
+    if plot_df.empty or float(plot_df["scaffold_dose"].max()) <= 0:
+        return charts
+
+    condition_order = unique_texts(plot_df["scaffold_condition"].tolist())
+    condition_palette = palette_for(condition_order)
+    style_field = "provider" if len(unique_texts(plot_df["provider"].tolist())) > 1 else None
+
+    def line_chart(metric: str, ylabel: str, title: str, subtitle: str, filename: str) -> None:
+        if metric not in plot_df.columns or plot_df[metric].dropna().empty:
+            return
+        fig, ax = plt.subplots(figsize=(9.6, 4.8))
+        sns.lineplot(
+            data=plot_df,
+            x="scaffold_dose",
+            y=metric,
+            hue="scaffold_condition",
+            style=style_field,
+            hue_order=condition_order,
+            palette=condition_palette,
+            marker="o",
+            estimator="mean",
+            errorbar=None,
+            ax=ax,
+        )
+        if metric == "query_alignment_delta":
+            ax.axhline(0, color=TOKENS["ink"], linewidth=1.0, linestyle=":")
+        ax.set_xlabel("Injected scaffold target tokens")
+        ax.set_ylabel(ylabel)
+        ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), frameon=False)
+        add_chart_header(fig, ax, title, subtitle)
+        charts[metric] = str(chart_dir / filename)
+        save_fig(fig, Path(charts[metric]))
+
+    line_chart(
+        "query_alignment_delta",
+        "Mean query-alignment delta",
+        "Scaffold dose changes query alignment nonlinearly",
+        "Dose 0 repeats the shared baseline; mid-dose peaks are the first sign of a treatment-like effect.",
+        "dose_query_alignment_delta.png",
+    )
+    line_chart(
+        "origin_drift",
+        "Origin drift from baseline",
+        "Higher scaffold doses pull answers farther from the baseline surface",
+        "Origin drift is 1 - cosine(answer, baseline) over hashed character n-gram vectors.",
+        "dose_origin_drift.png",
+    )
+    line_chart(
+        "scaffold_leakage",
+        "Answer-to-scaffold similarity",
+        "Scaffold leakage proxy rises when the injected path dominates the final answer",
+        "This uses scaffold previews and retained ponder records as a surface proxy, not hidden-state evidence.",
+        "dose_scaffold_leakage.png",
+    )
+    line_chart(
+        "coil_index",
+        "Coil index proxy",
+        "Coil index highlights recurrent, query-relevant alignment gain",
+        "Computed as recurrence x query relevance x positive alignment delta, so zero values are meaningful.",
+        "dose_coil_index.png",
+    )
+    return charts
+
+
+def summarize(run_df: pd.DataFrame, item_df: pd.DataFrame, dose_df: Optional[pd.DataFrame] = None) -> Dict[str, Any]:
     by_provider: Dict[str, Any] = {}
     for provider, group in item_df.groupby("provider"):
         by_provider[provider] = {
@@ -439,12 +762,37 @@ def summarize(run_df: pd.DataFrame, item_df: pd.DataFrame) -> Dict[str, Any]:
         )
         .to_dict(orient="records")
     )
+    dose_summary: Dict[str, Any] = {}
+    if dose_df is not None and not dose_df.empty:
+        non_baseline = dose_df[dose_df.get("is_baseline_reference", pd.Series(dtype=bool)) != True].copy()
+        if not non_baseline.empty:
+            best_alignment = non_baseline.sort_values("query_alignment_delta", ascending=False).head(1).to_dict(orient="records")
+            highest_drift = non_baseline.sort_values("origin_drift", ascending=False).head(1).to_dict(orient="records")
+            dose_summary = {
+                "row_count": int(len(dose_df)),
+                "max_dose": safe_float(dose_df["scaffold_dose"].max()),
+                "conditions": unique_texts(dose_df["scaffold_condition"].tolist()),
+                "best_alignment_row": best_alignment[0] if best_alignment else {},
+                "highest_origin_drift_row": highest_drift[0] if highest_drift else {},
+                "by_condition": (
+                    non_baseline.groupby("scaffold_condition", as_index=False)
+                    .agg(
+                        query_alignment_delta_mean=("query_alignment_delta", "mean"),
+                        origin_drift_mean=("origin_drift", "mean"),
+                        recurrence_mean=("recurrence", "mean"),
+                        scaffold_leakage_mean=("scaffold_leakage", "mean"),
+                        coil_index_mean=("coil_index", "mean"),
+                    )
+                    .to_dict(orient="records")
+                ),
+            }
     return {
         "run_count": int(len(run_df)),
         "ponder_item_count": int(len(item_df)),
         "by_provider": by_provider,
         "run_summary": run_summary,
         "condition_summary": condition_summary,
+        "dose_summary": dose_summary,
     }
 
 
@@ -611,12 +959,19 @@ def build_output_atlas_html(report_dir: Path, run_df: pd.DataFrame, item_df: pd.
                 if kind == "baseline":
                     meta = f"baseline | answer chars {len(str(answer))}"
                 else:
+                    dose_label = ""
+                    if condition_metrics.get("scaffold_dose") is not None:
+                        dose_label = (
+                            f" | scaffold {html.escape(str(condition_metrics.get('scaffold_condition') or ''))}"
+                            f"/{fmt_num(condition_metrics.get('scaffold_dose'), 0)}"
+                        )
                     meta = (
                         f"{html.escape(str(item.get('control') or name))} | "
                         f"answer chars {fmt_num(condition_metrics.get('answer_chars'), 0)} | "
                         f"diff ratio {fmt_num(condition_metrics.get('diff_ratio'), 3)} | "
                         f"alignment delta {fmt_num(condition_metrics.get('query_alignment_delta'), 3)} | "
                         f"api total delta {fmt_num(condition_metrics.get('api_total_delta'), 0)}"
+                        f"{dose_label}"
                     )
                 finish_reasons = ", ".join(trace.get("api_finish_reasons") or [])
                 keyword_html = ", ".join(html.escape(k) for k in trace.get("keywords", [])) or "(none captured)"
@@ -654,10 +1009,75 @@ def build_report_html(
     claude = summary["by_provider"].get("claude", {})
     gemini_run = summary["run_summary"].get("gemini", {})
     claude_run = summary["run_summary"].get("claude", {})
+    providers = unique_texts(run_df.get("provider", pd.Series(dtype=str)).tolist())
     elapsed_ratio = safe_float(claude_run.get("elapsed_s_mean")) or 0
     if safe_float(gemini_run.get("elapsed_s_mean")):
         elapsed_ratio = elapsed_ratio / float(gemini_run["elapsed_s_mean"])
     model_names = ", ".join(unique_texts(run_df.get("model", pd.Series(dtype=str)).tolist()))
+    if {"claude", "gemini"}.issubset(set(providers)):
+        provider_runtime_bullet = (
+            f"<strong>Claude was much slower but produced fuller answers.</strong> Mean runtime was "
+            f"{fmt_num(claude_run.get('elapsed_s_mean'), 1)}s for Claude versus "
+            f"{fmt_num(gemini_run.get('elapsed_s_mean'), 1)}s for Gemini, roughly "
+            f"{fmt_num(elapsed_ratio, 1)}x slower; Claude answers averaged "
+            f"{fmt_num(claude.get('answer_chars_mean'), 0)} chars versus Gemini's "
+            f"{fmt_num(gemini.get('answer_chars_mean'), 0)}."
+        )
+        alignment_bullet = (
+            f"<strong>Alignment lift is a triage signal, not a verdict.</strong> Gemini's mean "
+            f"query-alignment delta was {fmt_num(gemini.get('query_alignment_delta_mean'), 3)} "
+            f"versus Claude's {fmt_num(claude.get('query_alignment_delta_mean'), 3)}; read that "
+            f"alongside answer length, PCA position, and the raw output atlas."
+        )
+    elif providers:
+        provider = providers[0]
+        provider_stats = summary["by_provider"].get(provider, {})
+        provider_run = summary["run_summary"].get(provider, {})
+        provider_runtime_bullet = (
+            f"<strong>{html.escape(provider)} ran as the focused comparison lane.</strong> Mean runtime was "
+            f"{fmt_num(provider_run.get('elapsed_s_mean'), 1)}s and pondered answers averaged "
+            f"{fmt_num(provider_stats.get('answer_chars_mean'), 0)} chars."
+        )
+        alignment_bullet = (
+            f"<strong>Alignment lift is a triage signal, not a verdict.</strong> Mean query-alignment "
+            f"delta for {html.escape(provider)} was {fmt_num(provider_stats.get('query_alignment_delta_mean'), 3)}; "
+            f"read that alongside answer length, PCA position, and the raw output atlas."
+        )
+    else:
+        provider_runtime_bullet = "<strong>No provider rows were detected.</strong> Inspect the manifest and raw run logs."
+        alignment_bullet = "<strong>Alignment lift is unavailable.</strong> No pondered item rows were detected."
+
+    dose_summary = summary.get("dose_summary") if isinstance(summary.get("dose_summary"), dict) else {}
+    if dose_summary:
+        best = dose_summary.get("best_alignment_row") if isinstance(dose_summary.get("best_alignment_row"), dict) else {}
+        dose_bullet = (
+            f"<li><strong>Dose ladder metrics are now part of the report.</strong> The strongest alignment row was "
+            f"<code>{html.escape(str(best.get('scaffold_condition') or 'n/a'))}</code> at dose "
+            f"{fmt_num(best.get('scaffold_dose'), 0)} with alignment delta "
+            f"{fmt_num(best.get('query_alignment_delta'), 3)}; verify it against origin drift, leakage, and the raw text.</li>"
+        )
+    else:
+        dose_bullet = (
+            "<li><strong>Generated scaffold conditions are the expensive branch.</strong> "
+            "<code>facts</code> and <code>isomorphic</code> raise token overhead most strongly; "
+            "read token cost as operational overhead rather than a pure cognition claim.</li>"
+        )
+
+    metric_cards = [
+        (str(summary["run_count"]), "completed provider/query runs"),
+        (str(summary["ponder_item_count"]), "pondered item rows"),
+    ]
+    for provider in providers[:2]:
+        provider_run = summary["run_summary"].get(provider, {})
+        metric_cards.append((f"{fmt_num(provider_run.get('elapsed_s_mean'), 1)}s", f"{provider} mean run time"))
+    if len(metric_cards) < 4 and dose_summary:
+        metric_cards.append((fmt_num(dose_summary.get("max_dose"), 0), "max scaffold dose"))
+    if len(metric_cards) < 4:
+        metric_cards.append((str(len(providers)), "provider lanes"))
+    metric_grid_html = "".join(
+        f'<div class="metric"><strong>{html.escape(value)}</strong><span>{html.escape(label)}</span></div>'
+        for value, label in metric_cards[:4]
+    )
 
     artifact_rows = []
     for _, row in run_df.sort_values(["provider", "query_id"]).iterrows():
@@ -688,7 +1108,65 @@ def build_report_html(
     </section>
 """
 
-    title = "Claude/Gemini Pondering Machine Sweep"
+    dose_section = ""
+    if dose_summary and charts.get("query_alignment_delta"):
+        dose_figures = []
+        for key, alt, caption in [
+            (
+                "query_alignment_delta",
+                "Scaffold dose query alignment",
+                "Positive values mean the pondered answer aligned more with the query surface than the baseline did.",
+            ),
+            (
+                "origin_drift",
+                "Scaffold dose origin drift",
+                "Higher values mean the final answer moved farther from the baseline answer surface.",
+            ),
+            (
+                "scaffold_leakage",
+                "Scaffold dose leakage proxy",
+                "Leakage is a proxy from scaffold previews and retained records, not hidden-state access.",
+            ),
+            (
+                "coil_index",
+                "Scaffold dose coil index",
+                "Coil index combines recurrence, query relevance, and positive alignment gain.",
+            ),
+        ]:
+            if charts.get(key):
+                dose_figures.append(
+                    f"<figure>{img_tag(charts[key], alt, report_dir)}<figcaption>{html.escape(caption)}</figcaption></figure>"
+                )
+        dose_section = f"""
+    <section data-contract-section="key-findings">
+      <h2>Scaffold Dose Response and Attractor Proxies</h2>
+      <p><strong>Dose 0 is the shared baseline reference.</strong> The ladder then varies injected scaffold target tokens by condition, making it easier to see weak-injection, useful-intervention, and takeover-like regimes separately.</p>
+      {''.join(dose_figures)}
+      <p>Use <a href="dose_response_metrics.csv">dose_response_metrics.csv</a> for dose rows and <a href="attractor_metrics.csv">attractor_metrics.csv</a> for step drift, origin drift, recurrence, leakage proxy, and coil-index rows.</p>
+    </section>
+"""
+
+    title = "Scaffold Dose Ladder Sweep" if dose_summary else "Claude/Gemini Pondering Machine Sweep"
+    runtime_section_title = (
+        "Runtime and answer length frame the dose ladder"
+        if dose_summary
+        else "Runtime and answer length split provider behavior"
+    )
+    runtime_note = (
+        "This focused run uses one provider lane, so runtime is mainly a planning handle for larger dose ladders."
+        if len(providers) == 1
+        else "Gemini and Claude are both usable for artifact sweeps, but their latency/cost surfaces differ enough that high-volume sampling and qualitative inspection should be planned separately."
+    )
+    token_caption = (
+        "Log scale. Generated scaffold conditions add operational cost; use this as a planning metric, not a pure model-internals comparison."
+        if len(providers) == 1
+        else "Log scale. Claude values include Claude Code CLI prompt/cache wrapper overhead, so they are operationally real for this environment but not a pure model API comparison."
+    )
+    caveat_text = (
+        "This is an exploratory dose-ladder artifact sweep, not a stable benchmark. The curated bundle uses one prompt and one provider lane, semantic alignment and PCA use hashed character n-grams rather than embedding models, and attractor metrics are text-surface proxies rather than hidden-state measurements. The raw output atlas is the main qualitative evidence lane."
+        if dose_summary
+        else "This is an exploratory artifact sweep, not a stable benchmark. Semantic alignment used hashed character n-grams rather than an embedding model, provider routing differs by backend, and older pack JSON files may only retain ponder/scaffold previews in the trace while newer pack outputs retain full records."
+    )
     generated = dt.datetime.now().strftime("%Y-%m-%d %H:%M")
     return f"""<!doctype html>
 <html lang="ja">
@@ -753,22 +1231,19 @@ def build_report_html(
     <section class="summary" data-contract-section="executive-summary">
       <h2>Executive Summary</h2>
       <ul>
-        <li><strong>{summary["run_count"]} lab-matrix runs completed cleanly.</strong> The sweep produced {summary["ponder_item_count"]} pondered comparison rows across {html.escape(model_names or "the selected Claude/Gemini models")}, plus per-run JSON, trace, and matrix artifacts.</li>
-        <li><strong>Claude was much slower but produced fuller answers.</strong> Mean runtime was {fmt_num(claude_run.get("elapsed_s_mean"), 1)}s for Claude versus {fmt_num(gemini_run.get("elapsed_s_mean"), 1)}s for Gemini, roughly {fmt_num(elapsed_ratio, 1)}x slower; Claude answers averaged {fmt_num(claude.get("answer_chars_mean"), 0)} chars versus Gemini's {fmt_num(gemini.get("answer_chars_mean"), 0)}.</li>
-        <li><strong>Alignment lift is a triage signal, not a verdict.</strong> Gemini's mean query-alignment delta was {fmt_num(gemini.get("query_alignment_delta_mean"), 3)} versus Claude's {fmt_num(claude.get("query_alignment_delta_mean"), 3)}; read that alongside answer length, PCA position, and the raw output atlas.</li>
-        <li><strong>Generated scaffold conditions are the expensive branch.</strong> <code>facts</code> and <code>isomorphic</code> raised token overhead most strongly for both providers; Claude's CLI wrapper made the overhead about an order of magnitude larger than Gemini's direct OpenAI-compatible API path.</li>
+        <li><strong>{summary["run_count"]} lab-matrix runs completed cleanly.</strong> The sweep produced {summary["ponder_item_count"]} pondered comparison rows across {html.escape(model_names or "the selected models")}, plus per-run JSON, trace, and matrix artifacts.</li>
+        <li>{provider_runtime_bullet}</li>
+        <li>{alignment_bullet}</li>
+        {dose_bullet}
       </ul>
     </section>
 
     <section data-contract-section="key-findings">
-      <h2>Runtime and answer length split provider behavior</h2>
+      <h2>{html.escape(runtime_section_title)}</h2>
       <div class="metric-grid">
-        <div class="metric"><strong>{summary["run_count"]}</strong><span>completed provider/query runs</span></div>
-        <div class="metric"><strong>{summary["ponder_item_count"]}</strong><span>pondered item rows</span></div>
-        <div class="metric"><strong>{fmt_num(gemini_run.get("elapsed_s_mean"), 1)}s</strong><span>Gemini mean run time</span></div>
-        <div class="metric"><strong>{fmt_num(claude_run.get("elapsed_s_mean"), 1)}s</strong><span>Claude mean run time</span></div>
+        {metric_grid_html}
       </div>
-      <p><strong>Runtime separated clearly.</strong> Gemini and Claude are both usable for artifact sweeps, but their latency/cost surfaces differ enough that high-volume sampling and qualitative inspection should be planned separately.</p>
+      <p><strong>Runtime is part of the experimental surface.</strong> {html.escape(runtime_note)}</p>
       <figure>
         {img_tag(charts["runtime"], "Runtime by provider", report_dir)}
         <figcaption>Each dot is one query-level lab matrix. The bar is the provider mean.</figcaption>
@@ -790,9 +1265,11 @@ def build_report_html(
       <p><strong>Cost rises where the machine asks the model to synthesize a new scaffold.</strong> The plain associative and random controls are cheaper; <code>facts</code> and <code>isomorphic</code> require extra generation and larger final contexts.</p>
       <figure>
         {img_tag(charts["token_overhead"], "Token overhead by condition", report_dir)}
-        <figcaption>Log scale. Claude values include Claude Code CLI prompt/cache wrapper overhead, so they are operationally real for this environment but not a pure model API comparison.</figcaption>
+        <figcaption>{html.escape(token_caption)}</figcaption>
       </figure>
     </section>
+
+{dose_section}
 
 {pca_section}
 
@@ -825,7 +1302,7 @@ def build_report_html(
     <section data-contract-section="caveats-and-assumptions">
       <h2>Caveats and Assumptions</h2>
       <div class="callout">
-        <p>This is an exploratory artifact sweep, not a stable benchmark. There are only three prompts per provider, Gemini outputs were too short for final interpretation, Claude was routed through the Claude Code CLI rather than a direct Anthropic API client, and semantic alignment used hashed character n-grams rather than an embedding model. Older pack JSON files may only retain ponder/scaffold previews in the trace, while newer pack outputs retain full records.</p>
+        <p>{html.escape(caveat_text)}</p>
       </div>
     </section>
   </main>
@@ -858,11 +1335,18 @@ def main() -> int:
     )
     condition_df.to_csv(analysis_dir / "condition_summary.csv", index=False)
 
+    attractor_rows = build_attractor_rows(run_df, item_df)
+    write_csv(analysis_dir / "attractor_metrics.csv", attractor_rows)
+    dose_rows = build_dose_response_rows(run_df, item_df, attractor_rows)
+    write_csv(analysis_dir / "dose_response_metrics.csv", dose_rows)
+    dose_df = pd.DataFrame(dose_rows)
+
     charts = build_charts(run_df, item_df, chart_dir)
+    charts.update(build_dose_charts(dose_df, chart_dir))
     pca_chart, pca_summary = build_answer_pca(run_df, analysis_dir, chart_dir)
     if pca_chart:
         charts["answer_pca"] = pca_chart
-    summary = summarize(run_df, item_df)
+    summary = summarize(run_df, item_df, dose_df)
     summary["pca"] = pca_summary
     summary["charts"] = charts
     (analysis_dir / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")

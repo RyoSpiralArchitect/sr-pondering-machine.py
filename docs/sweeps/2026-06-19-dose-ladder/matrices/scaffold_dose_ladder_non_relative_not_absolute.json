@@ -1,0 +1,167 @@
+{
+  "name": "scaffold_dose_ladder_non_relative_not_absolute",
+  "description": "Scaffold condition x injected-token dose ladder. Dose 0 is the shared baseline row.",
+  "include_baseline": true,
+  "items": [
+    {
+      "name": "assoc_dose_64",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "assoc",
+        "scaffold_token_target": 64
+      }
+    },
+    {
+      "name": "assoc_dose_128",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "assoc",
+        "scaffold_token_target": 128
+      }
+    },
+    {
+      "name": "assoc_dose_256",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "assoc",
+        "scaffold_token_target": 256
+      }
+    },
+    {
+      "name": "assoc_dose_512",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "assoc",
+        "scaffold_token_target": 512
+      }
+    },
+    {
+      "name": "random_dose_64",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "random",
+        "scaffold_token_target": 64
+      }
+    },
+    {
+      "name": "random_dose_128",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "random",
+        "scaffold_token_target": 128
+      }
+    },
+    {
+      "name": "random_dose_256",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "random",
+        "scaffold_token_target": 256
+      }
+    },
+    {
+      "name": "random_dose_512",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "random",
+        "scaffold_token_target": 512
+      }
+    },
+    {
+      "name": "facts_dose_64",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 64
+      }
+    },
+    {
+      "name": "facts_dose_128",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 128
+      }
+    },
+    {
+      "name": "facts_dose_256",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 256
+      }
+    },
+    {
+      "name": "facts_dose_512",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 512
+      }
+    },
+    {
+      "name": "isomorphic_dose_64",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 64
+      }
+    },
+    {
+      "name": "isomorphic_dose_128",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 128
+      }
+    },
+    {
+      "name": "isomorphic_dose_256",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 256
+      }
+    },
+    {
+      "name": "isomorphic_dose_512",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 512
+      }
+    }
+  ]
+}

@@ -12,7 +12,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Sequence
 
 
 QUERIES = [
@@ -63,6 +63,20 @@ PROFILES: Dict[str, Dict[str, Any]] = {
             "claude": {"model": "opus", "reasoning_effort": "xhigh"},
         },
     },
+    "dose_ladder": {
+        "answer_max_new_tokens": "2048",
+        "ponder_max_new_tokens": "1024",
+        "scaffold_token_target": "0",
+        "api_timeout": "900",
+        "claude_budget_usd": "0.45",
+        "matrix": "dose_ladder",
+        "dose_values": [0, 32, 64, 128, 256, 512, 1024],
+        "dose_conditions": ["assoc", "random", "facts", "isomorphic"],
+        "providers": {
+            "gemini": {"model": "gemini-3.1-pro-preview", "reasoning_effort": "high"},
+            "claude": {"model": "opus", "reasoning_effort": "xhigh"},
+        },
+    },
 }
 
 
@@ -95,7 +109,75 @@ def provider_args(provider: str, profile: Dict[str, Any]) -> List[str]:
     raise ValueError(f"unknown provider: {provider}")
 
 
-def build_cmd(repo: Path, provider: str, query: Dict[str, str], out_dir: Path, profile: Dict[str, Any]) -> Dict[str, Any]:
+def parse_int_csv(value: str, *, default: Sequence[int]) -> List[int]:
+    if not str(value or "").strip():
+        return [int(x) for x in default]
+    out: List[int] = []
+    for raw in str(value).split(","):
+        raw = raw.strip()
+        if raw:
+            out.append(max(0, int(raw)))
+    return sorted(set(out))
+
+
+def parse_str_csv(value: str, *, default: Sequence[str]) -> List[str]:
+    if not str(value or "").strip():
+        return [str(x) for x in default]
+    return [x.strip() for x in str(value).split(",") if x.strip()]
+
+
+def write_dose_ladder_matrix(
+    out_dir: Path,
+    query: Dict[str, str],
+    *,
+    dose_values: Sequence[int],
+    dose_conditions: Sequence[str],
+) -> Path:
+    """Write a per-query scaffold dose ladder matrix consumed by --lab_matrix."""
+    matrix_dir = out_dir / "matrices"
+    matrix_dir.mkdir(parents=True, exist_ok=True)
+    matrix_path = matrix_dir / f"scaffold_dose_ladder_{slugify(query['id'])}.json"
+    items: List[Dict[str, Any]] = []
+    for condition in dose_conditions:
+        condition_s = str(condition).strip()
+        if not condition_s:
+            continue
+        for dose in dose_values:
+            dose_i = int(dose)
+            if dose_i <= 0:
+                continue
+            items.append(
+                {
+                    "name": f"{condition_s}_dose_{dose_i}",
+                    "kind": "ponder",
+                    "control": "none",
+                    "cfg": {
+                        "memory_policy": "current_only",
+                        "scaffold_condition": condition_s,
+                        "scaffold_token_target": dose_i,
+                    },
+                }
+            )
+
+    spec = {
+        "name": f"scaffold_dose_ladder_{slugify(query['id'])}",
+        "description": "Scaffold condition x injected-token dose ladder. Dose 0 is the shared baseline row.",
+        "include_baseline": True,
+        "items": items,
+    }
+    matrix_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2), encoding="utf-8")
+    return matrix_path
+
+
+def build_cmd(
+    repo: Path,
+    provider: str,
+    query: Dict[str, str],
+    out_dir: Path,
+    profile: Dict[str, Any],
+    *,
+    lab_matrix: str = "scaffold_abcd",
+) -> Dict[str, Any]:
     stem = f"{provider}_{slugify(query['id'])}"
     json_out = out_dir / f"{stem}.json"
     trace_out = out_dir / f"{stem}.trace.jsonl"
@@ -108,7 +190,7 @@ def build_cmd(repo: Path, provider: str, query: Dict[str, str], out_dir: Path, p
         "--query",
         query["text"],
         "--lab_matrix",
-        "scaffold_abcd",
+        lab_matrix,
         "--memory_policy",
         "current_only",
         "--no_write_memory",
@@ -157,6 +239,7 @@ def build_cmd(repo: Path, provider: str, query: Dict[str, str], out_dir: Path, p
         "matrix_report_out": str(matrix_report_out),
         "stdout": str(out_dir / f"{stem}.stdout.txt"),
         "stderr": str(out_dir / f"{stem}.stderr.txt"),
+        "lab_matrix_arg": lab_matrix,
     }
 
 
@@ -166,6 +249,8 @@ def main() -> int:
     ap.add_argument("--providers", default="gemini,claude")
     ap.add_argument("--profile", choices=sorted(PROFILES), default="standard")
     ap.add_argument("--limit_queries", type=int, default=0)
+    ap.add_argument("--dose_values", default="", help="Comma-separated scaffold token targets for dose_ladder profile")
+    ap.add_argument("--dose_conditions", default="", help="Comma-separated scaffold conditions for dose_ladder profile")
     args = ap.parse_args()
 
     repo = Path(__file__).resolve().parents[1]
@@ -175,6 +260,8 @@ def main() -> int:
     providers = [p.strip() for p in args.providers.split(",") if p.strip()]
     queries = QUERIES[: max(0, int(args.limit_queries)) or len(QUERIES)]
     profile = PROFILES[args.profile]
+    dose_values = parse_int_csv(str(args.dose_values or ""), default=profile.get("dose_values") or [])
+    dose_conditions = parse_str_csv(str(args.dose_conditions or ""), default=profile.get("dose_conditions") or [])
 
     env = os.environ.copy()
     if Path("/etc/ssl/cert.pem").exists():
@@ -189,12 +276,24 @@ def main() -> int:
         "queries": queries,
         "profile": args.profile,
         "profile_config": profile,
+        "dose_values": dose_values if profile.get("matrix") == "dose_ladder" else [],
+        "dose_conditions": dose_conditions if profile.get("matrix") == "dose_ladder" else [],
         "runs": [],
     }
 
     for provider in providers:
         for query in queries:
-            spec = build_cmd(repo, provider, query, out_dir, profile)
+            lab_matrix = "scaffold_abcd"
+            if profile.get("matrix") == "dose_ladder":
+                lab_matrix = str(
+                    write_dose_ladder_matrix(
+                        out_dir,
+                        query,
+                        dose_values=dose_values,
+                        dose_conditions=dose_conditions,
+                    )
+                )
+            spec = build_cmd(repo, provider, query, out_dir, profile, lab_matrix=lab_matrix)
             spec["profile"] = args.profile
             print(f"[sweep] start {provider}/{query['id']}")
             t0 = time.perf_counter()
