@@ -339,6 +339,53 @@ class TestReasoningCompare(unittest.TestCase):
         facts_spec = dict(items[3][1])
         self.assertEqual((((facts_spec.get("cfg") or {}).get("scaffold_token_target"))), 400)
 
+    def test_output_contract_prompt_markers(self) -> None:
+        answer_prompt = sp.build_prompt_for_answer(
+            "q",
+            memory_block="ponder",
+            lang="ja",
+            output_contract="final_closure",
+        )
+        self.assertIn("END_ANSWER", answer_prompt)
+        self.assertIn("最後の行", answer_prompt)
+
+        log_prompt = sp.build_prompt_for_pondering(
+            "q",
+            mode="assoc",
+            lang="en",
+            output_contract="log_closure",
+        )
+        self.assertIn("END_LOG", log_prompt)
+        self.assertIn("Only the final line", log_prompt)
+
+        skeleton_prompt = sp.build_prompt_for_pondering(
+            "q",
+            mode="assoc",
+            lang="ja",
+            output_contract="log_skeleton_closure",
+        )
+        self.assertIn("X1|", skeleton_prompt)
+        self.assertIn("非意味論ログ足場", skeleton_prompt)
+
+    def test_log_phase_rescue_prompt_and_contract_checks(self) -> None:
+        self.assertFalse(sp._log_text_satisfies_output_contract("X1|a\nX2|b", "log_skeleton_closure"))
+        self.assertTrue(
+            sp._log_text_satisfies_output_contract(
+                "X1|a\nX2|b\nX3|c\nX4|d\nEND_LOG",
+                "log_skeleton_closure",
+            )
+        )
+        prompt = sp.build_prompt_for_log_phase_rescue(
+            "Where does the interface bend?",
+            mode="assoc",
+            lang="en",
+            output_contract="log_skeleton_closure",
+            partial_log="X1|cut off",
+        )
+        self.assertIn("exactly the following 5-line shape", prompt)
+        self.assertIn("END_LOG", prompt)
+        self.assertIn("Partial log", prompt)
+
     def test_build_token_budget_compare_tracks_scaffold_and_reasoning(self) -> None:
         hf = SimpleNamespace(tokenizer=None)
         records = [
@@ -622,6 +669,32 @@ class TestOpenAICompat(unittest.TestCase):
         cfg = obj.get("cfg") or {}
         self.assertEqual(cfg.get("api_reasoning_effort"), "none")
 
+    def test_print_config_only_includes_log_phase_options(self) -> None:
+        out, _err = _run_main(
+            [
+                "--backend",
+                "openai_compat",
+                "--model",
+                "dummy",
+                "--query",
+                "q",
+                "--log_phase_max_new_tokens",
+                "2048",
+                "--log_phase_reasoning_effort",
+                "low",
+                "--log_phase_rescue",
+                "--log_phase_rescue_max_new_tokens",
+                "512",
+                "--print_config_only",
+            ]
+        )
+        obj = json.loads(out)
+        cfg = obj.get("cfg") or {}
+        self.assertEqual(cfg.get("log_phase_max_new_tokens"), 2048)
+        self.assertEqual(cfg.get("log_phase_reasoning_effort"), "low")
+        self.assertEqual(cfg.get("log_phase_rescue"), True)
+        self.assertEqual(cfg.get("log_phase_rescue_max_new_tokens"), 512)
+
     def test_generate_api_text_with_reasoning_retry_retries_once(self) -> None:
         class _FakeHF:
             def __init__(self) -> None:
@@ -670,6 +743,101 @@ class TestOpenAICompat(unittest.TestCase):
         self.assertEqual(hf.calls, [160, 384])
         self.assertEqual(meta.get("auto_retry", {}).get("to_max_tokens"), 384)
         self.assertEqual(len(warnings), 1)
+
+    def test_generate_api_text_with_log_phase_reasoning_override_restores_model(self) -> None:
+        hf = sp.OpenAICompatModel(
+            model="gemini-3.1-pro-preview",
+            api_base_url="https://generativelanguage.googleapis.com/v1beta/openai",
+            api_key="test",
+            api_reasoning_effort="high",
+        )
+        seen_payloads: list[dict] = []
+
+        def _fake_post(_url, *, headers, payload, timeout, max_retries):
+            seen_payloads.append(dict(payload))
+            return {"choices": [{"finish_reason": "stop", "message": {"content": "ok"}}], "usage": {"completion_tokens": 2}}
+
+        with patch.object(sp, "_http_post_json", side_effect=_fake_post):
+            text, meta = sp._generate_api_text_with_reasoning_retry(
+                hf,
+                provider="custom",
+                phase="ponder_stage",
+                prompt="hi",
+                max_new_tokens=32,
+                temperature=0.7,
+                top_p=0.95,
+                top_k=0,
+                repetition_penalty=1.0,
+                no_repeat_ngram_size=0,
+                seed=123,
+                reasoning_effort="low",
+            )
+
+        self.assertEqual(text, "ok")
+        self.assertEqual(seen_payloads[0].get("reasoning_effort"), "low")
+        self.assertEqual(hf.api_reasoning_effort, "high")
+        self.assertEqual(meta.get("reasoning_effort_override"), "low")
+
+    def test_log_phase_rescue_replaces_truncated_skeleton(self) -> None:
+        hf = sp.OpenAICompatModel(
+            model="gemini-3.1-pro-preview",
+            api_base_url="https://generativelanguage.googleapis.com/v1beta/openai",
+            api_key="test",
+            api_reasoning_effort="high",
+        )
+        cfg = sp.RunConfig(
+            backend="openai_compat",
+            provider="custom",
+            model_path="gemini-3.1-pro-preview",
+            memory_path=Path("ponder_logs.jsonl"),
+            prompt_lang="en",
+            output_contract="log_skeleton_closure",
+            log_phase_reasoning_effort="low",
+            log_phase_rescue=True,
+            log_phase_rescue_max_new_tokens=256,
+        )
+        calls: list[dict] = []
+
+        def _fake_rescue(_hf, **kwargs):
+            calls.append(dict(kwargs))
+            return (
+                "X1|choice path\nX2|constraint hinge\nX3|interface bend\nX4|local frame\nEND_LOG",
+                {
+                    "finish_reason": "stop",
+                    "prompt_tokens": 50,
+                    "completion_tokens": 20,
+                    "reasoning_tokens": 4,
+                    "total_tokens": 70,
+                    "api_calls": 1,
+                },
+            )
+
+        with patch.object(sp, "_generate_api_text_with_reasoning_retry", side_effect=_fake_rescue):
+            log, meta, info = sp._maybe_rescue_api_ponder_log(
+                hf,
+                cfg=cfg,
+                ponder_q="Where does the interface bend?",
+                stage_mode="assoc",
+                ponder_log="X1|choice path\nX2|constraint hinge",
+                ponder_meta={
+                    "finish_reason": "length",
+                    "prompt_tokens": 40,
+                    "completion_tokens": 32,
+                    "reasoning_tokens": 24,
+                    "total_tokens": 72,
+                    "api_calls": 1,
+                },
+                api_warnings=[],
+                seed=123,
+            )
+
+        self.assertTrue(sp._log_text_satisfies_output_contract(log, "log_skeleton_closure"))
+        self.assertEqual(calls[0].get("phase"), "ponder_stage_log_rescue")
+        self.assertEqual(calls[0].get("reasoning_effort"), "low")
+        self.assertEqual((info or {}).get("used"), True)
+        self.assertEqual((meta.get("log_rescue") or {}).get("used"), True)
+        self.assertEqual(meta.get("api_calls"), 2)
+        self.assertEqual(meta.get("completion_tokens"), 52)
 
     def test_format_api_http_error_includes_retry_after(self) -> None:
         msg = sp.format_api_http_error(

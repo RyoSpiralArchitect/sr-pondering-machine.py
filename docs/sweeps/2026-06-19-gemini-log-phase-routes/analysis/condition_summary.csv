@@ -1,0 +1,9 @@
+provider,condition,answer_chars_mean,query_alignment_delta_mean,api_total_delta_mean,stance_shift_mean,diff_ratio_mean
+gemini,facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue,139.0,-0.06961055723253784,2983.0,0.3555555555555556,0.7849117174959872
+gemini,facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue,608.0,0.031074521888955167,3994.0,0.4444444444444444,0.8644688644688645
+gemini,facts_dose_512_log_skeleton_closure_low_1024_no_rescue,135.0,-0.0920198022494786,2600.0,0.33333333333333337,0.8255250403877221
+gemini,facts_dose_512_log_skeleton_closure_low_2048_rescue,141.0,-0.061232141585997615,2609.0,0.41269841269841273,0.8144
+gemini,isomorphic_dose_512_log_skeleton_closure_inherit_1024_no_rescue,146.0,-0.09867436334488533,3182.0,0.6666666666666667,0.8507936507936508
+gemini,isomorphic_dose_512_log_skeleton_closure_inherit_2048_no_rescue,135.0,-0.13209759563510134,4092.0,0.6666666666666667,0.9030694668820678
+gemini,isomorphic_dose_512_log_skeleton_closure_low_1024_no_rescue,132.0,-0.1260383604092742,2914.0,0.5555555555555556,0.8863636363636364
+gemini,isomorphic_dose_512_log_skeleton_closure_low_2048_rescue,144.0,-0.1296589620744792,2845.0,1.0,0.9299363057324841

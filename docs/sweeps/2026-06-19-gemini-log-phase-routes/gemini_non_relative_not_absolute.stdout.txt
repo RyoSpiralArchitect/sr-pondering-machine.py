@@ -1,0 +1,143 @@
+[sr_ponder] backend=openai_compat provider=custom model='gemini-3.1-pro-preview' base_url=https://generativelanguage.googleapis.com/v1beta/openai reasoning_effort=high seed_method=auto logprobs_top_n=0 lang=ja band_profile=single bands=profile objective=random_band diversity=off hops=1 answer_style=plain control=none pipeline=assoc memory=current_only/tail/off scaffold=assoc/source write_memory=False
+
+=== PACK: baseline ===
+
+相対的と絶対的という二つの言葉は、しばしば単純な対義語として扱われます。しかし、この二つの概念の間に横たわる領域に目を向けてみると、そこには私たちの存在の核心に触れるような興味深い風景が広がっています。
+
+まず、相対的とは、他との比較や関係性によって自身の位置や価値が定まる状態を指します。長いと短い、明るいと暗い、優れていると劣っているなど、比較する対象があって初めて成り立つ世界です。一方で絶対的とは、いかなる他者や外部の条件にも依存せず、それ自体で完全に独立しており、なおかつ永遠不変で普遍的な真理のような状態を指します。
+
+では、非相対的でありながら絶対的ではない状態とは何でしょうか。それは、「他との比較によって成り立っているわけではないが、かといって永遠不変でも普遍的でもない状態」を意味します。
+
+この矛盾するような状態を想像するために、宇宙空間にただ一つだけぽつんと存在するリンゴを思い浮かべてみます。比較対象となる他のリンゴや果物は一切存在しません。そのため、そのリンゴが大きいか小さいか、美しいか醜いかを相対的に語ることはできず、その存在は非相対的
+
+=== PACK: facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue ===
+
+非相対的という概念と絶対的という概念はしばしば同義として扱われがちであるが、その本質的な次元は異なっている。非相対的とは、事物の性質や価値、あるいは真理が、観察者の視点や文化的背景、他者との比較といった外部との関係性に依存せず、それ自体として定まっている状態を指す。一方で絶対的
+
+=== COMPARISON ===
+
+answers_changed=yes chars=484->139 delta=-345 diff_ratio=0.7849
+records=1 unique_keywords=0 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.174531 query_base=0.130961 query_ponder=0.061350 align_delta=-0.069611
+stance[heuristic_lexicon] base=definition ponder=framing shift=0.355556 gain=framing drop=definition
+spatial[heuristic_lexicon] ans_density=2.066->0.000 log_density=23.256 q_density=0.000 groups=geometry->none log=path
+budget[api_usage_plus_visible_estimate] ans=478->139 scaffold=559 reason=0->0 completion=266->159
+
+=== PACK: facts_dose_512_log_skeleton_closure_low_1024_no_rescue ===
+
+「相対的」と「絶対的」はしばしば単純な対義語として扱われるため、「非相対的」であれば自動的に「絶対的」になるように思われがちです。しかし、この二分法は言葉の定義と適用される水準を混同しているために生じる錯覚だと言えます。ここで少し立ち止まり、それぞれの言葉の成立条件と不
+
+=== COMPARISON ===
+
+answers_changed=yes chars=484->135 delta=-349 diff_ratio=0.8255
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.143210 query_base=0.131335 query_ponder=0.039315 align_delta=-0.092020
+stance[heuristic_lexicon] base=definition ponder=conditionalization shift=0.333333 gain=conditionalization drop=definition
+spatial[heuristic_lexicon] ans_density=2.066->0.000 log_density=14.286 q_density=0.000 groups=geometry->none log=container
+budget[api_usage_plus_visible_estimate] ans=478->135 scaffold=596 reason=0->0 completion=266->181
+
+=== PACK: facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue ===
+
+非相対的という言葉は、他との比較や関係性によって価値や意味が変動しないことを指します。一方で絶対的という言葉は、いかなる条件や文脈、前提下においても普遍的に成立し、揺るがないことを意味します。この二つの概念を分水嶺として捉え、問いの成立条件と不成立条件の射程を探ることで、「非相対的ではあるが絶対的ではない状態」の輪郭が浮かび上がってきます。
+
+この状態を端的に言えば、特定の前提条件や限定された枠組みの内部においては他と比較されることなく独立して確定しているものの、その枠組みを外れた途端に普遍性を失ってしまう状態のことです。
+
+身近な境界事例として、個人の主観的な体験、例えば痛みの感覚が挙げられます。今まさに感じている痛みは、他人の痛みと比較して初めて生じるものではなく、本人にとっては他との関係性に依存しない直接的で疑いようのない事実です。その意味で、個人の痛みの感覚は非相対的です。しかし、その痛みは他者と完全に共有できる客観的な指標を持たず、全人類に共通する普遍的な基準として外部へ提示することはできません。したがって、それは絶対的ではありません。
+
+また、論理や数学の領域においても同様の構造が見出されます。ユークリッド幾何学における三角形の内角の和が180度であるという定理は、平面という前提条件の中では他の図形と比較されることなく自立して成立する非相対的な真理です。しかし、曲面を扱う非ユークリッド
+
+=== COMPARISON ===
+
+answers_changed=yes chars=484->608 delta=+124 diff_ratio=0.8645
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.217778 query_base=0.124937 query_ponder=0.156011 align_delta=0.031075
+stance[heuristic_lexicon] base=definition ponder=conditionalization shift=0.444444 gain=example_expansion drop=definition
+spatial[heuristic_lexicon] ans_density=2.066->4.934 log_density=0.000 q_density=0.000 groups=geometry->container log=none
+budget[api_usage_plus_visible_estimate] ans=478->600 scaffold=608 reason=0->0 completion=266->446
+
+=== PACK: facts_dose_512_log_skeleton_closure_low_2048_rescue ===
+
+他者との比較や外部との関係性に依存して性質や価値が決定されることを相対的と呼び、いかなる条件や状況にも制約されず無条件で普遍的・完全であることを絶対的と呼ぶならば、そのどちらでもない状態とはどのようなものか。この問いを考えるにあたり、少し寄り道をして、物事の成立条件や私たちの認識の
+
+=== COMPARISON ===
+
+answers_changed=yes chars=484->141 delta=-343 diff_ratio=0.8144
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.125433 query_base=0.122659 query_ponder=0.061427 align_delta=-0.061232
+stance[heuristic_lexicon] base=definition ponder=conditionalization shift=0.412698 gain=conditionalization drop=definition
+spatial[heuristic_lexicon] ans_density=2.066->0.000 log_density=0.000 q_density=0.000 groups=geometry->none log=none
+budget[api_usage_plus_visible_estimate] ans=478->141 scaffold=568 reason=0->0 completion=266->171
+
+=== PACK: isomorphic_dose_512_log_skeleton_closure_inherit_1024_no_rescue ===
+
+温室という閉鎖された空間で、光がわずかに遅れて届き、意味を伴わない配置だけがただ反復され続ける光景を思い浮かべてみます。その反復は、外の世界の何かと比較されることで生じているわけではありません。つまり、外部との関係性に依存する「相対的」なものではありません。しかし同時に、それが宇宙全体の普遍
+
+=== COMPARISON ===
+
+answers_changed=yes chars=484->146 delta=-338 diff_ratio=0.8508
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.118578 query_base=0.136533 query_ponder=0.037858 align_delta=-0.098674
+stance[heuristic_lexicon] base=definition ponder=conditionalization shift=0.666667 gain=resolution drop=definition
+spatial[heuristic_lexicon] ans_density=2.066->6.849 log_density=0.000 q_density=0.000 groups=geometry->geometry log=none
+budget[api_usage_plus_visible_estimate] ans=478->146 scaffold=585 reason=0->0 completion=266->158
+
+=== PACK: isomorphic_dose_512_log_skeleton_closure_low_1024_no_rescue ===
+
+2084年の記録に残された「温室では、光が少し遅れて届く。意味ではなく配置だけが反復されている」という奇妙なログについて、少し思いを巡らせてみます。
+
+意味や価値というものは、常に他の概念や文脈との比較、すなわち関係性（相対性）の中で生じます。したがって、意味が剥
+
+=== COMPARISON ===
+
+answers_changed=yes chars=484->132 delta=-352 diff_ratio=0.8864
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.086195 query_base=0.139965 query_ponder=0.013926 align_delta=-0.126038
+stance[heuristic_lexicon] base=definition ponder=framing shift=0.555556 gain=resolution drop=definition
+spatial[heuristic_lexicon] ans_density=2.066->0.000 log_density=13.333 q_density=0.000 groups=geometry->none log=container
+budget[api_usage_plus_visible_estimate] ans=478->127 scaffold=602 reason=0->0 completion=266->174
+
+=== PACK: isomorphic_dose_512_log_skeleton_closure_inherit_2048_no_rescue ===
+
+温室という密閉された空間で、光が少し遅れて届き、意味を持たずに配置だけが幾度も反復される情景を思い浮かべてみます。そこでは外部の風景と比べる必要もなくただ配置が繰り返されており、他との関係性に依存しない閉じられた世界が形成されています。しかし、そこに普遍的な意味や不変の
+
+=== COMPARISON ===
+
+answers_changed=yes chars=484->135 delta=-349 diff_ratio=0.9031
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.129634 query_base=0.144512 query_ponder=0.012415 align_delta=-0.132098
+stance[heuristic_lexicon] base=definition ponder=conditionalization shift=0.666667 gain=conditionalization drop=definition
+spatial[heuristic_lexicon] ans_density=2.066->7.407 log_density=0.000 q_density=0.000 groups=geometry->geometry log=none
+budget[api_usage_plus_visible_estimate] ans=478->135 scaffold=589 reason=0->0 completion=266->180
+
+=== PACK: isomorphic_dose_512_log_skeleton_closure_low_2048_rescue ===
+
+温室のガラスを透過する光がわずかに遅れ、意味を伴わずにただ配置だけが反復される光景について思いを巡らせてみる。意味や価値というものは、他者や別の事象との比較、すなわち相対的な関係性のネットワークの中で初めて生じる。したがって、意味を剥ぎ取られ、ただ物理的な形式や配置だけが繰り返されている
+
+=== COMPARISON ===
+
+answers_changed=yes chars=484->144 delta=-340 diff_ratio=0.9299
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.079469 query_base=0.138287 query_ponder=0.008628 align_delta=-0.129659
+stance[heuristic_lexicon] base=definition ponder=resolution shift=1.000000 gain=resolution drop=definition
+spatial[heuristic_lexicon] ans_density=2.066->0.000 log_density=13.514 q_density=0.000 groups=geometry->none log=path
+budget[api_usage_plus_visible_estimate] ans=478->144 scaffold=591 reason=0->0 completion=266->177
+
+=== PACK SUMMARY ===
+
+name                                        kind      control  chars  records  elapsed_s
+------------------------------------------  --------  -------  -----  -------  ------------------
+baseline                                    baseline           484             23.304321999999956
+facts_dose_512_log_skeleton_closure_inher…  ponder    none     139    1        51.59245262500008
+facts_dose_512_log_skeleton_closure_low_1…  ponder    none     135    1        45.06636479200097
+facts_dose_512_log_skeleton_closure_inher…  ponder    none     608    1        54.761635250000836
+facts_dose_512_log_skeleton_closure_low_2…  ponder    none     141    1        45.36848762500085
+isomorphic_dose_512_log_skeleton_closure_…  ponder    none     146    1        48.91278712500025
+isomorphic_dose_512_log_skeleton_closure_…  ponder    none     132    1        47.07179866600018
+isomorphic_dose_512_log_skeleton_closure_…  ponder    none     135    1        54.401716292000856
+isomorphic_dose_512_log_skeleton_closure_…  ponder    none     144    1        42.872260666999864
+
+[json_out] wrote artifacts/sweep_20260619_gemini_log_phase_routes/gemini_non_relative_not_absolute.json
+
+[matrix_report_out] wrote artifacts/sweep_20260619_gemini_log_phase_routes/gemini_non_relative_not_absolute.matrix.html
+
+[trace_report_out] wrote artifacts/sweep_20260619_gemini_log_phase_routes/gemini_non_relative_not_absolute.trace.html

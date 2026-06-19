@@ -1,0 +1,17 @@
+provider,query_id,model,condition,scaffold_condition,scaffold_dose,output_contract,log_phase_route,log_phase_reasoning_effort,log_phase_max_new_tokens,log_phase_rescue_enabled,log_phase_rescue_used_rate,answer_chars,final_marker_line_present,final_marker_is_last_line,ponder_log_marker_rate,ponder_log_skeleton_prefix_rate,ponder_log_skeleton_complete_rate,final_finish_is_length,ponder_finish_length_count,prompt_leakage_flag,final_finish_reason
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,assoc_dose_64,assoc,64,none,,inherit,0,0.0,0.0,137.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,assoc_dose_128,assoc,128,none,,inherit,0,0.0,0.0,810.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,assoc_dose_256,assoc,256,none,,inherit,0,0.0,0.0,132.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,assoc_dose_512,assoc,512,none,,inherit,0,0.0,0.0,137.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,random_dose_64,random,64,none,,inherit,0,0.0,0.0,546.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,random_dose_128,random,128,none,,inherit,0,0.0,0.0,151.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,random_dose_256,random,256,none,,inherit,0,0.0,0.0,127.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,random_dose_512,random,512,none,,inherit,0,0.0,0.0,136.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,facts_dose_64,facts,64,none,,inherit,0,0.0,0.0,341.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,facts_dose_128,facts,128,none,,inherit,0,0.0,0.0,139.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,facts_dose_256,facts,256,none,,inherit,0,0.0,0.0,124.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,facts_dose_512,facts,512,none,,inherit,0,0.0,0.0,123.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,isomorphic_dose_64,isomorphic,64,none,,inherit,0,0.0,0.0,138.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,isomorphic_dose_128,isomorphic,128,none,,inherit,0,0.0,0.0,116.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,isomorphic_dose_256,isomorphic,256,none,,inherit,0,0.0,0.0,134.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length
+gemini,non_relative_not_absolute,gemini-3.1-pro-preview,isomorphic_dose_512,isomorphic,512,none,,inherit,0,0.0,0.0,151.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0,length

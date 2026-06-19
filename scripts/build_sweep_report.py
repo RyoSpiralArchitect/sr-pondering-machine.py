@@ -42,6 +42,22 @@ COLOR_FAMILIES = {
     "pink": {"xlight": "#FCDAD6", "light": "#F5BACC", "base": "#F390CA", "mid": "#BD569B", "dark": "#8A3A6F"},
 }
 
+CONTRACT_ORDER = [
+    "none",
+    "final_closure",
+    "log_closure",
+    "log_final_closure",
+    "log_skeleton_closure",
+    "log_skeleton_final_closure",
+]
+
+LOG_PHASE_ROUTE_ORDER = [
+    "inherit_1024_no_rescue",
+    "low_1024_no_rescue",
+    "inherit_2048_no_rescue",
+    "low_2048_rescue",
+]
+
 
 def use_chart_theme() -> None:
     sns.set_theme(
@@ -114,7 +130,7 @@ def infer_scaffold_meta(item: Dict[str, Any]) -> tuple[str, Optional[int]]:
     if dose is None:
         dose = safe_int(scaffold.get("target_tokens"))
 
-    match = re.match(r"^(?P<condition>[A-Za-z0-9_-]+)_dose_(?P<dose>\d+)$", name)
+    match = re.match(r"^(?P<condition>[A-Za-z0-9_-]+)_dose_(?P<dose>\d+)(?:_[A-Za-z0-9_-]+)?$", name)
     if match:
         condition = condition or match.group("condition")
         dose = dose if dose is not None else int(match.group("dose"))
@@ -122,6 +138,122 @@ def infer_scaffold_meta(item: Dict[str, Any]) -> tuple[str, Optional[int]]:
     if not condition and name in {"assoc", "random", "facts", "isomorphic"}:
         condition = name
     return condition, dose
+
+
+def infer_output_contract(item: Dict[str, Any]) -> str:
+    name = str(item.get("name") or "").strip()
+    cfg = item.get("cfg_overrides") if isinstance(item.get("cfg_overrides"), dict) else {}
+    extras = item.get("extras") if isinstance(item.get("extras"), dict) else {}
+    contract = str(cfg.get("output_contract") or extras.get("output_contract") or "").strip()
+    if not contract:
+        for candidate in sorted(CONTRACT_ORDER, key=len, reverse=True):
+            suffix = f"_{candidate}"
+            if name.endswith(suffix):
+                contract = candidate
+                break
+    return contract or "none"
+
+
+def infer_log_phase_route(item: Dict[str, Any]) -> str:
+    name = str(item.get("name") or "").strip()
+    cfg = item.get("cfg_overrides") if isinstance(item.get("cfg_overrides"), dict) else {}
+    for route in LOG_PHASE_ROUTE_ORDER:
+        if name.endswith(f"_{route}"):
+            return route
+
+    effort = str(cfg.get("log_phase_reasoning_effort") or "inherit").strip() or "inherit"
+    budget = safe_int(cfg.get("log_phase_max_new_tokens"))
+    budget_label = str(budget) if budget and budget > 0 else "inherit"
+    rescue = bool(cfg.get("log_phase_rescue"))
+    if effort == "inherit" and budget_label == "inherit" and not rescue:
+        return ""
+    return f"{effort}_{budget_label}_{'rescue' if rescue else 'no_rescue'}"
+
+
+def _nonempty_lines(text: Any) -> List[str]:
+    return [line.strip() for line in str(text or "").splitlines() if line.strip()]
+
+
+def marker_line_present(text: Any, marker: str) -> int:
+    return int(any(line == marker for line in _nonempty_lines(text)))
+
+
+def marker_is_last_line(text: Any, marker: str) -> int:
+    lines = _nonempty_lines(text)
+    return int(bool(lines) and lines[-1] == marker)
+
+
+def log_skeleton_prefix_count(text: Any) -> int:
+    lines = _nonempty_lines(text)
+    prefixes = ("X1|", "X2|", "X3|", "X4|")
+    return sum(1 for prefix in prefixes if any(line.startswith(prefix) for line in lines))
+
+
+def log_skeleton_complete(text: Any) -> int:
+    lines = _nonempty_lines(text)
+    if len(lines) != 5 or marker_is_last_line(text, "END_LOG") != 1:
+        return 0
+    return int(all(lines[ix].startswith(f"X{ix + 1}|") for ix in range(4)))
+
+
+def prompt_leakage_flag(text: Any) -> int:
+    lowered = str(text or "").lower()
+    needles = [
+        "<ponder_log>",
+        "</ponder_log>",
+        "actual question:",
+        "additional output contract",
+        "additional log contract",
+        "本題の質問",
+        "追加の出力契約",
+        "追加のログ契約",
+        "出力は回答本文のみ",
+    ]
+    return int(any(needle.lower() in lowered for needle in needles))
+
+
+def record_logs(item: Dict[str, Any]) -> List[str]:
+    records = item.get("records")
+    if not isinstance(records, list):
+        return []
+    logs: List[str] = []
+    for record in records:
+        if isinstance(record, dict):
+            log = str(record.get("ponder_log") or "").strip()
+            if log:
+                logs.append(log)
+    return logs
+
+
+def finish_reason(meta: Any) -> str:
+    if not isinstance(meta, dict):
+        return ""
+    return str(meta.get("finish_reason") or meta.get("stop_reason") or "").strip().lower()
+
+
+def count_record_finish_reason(item: Dict[str, Any], reason: str) -> int:
+    records = item.get("records")
+    if not isinstance(records, list):
+        return 0
+    count = 0
+    for record in records:
+        if isinstance(record, dict) and finish_reason(record.get("api_generation")) == reason:
+            count += 1
+    return count
+
+
+def count_record_log_phase_flag(item: Dict[str, Any], key: str) -> int:
+    records = item.get("records")
+    if not isinstance(records, list):
+        return 0
+    count = 0
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        log_phase = record.get("log_phase") if isinstance(record.get("log_phase"), dict) else {}
+        if bool(log_phase.get(key)):
+            count += 1
+    return count
 
 
 def palette_for(values: Iterable[Any]) -> Dict[str, str]:
@@ -196,13 +328,27 @@ def extract_rows(sweep_dir: Path) -> tuple[List[Dict[str, Any]], List[Dict[str, 
             semantic = comp.get("semantic") if isinstance(comp.get("semantic"), dict) else {}
             stance = comp.get("stance") if isinstance(comp.get("stance"), dict) else {}
             spatial = comp.get("spatial_metaphor") if isinstance(comp.get("spatial_metaphor"), dict) else {}
-            logs = spatial.get("logs") if isinstance(spatial.get("logs"), dict) else {}
+            spatial_logs = spatial.get("logs") if isinstance(spatial.get("logs"), dict) else {}
             budget = comp.get("token_budget") if isinstance(comp.get("token_budget"), dict) else {}
             delta = budget.get("delta") if isinstance(budget.get("delta"), dict) else {}
             all_usage = budget.get("all_api_usage") if isinstance(budget.get("all_api_usage"), dict) else {}
             extras = item.get("extras") if isinstance(item.get("extras"), dict) else {}
             warnings = extras.get("api_warnings") if isinstance(extras.get("api_warnings"), list) else []
             scaffold_condition, scaffold_dose = infer_scaffold_meta(item)
+            output_contract = infer_output_contract(item)
+            cfg_overrides = item.get("cfg_overrides") if isinstance(item.get("cfg_overrides"), dict) else {}
+            log_phase_route = infer_log_phase_route(item)
+            log_phase_reasoning_effort = str(cfg_overrides.get("log_phase_reasoning_effort") or "inherit").strip() or "inherit"
+            log_phase_max_new_tokens = safe_int(cfg_overrides.get("log_phase_max_new_tokens")) or 0
+            log_phase_rescue_enabled = int(bool(cfg_overrides.get("log_phase_rescue")))
+            log_phase_rescue_used_count = count_record_log_phase_flag(item, "rescue_used")
+            answer = str(item.get("answer") or "")
+            record_log_values = record_logs(item)
+            log_marker_count = sum(marker_line_present(log, "END_LOG") for log in record_log_values)
+            log_skeleton_prefixes = sum(log_skeleton_prefix_count(log) for log in record_log_values)
+            log_skeleton_complete_count = sum(log_skeleton_complete(log) for log in record_log_values)
+            final_meta = extras.get("api_final_generation") if isinstance(extras.get("api_final_generation"), dict) else {}
+            final_reason = finish_reason(final_meta)
             item_rows.append(
                 {
                     "provider": provider,
@@ -211,13 +357,34 @@ def extract_rows(sweep_dir: Path) -> tuple[List[Dict[str, Any]], List[Dict[str, 
                     "condition": str(item.get("name") or ""),
                     "scaffold_condition": scaffold_condition,
                     "scaffold_dose": scaffold_dose,
+                    "output_contract": output_contract,
+                    "log_phase_route": log_phase_route,
+                    "log_phase_reasoning_effort": log_phase_reasoning_effort,
+                    "log_phase_max_new_tokens": log_phase_max_new_tokens,
+                    "log_phase_rescue_enabled": log_phase_rescue_enabled,
+                    "log_phase_rescue_used_count": log_phase_rescue_used_count,
+                    "log_phase_rescue_used_rate": (log_phase_rescue_used_count / len(record_log_values)) if record_log_values else None,
                     "answer_chars": safe_float(metrics.get("answer_chars")),
+                    "final_marker_line_present": marker_line_present(answer, "END_ANSWER"),
+                    "final_marker_is_last_line": marker_is_last_line(answer, "END_ANSWER"),
+                    "prompt_leakage_flag": prompt_leakage_flag(answer),
+                    "ponder_log_count": len(record_log_values),
+                    "ponder_log_marker_count": log_marker_count,
+                    "ponder_log_marker_rate": (log_marker_count / len(record_log_values)) if record_log_values else None,
+                    "ponder_log_skeleton_prefix_count": log_skeleton_prefixes,
+                    "ponder_log_skeleton_prefix_rate": (log_skeleton_prefixes / (4 * len(record_log_values))) if record_log_values else None,
+                    "ponder_log_skeleton_complete_count": log_skeleton_complete_count,
+                    "ponder_log_skeleton_complete_rate": (log_skeleton_complete_count / len(record_log_values)) if record_log_values else None,
+                    "final_finish_reason": final_reason,
+                    "final_finish_is_length": int(final_reason == "length") if final_reason else None,
+                    "ponder_finish_length_count": count_record_finish_reason(item, "length"),
+                    "ponder_finish_stop_count": count_record_finish_reason(item, "stop"),
                     "elapsed_s": safe_float(metrics.get("elapsed_s")),
                     "diff_ratio": safe_float(comp.get("diff_ratio")),
                     "answer_cosine": safe_float(semantic.get("answer_cosine")),
                     "query_alignment_delta": safe_float(semantic.get("query_alignment_delta")),
                     "stance_shift": safe_float(stance.get("shift_score")),
-                    "spatial_log_density": safe_float(logs.get("density_per_1k_chars")),
+                    "spatial_log_density": safe_float(spatial_logs.get("density_per_1k_chars")),
                     "api_total_delta": safe_float(delta.get("api_total_tokens")),
                     "api_prompt_delta": safe_float(delta.get("api_prompt_tokens")),
                     "api_completion_delta": safe_float(delta.get("api_completion_tokens")),
@@ -393,12 +560,14 @@ def collect_answer_docs(run_df: pd.DataFrame) -> List[Dict[str, Any]]:
                 continue
             name = str(item.get("name") or "")
             kind = str(item.get("kind") or "")
+            output_contract = infer_output_contract(item)
             docs.append(
                 {
                     "provider": str(row["provider"]),
                     "query_id": str(row["query_id"]),
                     "model": str(result.get("model") or row.get("model") or ""),
                     "condition": "baseline" if kind == "baseline" else name,
+                    "output_contract": output_contract,
                     "kind": kind,
                     "answer_chars": len(answer),
                     "answer": answer,
@@ -540,6 +709,7 @@ def build_attractor_rows(run_df: pd.DataFrame, item_df: pd.DataFrame) -> List[Di
             answer_vec = hashed_text_vector(answer)
             metric_row = metrics_by_item.get((provider, query_id, name), {})
             scaffold_condition, scaffold_dose = infer_scaffold_meta(item)
+            output_contract = str(metric_row.get("output_contract") or infer_output_contract(item) or "none")
             trace = trace_summary.get(name, {})
             scaffold_text = "\n\n".join(
                 unique_texts(list(trace.get("scaffold_previews") or []) + record_texts(item))
@@ -574,6 +744,7 @@ def build_attractor_rows(run_df: pd.DataFrame, item_df: pd.DataFrame) -> List[Di
                     "condition": name,
                     "scaffold_condition": scaffold_condition,
                     "scaffold_dose": scaffold_dose,
+                    "output_contract": output_contract,
                     "prior_item": prior_name,
                     "step_drift": step_drift,
                     "origin_drift": origin_drift,
@@ -603,6 +774,7 @@ def build_dose_response_rows(run_df: pd.DataFrame, item_df: pd.DataFrame, attrac
         condition = str(item.get("scaffold_condition") or "").strip()
         if dose is None or dose <= 0 or not condition:
             continue
+        output_contract = str(item.get("output_contract") or "none").strip() or "none"
         key = (str(item.get("provider")), str(item.get("query_id")), str(item.get("condition")))
         attractor = attractor_by_item.get(key, {})
         rows.append(
@@ -613,6 +785,7 @@ def build_dose_response_rows(run_df: pd.DataFrame, item_df: pd.DataFrame, attrac
                 "condition": str(item.get("condition") or ""),
                 "scaffold_condition": condition,
                 "scaffold_dose": dose,
+                "output_contract": output_contract,
                 "answer_chars": safe_float(item.get("answer_chars")),
                 "query_alignment_delta": safe_float(item.get("query_alignment_delta")),
                 "diff_ratio": safe_float(item.get("diff_ratio")),
@@ -629,9 +802,9 @@ def build_dose_response_rows(run_df: pd.DataFrame, item_df: pd.DataFrame, attrac
             }
         )
 
-    present = {(row["provider"], row["query_id"], row["scaffold_condition"]) for row in rows}
+    present = {(row["provider"], row["query_id"], row["scaffold_condition"], row["output_contract"]) for row in rows}
     run_lookup = {(str(row["provider"]), str(row["query_id"])): dict(row) for _, row in run_df.iterrows()}
-    for provider, query_id, condition in sorted(present):
+    for provider, query_id, condition, output_contract in sorted(present):
         run = run_lookup.get((provider, query_id), {})
         rows.append(
             {
@@ -641,6 +814,7 @@ def build_dose_response_rows(run_df: pd.DataFrame, item_df: pd.DataFrame, attrac
                 "condition": "baseline",
                 "scaffold_condition": condition,
                 "scaffold_dose": 0,
+                "output_contract": output_contract,
                 "answer_chars": safe_float(run.get("baseline_answer_chars")),
                 "query_alignment_delta": 0.0,
                 "diff_ratio": 0.0,
@@ -656,7 +830,16 @@ def build_dose_response_rows(run_df: pd.DataFrame, item_df: pd.DataFrame, attrac
                 "is_baseline_reference": True,
             }
         )
-    return sorted(rows, key=lambda r: (str(r["provider"]), str(r["query_id"]), str(r["scaffold_condition"]), int(r["scaffold_dose"])))
+    return sorted(
+        rows,
+        key=lambda r: (
+            str(r["provider"]),
+            str(r["query_id"]),
+            str(r["scaffold_condition"]),
+            str(r.get("output_contract") or "none"),
+            int(r["scaffold_dose"]),
+        ),
+    )
 
 
 def build_dose_charts(dose_df: pd.DataFrame, chart_dir: Path) -> Dict[str, str]:
@@ -670,6 +853,10 @@ def build_dose_charts(dose_df: pd.DataFrame, chart_dir: Path) -> Dict[str, str]:
     condition_order = unique_texts(plot_df["scaffold_condition"].tolist())
     condition_palette = palette_for(condition_order)
     style_field = "provider" if len(unique_texts(plot_df["provider"].tolist())) > 1 else None
+    if style_field is None and "output_contract" in plot_df.columns:
+        contracts = unique_texts(plot_df["output_contract"].tolist())
+        if len(contracts) > 1:
+            style_field = "output_contract"
 
     def line_chart(metric: str, ylabel: str, title: str, subtitle: str, filename: str) -> None:
         if metric not in plot_df.columns or plot_df[metric].dropna().empty:
@@ -728,7 +915,207 @@ def build_dose_charts(dose_df: pd.DataFrame, chart_dir: Path) -> Dict[str, str]:
     return charts
 
 
-def summarize(run_df: pd.DataFrame, item_df: pd.DataFrame, dose_df: Optional[pd.DataFrame] = None) -> Dict[str, Any]:
+def build_closure_contract_rows(item_df: pd.DataFrame) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    if item_df.empty or "output_contract" not in item_df.columns:
+        return rows
+    for _, item in item_df.iterrows():
+        contract = str(item.get("output_contract") or "none").strip() or "none"
+        rows.append(
+            {
+                "provider": str(item.get("provider")),
+                "query_id": str(item.get("query_id")),
+                "model": str(item.get("model") or ""),
+                "condition": str(item.get("condition") or ""),
+                "scaffold_condition": str(item.get("scaffold_condition") or ""),
+                "scaffold_dose": safe_int(item.get("scaffold_dose")),
+                "output_contract": contract,
+                "log_phase_route": str(item.get("log_phase_route") or ""),
+                "log_phase_reasoning_effort": str(item.get("log_phase_reasoning_effort") or "inherit"),
+                "log_phase_max_new_tokens": safe_int(item.get("log_phase_max_new_tokens")) or 0,
+                "log_phase_rescue_enabled": safe_float(item.get("log_phase_rescue_enabled")),
+                "log_phase_rescue_used_rate": safe_float(item.get("log_phase_rescue_used_rate")),
+                "answer_chars": safe_float(item.get("answer_chars")),
+                "final_marker_line_present": safe_float(item.get("final_marker_line_present")),
+                "final_marker_is_last_line": safe_float(item.get("final_marker_is_last_line")),
+                "ponder_log_marker_rate": safe_float(item.get("ponder_log_marker_rate")),
+                "ponder_log_skeleton_prefix_rate": safe_float(item.get("ponder_log_skeleton_prefix_rate")),
+                "ponder_log_skeleton_complete_rate": safe_float(item.get("ponder_log_skeleton_complete_rate")),
+                "final_finish_is_length": safe_float(item.get("final_finish_is_length")),
+                "ponder_finish_length_count": safe_float(item.get("ponder_finish_length_count")),
+                "prompt_leakage_flag": safe_float(item.get("prompt_leakage_flag")),
+                "final_finish_reason": str(item.get("final_finish_reason") or ""),
+            }
+        )
+    return rows
+
+
+def build_closure_charts(closure_df: pd.DataFrame, chart_dir: Path) -> Dict[str, str]:
+    charts: Dict[str, str] = {}
+    if closure_df.empty or "output_contract" not in closure_df.columns:
+        return charts
+    contracts = unique_texts(closure_df["output_contract"].tolist())
+    if not contracts or set(contracts) == {"none"}:
+        return charts
+
+    order = [x for x in CONTRACT_ORDER if x in contracts] + [x for x in contracts if x not in CONTRACT_ORDER]
+    palette = palette_for(order)
+
+    def bar_chart(metric: str, ylabel: str, title: str, subtitle: str, filename: str) -> None:
+        if metric not in closure_df.columns or closure_df[metric].dropna().empty:
+            return
+        fig, ax = plt.subplots(figsize=(9.6, 4.8))
+        sns.barplot(
+            data=closure_df,
+            x="output_contract",
+            y=metric,
+            hue="output_contract",
+            order=order,
+            palette=palette,
+            legend=False,
+            errorbar=None,
+            ax=ax,
+            edgecolor=TOKENS["ink"],
+        )
+        sns.stripplot(
+            data=closure_df,
+            x="output_contract",
+            y=metric,
+            order=order,
+            ax=ax,
+            color=COLOR_FAMILIES["orange"]["dark"],
+            size=4,
+            jitter=0.08,
+        )
+        ax.set_xlabel("")
+        ax.set_ylabel(ylabel)
+        ax.tick_params(axis="x", rotation=20)
+        add_chart_header(fig, ax, title, subtitle)
+        charts[metric] = str(chart_dir / filename)
+        save_fig(fig, Path(charts[metric]))
+
+    bar_chart(
+        "final_finish_is_length",
+        "Final answer length-stop rate",
+        "Closure contracts expose whether Gemini still stops by length",
+        "Bars show mean 0/1 final-answer length finish; dots are individual scaffold rows.",
+        "closure_final_finish_length_rate.png",
+    )
+    bar_chart(
+        "final_marker_is_last_line",
+        "END_ANSWER as final line",
+        "Final closure success is visible in the answer text",
+        "Rows without a final-answer contract are expected to stay near zero.",
+        "closure_final_marker_rate.png",
+    )
+    bar_chart(
+        "ponder_log_marker_rate",
+        "Ponder logs with END_LOG",
+        "Log closure success is measured before scaffold synthesis",
+        "Rows without a log contract are expected to stay near zero.",
+        "closure_log_marker_rate.png",
+    )
+    bar_chart(
+        "ponder_log_skeleton_complete_rate",
+        "Ponder logs matching X1-X4 skeleton",
+        "Skeleton closure tests whether a non-semantic frame survives generation",
+        "A pass requires exactly X1| through X4| followed by END_LOG.",
+        "closure_log_skeleton_rate.png",
+    )
+    bar_chart(
+        "answer_chars",
+        "Final answer characters",
+        "Closure contracts also control the output-length surface",
+        "Use this with marker and finish-rate charts to separate shorter-but-complete from truncated.",
+        "closure_answer_chars.png",
+    )
+    return charts
+
+
+def build_log_phase_route_charts(closure_df: pd.DataFrame, chart_dir: Path) -> Dict[str, str]:
+    charts: Dict[str, str] = {}
+    if closure_df.empty or "log_phase_route" not in closure_df.columns:
+        return charts
+    plot_df = closure_df[closure_df["log_phase_route"].fillna("").astype(str).str.len() > 0].copy()
+    if plot_df.empty:
+        return charts
+    routes = unique_texts(plot_df["log_phase_route"].tolist())
+    if len(routes) <= 1:
+        return charts
+    order = [x for x in LOG_PHASE_ROUTE_ORDER if x in routes] + [x for x in routes if x not in LOG_PHASE_ROUTE_ORDER]
+    palette = palette_for(order)
+
+    def bar_chart(metric: str, ylabel: str, title: str, subtitle: str, filename: str) -> None:
+        if metric not in plot_df.columns or plot_df[metric].dropna().empty:
+            return
+        fig, ax = plt.subplots(figsize=(9.8, 4.8))
+        sns.barplot(
+            data=plot_df,
+            x="log_phase_route",
+            y=metric,
+            hue="log_phase_route",
+            order=order,
+            palette=palette,
+            legend=False,
+            errorbar=None,
+            ax=ax,
+            edgecolor=TOKENS["ink"],
+        )
+        sns.stripplot(
+            data=plot_df,
+            x="log_phase_route",
+            y=metric,
+            order=order,
+            ax=ax,
+            color=COLOR_FAMILIES["orange"]["dark"],
+            size=4,
+            jitter=0.08,
+        )
+        ax.set_xlabel("")
+        ax.set_ylabel(ylabel)
+        ax.tick_params(axis="x", rotation=18)
+        add_chart_header(fig, ax, title, subtitle)
+        chart_key = f"log_phase_route_{metric}"
+        charts[chart_key] = str(chart_dir / filename)
+        save_fig(fig, Path(charts[chart_key]))
+
+    bar_chart(
+        "ponder_log_marker_rate",
+        "Ponder logs with END_LOG",
+        "Log-only routes change visible closure before the final answer",
+        "Bars show mean END_LOG presence; dots are scaffold rows under the same log contract.",
+        "log_phase_route_marker_rate.png",
+    )
+    bar_chart(
+        "ponder_log_skeleton_complete_rate",
+        "Ponder logs matching X1-X4 skeleton",
+        "Larger log budget plus rescue targets skeleton completion",
+        "A pass requires exactly X1| through X4| followed by END_LOG.",
+        "log_phase_route_skeleton_rate.png",
+    )
+    bar_chart(
+        "ponder_finish_length_count",
+        "Length finishes per item",
+        "Log route changes whether Gemini still runs out of visible budget",
+        "Lower is better for this diagnostic because each item has one ponder stage in the focused sweep.",
+        "log_phase_route_length_finishes.png",
+    )
+    bar_chart(
+        "log_phase_rescue_used_rate",
+        "Rescue used rate",
+        "Rescue is visible only when the first log generation misses the contract",
+        "Rows without rescue enabled should remain at zero by construction.",
+        "log_phase_route_rescue_used_rate.png",
+    )
+    return charts
+
+
+def summarize(
+    run_df: pd.DataFrame,
+    item_df: pd.DataFrame,
+    dose_df: Optional[pd.DataFrame] = None,
+    closure_df: Optional[pd.DataFrame] = None,
+) -> Dict[str, Any]:
     by_provider: Dict[str, Any] = {}
     for provider, group in item_df.groupby("provider"):
         by_provider[provider] = {
@@ -786,6 +1173,43 @@ def summarize(run_df: pd.DataFrame, item_df: pd.DataFrame, dose_df: Optional[pd.
                     .to_dict(orient="records")
                 ),
             }
+    closure_summary: Dict[str, Any] = {}
+    if closure_df is not None and not closure_df.empty:
+        contracts = unique_texts(closure_df.get("output_contract", pd.Series(dtype=str)).tolist())
+        if contracts and set(contracts) != {"none"}:
+            by_contract = (
+                closure_df.groupby("output_contract", as_index=False)
+                .agg(
+                    rows=("condition", "count"),
+                    answer_chars_mean=("answer_chars", "mean"),
+                    final_finish_length_rate=("final_finish_is_length", "mean"),
+                    final_marker_last_rate=("final_marker_is_last_line", "mean"),
+                    log_marker_rate=("ponder_log_marker_rate", "mean"),
+                    log_skeleton_complete_rate=("ponder_log_skeleton_complete_rate", "mean"),
+                    prompt_leakage_rate=("prompt_leakage_flag", "mean"),
+                )
+                .to_dict(orient="records")
+            )
+            closure_summary = {
+                "row_count": int(len(closure_df)),
+                "contracts": contracts,
+                "by_contract": by_contract,
+            }
+        route_df = closure_df[closure_df.get("log_phase_route", pd.Series(dtype=str)).fillna("").astype(str).str.len() > 0].copy()
+        if not route_df.empty:
+            closure_summary["log_phase_routes"] = unique_texts(route_df["log_phase_route"].tolist())
+            closure_summary["by_log_phase_route"] = (
+                route_df.groupby("log_phase_route", as_index=False)
+                .agg(
+                    rows=("condition", "count"),
+                    log_marker_rate=("ponder_log_marker_rate", "mean"),
+                    log_skeleton_complete_rate=("ponder_log_skeleton_complete_rate", "mean"),
+                    ponder_finish_length_mean=("ponder_finish_length_count", "mean"),
+                    rescue_used_rate=("log_phase_rescue_used_rate", "mean"),
+                    answer_chars_mean=("answer_chars", "mean"),
+                )
+                .to_dict(orient="records")
+            )
     return {
         "run_count": int(len(run_df)),
         "ponder_item_count": int(len(item_df)),
@@ -793,6 +1217,7 @@ def summarize(run_df: pd.DataFrame, item_df: pd.DataFrame, dose_df: Optional[pd.
         "run_summary": run_summary,
         "condition_summary": condition_summary,
         "dose_summary": dose_summary,
+        "closure_summary": closure_summary,
     }
 
 
@@ -965,6 +1390,15 @@ def build_output_atlas_html(report_dir: Path, run_df: pd.DataFrame, item_df: pd.
                             f" | scaffold {html.escape(str(condition_metrics.get('scaffold_condition') or ''))}"
                             f"/{fmt_num(condition_metrics.get('scaffold_dose'), 0)}"
                         )
+                    contract_label = ""
+                    if condition_metrics.get("output_contract") and str(condition_metrics.get("output_contract")) != "none":
+                        contract_label = f" | contract {html.escape(str(condition_metrics.get('output_contract')))}"
+                    route_label = ""
+                    if condition_metrics.get("log_phase_route"):
+                        route_label = (
+                            f" | log route {html.escape(str(condition_metrics.get('log_phase_route')))}"
+                            f" rescue {fmt_num(condition_metrics.get('log_phase_rescue_used_rate'), 2)}"
+                        )
                     meta = (
                         f"{html.escape(str(item.get('control') or name))} | "
                         f"answer chars {fmt_num(condition_metrics.get('answer_chars'), 0)} | "
@@ -972,6 +1406,8 @@ def build_output_atlas_html(report_dir: Path, run_df: pd.DataFrame, item_df: pd.
                         f"alignment delta {fmt_num(condition_metrics.get('query_alignment_delta'), 3)} | "
                         f"api total delta {fmt_num(condition_metrics.get('api_total_delta'), 0)}"
                         f"{dose_label}"
+                        f"{contract_label}"
+                        f"{route_label}"
                     )
                 finish_reasons = ", ".join(trace.get("api_finish_reasons") or [])
                 keyword_html = ", ".join(html.escape(k) for k in trace.get("keywords", [])) or "(none captured)"
@@ -1048,6 +1484,8 @@ def build_report_html(
         alignment_bullet = "<strong>Alignment lift is unavailable.</strong> No pondered item rows were detected."
 
     dose_summary = summary.get("dose_summary") if isinstance(summary.get("dose_summary"), dict) else {}
+    closure_summary = summary.get("closure_summary") if isinstance(summary.get("closure_summary"), dict) else {}
+    log_phase_rows = closure_summary.get("by_log_phase_route") if isinstance(closure_summary.get("by_log_phase_route"), list) else []
     if dose_summary:
         best = dose_summary.get("best_alignment_row") if isinstance(dose_summary.get("best_alignment_row"), dict) else {}
         dose_bullet = (
@@ -1062,6 +1500,53 @@ def build_report_html(
             "<code>facts</code> and <code>isomorphic</code> raise token overhead most strongly; "
             "read token cost as operational overhead rather than a pure cognition claim.</li>"
         )
+    if closure_summary:
+        closure_rows = closure_summary.get("by_contract") if isinstance(closure_summary.get("by_contract"), list) else []
+        best_marker = sorted(
+            closure_rows,
+            key=lambda row: (
+                safe_float(row.get("final_marker_last_rate")) or 0.0,
+                -(safe_float(row.get("final_finish_length_rate")) or 0.0),
+            ),
+            reverse=True,
+        )
+        best_contract = best_marker[0] if best_marker else {}
+        closure_bullet = (
+            f"<li><strong>Output closure is now a first-class experimental axis.</strong> "
+            f"Best final marker rate in this run was <code>{html.escape(str(best_contract.get('output_contract') or 'n/a'))}</code> "
+            f"at {fmt_num((safe_float(best_contract.get('final_marker_last_rate')) or 0.0) * 100, 0)}%; "
+            "read it with the finish-reason chart and raw output atlas.</li>"
+        )
+    else:
+        closure_bullet = ""
+    log_phase_bullet = ""
+    if log_phase_rows:
+        def _route_budget(row: Dict[str, Any]) -> int:
+            route = str(row.get("log_phase_route") or "")
+            match = re.search(r"_(\d+)_", route)
+            return int(match.group(1)) if match else 999999
+
+        def _route_rescue_penalty(row: Dict[str, Any]) -> int:
+            route = str(row.get("log_phase_route") or "")
+            return int(route.endswith("_rescue") and not route.endswith("_no_rescue"))
+
+        best_route_rows = sorted(
+            log_phase_rows,
+            key=lambda row: (
+                -(safe_float(row.get("log_skeleton_complete_rate")) or 0.0),
+                -(safe_float(row.get("log_marker_rate")) or 0.0),
+                safe_float(row.get("ponder_finish_length_mean")) or 0.0,
+                _route_budget(row),
+                _route_rescue_penalty(row),
+            ),
+        )
+        best_route = best_route_rows[0] if best_route_rows else {}
+        log_phase_bullet = (
+            f"<li><strong>Log-phase routing is now isolated from final-answer routing.</strong> "
+            f"Best skeleton-complete route was <code>{html.escape(str(best_route.get('log_phase_route') or 'n/a'))}</code> "
+            f"at {fmt_num((safe_float(best_route.get('log_skeleton_complete_rate')) or 0.0) * 100, 0)}%; "
+            "compare it with rescue-used rate and raw ponder logs.</li>"
+        )
 
     metric_cards = [
         (str(summary["run_count"]), "completed provider/query runs"),
@@ -1072,6 +1557,8 @@ def build_report_html(
         metric_cards.append((f"{fmt_num(provider_run.get('elapsed_s_mean'), 1)}s", f"{provider} mean run time"))
     if len(metric_cards) < 4 and dose_summary:
         metric_cards.append((fmt_num(dose_summary.get("max_dose"), 0), "max scaffold dose"))
+    if len(metric_cards) < 4 and closure_summary:
+        metric_cards.append((str(len(closure_summary.get("contracts") or [])), "output contracts"))
     if len(metric_cards) < 4:
         metric_cards.append((str(len(providers)), "provider lanes"))
     metric_grid_html = "".join(
@@ -1146,14 +1633,104 @@ def build_report_html(
     </section>
 """
 
-    title = "Scaffold Dose Ladder Sweep" if dose_summary else "Claude/Gemini Pondering Machine Sweep"
+    closure_section = ""
+    if closure_summary:
+        closure_figures = []
+        for key, alt, caption in [
+            (
+                "final_finish_is_length",
+                "Final answer length finish rate by output contract",
+                "Lower is better when it means the answer closed normally rather than exhausting completion tokens.",
+            ),
+            (
+                "final_marker_is_last_line",
+                "Final marker pass rate by output contract",
+                "A pass means END_ANSWER was the final non-empty line of the generated answer.",
+            ),
+            (
+                "ponder_log_marker_rate",
+                "Ponder log marker rate by output contract",
+                "A pass means the saved ponder log included END_LOG as a standalone line.",
+            ),
+            (
+                "ponder_log_skeleton_complete_rate",
+                "Ponder log skeleton pass rate by output contract",
+                "A pass means the saved ponder log matched X1| through X4| plus END_LOG exactly.",
+            ),
+            (
+                "answer_chars",
+                "Answer length by output contract",
+                "Shorter output is useful only when the marker and raw answer show it completed rather than collapsed.",
+            ),
+        ]:
+            if charts.get(key):
+                closure_figures.append(
+                    f"<figure>{img_tag(charts[key], alt, report_dir)}<figcaption>{html.escape(caption)}</figcaption></figure>"
+                )
+        closure_section = f"""
+    <section data-contract-section="key-findings">
+      <h2>Gemini Output Closure Contract</h2>
+      <p><strong>The closure contract splits the problem into log closure and final-answer closure.</strong> This helps distinguish a scaffold that fails while producing the ponder log from one that fails when landing the final answer.</p>
+      {''.join(closure_figures)}
+      <p>Use <a href="closure_contract_metrics.csv">closure_contract_metrics.csv</a> for marker pass rates, final finish reasons, prompt-leak flags, and row-level answer lengths.</p>
+    </section>
+"""
+
+    log_phase_section = ""
+    if log_phase_rows:
+        route_figures = []
+        for key, alt, caption in [
+            (
+                "log_phase_route_ponder_log_marker_rate",
+                "Log phase route marker rate",
+                "END_LOG presence indicates whether the visible log reached a closure marker.",
+            ),
+            (
+                "log_phase_route_ponder_log_skeleton_complete_rate",
+                "Log phase route skeleton completion",
+                "Skeleton completion is the stricter X1-X4 plus END_LOG contract.",
+            ),
+            (
+                "log_phase_route_ponder_finish_length_count",
+                "Log phase route length finishes",
+                "Length finishes show when the first log pass still runs out of visible output budget.",
+            ),
+            (
+                "log_phase_route_log_phase_rescue_used_rate",
+                "Log phase rescue usage",
+                "Rescue usage should rise only where the initial log pass misses the contract.",
+            ),
+        ]:
+            if charts.get(key):
+                route_figures.append(
+                    f"<figure>{img_tag(charts[key], alt, report_dir)}<figcaption>{html.escape(caption)}</figcaption></figure>"
+                )
+        log_phase_section = f"""
+    <section data-contract-section="key-findings">
+      <h2>Log-Phase Dedicated Routes</h2>
+      <p><strong>This isolates the ponder-log call from the final-answer call.</strong> The route axis varies only log-stage reasoning effort, log-stage visible-token budget, and whether a short log-only rescue call is allowed after a contract miss.</p>
+      {''.join(route_figures)}
+      <p>Use <a href="closure_contract_metrics.csv">closure_contract_metrics.csv</a> to compare route-level marker pass rates, length finishes, and rescue-used rates.</p>
+    </section>
+"""
+
+    if closure_summary:
+        title = "Gemini Log-Phase Route Sweep" if log_phase_rows else "Gemini Closure Contract Sweep"
+    elif dose_summary:
+        title = "Scaffold Dose Ladder Sweep"
+    else:
+        title = "Claude/Gemini Pondering Machine Sweep"
     runtime_section_title = (
-        "Runtime and answer length frame the dose ladder"
+        "Runtime and answer length frame the closure contract"
+        if closure_summary
+        else "Runtime and answer length frame the dose ladder"
         if dose_summary
         else "Runtime and answer length split provider behavior"
     )
     runtime_note = (
-        "This focused run uses one provider lane, so runtime is mainly a planning handle for larger dose ladders."
+        "This focused run uses one provider lane, so runtime is mainly a planning handle for larger closure sweeps."
+        if closure_summary
+        else "This focused run uses one provider lane, so runtime is mainly a planning handle for larger dose ladders."
         if len(providers) == 1
         else "Gemini and Claude are both usable for artifact sweeps, but their latency/cost surfaces differ enough that high-volume sampling and qualitative inspection should be planned separately."
     )
@@ -1163,7 +1740,11 @@ def build_report_html(
         else "Log scale. Claude values include Claude Code CLI prompt/cache wrapper overhead, so they are operationally real for this environment but not a pure model API comparison."
     )
     caveat_text = (
-        "This is an exploratory dose-ladder artifact sweep, not a stable benchmark. The curated bundle uses one prompt and one provider lane, semantic alignment and PCA use hashed character n-grams rather than embedding models, and attractor metrics are text-surface proxies rather than hidden-state measurements. The raw output atlas is the main qualitative evidence lane."
+        "This is an exploratory Gemini log-phase route sweep, not a stable benchmark. Marker checks only prove visible completion, rescue replaces the saved ponder log only when it improves the visible log contract, finish reasons are provider-reported API metadata, semantic alignment and PCA use hashed character n-grams rather than embedding models, and the raw output atlas remains the main qualitative evidence lane."
+        if log_phase_rows
+        else "This is an exploratory Gemini closure-contract sweep, not a stable benchmark. Marker checks only prove visible completion, finish reasons are provider-reported API metadata, semantic alignment and PCA use hashed character n-grams rather than embedding models, and the raw output atlas remains the main qualitative evidence lane."
+        if closure_summary
+        else "This is an exploratory dose-ladder artifact sweep, not a stable benchmark. The curated bundle uses one prompt and one provider lane, semantic alignment and PCA use hashed character n-grams rather than embedding models, and attractor metrics are text-surface proxies rather than hidden-state measurements. The raw output atlas is the main qualitative evidence lane."
         if dose_summary
         else "This is an exploratory artifact sweep, not a stable benchmark. Semantic alignment used hashed character n-grams rather than an embedding model, provider routing differs by backend, and older pack JSON files may only retain ponder/scaffold previews in the trace while newer pack outputs retain full records."
     )
@@ -1234,6 +1815,8 @@ def build_report_html(
         <li><strong>{summary["run_count"]} lab-matrix runs completed cleanly.</strong> The sweep produced {summary["ponder_item_count"]} pondered comparison rows across {html.escape(model_names or "the selected models")}, plus per-run JSON, trace, and matrix artifacts.</li>
         <li>{provider_runtime_bullet}</li>
         <li>{alignment_bullet}</li>
+        {closure_bullet}
+        {log_phase_bullet}
         {dose_bullet}
       </ul>
     </section>
@@ -1269,16 +1852,20 @@ def build_report_html(
       </figure>
     </section>
 
-{dose_section}
+	{closure_section}
+
+	{log_phase_section}
+
+	{dose_section}
 
 {pca_section}
 
     <section data-contract-section="recommended-next-steps">
       <h2>Recommended Next Steps</h2>
       <ol>
+        <li><strong>Use closure markers as a diagnostic, not a quality score.</strong> They show whether Gemini landed the output; they do not prove the answer is better.</li>
         <li><strong>Normalize answer-length targets before making provider claims.</strong> Require a minimum answer length, or stratify metrics by length band.</li>
         <li><strong>Use the output atlas as the qualitative inspection lane.</strong> The charts show surface movement; the actual generated text shows whether the movement is meaningful.</li>
-        <li><strong>Add a small judge pass after the sweep shape is stable.</strong> The current hash alignment and PCA views are useful for triage, but they cannot say whether the pondered answer is actually better.</li>
       </ol>
     </section>
 
@@ -1340,13 +1927,18 @@ def main() -> int:
     dose_rows = build_dose_response_rows(run_df, item_df, attractor_rows)
     write_csv(analysis_dir / "dose_response_metrics.csv", dose_rows)
     dose_df = pd.DataFrame(dose_rows)
+    closure_rows = build_closure_contract_rows(item_df)
+    write_csv(analysis_dir / "closure_contract_metrics.csv", closure_rows)
+    closure_df = pd.DataFrame(closure_rows)
 
     charts = build_charts(run_df, item_df, chart_dir)
     charts.update(build_dose_charts(dose_df, chart_dir))
+    charts.update(build_closure_charts(closure_df, chart_dir))
+    charts.update(build_log_phase_route_charts(closure_df, chart_dir))
     pca_chart, pca_summary = build_answer_pca(run_df, analysis_dir, chart_dir)
     if pca_chart:
         charts["answer_pca"] = pca_chart
-    summary = summarize(run_df, item_df, dose_df)
+    summary = summarize(run_df, item_df, dose_df, closure_df)
     summary["pca"] = pca_summary
     summary["charts"] = charts
     (analysis_dir / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
