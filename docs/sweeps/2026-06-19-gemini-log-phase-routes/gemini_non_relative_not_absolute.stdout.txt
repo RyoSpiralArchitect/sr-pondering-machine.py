@@ -124,15 +124,15 @@ budget[api_usage_plus_visible_estimate] ans=478->144 scaffold=591 reason=0->0 co
 
 === PACK SUMMARY ===
 
-name                                        kind      control  chars  records  elapsed_s         
+name                                        kind      control  chars  records  elapsed_s
 ------------------------------------------  --------  -------  -----  -------  ------------------
 baseline                                    baseline           484             23.304321999999956
-facts_dose_512_log_skeleton_closure_inher…  ponder    none     139    1        51.59245262500008 
-facts_dose_512_log_skeleton_closure_low_1…  ponder    none     135    1        45.06636479200097 
+facts_dose_512_log_skeleton_closure_inher…  ponder    none     139    1        51.59245262500008
+facts_dose_512_log_skeleton_closure_low_1…  ponder    none     135    1        45.06636479200097
 facts_dose_512_log_skeleton_closure_inher…  ponder    none     608    1        54.761635250000836
-facts_dose_512_log_skeleton_closure_low_2…  ponder    none     141    1        45.36848762500085 
-isomorphic_dose_512_log_skeleton_closure_…  ponder    none     146    1        48.91278712500025 
-isomorphic_dose_512_log_skeleton_closure_…  ponder    none     132    1        47.07179866600018 
+facts_dose_512_log_skeleton_closure_low_2…  ponder    none     141    1        45.36848762500085
+isomorphic_dose_512_log_skeleton_closure_…  ponder    none     146    1        48.91278712500025
+isomorphic_dose_512_log_skeleton_closure_…  ponder    none     132    1        47.07179866600018
 isomorphic_dose_512_log_skeleton_closure_…  ponder    none     135    1        54.401716292000856
 isomorphic_dose_512_log_skeleton_closure_…  ponder    none     144    1        42.872260666999864
 
