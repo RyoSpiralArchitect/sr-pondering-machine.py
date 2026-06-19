@@ -1,7 +1,7 @@
 {
-  "ts": "2026-06-19T03:21:35.495094+00:00",
+  "ts": "2026-06-19T05:42:17.562104+00:00",
   "repo": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py",
-  "out_dir": "artifacts/sweep_20260619_dose_ladder",
+  "out_dir": "artifacts/sweep_20260619_dose_ladder_latest",
   "providers": [
     "gemini"
   ],
@@ -58,6 +58,8 @@
     "facts",
     "isomorphic"
   ],
+  "output_contracts": [],
+  "log_phase_routes": [],
   "runs": [
     {
       "provider": "gemini",
@@ -81,7 +83,7 @@
         "--query",
         "非相対的ではあるが絶対的ではない状態とは？",
         "--lab_matrix",
-        "artifacts/sweep_20260619_dose_ladder/matrices/scaffold_dose_ladder_non_relative_not_absolute.json",
+        "artifacts/sweep_20260619_dose_ladder_latest/matrices/scaffold_dose_ladder_non_relative_not_absolute.json",
         "--memory_policy",
         "current_only",
         "--no_write_memory",
@@ -111,24 +113,24 @@
         "1",
         "--pack_resume",
         "--json_out",
-        "artifacts/sweep_20260619_dose_ladder/gemini_non_relative_not_absolute.json",
+        "artifacts/sweep_20260619_dose_ladder_latest/gemini_non_relative_not_absolute.json",
         "--trace_out",
-        "artifacts/sweep_20260619_dose_ladder/gemini_non_relative_not_absolute.trace.jsonl",
+        "artifacts/sweep_20260619_dose_ladder_latest/gemini_non_relative_not_absolute.trace.jsonl",
         "--trace_report_out",
-        "artifacts/sweep_20260619_dose_ladder/gemini_non_relative_not_absolute.trace.html",
+        "artifacts/sweep_20260619_dose_ladder_latest/gemini_non_relative_not_absolute.trace.html",
         "--matrix_report_out",
-        "artifacts/sweep_20260619_dose_ladder/gemini_non_relative_not_absolute.matrix.html"
+        "artifacts/sweep_20260619_dose_ladder_latest/gemini_non_relative_not_absolute.matrix.html"
       ],
-      "json_out": "artifacts/sweep_20260619_dose_ladder/gemini_non_relative_not_absolute.json",
-      "trace_out": "artifacts/sweep_20260619_dose_ladder/gemini_non_relative_not_absolute.trace.jsonl",
-      "trace_report_out": "artifacts/sweep_20260619_dose_ladder/gemini_non_relative_not_absolute.trace.html",
-      "matrix_report_out": "artifacts/sweep_20260619_dose_ladder/gemini_non_relative_not_absolute.matrix.html",
-      "stdout": "artifacts/sweep_20260619_dose_ladder/gemini_non_relative_not_absolute.stdout.txt",
-      "stderr": "artifacts/sweep_20260619_dose_ladder/gemini_non_relative_not_absolute.stderr.txt",
-      "lab_matrix_arg": "artifacts/sweep_20260619_dose_ladder/matrices/scaffold_dose_ladder_non_relative_not_absolute.json",
+      "json_out": "artifacts/sweep_20260619_dose_ladder_latest/gemini_non_relative_not_absolute.json",
+      "trace_out": "artifacts/sweep_20260619_dose_ladder_latest/gemini_non_relative_not_absolute.trace.jsonl",
+      "trace_report_out": "artifacts/sweep_20260619_dose_ladder_latest/gemini_non_relative_not_absolute.trace.html",
+      "matrix_report_out": "artifacts/sweep_20260619_dose_ladder_latest/gemini_non_relative_not_absolute.matrix.html",
+      "stdout": "artifacts/sweep_20260619_dose_ladder_latest/gemini_non_relative_not_absolute.stdout.txt",
+      "stderr": "artifacts/sweep_20260619_dose_ladder_latest/gemini_non_relative_not_absolute.stderr.txt",
+      "lab_matrix_arg": "artifacts/sweep_20260619_dose_ladder_latest/matrices/scaffold_dose_ladder_non_relative_not_absolute.json",
       "profile": "dose_ladder",
       "returncode": 0,
-      "elapsed_s": 670.508713792,
+      "elapsed_s": 701.393412458001,
       "ok": true
     }
   ]
