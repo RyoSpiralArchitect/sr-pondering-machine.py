@@ -1,0 +1,635 @@
+<!doctype html>
+<html><head><meta charset='utf-8'/>
+<title>sr_ponder matrix report</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:24px;color:#111;background:#fafafa;}h1,h2,h3{margin:0 0 12px 0;} .muted{color:#666;} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0;}.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 14px 0;padding:10px 12px;background:#fff;border:1px solid #ddd;border-radius:10px;}.toolbar label{font-size:13px;color:#333;display:flex;gap:6px;align-items:center;}.toolbar select,.toolbar button{font:inherit;padding:6px 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111;}.toolbar button{cursor:pointer;}.heatmap-wrap{margin:12px 0 20px 0;}.heatmap-cell{min-width:74px;text-align:center;font-variant-numeric:tabular-nums;}.heat-win{background:#e8f7ee;color:#0a5a2e;}.heat-loss{background:#fdecec;color:#8b1d1d;}.heat-tie,.heat-diag{background:#f3f3f3;color:#666;}.heat-missing{background:#fff8e6;color:#8a6d1f;}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #ddd;} th,td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:top;text-align:left;font-size:13px;}th{background:#f3f3f3;position:sticky;top:0;} code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}pre{white-space:pre-wrap;background:#fbfbfb;border:1px solid #eee;padding:12px;border-radius:8px;}.pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef4ff;color:#245; margin-right:6px;font-size:12px;}details{margin:12px 0;} .num{text-align:right;} .ok{color:#0a6;} .warn{color:#a60;}</style>
+</head><body>
+<h1>sr_ponder matrix report</h1>
+<div class='muted'>gemini_log_phase_routes_non_relative_not_absolute · custom / gemini-3.1-pro-preview</div>
+<p><strong>Query:</strong> 非相対的ではあるが絶対的ではない状態とは？</p>
+<div class='grid'>
+<div class='card'><div class='muted'>Items</div><div><strong>9</strong></div></div>
+<div class='card'><div class='muted'>Ponder items</div><div><strong>8</strong></div></div>
+<div class='card'><div class='muted'>Warnings</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Baseline</div><div><strong>baseline</strong></div></div>
+<div class='card'><div class='muted'>Max reasoning Δ</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Max stance shift</div><div><strong>1.0000</strong></div></div>
+<div class='card'><div class='muted'>Best align Δ</div><div><strong>0.0311</strong></div></div>
+</div>
+<h2>Pairwise heatmap</h2>
+<div class='toolbar'><strong>A/B/C/D win-loss heatmap</strong><label>Metric<select id='heatmap-metric-key'>
+<option value='query_alignment_delta' selected>Query align Δ</option>
+<option value='stance_shift'>Stance shift</option>
+<option value='budget_reasoning_delta'>Reasoning token Δ</option>
+<option value='budget_total_delta'>Total token Δ</option>
+</select></label><span class='muted'>Green means the row beats the column on the selected metric. Cost metrics use lower-is-better.</span></div>
+<div class='heatmap-wrap' data-heatmap-key='query_alignment_delta'><div class='muted'>Query align Δ · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue</th>
+<th>facts_dose_512_log_skeleton_closure_low_1024_no_rescue</th>
+<th>facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue</th>
+<th>facts_dose_512_log_skeleton_closure_low_2048_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_inherit_1024_no_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_1024_no_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_inherit_2048_no_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_2048_rescue</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue</strong><br/><span class='muted'>-0.0696 · 5W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0224</td>
+<td class='heatmap-cell heat-loss'>-0.1007</td>
+<td class='heatmap-cell heat-loss'>-0.0084</td>
+<td class='heatmap-cell heat-win'>0.0291</td>
+<td class='heatmap-cell heat-win'>0.0564</td>
+<td class='heatmap-cell heat-win'>0.0625</td>
+<td class='heatmap-cell heat-win'>0.0600</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_1024_no_rescue</strong><br/><span class='muted'>-0.0920 · 4W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0224</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1231</td>
+<td class='heatmap-cell heat-loss'>-0.0308</td>
+<td class='heatmap-cell heat-win'>0.0067</td>
+<td class='heatmap-cell heat-win'>0.0340</td>
+<td class='heatmap-cell heat-win'>0.0401</td>
+<td class='heatmap-cell heat-win'>0.0376</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue</strong><br/><span class='muted'>0.0311 · 7W</span></td>
+<td class='heatmap-cell heat-win'>0.1007</td>
+<td class='heatmap-cell heat-win'>0.1231</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0923</td>
+<td class='heatmap-cell heat-win'>0.1297</td>
+<td class='heatmap-cell heat-win'>0.1571</td>
+<td class='heatmap-cell heat-win'>0.1632</td>
+<td class='heatmap-cell heat-win'>0.1607</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_2048_rescue</strong><br/><span class='muted'>-0.0612 · 6W</span></td>
+<td class='heatmap-cell heat-win'>0.0084</td>
+<td class='heatmap-cell heat-win'>0.0308</td>
+<td class='heatmap-cell heat-loss'>-0.0923</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0374</td>
+<td class='heatmap-cell heat-win'>0.0648</td>
+<td class='heatmap-cell heat-win'>0.0709</td>
+<td class='heatmap-cell heat-win'>0.0684</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_inherit_1024_no_rescue</strong><br/><span class='muted'>-0.0987 · 3W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0291</td>
+<td class='heatmap-cell heat-loss'>-0.0067</td>
+<td class='heatmap-cell heat-loss'>-0.1297</td>
+<td class='heatmap-cell heat-loss'>-0.0374</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0274</td>
+<td class='heatmap-cell heat-win'>0.0334</td>
+<td class='heatmap-cell heat-win'>0.0310</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_1024_no_rescue</strong><br/><span class='muted'>-0.1260 · 2W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0564</td>
+<td class='heatmap-cell heat-loss'>-0.0340</td>
+<td class='heatmap-cell heat-loss'>-0.1571</td>
+<td class='heatmap-cell heat-loss'>-0.0648</td>
+<td class='heatmap-cell heat-loss'>-0.0274</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0061</td>
+<td class='heatmap-cell heat-win'>0.0036</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_inherit_2048_no_rescue</strong><br/><span class='muted'>-0.1321 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0625</td>
+<td class='heatmap-cell heat-loss'>-0.0401</td>
+<td class='heatmap-cell heat-loss'>-0.1632</td>
+<td class='heatmap-cell heat-loss'>-0.0709</td>
+<td class='heatmap-cell heat-loss'>-0.0334</td>
+<td class='heatmap-cell heat-loss'>-0.0061</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0024</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_2048_rescue</strong><br/><span class='muted'>-0.1297 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0600</td>
+<td class='heatmap-cell heat-loss'>-0.0376</td>
+<td class='heatmap-cell heat-loss'>-0.1607</td>
+<td class='heatmap-cell heat-loss'>-0.0684</td>
+<td class='heatmap-cell heat-loss'>-0.0310</td>
+<td class='heatmap-cell heat-loss'>-0.0036</td>
+<td class='heatmap-cell heat-win'>0.0024</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='stance_shift' style='display:none'><div class='muted'>Stance shift · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue</th>
+<th>facts_dose_512_log_skeleton_closure_low_1024_no_rescue</th>
+<th>facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue</th>
+<th>facts_dose_512_log_skeleton_closure_low_2048_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_inherit_1024_no_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_1024_no_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_inherit_2048_no_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_2048_rescue</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue</strong><br/><span class='muted'>0.3556 · 1W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0222</td>
+<td class='heatmap-cell heat-loss'>-0.0889</td>
+<td class='heatmap-cell heat-loss'>-0.0571</td>
+<td class='heatmap-cell heat-loss'>-0.3111</td>
+<td class='heatmap-cell heat-loss'>-0.2000</td>
+<td class='heatmap-cell heat-loss'>-0.3111</td>
+<td class='heatmap-cell heat-loss'>-0.6444</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_1024_no_rescue</strong><br/><span class='muted'>0.3333 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0222</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1111</td>
+<td class='heatmap-cell heat-loss'>-0.0794</td>
+<td class='heatmap-cell heat-loss'>-0.3333</td>
+<td class='heatmap-cell heat-loss'>-0.2222</td>
+<td class='heatmap-cell heat-loss'>-0.3333</td>
+<td class='heatmap-cell heat-loss'>-0.6667</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue</strong><br/><span class='muted'>0.4444 · 3W</span></td>
+<td class='heatmap-cell heat-win'>0.0889</td>
+<td class='heatmap-cell heat-win'>0.1111</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0317</td>
+<td class='heatmap-cell heat-loss'>-0.2222</td>
+<td class='heatmap-cell heat-loss'>-0.1111</td>
+<td class='heatmap-cell heat-loss'>-0.2222</td>
+<td class='heatmap-cell heat-loss'>-0.5556</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_2048_rescue</strong><br/><span class='muted'>0.4127 · 2W</span></td>
+<td class='heatmap-cell heat-win'>0.0571</td>
+<td class='heatmap-cell heat-win'>0.0794</td>
+<td class='heatmap-cell heat-loss'>-0.0317</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.2540</td>
+<td class='heatmap-cell heat-loss'>-0.1429</td>
+<td class='heatmap-cell heat-loss'>-0.2540</td>
+<td class='heatmap-cell heat-loss'>-0.5873</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_inherit_1024_no_rescue</strong><br/><span class='muted'>0.6667 · 5W</span></td>
+<td class='heatmap-cell heat-win'>0.3111</td>
+<td class='heatmap-cell heat-win'>0.3333</td>
+<td class='heatmap-cell heat-win'>0.2222</td>
+<td class='heatmap-cell heat-win'>0.2540</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.1111</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-loss'>-0.3333</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_1024_no_rescue</strong><br/><span class='muted'>0.5556 · 4W</span></td>
+<td class='heatmap-cell heat-win'>0.2000</td>
+<td class='heatmap-cell heat-win'>0.2222</td>
+<td class='heatmap-cell heat-win'>0.1111</td>
+<td class='heatmap-cell heat-win'>0.1429</td>
+<td class='heatmap-cell heat-loss'>-0.1111</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1111</td>
+<td class='heatmap-cell heat-loss'>-0.4444</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_inherit_2048_no_rescue</strong><br/><span class='muted'>0.6667 · 5W</span></td>
+<td class='heatmap-cell heat-win'>0.3111</td>
+<td class='heatmap-cell heat-win'>0.3333</td>
+<td class='heatmap-cell heat-win'>0.2222</td>
+<td class='heatmap-cell heat-win'>0.2540</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-win'>0.1111</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.3333</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_2048_rescue</strong><br/><span class='muted'>1.0000 · 7W</span></td>
+<td class='heatmap-cell heat-win'>0.6444</td>
+<td class='heatmap-cell heat-win'>0.6667</td>
+<td class='heatmap-cell heat-win'>0.5556</td>
+<td class='heatmap-cell heat-win'>0.5873</td>
+<td class='heatmap-cell heat-win'>0.3333</td>
+<td class='heatmap-cell heat-win'>0.4444</td>
+<td class='heatmap-cell heat-win'>0.3333</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_reasoning_delta' style='display:none'><div class='muted'>Reasoning token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue</th>
+<th>facts_dose_512_log_skeleton_closure_low_1024_no_rescue</th>
+<th>facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue</th>
+<th>facts_dose_512_log_skeleton_closure_low_2048_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_inherit_1024_no_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_1024_no_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_inherit_2048_no_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_2048_rescue</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_1024_no_rescue</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_2048_rescue</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_inherit_1024_no_rescue</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_1024_no_rescue</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_inherit_2048_no_rescue</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_2048_rescue</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_total_delta' style='display:none'><div class='muted'>Total token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue</th>
+<th>facts_dose_512_log_skeleton_closure_low_1024_no_rescue</th>
+<th>facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue</th>
+<th>facts_dose_512_log_skeleton_closure_low_2048_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_inherit_1024_no_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_1024_no_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_inherit_2048_no_rescue</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_2048_rescue</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue</strong><br/><span class='muted'>2983.0000 · 3W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-383.0000</td>
+<td class='heatmap-cell heat-win'>1011.0000</td>
+<td class='heatmap-cell heat-loss'>-374.0000</td>
+<td class='heatmap-cell heat-win'>199.0000</td>
+<td class='heatmap-cell heat-loss'>-69.0000</td>
+<td class='heatmap-cell heat-win'>1109.0000</td>
+<td class='heatmap-cell heat-loss'>-138.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_1024_no_rescue</strong><br/><span class='muted'>2600.0000 · 7W</span></td>
+<td class='heatmap-cell heat-win'>383.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>1394.0000</td>
+<td class='heatmap-cell heat-win'>9.0000</td>
+<td class='heatmap-cell heat-win'>582.0000</td>
+<td class='heatmap-cell heat-win'>314.0000</td>
+<td class='heatmap-cell heat-win'>1492.0000</td>
+<td class='heatmap-cell heat-win'>245.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue</strong><br/><span class='muted'>3994.0000 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-1011.0000</td>
+<td class='heatmap-cell heat-loss'>-1394.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-1385.0000</td>
+<td class='heatmap-cell heat-loss'>-812.0000</td>
+<td class='heatmap-cell heat-loss'>-1080.0000</td>
+<td class='heatmap-cell heat-win'>98.0000</td>
+<td class='heatmap-cell heat-loss'>-1149.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_2048_rescue</strong><br/><span class='muted'>2609.0000 · 6W</span></td>
+<td class='heatmap-cell heat-win'>374.0000</td>
+<td class='heatmap-cell heat-loss'>-9.0000</td>
+<td class='heatmap-cell heat-win'>1385.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>573.0000</td>
+<td class='heatmap-cell heat-win'>305.0000</td>
+<td class='heatmap-cell heat-win'>1483.0000</td>
+<td class='heatmap-cell heat-win'>236.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_inherit_1024_no_rescue</strong><br/><span class='muted'>3182.0000 · 2W</span></td>
+<td class='heatmap-cell heat-loss'>-199.0000</td>
+<td class='heatmap-cell heat-loss'>-582.0000</td>
+<td class='heatmap-cell heat-win'>812.0000</td>
+<td class='heatmap-cell heat-loss'>-573.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-268.0000</td>
+<td class='heatmap-cell heat-win'>910.0000</td>
+<td class='heatmap-cell heat-loss'>-337.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_1024_no_rescue</strong><br/><span class='muted'>2914.0000 · 4W</span></td>
+<td class='heatmap-cell heat-win'>69.0000</td>
+<td class='heatmap-cell heat-loss'>-314.0000</td>
+<td class='heatmap-cell heat-win'>1080.0000</td>
+<td class='heatmap-cell heat-loss'>-305.0000</td>
+<td class='heatmap-cell heat-win'>268.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>1178.0000</td>
+<td class='heatmap-cell heat-loss'>-69.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_inherit_2048_no_rescue</strong><br/><span class='muted'>4092.0000 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-1109.0000</td>
+<td class='heatmap-cell heat-loss'>-1492.0000</td>
+<td class='heatmap-cell heat-loss'>-98.0000</td>
+<td class='heatmap-cell heat-loss'>-1483.0000</td>
+<td class='heatmap-cell heat-loss'>-910.0000</td>
+<td class='heatmap-cell heat-loss'>-1178.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-1247.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_2048_rescue</strong><br/><span class='muted'>2845.0000 · 5W</span></td>
+<td class='heatmap-cell heat-win'>138.0000</td>
+<td class='heatmap-cell heat-loss'>-245.0000</td>
+<td class='heatmap-cell heat-win'>1149.0000</td>
+<td class='heatmap-cell heat-loss'>-236.0000</td>
+<td class='heatmap-cell heat-win'>337.0000</td>
+<td class='heatmap-cell heat-win'>69.0000</td>
+<td class='heatmap-cell heat-win'>1247.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<h2>Comparison table</h2>
+<div class='toolbar'><strong>Sort by baseline-relative metric</strong><label>Metric<select id='matrix-sort-key'><option value='judge_score_delta'>Judge score Δ</option><option value='judge_resolution_delta'>Judge resolution Δ</option><option value='query_alignment_delta'>Query align Δ</option><option value='stance_shift'>Stance shift</option><option value='budget_reasoning_delta'>Reasoning token Δ</option><option value='budget_completion_delta'>Completion token Δ</option><option value='budget_total_delta'>Total token Δ</option><option value='answer_cosine'>Answer cosine</option><option value='diff_ratio'>Diff ratio</option><option value='answer_chars'>Answer chars</option><option value='elapsed_s'>Elapsed seconds</option><option value='name'>Name</option></select></label><label>Direction<select id='matrix-sort-dir'><option value='desc'>Descending</option><option value='asc'>Ascending</option></select></label><button type='button' id='matrix-sort-apply'>Apply</button><span class='muted'>Baseline rows stay pinned to the top.</span></div>
+<table><thead><tr>
+<th>Item</th>
+<th>Kind</th>
+<th>Scaffold</th>
+<th>Chars</th>
+<th>Elapsed</th>
+<th>Semantic</th>
+<th>Judge</th>
+<th>Stance</th>
+<th>Budget</th>
+<th>Warnings</th>
+</tr></thead><tbody id='matrix-report-body'>
+<tr data-name='baseline' data-kind='baseline' data-answer-chars='484' data-elapsed-s='23.304321999999956' data-diff-ratio='' data-answer-cosine='' data-query-alignment-delta='' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='' data-budget-scaffold-tokens='' data-budget-reasoning-delta='' data-budget-completion-delta='' data-budget-total-delta=''>
+<td><strong>baseline</strong><br/><span class='muted'></span></td>
+<td>baseline</td>
+<td>—</td>
+<td class='num'>484</td>
+<td class='num'>23.30</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue' data-kind='ponder' data-answer-chars='139' data-elapsed-s='51.59245262500008' data-diff-ratio='0.7849117174959872' data-answer-cosine='0.17453059591291809' data-query-alignment-delta='-0.06961055723253784' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.3555555555555556' data-budget-scaffold-tokens='559' data-budget-reasoning-delta='0' data-budget-completion-delta='-107' data-budget-total-delta='2983'>
+<td><strong>facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/512</td>
+<td class='num'>139</td>
+<td class='num'>51.59</td>
+<td>cos=0.1745 | Δalign=-0.0696</td>
+<td>—</td>
+<td>definition→framing | shift=0.3556</td>
+<td>scaf=559 | reasonΔ=0 | compΔ=-107</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_512_log_skeleton_closure_low_1024_no_rescue' data-kind='ponder' data-answer-chars='135' data-elapsed-s='45.06636479200097' data-diff-ratio='0.8255250403877221' data-answer-cosine='0.14320969403312012' data-query-alignment-delta='-0.0920198022494786' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.33333333333333337' data-budget-scaffold-tokens='596' data-budget-reasoning-delta='0' data-budget-completion-delta='-85' data-budget-total-delta='2600'>
+<td><strong>facts_dose_512_log_skeleton_closure_low_1024_no_rescue</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/512</td>
+<td class='num'>135</td>
+<td class='num'>45.07</td>
+<td>cos=0.1432 | Δalign=-0.0920</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.3333</td>
+<td>scaf=596 | reasonΔ=0 | compΔ=-85</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue' data-kind='ponder' data-answer-chars='608' data-elapsed-s='54.761635250000836' data-diff-ratio='0.8644688644688645' data-answer-cosine='0.2177784190604256' data-query-alignment-delta='0.031074521888955167' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.4444444444444444' data-budget-scaffold-tokens='608' data-budget-reasoning-delta='0' data-budget-completion-delta='180' data-budget-total-delta='3994'>
+<td><strong>facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/512</td>
+<td class='num'>608</td>
+<td class='num'>54.76</td>
+<td>cos=0.2178 | Δalign=0.0311</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.4444</td>
+<td>scaf=608 | reasonΔ=0 | compΔ=180</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_512_log_skeleton_closure_low_2048_rescue' data-kind='ponder' data-answer-chars='141' data-elapsed-s='45.36848762500085' data-diff-ratio='0.8144' data-answer-cosine='0.12543251986015214' data-query-alignment-delta='-0.061232141585997615' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.41269841269841273' data-budget-scaffold-tokens='568' data-budget-reasoning-delta='0' data-budget-completion-delta='-95' data-budget-total-delta='2609'>
+<td><strong>facts_dose_512_log_skeleton_closure_low_2048_rescue</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/512</td>
+<td class='num'>141</td>
+<td class='num'>45.37</td>
+<td>cos=0.1254 | Δalign=-0.0612</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.4127</td>
+<td>scaf=568 | reasonΔ=0 | compΔ=-95</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_512_log_skeleton_closure_inherit_1024_no_rescue' data-kind='ponder' data-answer-chars='146' data-elapsed-s='48.91278712500025' data-diff-ratio='0.8507936507936508' data-answer-cosine='0.11857793496357753' data-query-alignment-delta='-0.09867436334488533' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.6666666666666667' data-budget-scaffold-tokens='585' data-budget-reasoning-delta='0' data-budget-completion-delta='-108' data-budget-total-delta='3182'>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_inherit_1024_no_rescue</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/512</td>
+<td class='num'>146</td>
+<td class='num'>48.91</td>
+<td>cos=0.1186 | Δalign=-0.0987</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.6667</td>
+<td>scaf=585 | reasonΔ=0 | compΔ=-108</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_512_log_skeleton_closure_low_1024_no_rescue' data-kind='ponder' data-answer-chars='132' data-elapsed-s='47.07179866600018' data-diff-ratio='0.8863636363636364' data-answer-cosine='0.0861951106075481' data-query-alignment-delta='-0.1260383604092742' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.5555555555555556' data-budget-scaffold-tokens='602' data-budget-reasoning-delta='0' data-budget-completion-delta='-92' data-budget-total-delta='2914'>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_1024_no_rescue</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/512</td>
+<td class='num'>132</td>
+<td class='num'>47.07</td>
+<td>cos=0.0862 | Δalign=-0.1260</td>
+<td>—</td>
+<td>definition→framing | shift=0.5556</td>
+<td>scaf=602 | reasonΔ=0 | compΔ=-92</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_512_log_skeleton_closure_inherit_2048_no_rescue' data-kind='ponder' data-answer-chars='135' data-elapsed-s='54.401716292000856' data-diff-ratio='0.9030694668820678' data-answer-cosine='0.12963396910753852' data-query-alignment-delta='-0.13209759563510134' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.6666666666666667' data-budget-scaffold-tokens='589' data-budget-reasoning-delta='0' data-budget-completion-delta='-86' data-budget-total-delta='4092'>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_inherit_2048_no_rescue</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/512</td>
+<td class='num'>135</td>
+<td class='num'>54.40</td>
+<td>cos=0.1296 | Δalign=-0.1321</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.6667</td>
+<td>scaf=589 | reasonΔ=0 | compΔ=-86</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_512_log_skeleton_closure_low_2048_rescue' data-kind='ponder' data-answer-chars='144' data-elapsed-s='42.872260666999864' data-diff-ratio='0.9299363057324841' data-answer-cosine='0.07946928198577308' data-query-alignment-delta='-0.1296589620744792' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='1.0' data-budget-scaffold-tokens='591' data-budget-reasoning-delta='0' data-budget-completion-delta='-89' data-budget-total-delta='2845'>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_2048_rescue</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/512</td>
+<td class='num'>144</td>
+<td class='num'>42.87</td>
+<td>cos=0.0795 | Δalign=-0.1297</td>
+<td>—</td>
+<td>definition→resolution | shift=1.0000</td>
+<td>scaf=591 | reasonΔ=0 | compΔ=-89</td>
+<td class='ok'>0</td>
+</tr>
+</tbody></table>
+<h2>Item details</h2>
+<details>
+<summary><strong>baseline</strong> · baseline</summary>
+<div class='card'>
+<h3>answer</h3>
+<pre>相対的と絶対的という二つの言葉は、しばしば単純な対義語として扱われます。しかし、この二つの概念の間に横たわる領域に目を向けてみると、そこには私たちの存在の核心に触れるような興味深い風景が広がっています。
+
+まず、相対的とは、他との比較や関係性によって自身の位置や価値が定まる状態を指します。長いと短い、明るいと暗い、優れていると劣っているなど、比較する対象があって初めて成り立つ世界です。一方で絶対的とは、いかなる他者や外部の条件にも依存せず、それ自体で完全に独立しており、なおかつ永遠不変で普遍的な真理のような状態を指します。
+
+では、非相対的でありながら絶対的ではない状態とは何でしょうか。それは、「他との比較によって成り立っているわけではないが、かといって永遠不変でも普遍的でもない状態」を意味します。
+
+この矛盾するような状態を想像するために、宇宙空間にただ一つだけぽつんと存在するリンゴを思い浮かべてみます。比較対象となる他のリンゴや果物は一切存在しません。そのため、そのリンゴが大きいか小さいか、美しいか醜いかを相対的に語ることはできず、その存在は非相対的</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.7849 | changed=True</div>
+<h3>answer</h3>
+<pre>非相対的という概念と絶対的という概念はしばしば同義として扱われがちであるが、その本質的な次元は異なっている。非相対的とは、事物の性質や価値、あるいは真理が、観察者の視点や文化的背景、他者との比較といった外部との関係性に依存せず、それ自体として定まっている状態を指す。一方で絶対的</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_512_log_skeleton_closure_low_1024_no_rescue</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8255 | changed=True</div>
+<h3>answer</h3>
+<pre>「相対的」と「絶対的」はしばしば単純な対義語として扱われるため、「非相対的」であれば自動的に「絶対的」になるように思われがちです。しかし、この二分法は言葉の定義と適用される水準を混同しているために生じる錯覚だと言えます。ここで少し立ち止まり、それぞれの言葉の成立条件と不</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8645 | changed=True</div>
+<h3>answer</h3>
+<pre>非相対的という言葉は、他との比較や関係性によって価値や意味が変動しないことを指します。一方で絶対的という言葉は、いかなる条件や文脈、前提下においても普遍的に成立し、揺るがないことを意味します。この二つの概念を分水嶺として捉え、問いの成立条件と不成立条件の射程を探ることで、「非相対的ではあるが絶対的ではない状態」の輪郭が浮かび上がってきます。
+
+この状態を端的に言えば、特定の前提条件や限定された枠組みの内部においては他と比較されることなく独立して確定しているものの、その枠組みを外れた途端に普遍性を失ってしまう状態のことです。
+
+身近な境界事例として、個人の主観的な体験、例えば痛みの感覚が挙げられます。今まさに感じている痛みは、他人の痛みと比較して初めて生じるものではなく、本人にとっては他との関係性に依存しない直接的で疑いようのない事実です。その意味で、個人の痛みの感覚は非相対的です。しかし、その痛みは他者と完全に共有できる客観的な指標を持たず、全人類に共通する普遍的な基準として外部へ提示することはできません。したがって、それは絶対的ではありません。
+
+また、論理や数学の領域においても同様の構造が見出されます。ユークリッド幾何学における三角形の内角の和が180度であるという定理は、平面という前提条件の中では他の図形と比較されることなく自立して成立する非相対的な真理です。しかし、曲面を扱う非ユークリッド</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_512_log_skeleton_closure_low_2048_rescue</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8144 | changed=True</div>
+<h3>answer</h3>
+<pre>他者との比較や外部との関係性に依存して性質や価値が決定されることを相対的と呼び、いかなる条件や状況にも制約されず無条件で普遍的・完全であることを絶対的と呼ぶならば、そのどちらでもない状態とはどのようなものか。この問いを考えるにあたり、少し寄り道をして、物事の成立条件や私たちの認識の</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_512_log_skeleton_closure_inherit_1024_no_rescue</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8508 | changed=True</div>
+<h3>answer</h3>
+<pre>温室という閉鎖された空間で、光がわずかに遅れて届き、意味を伴わない配置だけがただ反復され続ける光景を思い浮かべてみます。その反復は、外の世界の何かと比較されることで生じているわけではありません。つまり、外部との関係性に依存する「相対的」なものではありません。しかし同時に、それが宇宙全体の普遍</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_512_log_skeleton_closure_low_1024_no_rescue</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8864 | changed=True</div>
+<h3>answer</h3>
+<pre>2084年の記録に残された「温室では、光が少し遅れて届く。意味ではなく配置だけが反復されている」という奇妙なログについて、少し思いを巡らせてみます。
+
+意味や価値というものは、常に他の概念や文脈との比較、すなわち関係性（相対性）の中で生じます。したがって、意味が剥</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_512_log_skeleton_closure_inherit_2048_no_rescue</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9031 | changed=True</div>
+<h3>answer</h3>
+<pre>温室という密閉された空間で、光が少し遅れて届き、意味を持たずに配置だけが幾度も反復される情景を思い浮かべてみます。そこでは外部の風景と比べる必要もなくただ配置が繰り返されており、他との関係性に依存しない閉じられた世界が形成されています。しかし、そこに普遍的な意味や不変の</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_512_log_skeleton_closure_low_2048_rescue</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9299 | changed=True</div>
+<h3>answer</h3>
+<pre>温室のガラスを透過する光がわずかに遅れ、意味を伴わずにただ配置だけが反復される光景について思いを巡らせてみる。意味や価値というものは、他者や別の事象との比較、すなわち相対的な関係性のネットワークの中で初めて生じる。したがって、意味を剥ぎ取られ、ただ物理的な形式や配置だけが繰り返されている</pre>
+</div>
+</details>
+<script>(function(){const body=document.getElementById('matrix-report-body');const heatSel=document.getElementById('heatmap-metric-key');const keySel=document.getElementById('matrix-sort-key');const dirSel=document.getElementById('matrix-sort-dir');const applyBtn=document.getElementById('matrix-sort-apply');const heatmaps=Array.from(document.querySelectorAll('[data-heatmap-key]'));if(heatSel&&heatmaps.length){function syncHeatmap(){const wanted=heatSel.value||'';for(const node of heatmaps){node.style.display=(node.getAttribute('data-heatmap-key')===wanted)?'':'none';}}heatSel.addEventListener('change',syncHeatmap);syncHeatmap();}if(!body||!keySel||!dirSel||!applyBtn){return;}function metricValue(row,key){const attr='data-'+String(key||'').replace(/_/g,'-');const raw=row.getAttribute(attr)||'';if(key==='name'){return raw.toLowerCase();}const num=Number(raw);return Number.isFinite(num)?num:null;}function compareRows(a,b,key,dir){const av=metricValue(a,key);const bv=metricValue(b,key);if(typeof av==='string'||typeof bv==='string'){const as=String(av||'');const bs=String(bv||'');return dir==='asc'?as.localeCompare(bs):bs.localeCompare(as);}if(av===null&&bv===null){return 0;}if(av===null){return 1;}if(bv===null){return -1;}return dir==='asc'?(av-bv):(bv-av);}function sortRows(){const key=keySel.value||'query_alignment_delta';const dir=dirSel.value||'desc';const rows=Array.from(body.querySelectorAll('tr'));const pinned=rows.filter((row)=>row.getAttribute('data-kind')==='baseline');const sortable=rows.filter((row)=>row.getAttribute('data-kind')!=='baseline');sortable.sort((a,b)=>{const main=compareRows(a,b,key,dir);if(main!==0){return main;}return compareRows(a,b,'name','asc');});for(const row of pinned.concat(sortable)){body.appendChild(row);}}applyBtn.addEventListener('click',sortRows);keySel.addEventListener('change',sortRows);dirSel.addEventListener('change',sortRows);sortRows();})();</script>
+</body></html>
