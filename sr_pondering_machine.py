@@ -1778,6 +1778,30 @@ def _output_contract_has_log_skeleton(contract: str) -> bool:
     )
 
 
+def _log_contract_lines(text: Any) -> List[str]:
+    return [line.strip() for line in str(text or "").splitlines() if line.strip()]
+
+
+def _log_contract_marker_is_last(text: Any) -> bool:
+    lines = _log_contract_lines(text)
+    return bool(lines) and lines[-1] == "END_LOG"
+
+
+def _log_contract_skeleton_complete(text: Any) -> bool:
+    lines = _log_contract_lines(text)
+    if len(lines) != 5 or lines[-1] != "END_LOG":
+        return False
+    return all(lines[ix].startswith(f"X{ix + 1}|") for ix in range(4))
+
+
+def _log_text_satisfies_output_contract(text: Any, contract: str) -> bool:
+    if not _output_contract_has_log(contract):
+        return True
+    if _output_contract_has_log_skeleton(contract):
+        return _log_contract_skeleton_complete(text)
+    return _log_contract_marker_is_last(text)
+
+
 def _build_random_scaffold_local(*, lang: str, seed: int, n_lines: int = 12) -> str:
     rng = random.Random(int(seed) + 17017)
     out: List[str] = []
@@ -2527,6 +2551,73 @@ def build_prompt_for_pondering(
             "</prev_ponder>\n\n"
             + body
         )
+    return body
+
+
+def build_prompt_for_log_phase_rescue(
+    ponder_q: str,
+    *,
+    mode: str,
+    lang: str,
+    output_contract: str = "none",
+    partial_log: str = "",
+) -> str:
+    contract = _normalize_output_contract_name(output_contract)
+    partial = str(partial_log or "").strip()
+    if len(partial) > 900:
+        partial = partial[:420].rstrip() + "\n...\n" + partial[-420:].lstrip()
+
+    if _output_contract_has_log_skeleton(contract):
+        if lang == "ja":
+            body = (
+                "前の ponder log は途中で切れた可能性があります。意味を救わず、可視ログの外枠だけを新しく閉じてください。\n"
+                "本題にも、この問いにも答えないでください。\n"
+                "出力はちょうど次の5行だけです。説明、見出し、引用、追加行は禁止。\n\n"
+                "形式:\n"
+                "X1|短い断片\n"
+                "X2|短い断片\n"
+                "X3|短い断片\n"
+                "X4|短い断片\n"
+                "END_LOG\n\n"
+                f"問い: {ponder_q}\n"
+                f"モード: {mode}\n"
+            )
+        else:
+            body = (
+                "The previous ponder log may have been cut off. Do not continue its meaning; close a fresh visible log frame only.\n"
+                "Do not answer the main topic or this side question.\n"
+                "Output exactly the following 5-line shape. No explanations, headings, quotes, or extra lines.\n\n"
+                "Shape:\n"
+                "X1|short fragment\n"
+                "X2|short fragment\n"
+                "X3|short fragment\n"
+                "X4|short fragment\n"
+                "END_LOG\n\n"
+                f"Question: {ponder_q}\n"
+                f"Mode: {mode}\n"
+            )
+    else:
+        if lang == "ja":
+            body = (
+                "前の ponder log は途中で切れた可能性があります。意味を救わず、短い可視ログだけを新しく閉じてください。\n"
+                "本題にも、この問いにも答えないでください。\n"
+                "出力は4〜6行だけ。最後の行だけは END_LOG とだけ書き、その後は何も書かないでください。\n\n"
+                f"問い: {ponder_q}\n"
+                f"モード: {mode}\n"
+            )
+        else:
+            body = (
+                "The previous ponder log may have been cut off. Do not continue its meaning; write a fresh short visible log only.\n"
+                "Do not answer the main topic or this side question.\n"
+                "Output only 4 to 6 lines. The final line must contain only END_LOG, with nothing after it.\n\n"
+                f"Question: {ponder_q}\n"
+                f"Mode: {mode}\n"
+            )
+    if partial:
+        if lang == "ja":
+            body += "\n途中ログ（継続せず、形式確認だけに使う）:\n<partial_log>\n" + partial + "\n</partial_log>\n"
+        else:
+            body += "\nPartial log (do not continue it; use only to notice that closure failed):\n<partial_log>\n" + partial + "\n</partial_log>\n"
     return body
 
 
@@ -5874,6 +5965,10 @@ class RunConfig:
     answer_style: str = "plain"  # plain|surreal|metaphor|meta
     answer_max_new_tokens: int = 1550
     ponder_max_new_tokens: int = 1020
+    log_phase_max_new_tokens: int = 0  # 0 inherits ponder_max_new_tokens
+    log_phase_reasoning_effort: str = "inherit"  # inherit|auto|none|minimal|low|medium|high|xhigh
+    log_phase_rescue: bool = False
+    log_phase_rescue_max_new_tokens: int = 384
     temperature: float = 0.8
     top_p: float = 0.95
     top_k: int = 0
@@ -5974,6 +6069,11 @@ def summarize_api_generation_meta(meta: Any) -> Dict[str, Any]:
     retry = meta.get("auto_retry")
     if isinstance(retry, dict) and retry:
         out["auto_retry"] = _jsonable(retry)
+    if isinstance(meta.get("reasoning_effort_override"), str) and str(meta.get("reasoning_effort_override")).strip():
+        out["reasoning_effort_override"] = str(meta.get("reasoning_effort_override")).strip()
+    for key in ("visible_rescue", "log_rescue", "log_phase"):
+        if isinstance(meta.get(key), dict) and meta.get(key):
+            out[key] = _jsonable(meta.get(key))
     return out
 
 
@@ -6024,6 +6124,40 @@ def _api_reasoning_starved_empty_output(text: str, meta: Dict[str, Any]) -> bool
     if completion_tokens <= 0 or reasoning_tokens < completion_tokens:
         return False
     return finish_reason in ("", "length")
+
+
+def _normalize_log_phase_reasoning_effort(value: Any) -> str:
+    effort = str(value or "inherit").strip().lower()
+    allowed = {"inherit", "auto", "none", "minimal", "low", "medium", "high", "xhigh"}
+    if effort not in allowed:
+        raise ValueError(f"Unknown log_phase_reasoning_effort: {value!r}")
+    return effort
+
+
+def _log_phase_reasoning_effort_override(cfg: "RunConfig") -> str:
+    effort = _normalize_log_phase_reasoning_effort(getattr(cfg, "log_phase_reasoning_effort", "inherit"))
+    return "" if effort == "inherit" else effort
+
+
+def _log_phase_max_new_tokens(cfg: "RunConfig") -> int:
+    override = int(getattr(cfg, "log_phase_max_new_tokens", 0) or 0)
+    if override > 0:
+        return override
+    return int(getattr(cfg, "ponder_max_new_tokens", 0) or 0)
+
+
+@contextlib.contextmanager
+def _temporary_api_reasoning_effort(hf: "OpenAICompatModel", effort: str):
+    effort_s = str(effort or "").strip().lower()
+    if not effort_s or effort_s == "inherit":
+        yield
+        return
+    old = getattr(hf, "api_reasoning_effort", "auto")
+    hf.api_reasoning_effort = effort_s
+    try:
+        yield
+    finally:
+        hf.api_reasoning_effort = old
 
 
 def _token_ids_for_text(tokenizer: Any, text: str) -> List[int]:
@@ -6342,7 +6476,32 @@ def _generate_api_text_with_reasoning_retry(
     no_repeat_ngram_size: int,
     seed: Optional[int],
     api_warnings: Optional[List[str]] = None,
+    reasoning_effort: str = "inherit",
 ) -> Tuple[str, Dict[str, Any]]:
+    effort = str(reasoning_effort or "inherit").strip().lower()
+    if effort and effort != "inherit":
+        _normalize_log_phase_reasoning_effort(effort)
+        with _temporary_api_reasoning_effort(hf, effort):
+            text, meta = _generate_api_text_with_reasoning_retry(
+                hf,
+                provider=provider,
+                phase=phase,
+                prompt=prompt,
+                max_new_tokens=max_new_tokens,
+                temperature=temperature,
+                top_p=top_p,
+                top_k=top_k,
+                repetition_penalty=repetition_penalty,
+                no_repeat_ngram_size=no_repeat_ngram_size,
+                seed=seed,
+                api_warnings=api_warnings,
+                reasoning_effort="inherit",
+            )
+        meta = dict(meta)
+        meta["reasoning_effort_override"] = effort
+        hf.last_response_meta = dict(meta)
+        return text, meta
+
     text = hf.generate_text(
         prompt,
         max_new_tokens=max_new_tokens,
@@ -6401,6 +6560,93 @@ def _generate_api_text_with_reasoning_retry(
     }
     hf.last_response_meta = dict(meta)
     return text, meta
+
+
+def _maybe_rescue_api_ponder_log(
+    hf: OpenAICompatModel,
+    *,
+    cfg: "RunConfig",
+    ponder_q: str,
+    stage_mode: str,
+    ponder_log: str,
+    ponder_meta: Dict[str, Any],
+    api_warnings: List[str],
+    seed: Optional[int],
+) -> Tuple[str, Dict[str, Any], Optional[Dict[str, Any]]]:
+    contract = str(getattr(cfg, "output_contract", "none") or "none")
+    if not bool(getattr(cfg, "log_phase_rescue", False)):
+        return ponder_log, ponder_meta, None
+    if not _output_contract_has_log(contract):
+        return ponder_log, ponder_meta, None
+    if _log_text_satisfies_output_contract(ponder_log, contract):
+        return ponder_log, ponder_meta, None
+
+    rescue_max_new_tokens = max(64, int(getattr(cfg, "log_phase_rescue_max_new_tokens", 0) or 384))
+    rescue_prompt = hf._apply_chat(
+        build_prompt_for_log_phase_rescue(
+            ponder_q,
+            mode=stage_mode,
+            lang=str(getattr(cfg, "prompt_lang", "en") or "en"),
+            output_contract=contract,
+            partial_log=ponder_log,
+        ),
+        system_text=None,
+    )
+    msg = (
+        f"API ponder log failed its visible log contract; attempting log rescue "
+        f"(contract={contract!r}, max_tokens={rescue_max_new_tokens})."
+    )
+    if msg not in api_warnings:
+        api_warnings.append(msg)
+        print(f"[sr_ponder] WARN: {msg}", file=sys.stderr)
+
+    effort = _log_phase_reasoning_effort_override(cfg)
+    rescue_log, rescue_meta = _generate_api_text_with_reasoning_retry(
+        hf,
+        provider=cfg.provider,
+        phase="ponder_stage_log_rescue",
+        prompt=rescue_prompt,
+        max_new_tokens=int(rescue_max_new_tokens),
+        temperature=0.2,
+        top_p=1.0,
+        top_k=0,
+        repetition_penalty=1.0,
+        no_repeat_ngram_size=0,
+        seed=None if seed is None else int(seed) + 7001,
+        api_warnings=api_warnings,
+        reasoning_effort=effort or "inherit",
+    )
+    rescue_satisfies = _log_text_satisfies_output_contract(rescue_log, contract)
+    original_satisfies = _log_text_satisfies_output_contract(ponder_log, contract)
+    rescue_info: Dict[str, Any] = {
+        "attempted": True,
+        "used": False,
+        "contract": contract,
+        "original_chars": len(ponder_log or ""),
+        "rescued_chars": len(rescue_log or ""),
+        "original_finish_reason": str((ponder_meta or {}).get("finish_reason") or ""),
+        "rescue_finish_reason": str((rescue_meta or {}).get("finish_reason") or ""),
+        "rescue_satisfies_contract": bool(rescue_satisfies),
+        "original_satisfies_contract": bool(original_satisfies),
+        "max_new_tokens": int(rescue_max_new_tokens),
+        "reasoning_effort": effort or "inherit",
+        "api_generation": rescue_meta,
+    }
+    if rescue_satisfies or ((not str(ponder_log or "").strip()) and str(rescue_log or "").strip()):
+        merged = _merge_api_token_buckets([ponder_meta, rescue_meta])
+        out_meta = dict(rescue_meta)
+        out_meta["api_calls"] = int(merged.get("calls") or 0)
+        for key in ("prompt_tokens", "completion_tokens", "reasoning_tokens", "total_tokens"):
+            out_meta[key] = int(merged.get(key) or 0)
+        rescue_info["used"] = True
+        out_meta["log_rescue"] = {k: v for k, v in rescue_info.items() if k != "api_generation"}
+        hf.last_response_meta = dict(out_meta)
+        return rescue_log, out_meta, rescue_info
+
+    ponder_meta = dict(ponder_meta or {})
+    ponder_meta["log_rescue"] = {k: v for k, v in rescue_info.items() if k != "api_generation"}
+    hf.last_response_meta = dict(ponder_meta)
+    return ponder_log, ponder_meta, rescue_info
 
 
 def _maybe_rescue_empty_api_final_answer(
@@ -7329,9 +7575,10 @@ def run_ponder(
                         system_text=None,
                     )
                     t_gen0 = time.perf_counter()
+                    log_phase_tokens = _log_phase_max_new_tokens(cfg)
                     ponder_log = hf.generate_text(
                         ponder_prompt,
-                        max_new_tokens=cfg.ponder_max_new_tokens,
+                        max_new_tokens=log_phase_tokens,
                         temperature=max(0.4, cfg.temperature),
                         top_p=cfg.top_p,
                         top_k=cfg.top_k,
@@ -7340,6 +7587,12 @@ def run_ponder(
                         seed=int(cfg.seed) + 1 + log_ix,
                     )
                     ponder_meta = summarize_api_generation_meta(getattr(hf, "last_response_meta", {}))
+                    if ponder_meta:
+                        ponder_meta["log_phase"] = {
+                            "max_new_tokens": int(log_phase_tokens),
+                            "reasoning_effort": "n/a",
+                            "rescue_enabled": False,
+                        }
                     gen_s = float(time.perf_counter() - t_gen0)
                     stage_logs.append(ponder_log)
                     if trace:
@@ -7353,6 +7606,9 @@ def run_ponder(
                             stage_ix=int(stage_ix),
                             mode=stage_mode,
                             output_contract=cfg.output_contract,
+                            log_phase_max_new_tokens=int(log_phase_tokens),
+                            log_phase_reasoning_effort="n/a",
+                            log_phase_rescue_enabled=False,
                             elapsed_s=gen_s,
                             text_chars=len(ponder_log or ""),
                             text_preview=trace.preview(ponder_log),
@@ -7392,6 +7648,13 @@ def run_ponder(
                         "selected_tokens": hop_selected_tokens,
                         "rejected_cfg": dataclasses.asdict(cfg.rejected),
                         "band": {"start_rank": band_start, "end_rank": band_end},
+                        "api_generation": ponder_meta if ponder_meta else None,
+                        "log_phase": {
+                            "max_new_tokens": int(log_phase_tokens),
+                            "reasoning_effort": "n/a",
+                            "rescue_enabled": False,
+                            "rescue_used": False,
+                        },
                         "ponder_question": ponder_q,
                         "ponder_log": ponder_log,
                         "gen_elapsed_s": gen_s,
@@ -8229,12 +8492,14 @@ def run_ponder_api(
                         system_text=None,
                     )
                     t_gen0 = time.perf_counter()
+                    log_phase_tokens = _log_phase_max_new_tokens(cfg)
+                    log_phase_effort = _log_phase_reasoning_effort_override(cfg)
                     ponder_log, ponder_meta = _generate_api_text_with_reasoning_retry(
                         hf,
                         provider=cfg.provider,
                         phase="ponder_stage",
                         prompt=ponder_prompt,
-                        max_new_tokens=cfg.ponder_max_new_tokens,
+                        max_new_tokens=log_phase_tokens,
                         temperature=max(0.4, cfg.temperature),
                         top_p=cfg.top_p,
                         top_k=0,
@@ -8242,7 +8507,26 @@ def run_ponder_api(
                         no_repeat_ngram_size=0,
                         seed=int(cfg.seed) + 1 + log_ix,
                         api_warnings=api_warnings,
+                        reasoning_effort=log_phase_effort or "inherit",
                     )
+                    ponder_log, ponder_meta, log_rescue_info = _maybe_rescue_api_ponder_log(
+                        hf,
+                        cfg=cfg,
+                        ponder_q=ponder_q,
+                        stage_mode=stage_mode,
+                        ponder_log=ponder_log,
+                        ponder_meta=ponder_meta,
+                        api_warnings=api_warnings,
+                        seed=int(cfg.seed) + 1 + log_ix,
+                    )
+                    if ponder_meta:
+                        ponder_meta = dict(ponder_meta)
+                        ponder_meta["log_phase"] = {
+                            "max_new_tokens": int(log_phase_tokens),
+                            "reasoning_effort": log_phase_effort or "inherit",
+                            "rescue_enabled": bool(getattr(cfg, "log_phase_rescue", False)),
+                            "rescue_used": bool((log_rescue_info or {}).get("used")),
+                        }
                     gen_s = float(time.perf_counter() - t_gen0)
                     stage_logs.append(ponder_log)
                     if trace:
@@ -8256,11 +8540,39 @@ def run_ponder_api(
                             stage_ix=int(stage_ix),
                             mode=stage_mode,
                             output_contract=cfg.output_contract,
+                            log_phase_max_new_tokens=int(log_phase_tokens),
+                            log_phase_reasoning_effort=log_phase_effort or "inherit",
+                            log_phase_rescue_enabled=bool(getattr(cfg, "log_phase_rescue", False)),
+                            log_phase_rescue_used=bool((log_rescue_info or {}).get("used")),
                             elapsed_s=gen_s,
                             text_chars=len(ponder_log or ""),
                             text_preview=trace.preview(ponder_log),
                             api_meta=ponder_meta if ponder_meta else None,
                         )
+                        if log_rescue_info:
+                            trace.event(
+                                "ponder_stage_rescue",
+                                run_id=run_id,
+                                pack_item=pack_item,
+                                band_label=band_label,
+                                band_ponder_ix=int(band_ponder_ix),
+                                hop_ix=int(hop_ix),
+                                stage_ix=int(stage_ix),
+                                mode=stage_mode,
+                                output_contract=cfg.output_contract,
+                                used=bool(log_rescue_info.get("used")),
+                                rescue_satisfies_contract=bool(log_rescue_info.get("rescue_satisfies_contract")),
+                                original_satisfies_contract=bool(log_rescue_info.get("original_satisfies_contract")),
+                                original_finish_reason=str(log_rescue_info.get("original_finish_reason") or ""),
+                                rescue_finish_reason=str(log_rescue_info.get("rescue_finish_reason") or ""),
+                                text_chars=len(ponder_log or ""),
+                                text_preview=trace.preview(ponder_log),
+                                api_meta=(
+                                    log_rescue_info.get("api_generation")
+                                    if isinstance(log_rescue_info.get("api_generation"), dict)
+                                    else None
+                                ),
+                            )
 
                     if cfg.print_probe:
                         _print_probe_table(
@@ -8302,6 +8614,17 @@ def run_ponder_api(
                         "api_band_probe_truncated": api_band_probe_truncated,
                         "api_seed_fallback_reason": seed_fallback_reason,
                         "api_generation": ponder_meta if ponder_meta else None,
+                        "api_log_rescue_generation": (
+                            (log_rescue_info or {}).get("api_generation")
+                            if isinstance((log_rescue_info or {}).get("api_generation"), dict)
+                            else None
+                        ),
+                        "log_phase": {
+                            "max_new_tokens": int(log_phase_tokens),
+                            "reasoning_effort": log_phase_effort or "inherit",
+                            "rescue_enabled": bool(getattr(cfg, "log_phase_rescue", False)),
+                            "rescue_used": bool((log_rescue_info or {}).get("used")),
+                        },
                         "ponder_question": ponder_q,
                         "ponder_log": ponder_log,
                         "gen_elapsed_s": gen_s,
@@ -9195,6 +9518,29 @@ def main() -> None:
         default=160,
         help="Max tokens for each ponder stage (provider=openai + gpt-5* auto-raises the default floor to 384)",
     )
+    g_gen.add_argument(
+        "--log_phase_max_new_tokens",
+        type=int,
+        default=0,
+        help="Max tokens for ponder-log generation only (0 inherits --ponder_max_new_tokens)",
+    )
+    g_gen.add_argument(
+        "--log_phase_reasoning_effort",
+        choices=["inherit", "auto", "none", "minimal", "low", "medium", "high", "xhigh"],
+        default="inherit",
+        help="Reasoning effort for ponder-log API calls only (inherit keeps --api_reasoning_effort)",
+    )
+    g_gen.add_argument(
+        "--log_phase_rescue",
+        action="store_true",
+        help="If a log contract misses END_LOG/skeleton closure, run a short log-only rescue call",
+    )
+    g_gen.add_argument(
+        "--log_phase_rescue_max_new_tokens",
+        type=int,
+        default=384,
+        help="Max tokens for the optional log-contract rescue call",
+    )
     g_gen.add_argument("--temperature", type=float, default=0.7)
     g_gen.add_argument("--top_p", type=float, default=0.95)
     g_gen.add_argument("--top_k", type=int, default=0)
@@ -9359,6 +9705,10 @@ def main() -> None:
         answer_style=args.answer_style,
         answer_max_new_tokens=args.answer_max_new_tokens,
         ponder_max_new_tokens=args.ponder_max_new_tokens,
+        log_phase_max_new_tokens=max(0, int(args.log_phase_max_new_tokens)),
+        log_phase_reasoning_effort=_normalize_log_phase_reasoning_effort(str(args.log_phase_reasoning_effort)),
+        log_phase_rescue=bool(args.log_phase_rescue),
+        log_phase_rescue_max_new_tokens=max(64, int(args.log_phase_rescue_max_new_tokens)),
         temperature=args.temperature,
         top_p=args.top_p,
         top_k=args.top_k,

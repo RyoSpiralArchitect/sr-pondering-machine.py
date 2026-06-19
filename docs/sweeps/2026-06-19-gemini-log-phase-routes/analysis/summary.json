@@ -1,0 +1,261 @@
+{
+  "run_count": 1,
+  "ponder_item_count": 8,
+  "by_provider": {
+    "gemini": {
+      "ponder_items": 8,
+      "answer_chars_mean": 197.5,
+      "diff_ratio_mean": 0.8574335852655516,
+      "query_alignment_delta_mean": -0.08478215758034988,
+      "stance_shift_mean": 0.5543650793650794,
+      "spatial_log_density_mean": 8.048546885756188,
+      "api_total_delta_mean": 3152.375,
+      "external_scaffold_tokens_mean": 587.25,
+      "all_api_total_tokens_mean": 7346.375
+    }
+  },
+  "run_summary": {
+    "gemini": {
+      "runs": 1,
+      "elapsed_s_mean": 416.18472429100075,
+      "elapsed_s_min": 416.18472429100075,
+      "elapsed_s_max": 416.18472429100075
+    }
+  },
+  "condition_summary": [
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue",
+      "answer_chars_mean": 139.0,
+      "query_alignment_delta_mean": -0.06961055723253784,
+      "api_total_delta_mean": 2983.0,
+      "stance_shift_mean": 0.3555555555555556,
+      "diff_ratio_mean": 0.7849117174959872
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue",
+      "answer_chars_mean": 608.0,
+      "query_alignment_delta_mean": 0.031074521888955167,
+      "api_total_delta_mean": 3994.0,
+      "stance_shift_mean": 0.4444444444444444,
+      "diff_ratio_mean": 0.8644688644688645
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_512_log_skeleton_closure_low_1024_no_rescue",
+      "answer_chars_mean": 135.0,
+      "query_alignment_delta_mean": -0.0920198022494786,
+      "api_total_delta_mean": 2600.0,
+      "stance_shift_mean": 0.33333333333333337,
+      "diff_ratio_mean": 0.8255250403877221
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_512_log_skeleton_closure_low_2048_rescue",
+      "answer_chars_mean": 141.0,
+      "query_alignment_delta_mean": -0.061232141585997615,
+      "api_total_delta_mean": 2609.0,
+      "stance_shift_mean": 0.41269841269841273,
+      "diff_ratio_mean": 0.8144
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_512_log_skeleton_closure_inherit_1024_no_rescue",
+      "answer_chars_mean": 146.0,
+      "query_alignment_delta_mean": -0.09867436334488533,
+      "api_total_delta_mean": 3182.0,
+      "stance_shift_mean": 0.6666666666666667,
+      "diff_ratio_mean": 0.8507936507936508
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_512_log_skeleton_closure_inherit_2048_no_rescue",
+      "answer_chars_mean": 135.0,
+      "query_alignment_delta_mean": -0.13209759563510134,
+      "api_total_delta_mean": 4092.0,
+      "stance_shift_mean": 0.6666666666666667,
+      "diff_ratio_mean": 0.9030694668820678
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_512_log_skeleton_closure_low_1024_no_rescue",
+      "answer_chars_mean": 132.0,
+      "query_alignment_delta_mean": -0.1260383604092742,
+      "api_total_delta_mean": 2914.0,
+      "stance_shift_mean": 0.5555555555555556,
+      "diff_ratio_mean": 0.8863636363636364
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_512_log_skeleton_closure_low_2048_rescue",
+      "answer_chars_mean": 144.0,
+      "query_alignment_delta_mean": -0.1296589620744792,
+      "api_total_delta_mean": 2845.0,
+      "stance_shift_mean": 1.0,
+      "diff_ratio_mean": 0.9299363057324841
+    }
+  ],
+  "dose_summary": {
+    "row_count": 10,
+    "max_dose": 512.0,
+    "conditions": [
+      "facts",
+      "isomorphic"
+    ],
+    "best_alignment_row": {
+      "provider": "gemini",
+      "query_id": "non_relative_not_absolute",
+      "model": "gemini-3.1-pro-preview",
+      "condition": "facts_dose_512_log_skeleton_closure_inherit_2048_no_rescue",
+      "scaffold_condition": "facts",
+      "scaffold_dose": 512,
+      "output_contract": "log_skeleton_closure",
+      "answer_chars": 608.0,
+      "query_alignment_delta": 0.031074521888955167,
+      "diff_ratio": 0.8644688644688645,
+      "stance_shift": 0.4444444444444444,
+      "spatial_log_density": 0.0,
+      "api_total_delta": 3994.0,
+      "origin_drift": 0.2350829906185926,
+      "recurrence": 0.7649170093814074,
+      "query_relevance": 0.3382442023639689,
+      "scaffold_leakage": 0.7084656949643569,
+      "coil_index": 0.008039872009806725,
+      "attractor_class": "mixed",
+      "is_baseline_reference": false
+    },
+    "highest_origin_drift_row": {
+      "provider": "gemini",
+      "query_id": "non_relative_not_absolute",
+      "model": "gemini-3.1-pro-preview",
+      "condition": "isomorphic_dose_512_log_skeleton_closure_low_2048_rescue",
+      "scaffold_condition": "isomorphic",
+      "scaffold_dose": 512,
+      "output_contract": "log_skeleton_closure",
+      "answer_chars": 144.0,
+      "query_alignment_delta": -0.1296589620744792,
+      "diff_ratio": 0.9299363057324841,
+      "stance_shift": 1.0,
+      "spatial_log_density": 13.513513513513514,
+      "api_total_delta": 2845.0,
+      "origin_drift": 0.48491366537843505,
+      "recurrence": 0.6084458762669128,
+      "query_relevance": 0.1986054245331751,
+      "scaffold_leakage": 0.5076725271004721,
+      "coil_index": 0.0,
+      "attractor_class": "divergence",
+      "is_baseline_reference": false
+    },
+    "by_condition": [
+      {
+        "scaffold_condition": "facts",
+        "query_alignment_delta_mean": -0.04794699479476472,
+        "origin_drift_mean": 0.36873598196730684,
+        "recurrence_mean": 0.637992514605215,
+        "scaffold_leakage_mean": 0.5840464539393573,
+        "coil_index_mean": 0.0020099680024516812
+      },
+      {
+        "scaffold_condition": "isomorphic",
+        "query_alignment_delta_mean": -0.12161732036593502,
+        "origin_drift_mean": 0.43819046671645223,
+        "recurrence_mean": 0.609879457103763,
+        "scaffold_leakage_mean": 0.5312454861373932,
+        "coil_index_mean": 0.0
+      }
+    ]
+  },
+  "closure_summary": {
+    "row_count": 8,
+    "contracts": [
+      "log_skeleton_closure"
+    ],
+    "by_contract": [
+      {
+        "output_contract": "log_skeleton_closure",
+        "rows": 8,
+        "answer_chars_mean": 197.5,
+        "final_finish_length_rate": 1.0,
+        "final_marker_last_rate": 0.0,
+        "log_marker_rate": 0.75,
+        "log_skeleton_complete_rate": 0.75,
+        "prompt_leakage_rate": 0.0
+      }
+    ],
+    "log_phase_routes": [
+      "inherit_1024_no_rescue",
+      "low_1024_no_rescue",
+      "inherit_2048_no_rescue",
+      "low_2048_rescue"
+    ],
+    "by_log_phase_route": [
+      {
+        "log_phase_route": "inherit_1024_no_rescue",
+        "rows": 2,
+        "log_marker_rate": 0.0,
+        "log_skeleton_complete_rate": 0.0,
+        "ponder_finish_length_mean": 1.0,
+        "rescue_used_rate": 0.0,
+        "answer_chars_mean": 142.5
+      },
+      {
+        "log_phase_route": "inherit_2048_no_rescue",
+        "rows": 2,
+        "log_marker_rate": 1.0,
+        "log_skeleton_complete_rate": 1.0,
+        "ponder_finish_length_mean": 0.0,
+        "rescue_used_rate": 0.0,
+        "answer_chars_mean": 371.5
+      },
+      {
+        "log_phase_route": "low_1024_no_rescue",
+        "rows": 2,
+        "log_marker_rate": 1.0,
+        "log_skeleton_complete_rate": 1.0,
+        "ponder_finish_length_mean": 0.0,
+        "rescue_used_rate": 0.0,
+        "answer_chars_mean": 133.5
+      },
+      {
+        "log_phase_route": "low_2048_rescue",
+        "rows": 2,
+        "log_marker_rate": 1.0,
+        "log_skeleton_complete_rate": 1.0,
+        "ponder_finish_length_mean": 0.0,
+        "rescue_used_rate": 0.0,
+        "answer_chars_mean": 142.5
+      }
+    ]
+  },
+  "pca": {
+    "doc_count": 9,
+    "feature_dim": 768,
+    "explained_variance_ratio": [
+      0.19390622174401612,
+      0.15820319899765797
+    ],
+    "provider_centroid_distance": null,
+    "csv": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/answer_pca.csv"
+  },
+  "charts": {
+    "runtime": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/runtime_by_provider.png",
+    "alignment": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/alignment_by_condition.png",
+    "token_overhead": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/token_overhead_by_condition.png",
+    "answer_length": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/answer_length_by_condition.png",
+    "query_alignment_delta": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/dose_query_alignment_delta.png",
+    "origin_drift": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/dose_origin_drift.png",
+    "scaffold_leakage": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/dose_scaffold_leakage.png",
+    "coil_index": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/dose_coil_index.png",
+    "final_finish_is_length": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/closure_final_finish_length_rate.png",
+    "final_marker_is_last_line": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/closure_final_marker_rate.png",
+    "ponder_log_marker_rate": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/closure_log_marker_rate.png",
+    "ponder_log_skeleton_complete_rate": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/closure_log_skeleton_rate.png",
+    "answer_chars": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/closure_answer_chars.png",
+    "log_phase_route_ponder_log_marker_rate": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/log_phase_route_marker_rate.png",
+    "log_phase_route_ponder_log_skeleton_complete_rate": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/log_phase_route_skeleton_rate.png",
+    "log_phase_route_ponder_finish_length_count": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/log_phase_route_length_finishes.png",
+    "log_phase_route_log_phase_rescue_used_rate": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/log_phase_route_rescue_used_rate.png",
+    "answer_pca": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-log-phase-routes/analysis/charts/answer_pca_by_provider_condition.png"
+  }
+}

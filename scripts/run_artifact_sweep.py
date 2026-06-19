@@ -99,6 +99,35 @@ PROFILES: Dict[str, Dict[str, Any]] = {
             "claude": {"model": "opus", "reasoning_effort": "xhigh"},
         },
     },
+    "gemini_log_phase_routes": {
+        "answer_max_new_tokens": "2048",
+        "ponder_max_new_tokens": "1024",
+        "scaffold_token_target": "0",
+        "api_timeout": "900",
+        "claude_budget_usd": "0.45",
+        "matrix": "log_phase_routes",
+        "dose_values": [512],
+        "dose_conditions": ["facts", "isomorphic"],
+        "output_contracts": ["log_skeleton_closure"],
+        "log_phase_routes": [
+            {"name": "inherit_1024_no_rescue", "cfg": {}},
+            {"name": "low_1024_no_rescue", "cfg": {"log_phase_reasoning_effort": "low"}},
+            {"name": "inherit_2048_no_rescue", "cfg": {"log_phase_max_new_tokens": 2048}},
+            {
+                "name": "low_2048_rescue",
+                "cfg": {
+                    "log_phase_reasoning_effort": "low",
+                    "log_phase_max_new_tokens": 2048,
+                    "log_phase_rescue": True,
+                    "log_phase_rescue_max_new_tokens": 384,
+                },
+            },
+        ],
+        "providers": {
+            "gemini": {"model": "gemini-3.1-pro-preview", "reasoning_effort": "high"},
+            "claude": {"model": "opus", "reasoning_effort": "xhigh"},
+        },
+    },
 }
 
 
@@ -238,6 +267,61 @@ def write_closure_contract_matrix(
     return matrix_path
 
 
+def write_log_phase_route_matrix(
+    out_dir: Path,
+    query: Dict[str, str],
+    *,
+    dose_values: Sequence[int],
+    dose_conditions: Sequence[str],
+    output_contracts: Sequence[str],
+    log_phase_routes: Sequence[Dict[str, Any]],
+) -> Path:
+    """Write a matrix varying only the log-generation route under a fixed log contract."""
+    matrix_dir = out_dir / "matrices"
+    matrix_dir.mkdir(parents=True, exist_ok=True)
+    matrix_path = matrix_dir / f"gemini_log_phase_routes_{slugify(query['id'])}.json"
+    items: List[Dict[str, Any]] = []
+    for condition in dose_conditions:
+        condition_s = str(condition).strip()
+        if not condition_s:
+            continue
+        for dose in dose_values:
+            dose_i = int(dose)
+            if dose_i <= 0:
+                continue
+            for contract in output_contracts:
+                contract_s = str(contract).strip() or "log_skeleton_closure"
+                for route in log_phase_routes:
+                    if not isinstance(route, dict):
+                        continue
+                    route_name = slugify(str(route.get("name") or "route"))
+                    route_cfg = route.get("cfg") if isinstance(route.get("cfg"), dict) else {}
+                    cfg = {
+                        "memory_policy": "current_only",
+                        "scaffold_condition": condition_s,
+                        "scaffold_token_target": dose_i,
+                        "output_contract": contract_s,
+                    }
+                    cfg.update(dict(route_cfg or {}))
+                    items.append(
+                        {
+                            "name": f"{condition_s}_dose_{dose_i}_{contract_s}_{route_name}",
+                            "kind": "ponder",
+                            "control": "none",
+                            "cfg": cfg,
+                        }
+                    )
+
+    spec = {
+        "name": f"gemini_log_phase_routes_{slugify(query['id'])}",
+        "description": "Log-phase route sweep: inherited vs log-only reasoning effort, larger log budget, and optional log-contract rescue.",
+        "include_baseline": True,
+        "items": items,
+    }
+    matrix_path.write_text(json.dumps(spec, ensure_ascii=False, indent=2), encoding="utf-8")
+    return matrix_path
+
+
 def build_cmd(
     repo: Path,
     provider: str,
@@ -333,6 +417,7 @@ def main() -> int:
     dose_values = parse_int_csv(str(args.dose_values or ""), default=profile.get("dose_values") or [])
     dose_conditions = parse_str_csv(str(args.dose_conditions or ""), default=profile.get("dose_conditions") or [])
     output_contracts = parse_str_csv(str(args.output_contracts or ""), default=profile.get("output_contracts") or ["none"])
+    log_phase_routes = profile.get("log_phase_routes") or []
 
     env = os.environ.copy()
     if Path("/etc/ssl/cert.pem").exists():
@@ -347,9 +432,10 @@ def main() -> int:
         "queries": queries,
         "profile": args.profile,
         "profile_config": profile,
-        "dose_values": dose_values if profile.get("matrix") in ("dose_ladder", "closure_contract") else [],
-        "dose_conditions": dose_conditions if profile.get("matrix") in ("dose_ladder", "closure_contract") else [],
-        "output_contracts": output_contracts if profile.get("matrix") == "closure_contract" else [],
+        "dose_values": dose_values if profile.get("matrix") in ("dose_ladder", "closure_contract", "log_phase_routes") else [],
+        "dose_conditions": dose_conditions if profile.get("matrix") in ("dose_ladder", "closure_contract", "log_phase_routes") else [],
+        "output_contracts": output_contracts if profile.get("matrix") in ("closure_contract", "log_phase_routes") else [],
+        "log_phase_routes": log_phase_routes if profile.get("matrix") == "log_phase_routes" else [],
         "runs": [],
     }
 
@@ -373,6 +459,17 @@ def main() -> int:
                         dose_values=dose_values,
                         dose_conditions=dose_conditions,
                         output_contracts=output_contracts,
+                    )
+                )
+            elif profile.get("matrix") == "log_phase_routes":
+                lab_matrix = str(
+                    write_log_phase_route_matrix(
+                        out_dir,
+                        query,
+                        dose_values=dose_values,
+                        dose_conditions=dose_conditions,
+                        output_contracts=output_contracts,
+                        log_phase_routes=log_phase_routes,
                     )
                 )
             spec = build_cmd(repo, provider, query, out_dir, profile, lab_matrix=lab_matrix)

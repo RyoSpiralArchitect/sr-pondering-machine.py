@@ -73,6 +73,33 @@ class TestDoseLadderSweepReport(unittest.TestCase):
             )
             self.assertEqual(data["items"][2]["cfg"]["output_contract"], "log_skeleton_final_closure")
 
+    def test_write_log_phase_route_matrix_crosses_routes(self) -> None:
+        with _tempdir() as td:
+            matrix_path = sweep.write_log_phase_route_matrix(
+                td,
+                {"id": "reality", "text": "What is reality?"},
+                dose_values=[512],
+                dose_conditions=["facts"],
+                output_contracts=["log_skeleton_closure"],
+                log_phase_routes=[
+                    {"name": "inherit_1024_no_rescue", "cfg": {}},
+                    {"name": "low_2048_rescue", "cfg": {"log_phase_reasoning_effort": "low", "log_phase_max_new_tokens": 2048, "log_phase_rescue": True}},
+                ],
+            )
+            data = json.loads(matrix_path.read_text(encoding="utf-8"))
+            self.assertTrue(data["include_baseline"])
+            names = [item["name"] for item in data["items"]]
+            self.assertEqual(
+                names,
+                [
+                    "facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue",
+                    "facts_dose_512_log_skeleton_closure_low_2048_rescue",
+                ],
+            )
+            self.assertEqual(data["items"][1]["cfg"]["log_phase_reasoning_effort"], "low")
+            self.assertEqual(data["items"][1]["cfg"]["log_phase_max_new_tokens"], 2048)
+            self.assertEqual(data["items"][1]["cfg"]["log_phase_rescue"], True)
+
     def test_extracts_dose_and_attractor_metrics_from_pack_json(self) -> None:
         if report is None or pd is None:
             self.skipTest("optional report-analysis dependencies are not installed")
@@ -101,6 +128,9 @@ class TestDoseLadderSweepReport(unittest.TestCase):
                             "scaffold_condition": "assoc",
                             "scaffold_token_target": 64,
                             "output_contract": "log_skeleton_final_closure",
+                            "log_phase_reasoning_effort": "low",
+                            "log_phase_max_new_tokens": 2048,
+                            "log_phase_rescue": True,
                         },
                         "metrics": {"answer_chars": 66, "records": 1, "elapsed_s": 2.0},
                         "records": [
@@ -108,6 +138,7 @@ class TestDoseLadderSweepReport(unittest.TestCase):
                                 "ponder_question": "Where does the interface bend?",
                                 "ponder_log": "X1|choice path\nX2|constraint hinge\nX3|interface bend\nX4|local frame\nEND_LOG",
                                 "api_generation": {"finish_reason": "stop"},
+                                "log_phase": {"rescue_used": True},
                             }
                         ],
                         "extras": {
@@ -160,6 +191,10 @@ class TestDoseLadderSweepReport(unittest.TestCase):
             self.assertEqual(item_rows[0]["scaffold_condition"], "assoc")
             self.assertEqual(item_rows[0]["scaffold_dose"], 64)
             self.assertEqual(item_rows[0]["output_contract"], "log_skeleton_final_closure")
+            self.assertEqual(item_rows[0]["log_phase_reasoning_effort"], "low")
+            self.assertEqual(item_rows[0]["log_phase_max_new_tokens"], 2048)
+            self.assertEqual(item_rows[0]["log_phase_rescue_enabled"], 1)
+            self.assertEqual(item_rows[0]["log_phase_rescue_used_count"], 1)
             self.assertEqual(item_rows[0]["final_marker_is_last_line"], 1)
             self.assertEqual(item_rows[0]["ponder_log_marker_count"], 1)
             self.assertEqual(item_rows[0]["ponder_log_skeleton_complete_count"], 1)
@@ -178,6 +213,10 @@ class TestDoseLadderSweepReport(unittest.TestCase):
             self.assertTrue(any(row["is_baseline_reference"] for row in dose_rows))
             closure_rows = report.build_closure_contract_rows(item_df)
             self.assertEqual(closure_rows[0]["output_contract"], "log_skeleton_final_closure")
+            self.assertEqual(closure_rows[0]["log_phase_reasoning_effort"], "low")
+            self.assertEqual(closure_rows[0]["log_phase_max_new_tokens"], 2048)
+            self.assertEqual(closure_rows[0]["log_phase_rescue_enabled"], 1.0)
+            self.assertEqual(closure_rows[0]["log_phase_rescue_used_rate"], 1.0)
             self.assertEqual(closure_rows[0]["final_marker_is_last_line"], 1.0)
             self.assertEqual(closure_rows[0]["ponder_log_skeleton_complete_rate"], 1.0)
 
