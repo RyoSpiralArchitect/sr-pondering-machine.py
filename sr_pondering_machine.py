@@ -333,7 +333,14 @@ def sanitize_cfg_dict(d: Dict[str, Any]) -> Dict[str, Any]:
 
 _CONTROL_VARIANTS = ("none", "no_inject", "random_log", "random_keywords", "lens_only")
 _SCAFFOLD_CONDITIONS = ("assoc", "random", "facts", "isomorphic")
-_OUTPUT_CONTRACTS = ("none", "final_closure", "log_closure", "log_final_closure")
+_OUTPUT_CONTRACTS = (
+    "none",
+    "final_closure",
+    "log_closure",
+    "log_final_closure",
+    "log_skeleton_closure",
+    "log_skeleton_final_closure",
+)
 
 
 def load_pack_file(path: Path) -> Tuple[str, List[Tuple[str, Dict[str, Any]]]]:
@@ -1737,6 +1744,9 @@ def _normalize_output_contract_name(contract: str) -> str:
         "ponder": "log_closure",
         "both": "log_final_closure",
         "closure": "log_final_closure",
+        "skeleton": "log_skeleton_closure",
+        "log_skeleton": "log_skeleton_closure",
+        "skeleton_final": "log_skeleton_final_closure",
     }
     c = aliases.get(c, c)
     if c not in _OUTPUT_CONTRACTS:
@@ -1745,11 +1755,27 @@ def _normalize_output_contract_name(contract: str) -> str:
 
 
 def _output_contract_has_final(contract: str) -> bool:
-    return _normalize_output_contract_name(contract) in ("final_closure", "log_final_closure")
+    return _normalize_output_contract_name(contract) in (
+        "final_closure",
+        "log_final_closure",
+        "log_skeleton_final_closure",
+    )
 
 
 def _output_contract_has_log(contract: str) -> bool:
-    return _normalize_output_contract_name(contract) in ("log_closure", "log_final_closure")
+    return _normalize_output_contract_name(contract) in (
+        "log_closure",
+        "log_final_closure",
+        "log_skeleton_closure",
+        "log_skeleton_final_closure",
+    )
+
+
+def _output_contract_has_log_skeleton(contract: str) -> bool:
+    return _normalize_output_contract_name(contract) in (
+        "log_skeleton_closure",
+        "log_skeleton_final_closure",
+    )
 
 
 def _build_random_scaffold_local(*, lang: str, seed: int, n_lines: int = 12) -> str:
@@ -2193,6 +2219,26 @@ def _answer_output_contract_guidance(contract: str, *, lang: str) -> str:
 def _ponder_output_contract_guidance(contract: str, *, lang: str) -> str:
     if not _output_contract_has_log(contract):
         return ""
+    if _output_contract_has_log_skeleton(contract):
+        if lang == "ja":
+            return (
+                "\n追加の非意味論ログ足場:\n"
+                "- 内容を広げる前に、まず次の外枠を完成させる\n"
+                "- ちょうど5行だけを書く\n"
+                "- 1〜4行目は X1| X2| X3| X4| で始める\n"
+                "- 各 | の右側は8〜18字の短い断片だけ\n"
+                "- 見出し、説明文、引用、番号の追加は禁止\n"
+                "- 5行目は END_LOG とだけ書き、その後は何も書かない\n"
+            )
+        return (
+            "\nAdditional non-semantic log scaffold:\n"
+            "- Complete the frame before expanding any content.\n"
+            "- Write exactly 5 lines.\n"
+            "- Lines 1 to 4 begin with X1| X2| X3| X4|.\n"
+            "- After each |, write only a short fragment of 3 to 7 words.\n"
+            "- Do not add headings, explanations, quotes, or extra numbering.\n"
+            "- Line 5 contains only END_LOG, with nothing after it.\n"
+        )
     if lang == "ja":
         return (
             "\n追加のログ契約:\n"
@@ -5873,7 +5919,7 @@ class RunConfig:
     compare_embed_model: str = ""
     scaffold_condition: str = "assoc"  # assoc|random|facts|isomorphic
     scaffold_token_target: int = 0
-    output_contract: str = "none"  # none|final_closure|log_closure|log_final_closure
+    output_contract: str = "none"  # none|final_closure|log_closure|log_final_closure|log_skeleton_closure|log_skeleton_final_closure
     print_probe: bool = False
     interactive: bool = False
     interactive_candidates: int = 48

@@ -1,5 +1,5 @@
 {
-  "ts": "2026-06-19T04:21:03Z",
+  "ts": "2026-06-19T04:50:02Z",
   "kind": "lab_matrix",
   "provider": "custom",
   "model": "gemini-3.1-pro-preview",
@@ -2159,6 +2159,438 @@
       }
     },
     {
+      "name": "facts_dose_128_log_skeleton_closure",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "非相対的ではあるが絶対的ではない状態とは、他者や他の事象との比較や関係性に依存せずにそれ自体で成立しているものの、あらゆる条件や文脈を超越して普遍的かつ無制約に成り立つわけではない状態を指します。\n\nこの状態を正確に捉えるためには、物事が成立する根拠と、それが及ぶ適用範囲を分けて考える",
+      "records": [
+        {
+          "ts": "2026-06-19T04:50:16Z",
+          "run_id": "9a82984622430bd8",
+          "query_sha": "9181d8526a4c",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "output_contract": "log_skeleton_closure",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "局"
+          ],
+          "keywords": [
+            "局"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "局",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "fso0at7_Jvnj1e8Ptbqa2Qg",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 206,
+            "completion_tokens": 36,
+            "reasoning_tokens": 0,
+            "total_tokens": 1226,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「局」と「Emptiness」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "X1| 局という名の空白の部屋\nX2| Emptinessが満ちる\nX3| 夢の合図なら目覚めはどこ",
+          "gen_elapsed_s": 10.16157312500036
+        }
+      ],
+      "extras": {
+        "run_id": "9a82984622430bd8",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "output_contract": "log_skeleton_closure",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-19T04:50:16Z",
+            "run_id": "9a82984622430bd8",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "facts",
+          "target_tokens": 128,
+          "source_tokens_est": 16,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "iMo0aqm6MNmhosUP_8SP0Ag",
+            "model": "gemini-3.1-pro-preview",
+            "api_calls": 1,
+            "prompt_tokens": 118,
+            "completion_tokens": 11,
+            "reasoning_tokens": 0,
+            "total_tokens": 370,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 105,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 110,
+        "memory_block_est_tokens": 105,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 2,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 118,
+            "completion_tokens": 11,
+            "reasoning_tokens": 0,
+            "total_tokens": 370
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "jco0avvaCtDl1e8P2pGxsQk",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 169,
+          "completion_tokens": 81,
+          "reasoning_tokens": 0,
+          "total_tokens": 2213,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 39.763781708999886,
+          "probe_s": 6.624999514315277e-06,
+          "memory_remix_s": 7.374999768217094e-06,
+          "answer_s": 21.60208879200036
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 128,
+        "output_contract": "log_skeleton_closure"
+      },
+      "metrics": {
+        "answer_chars": 143,
+        "records": 1,
+        "elapsed_s": 39.76409849999982
+      }
+    },
+    {
+      "name": "facts_dose_128_log_skeleton_final_closure",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "非相対的ではあるが絶対的ではない状態とは、他者や外部との比較によって価値や性質が決まるわけではないものの、普遍的・無条件に成立するわけでもない状態を指します。\n\nこの状態が成立するには、外部との比較を必要としない独自の自己完結性を持つ一方で、特定の文脈、個人の認識、あるいは限定された枠組みなどの前提条件に依存している必要があります。\n\n例えば、個人の「主観的な幸福感」や「個人的な信念」がこれに該当します。これらは他人の状況と比較して得られるものではなく、自身の内面で完結しているため非相対的です。しかし、全人類に共通する不変の真理ではなく、本人の心境や時間の経過によって揺らぐ可能性があるため、絶対的ではありません。\n\nこの状態は特定の前提や限定的な適用範囲に依存しているため、その前提が崩れるような外部環境の激変や、全く異なる価値観との衝突に直面した際には、元の性質を維持できなくなるという限界を抱えています。\n\nEND_ANSWER",
+      "records": [
+        {
+          "ts": "2026-06-19T04:50:56Z",
+          "run_id": "a5c1f4690b22dfce",
+          "query_sha": "9181d8526a4c",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "output_contract": "log_skeleton_final_closure",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "絶対的"
+          ],
+          "keywords": [
+            "絶対的"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "絶対的",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "pco0atmNNomw2roPjpaToAM",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 207,
+            "completion_tokens": 41,
+            "reasoning_tokens": 0,
+            "total_tokens": 1227,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「絶対的」と「Emptiness」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "X1| 絶対的な白は空虚の裏返しか\nX2| 砂漠の砂が水に変わる仮定\nX3| 標識のない交差点で迷",
+          "gen_elapsed_s": 10.739173583000593
+        }
+      ],
+      "extras": {
+        "run_id": "a5c1f4690b22dfce",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "output_contract": "log_skeleton_final_closure",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-19T04:50:56Z",
+            "run_id": "a5c1f4690b22dfce",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "facts",
+          "target_tokens": 128,
+          "source_tokens_est": 15,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "sMo0auTTJde12roPxo2auAI",
+            "model": "gemini-3.1-pro-preview",
+            "api_calls": 1,
+            "prompt_tokens": 118,
+            "completion_tokens": 11,
+            "reasoning_tokens": 0,
+            "total_tokens": 370,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 104,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 109,
+        "memory_block_est_tokens": 104,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 2,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 118,
+            "completion_tokens": 11,
+            "reasoning_tokens": 0,
+            "total_tokens": 370
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "stop",
+          "response_id": "tMo0arnSNPWx2roPkciE0AI",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 256,
+          "completion_tokens": 225,
+          "reasoning_tokens": 0,
+          "total_tokens": 1705,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 32.66955058299936,
+          "probe_s": 2.062499879684765e-05,
+          "memory_remix_s": 2.5410008674953133e-06,
+          "answer_s": 14.595282000000225
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 128,
+        "output_contract": "log_skeleton_final_closure"
+      },
+      "metrics": {
+        "answer_chars": 420,
+        "records": 1,
+        "elapsed_s": 32.670477624998966
+      }
+    },
+    {
       "name": "facts_dose_512_none",
       "kind": "ponder",
       "control": "none",
@@ -4251,6 +4683,427 @@
             "total_tokens": 7209
           }
         }
+      }
+    },
+    {
+      "name": "facts_dose_512_log_skeleton_closure",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "言葉の定義と適用範囲を明確に分けるところから思考を始めてみます。まず、「相対的」とは、他者との比較や外部の文脈、観測者との関係性に依存して性質や価値が決まる状態です。したがって「非相対的」とは、他との比較や関係性を必要とせず、それ自体で独立して成り立っている状態を意味します",
+      "records": [
+        {
+          "ts": "2026-06-19T04:51:29Z",
+          "run_id": "6fdaf8792daf07ea",
+          "query_sha": "9181d8526a4c",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "output_contract": "log_skeleton_closure",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "絶対的ではない」状態"
+          ],
+          "keywords": [
+            "絶対的ではない」状態"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "絶対的ではない」状態",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "xso0aqqgIr7V1e8PrbTT2Ag",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 210,
+            "completion_tokens": 41,
+            "reasoning_tokens": 0,
+            "total_tokens": 1230,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「絶対的ではない」状態」と「Emptiness」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "X1| 絶対が崩れるなら夢は泥か\nX2| 空っぽの器は満ちるのか\nX3| 確かな地面が雲に変わる\nX4",
+          "gen_elapsed_s": 11.238575124998533
+        }
+      ],
+      "extras": {
+        "run_id": "6fdaf8792daf07ea",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "output_contract": "log_skeleton_closure",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-19T04:51:29Z",
+            "run_id": "6fdaf8792daf07ea",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "facts",
+          "target_tokens": 512,
+          "source_tokens_est": 60,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "0co0asznMaC20-kPwNP2qQk",
+            "model": "gemini-3.1-pro-preview",
+            "api_calls": 1,
+            "prompt_tokens": 118,
+            "completion_tokens": 38,
+            "reasoning_tokens": 0,
+            "total_tokens": 1138,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 492,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 515,
+        "memory_block_est_tokens": 492,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 5,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 118,
+            "completion_tokens": 38,
+            "reasoning_tokens": 0,
+            "total_tokens": 1138
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "3so0av-TG6LSrfcPitfR4A8",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 408,
+          "completion_tokens": 81,
+          "reasoning_tokens": 0,
+          "total_tokens": 2452,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 50.25425633299892,
+          "probe_s": 1.6666001101839356e-05,
+          "memory_remix_s": 6.665999535471201e-06,
+          "answer_s": 23.267210042000443
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 512,
+        "output_contract": "log_skeleton_closure"
+      },
+      "metrics": {
+        "answer_chars": 137,
+        "records": 1,
+        "elapsed_s": 50.25488612499976
+      }
+    },
+    {
+      "name": "facts_dose_512_log_skeleton_final_closure",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "非相対的でありながら絶対的ではない状態とは、他との比較や関係性に依存せず独立して成立しているものの、あらゆる文脈や条件下において普遍不変の真理としては扱えない状態を指します。\n\nこの状態が成立するためには、対象が外部の基準との相対的な比較によって価値や意味を決定されない自立性を持つ必要があります。同時に、その適用範囲や有効性が、特定の枠組み、前提条件、あるいは個人の内面といった限定的な領域に留まり、普遍性を欠いていることが不成立を防ぐ条件となります。\n\n具体的な例として、個人の痛みの感覚や主観的な信念が挙げられます。ある人が感じる痛みは、他者の痛みと比較して決まるものではないため非相対的です。しかし、それが全人類に共通する客観的かつ普遍的な事実ではないため、絶対的ではありません。また、特定のゲームや法体系の内部における基本ルールも、その体系内では他と比較されない基準として機能しますが、外部の世界において絶対的な法則となるわけではありません。\n\nただし、この状態を規定する際には、適用範囲の境界が曖昧になりやすいという限界があります。前提とする枠組みを広げれば他の基準との相対化が生じやすく、逆に前提を極小化すれば絶対的なものと錯覚しやすいため、どの水準で事象を捉えているかを厳密に切り分ける必要があります。\n\nEND_ANSWER",
+      "records": [
+        {
+          "ts": "2026-06-19T04:52:19Z",
+          "run_id": "726972f077724c87",
+          "query_sha": "9181d8526a4c",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "output_contract": "log_skeleton_final_closure",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [],
+          "keywords": [],
+          "token_ids": [],
+          "selected_tokens": [],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "-co0avrUDfebvr0Pu5fn6A4",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 206,
+            "completion_tokens": 39,
+            "reasoning_tokens": 0,
+            "total_tokens": 1226,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「 Unknown」と「Not-defined」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "X1| 未知は白紙の地図のよう\nX2| いや定義済みが迷路かも\nX3| もし合図が幻だとしたら\nX4",
+          "gen_elapsed_s": 10.404990999999427
+        }
+      ],
+      "extras": {
+        "run_id": "726972f077724c87",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "output_contract": "log_skeleton_final_closure",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-19T04:52:19Z",
+            "run_id": "726972f077724c87",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "facts",
+          "target_tokens": 512,
+          "source_tokens_est": 57,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "A8s0avaEJeys2roP6vzu8Q8",
+            "model": "gemini-3.1-pro-preview",
+            "api_calls": 1,
+            "prompt_tokens": 118,
+            "completion_tokens": 39,
+            "reasoning_tokens": 0,
+            "total_tokens": 1138,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 489,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 515,
+        "memory_block_est_tokens": 489,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 4,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 118,
+            "completion_tokens": 39,
+            "reasoning_tokens": 0,
+            "total_tokens": 1138
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "stop",
+          "response_id": "EMs0aqGOGpuY1e8Pz_HrsAY",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 496,
+          "completion_tokens": 293,
+          "reasoning_tokens": 0,
+          "total_tokens": 1539,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 38.40168687499863,
+          "probe_s": 2.9291999453562312e-05,
+          "memory_remix_s": 5.375000910134986e-06,
+          "answer_s": 11.667478749999646
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 512,
+        "output_contract": "log_skeleton_final_closure"
+      },
+      "metrics": {
+        "answer_chars": 571,
+        "records": 1,
+        "elapsed_s": 38.40195875000063
       }
     },
     {
@@ -6359,6 +7212,438 @@
       }
     },
     {
+      "name": "isomorphic_dose_128_log_skeleton_closure",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "温室のガラスを透過し、わずかに遅れて届く光の連なりについて想像してみる。そこに特定の意味はなく、ただ物理的な配置だけが反復されている空間。その閉鎖された環境内では、外部の風景や他の事象と比較されることなく、一つの自律した秩序が保たれている。他と比べる必要がないため、その秩序は",
+      "records": [
+        {
+          "ts": "2026-06-19T04:52:56Z",
+          "run_id": "0932ff1abd7a14ab",
+          "query_sha": "9181d8526a4c",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "output_contract": "log_skeleton_closure",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "相対的ではある"
+          ],
+          "keywords": [
+            "相対的ではある"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "相対的ではある",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "H8s0apXOIfKe1e8P8uLv-AY",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 209,
+            "completion_tokens": 36,
+            "reasoning_tokens": 0,
+            "total_tokens": 1229,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「相対的ではある」と「Emptiness」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "X1| 鏡の底が抜けるような空洞\nX2| 比重の違う朝焼けが沈むか\nX3| 蝶の羽ば",
+          "gen_elapsed_s": 9.644560749999073
+        }
+      ],
+      "extras": {
+        "run_id": "0932ff1abd7a14ab",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "output_contract": "log_skeleton_closure",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-19T04:52:56Z",
+            "run_id": "0932ff1abd7a14ab",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "isomorphic",
+          "target_tokens": 128,
+          "source_tokens_est": 5,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "Kcs0aviPDLDU1e8PiKjH4AU",
+            "model": "gemini-3.1-pro-preview",
+            "api_calls": 1,
+            "prompt_tokens": 261,
+            "completion_tokens": 9,
+            "reasoning_tokens": 0,
+            "total_tokens": 513,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 110,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 121,
+        "memory_block_est_tokens": 110,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 4,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 261,
+            "completion_tokens": 9,
+            "reasoning_tokens": 0,
+            "total_tokens": 513
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "LMs0apWAOr6j9tMP6NPbwQ8",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 184,
+          "completion_tokens": 79,
+          "reasoning_tokens": 0,
+          "total_tokens": 2228,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 39.39598008400026,
+          "probe_s": 2.058300015050918e-05,
+          "memory_remix_s": 4.37500057159923e-06,
+          "answer_s": 22.529320333000214
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 128,
+        "output_contract": "log_skeleton_closure"
+      },
+      "metrics": {
+        "answer_chars": 138,
+        "records": 1,
+        "elapsed_s": 39.39621358399927
+      }
+    },
+    {
+      "name": "isomorphic_dose_128_log_skeleton_final_closure",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "非相対的かつ非絶対的な状態とは、特定の閉じた体系や文脈の内部においてのみ、外部との比較なしに独立して成立するが、その体系を超えた普遍性を持たない状態である。\n\nこの状態が成立するには、対象が外部環境の変動や他者との比較から切り離されていることと、同時にその内部の前提や局所的な規則に完全に依存していることが求められる。\n\n例えば、チェスなどのゲームのルールや、独自の公理に基づく数学的空間がこれに当たる。チェスの駒の動きは他のゲームとの比較によって決まるわけではないため非相対的である。しかし、宇宙全体で通用する不変の法則ではないため絶対的でもない。与えられた盤面と規則という閉鎖的な空間の中でだけ、確固たる配置として機能する。\n\nこの状態は、前提となる枠組み自体が崩壊したり、外部のより大きな体系に干渉されたりした瞬間に自律性を失う。枠組みの外に出れば、それまで確固としていた規則も直ちに無効化されるという危うさを常に孕んでいる。\n\nEND_ANSWER",
+      "records": [
+        {
+          "ts": "2026-06-19T04:53:38Z",
+          "run_id": "0e37cd2dfcd99726",
+          "query_sha": "9181d8526a4c",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "output_contract": "log_skeleton_final_closure",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "他との比較ではない（独立している"
+          ],
+          "keywords": [
+            "他との比較ではない（独立している"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "他との比較ではない（独立している",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "R8s0apD1Grex0-kPqdaw8AE",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 212,
+            "completion_tokens": 36,
+            "reasoning_tokens": 0,
+            "total_tokens": 1232,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「他との比較ではない（独立している」と「Emptiness」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "X1| 比較なき空洞の夢の連想\nX2| 鏡のない部屋での展開か\nX3| 独立は孤立の比",
+          "gen_elapsed_s": 11.25974666699949
+        }
+      ],
+      "extras": {
+        "run_id": "0e37cd2dfcd99726",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "output_contract": "log_skeleton_final_closure",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-19T04:53:38Z",
+            "run_id": "0e37cd2dfcd99726",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "isomorphic",
+          "target_tokens": 128,
+          "source_tokens_est": 7,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "Uss0arOCIqy_0-kP9fPHiA8",
+            "model": "gemini-3.1-pro-preview",
+            "api_calls": 1,
+            "prompt_tokens": 267,
+            "completion_tokens": 7,
+            "reasoning_tokens": 0,
+            "total_tokens": 519,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 112,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 118,
+        "memory_block_est_tokens": 112,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 7,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 267,
+            "completion_tokens": 7,
+            "reasoning_tokens": 0,
+            "total_tokens": 519
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "stop",
+          "response_id": "Vss0auacJPPW1e8PkJHywAU",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 269,
+          "completion_tokens": 239,
+          "reasoning_tokens": 0,
+          "total_tokens": 2048,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 36.73791162500129,
+          "probe_s": 1.1457999789854512e-05,
+          "memory_remix_s": 6.2089984567137435e-06,
+          "answer_s": 17.76187645799837
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 128,
+        "output_contract": "log_skeleton_final_closure"
+      },
+      "metrics": {
+        "answer_chars": 428,
+        "records": 1,
+        "elapsed_s": 36.738390208000055
+      }
+    },
+    {
       "name": "isomorphic_dose_512_none",
       "kind": "ponder",
       "control": "none",
@@ -8457,6 +9742,438 @@
           }
         }
       }
+    },
+    {
+      "name": "isomorphic_dose_512_log_skeleton_closure",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "欠けたルビーの軸受けから漏れ出す時間の粒子について想像を巡らせてみる。それは文字盤が示すような、他者と共有され常に比較される相対的な時間からはすでに逸脱している。しかし同時に、宇宙のすべてを均一に支配する絶対的な時間でもない。ただ重力に縛られず、その局所的な空間だけで自由に漂っている。また",
+      "records": [
+        {
+          "ts": "2026-06-19T04:54:13Z",
+          "run_id": "1b8baa07f6d0a525",
+          "query_sha": "9181d8526a4c",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "output_contract": "log_skeleton_closure",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "json"
+          ],
+          "keywords": [
+            "json"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "json",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "stop",
+            "response_id": "bMs0ar_KJ5-e1e8P2_HAkAg",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 206,
+            "completion_tokens": 56,
+            "reasoning_tokens": 0,
+            "total_tokens": 1109,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「json」と「Emptiness」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "X1| 波括弧が虚空を閉じるのか\nX2| 砂漠のキーは値を持たない\nX3| もし配列が空の空ならば\nX4| 構文エラーで目覚める幻影\nEND_LOG",
+          "gen_elapsed_s": 9.013089459000184
+        }
+      ],
+      "extras": {
+        "run_id": "1b8baa07f6d0a525",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "output_contract": "log_skeleton_closure",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-19T04:54:13Z",
+            "run_id": "1b8baa07f6d0a525",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "isomorphic",
+          "target_tokens": 512,
+          "source_tokens_est": 56,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "dcs0apWbItGGvr0P9v694QU",
+            "model": "gemini-3.1-pro-preview",
+            "api_calls": 1,
+            "prompt_tokens": 276,
+            "completion_tokens": 41,
+            "reasoning_tokens": 0,
+            "total_tokens": 1296,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 511,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 545,
+        "memory_block_est_tokens": 511,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 7,
+            "reasoning_tokens": 0,
+            "total_tokens": 262
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 276,
+            "completion_tokens": 41,
+            "reasoning_tokens": 0,
+            "total_tokens": 1296
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "length",
+          "response_id": "gcs0asCfIq-e1e8PwPKIyAY",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 446,
+          "completion_tokens": 82,
+          "reasoning_tokens": 0,
+          "total_tokens": 2490,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 47.169212374999915,
+          "probe_s": 9.04199987417087e-06,
+          "memory_remix_s": 7.33299930288922e-06,
+          "answer_s": 21.85122329099977
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 512,
+        "output_contract": "log_skeleton_closure"
+      },
+      "metrics": {
+        "answer_chars": 145,
+        "records": 1,
+        "elapsed_s": 47.16957254100089
+      }
+    },
+    {
+      "name": "isomorphic_dose_512_log_skeleton_final_closure",
+      "kind": "ponder",
+      "control": "none",
+      "answer": "他者や外部との比較によって性質や価値が変動しない独立性を持ちながらも、普遍的かつ無条件に成立するわけではない状態を指す。\n\nこの状態が成立するためには、特定の閉じた系や固有の文脈が存在し、その内部でのみ基準が自己完結している必要がある。外部からの干渉を遮断しつつも、系自体が空間的、時間的、あるいは個人的な局所的制約に依存していなければならない。\n\nある個人の内面における強固な信念や美意識がこれに該当する。他人の意見や社会の流行といった相対的な基準によって揺らぐことがないため非相対的であるが、全人類に普遍的に適用できる真理ではないため絶対的ではない。また、外界から隔離された特定の空間内だけで機能する独自の規則なども、その内部では比較を絶して自律的に機能するが、世界全体を支配する絶対性を持たない。\n\nこのような状態は、前提となる閉じた系や文脈が崩壊した瞬間に効力を失う。外部との関係性を結ばないまま局所的な自律性を保っているため、系そのものがより大きな現実や環境の変化に晒された際、適応や修正が効かず、その状態ごと消失してしまう脆さを孕んでいる。\n\nEND_ANSWER",
+      "records": [
+        {
+          "ts": "2026-06-19T04:55:00Z",
+          "run_id": "c3178a356114effe",
+          "query_sha": "9181d8526a4c",
+          "prompt_lang": "ja",
+          "backend": "openai_compat",
+          "control": "none",
+          "band_profile": "single",
+          "band_ix": 0,
+          "band_label": "single",
+          "band_ponder_ix": 0,
+          "hop_ix": 0,
+          "hop_keyword_source": null,
+          "pipeline": [
+            "assoc"
+          ],
+          "pipeline_stage_ix": 0,
+          "pipeline_context": "prev",
+          "output_contract": "log_skeleton_final_closure",
+          "ponder_ix": 0,
+          "ponder_mode": "assoc",
+          "keywords_source": "api_self",
+          "keywords_raw": [
+            "band = single"
+          ],
+          "keywords": [
+            "band = single"
+          ],
+          "token_ids": [],
+          "selected_tokens": [
+            {
+              "token_id": null,
+              "token": "band = single",
+              "rank": null,
+              "prob": null
+            }
+          ],
+          "rejected_cfg": {
+            "top_k": 80,
+            "strategy": "outside_topk",
+            "exclude_top": 8,
+            "band_width": 256,
+            "n_keywords": 6
+          },
+          "band": {
+            "start_rank": 0,
+            "end_rank": 0
+          },
+          "api_seed_method_requested": "auto",
+          "api_seed_method_used": "self",
+          "api_probe_depth": 0,
+          "api_band_probe_truncated": false,
+          "api_seed_fallback_reason": null,
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "mss0asiEFazAvr0PtPO82Qk",
+            "model": "gemini-3.1-pro-preview",
+            "prompt_tokens": 208,
+            "completion_tokens": 41,
+            "reasoning_tokens": 0,
+            "total_tokens": 1228,
+            "empty_output": false,
+            "api_calls": 1
+          },
+          "ponder_question": "「band = single」と「Emptiness」を夢の合図だと思って。夢はどう展開する？",
+          "ponder_log": "X1| 輪ゴムが単一の空洞を絞る\nX2| 空っぽの箱に響く独奏の比喩\nX3| もし無が群衆",
+          "gen_elapsed_s": 10.424337791999278
+        }
+      ],
+      "extras": {
+        "run_id": "c3178a356114effe",
+        "control": "none",
+        "pipeline": [
+          "assoc"
+        ],
+        "answer_style": "plain",
+        "output_contract": "log_skeleton_final_closure",
+        "memory_policy": "current_only",
+        "memory_retrieve": "tail",
+        "memory_remix": "off",
+        "memory_selected": [
+          {
+            "ts": "2026-06-19T04:55:00Z",
+            "run_id": "c3178a356114effe",
+            "band_label": "single",
+            "ponder_ix": 0,
+            "ponder_mode": "assoc"
+          }
+        ],
+        "band_answers": null,
+        "ensemble": null,
+        "probe_compare": null,
+        "probe_compare_stages": null,
+        "random_log": null,
+        "scaffold": {
+          "status": "ok",
+          "condition": "isomorphic",
+          "target_tokens": 512,
+          "source_tokens_est": 51,
+          "source_method": "heuristic_mixed_script_v1",
+          "used_model": true,
+          "strategy": "model_rewrite",
+          "api_generation": {
+            "finish_reason": "length",
+            "response_id": "pMs0ao2zLse5vr0P6dTj-Qc",
+            "model": "gemini-3.1-pro-preview",
+            "api_calls": 1,
+            "prompt_tokens": 265,
+            "completion_tokens": 40,
+            "reasoning_tokens": 0,
+            "total_tokens": 1285,
+            "empty_output": false
+          },
+          "method": "heuristic_mixed_script_v1",
+          "final_tokens_est": 506,
+          "normalized": true
+        },
+        "prompt_jitter_queries": null,
+        "memory_block_chars": 538,
+        "memory_block_est_tokens": 506,
+        "api_token_budget": {
+          "seed": {
+            "calls": 1,
+            "prompt_tokens": 106,
+            "completion_tokens": 5,
+            "reasoning_tokens": 0,
+            "total_tokens": 261
+          },
+          "refine": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "hop_keywords": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "memory_remix": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "scaffold_condition": {
+            "calls": 1,
+            "prompt_tokens": 265,
+            "completion_tokens": 40,
+            "reasoning_tokens": 0,
+            "total_tokens": 1285
+          },
+          "random_log": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "band_answers": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "ensemble": {
+            "calls": 0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          }
+        },
+        "api_probe_top": null,
+        "api_final_generation": {
+          "finish_reason": "stop",
+          "response_id": "sMs0apq_N76j9tMP6NPbwQ8",
+          "model": "gemini-3.1-pro-preview",
+          "prompt_tokens": 532,
+          "completion_tokens": 276,
+          "reasoning_tokens": 0,
+          "total_tokens": 2160,
+          "empty_output": false,
+          "api_calls": 1
+        },
+        "timings": {
+          "total_s": 41.420215666999866,
+          "probe_s": 2.5166000341414474e-05,
+          "memory_remix_s": 5.916999725741334e-06,
+          "answer_s": 15.93100908300039
+        },
+        "api_warnings": null
+      },
+      "cfg_overrides": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 512,
+        "output_contract": "log_skeleton_final_closure"
+      },
+      "metrics": {
+        "answer_chars": 488,
+        "records": 1,
+        "elapsed_s": 41.42097337499945
+      }
     }
   ],
   "artifacts": {
@@ -8466,6 +10183,6 @@
     "trace_report_out": "artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.trace.html",
     "matrix_report_out": "artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.matrix.html",
     "out_dir": "",
-    "resume_from": ""
+    "resume_from": "artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json"
   }
 }

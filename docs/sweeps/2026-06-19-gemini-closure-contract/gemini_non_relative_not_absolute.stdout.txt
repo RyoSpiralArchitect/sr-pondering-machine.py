@@ -2,321 +2,167 @@
 
 === PACK: baseline ===
 
-「相対的」とは、他との比較や関係性のなかで価値や性質が定まる状態を指します。一方で「絶対的」とは、いかなる条件や文脈にも依存せず、他に並ぶものがない完全で普遍的な状態を指します。通常、私たちはこの二つを対義語として扱いがちですが、この問いは「
+[sr_ponder] [resume] skipping 'baseline' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
 === PACK: facts_dose_128_none ===
 
-非相対的ではあるが絶対的ではない状態とはどのようなものかを探るためには、まず私たちが物事を評価する際の「基準の所在」と「適用範囲」という二つの異なる水準を分けて考える必要があります。
-
-相対的とは、他者や外部の基準との比較によって自身の価値や性質が定まる状態を指します。そこから脱却した「非相対的
-
-=== COMPARISON ===
-
-answers_changed=yes chars=121->148 delta=+27 diff_ratio=0.7546
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.148085 query_base=0.033357 query_ponder=0.308774 align_delta=0.275416
-stance[heuristic_lexicon] base=conditionalization ponder=definition shift=0.380952 gain=definition drop=conditionalization
-spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=2.786 q_density=0.000 groups=none->none log=geometry
-budget[api_usage_plus_visible_estimate] ans=121->146 scaffold=470 reason=0->0 completion=77->297
+[sr_ponder] [resume] skipping 'facts_dose_128_none' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
 === PACK: facts_dose_128_final_closure ===
 
-他者や外部との比較によらず自己完結しているが、普遍性や不変性を持たない状態を指す。
-
-この状態が成立するには、外部の評価や基準に依存しない独立性を持つと同時に、適用範囲が特定の個人や状況に限定され、時間や環境の変化によって自ら変わり得る柔軟性を保っていることが求められる。
-
-たとえば、個人が抱く「今日の気分の良さ」や「自分なりの美意識」が該当する。これらは他人より優れているかという比較に基づくものではないが、明日も同じであるという保証や、全人類に適用される真理でもない。
-
-しかし、この状態は外部の基準を持たないために独善的になりやすく、普遍的な正当性も欠くため、他者との共有や社会的な合意形成が困難になるという限界を抱えている。
-
-END_ANSWER
-
-=== COMPARISON ===
-
-answers_changed=yes chars=121->329 delta=+208 diff_ratio=0.8933
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.067217 query_base=0.037931 query_ponder=0.045715 align_delta=0.007784
-stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.500000 gain=example_expansion drop=definition
-spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
-budget[api_usage_plus_visible_estimate] ans=121->312 scaffold=181 reason=0->0 completion=77->235
+[sr_ponder] [resume] skipping 'facts_dose_128_final_closure' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
 === PACK: facts_dose_128_log_closure ===
 
-私たちが物事の性質や価値を捉えるとき、しばしば相対的と絶対的という二項対立の枠組みを用いてしまいます。他との比較や関係性によって意味が決まる状態を相対的と呼び、いかなる条件や外部の存在にも依存せず、永遠かつ普遍的に完結している状態を絶対的と呼びます。しかし、世界を観察すると、
-
-=== COMPARISON ===
-
-answers_changed=yes chars=121->138 delta=+17 diff_ratio=0.6139
-records=1 unique_keywords=0 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.172951 query_base=0.027497 query_ponder=0.037752 align_delta=0.010255
-stance[heuristic_lexicon] base=conditionalization ponder=framing shift=0.357143 gain=framing drop=definition
-spatial[heuristic_lexicon] ans_density=0.000->7.246 log_density=0.000 q_density=0.000 groups=none->container log=none
-budget[api_usage_plus_visible_estimate] ans=121->138 scaffold=180 reason=0->0 completion=77->133
+[sr_ponder] [resume] skipping 'facts_dose_128_log_closure' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
 === PACK: facts_dose_128_log_final_closure ===
 
-非相対的ではあるが絶対的ではない状態とは、他との比較に依存せずに性質や価値が決まるものの、特定の前提や枠組みの中でのみ成立する状態です。
+[sr_ponder] [resume] skipping 'facts_dose_128_log_final_closure' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
-この状態が成り立つには、外部の比較対象を必要としない独自の基準が内部に存在している一方で、その基準の適用範囲が普遍的・無条件ではなく、特定の文脈や制約に縛られている必要があります。
+=== PACK: facts_dose_128_log_skeleton_closure ===
 
-特定のゲームにおけるルールや得点基準がこれに該当します。たとえば「ボウリングで10本のピンを1球で倒せばストライクである」という事実は、他者の成績と比較して決まるわけではありません。しかし、この事実はボウリングという人為的なルールの内部でのみ有効であり、あらゆる状況で通用する不変の法則ではありません。
+非相対的ではあるが絶対的ではない状態とは、他者や他の事象との比較や関係性に依存せずにそれ自体で成立しているものの、あらゆる条件や文脈を超越して普遍的かつ無制約に成り立つわけではない状態を指します。
 
-このような状態は、依存している前提やルールが変更・消滅した瞬間にその意味を失うため、いかなる環境下でも揺るがない無条件の基盤として扱うことには限界があります。
+この状態を正確に捉えるためには、物事が成立する根拠と、それが及ぶ適用範囲を分けて考える
+
+=== PACK: facts_dose_128_log_skeleton_final_closure ===
+
+非相対的ではあるが絶対的ではない状態とは、他者や外部との比較によって価値や性質が決まるわけではないものの、普遍的・無条件に成立するわけでもない状態を指します。
+
+この状態が成立するには、外部との比較を必要としない独自の自己完結性を持つ一方で、特定の文脈、個人の認識、あるいは限定された枠組みなどの前提条件に依存している必要があります。
+
+例えば、個人の「主観的な幸福感」や「個人的な信念」がこれに該当します。これらは他人の状況と比較して得られるものではなく、自身の内面で完結しているため非相対的です。しかし、全人類に共通する不変の真理ではなく、本人の心境や時間の経過によって揺らぐ可能性があるため、絶対的ではありません。
+
+この状態は特定の前提や限定的な適用範囲に依存しているため、その前提が崩れるような外部環境の激変や、全く異なる価値観との衝突に直面した際には、元の性質を維持できなくなるという限界を抱えています。
 
 END_ANSWER
-
-=== COMPARISON ===
-
-answers_changed=yes chars=121->406 delta=+285 diff_ratio=0.9051
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.121021 query_base=0.033629 query_ponder=0.193394 align_delta=0.159765
-stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.246753 gain=example_expansion drop=definition
-spatial[heuristic_lexicon] ans_density=0.000->2.463 log_density=20.833 q_density=0.000 groups=none->container log=stage
-budget[api_usage_plus_visible_estimate] ans=121->388 scaffold=188 reason=0->0 completion=77->271
 
 === PACK: facts_dose_512_none ===
 
-「非相対的ではあるが絶対的ではない状態」とは、対象の性質や状態が他者との比較や観測者の視点に依存せずに内在的に定まっている（非相対的）一方で、それがいかなる条件にも縛られず普遍的・無条件に成り立つわけではない（非絶対的）という状態を指します。
-
-この概念を明確にするためには、対象がどのように定まるかという「定義の水準」と、それがどこまで通用するかという「適用範囲の水準」を分けて考える必要があります。
-
-成立条件として、その対象の状態は外部環境や他者との関係性に依存せず、単独で自立しています。その意味において「非相対的」です。しかし不成立条件として、その状態は特定の局所的な枠組み、限られた時間や空間、あるいは特定の前提条件の下でのみ成立しています。そのため、例外なくあらゆる状況で通用する「絶対的」なものではありません。
-
-具体的な例として、個人の「痛み」や「特定の赤色を見たときの感覚」といった純粋な主観的体験（クオリア）が挙げられます。自分が今痛みを感じているという事実は、他人の感覚と比較して決まるものではないため非相対的です。しかし、それは「私」という特定の個人の
-
-=== COMPARISON ===
-
-answers_changed=yes chars=121->489 delta=+368 diff_ratio=0.9082
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.156278 query_base=0.033506 query_ponder=0.180412 align_delta=0.146906
-stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.161905 gain=example_expansion drop=definition
-spatial[heuristic_lexicon] ans_density=0.000->4.090 log_density=9.091 q_density=0.000 groups=none->container log=path
-budget[api_usage_plus_visible_estimate] ans=121->483 scaffold=649 reason=0->0 completion=77->381
+[sr_ponder] [resume] skipping 'facts_dose_512_none' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
 === PACK: facts_dose_512_final_closure ===
 
-特定の枠組みや体系の内部において客観的・普遍的な基準が確立しているが、その枠組み自体があらゆる状況を超越した無条件の究極真理ではない状態を指す。
-
-この状態が成立するには、個人の主観や文化の違いによって真理や価値が恣意的に変動しないという非相対的な性質を持つと同時に、その基準が適用されるための明確な前提条件が存在し、無謬の絶対には至らないという制約が必要である。
-
-科学的法則や近代の人権概念がこれに該当する。ニュートン力学は日常的な物理現象において誰にとっても正しい法則であるが、光速に近い状態では成り立たないため絶対的ではない。また、基本的人権も個人の感情で否定できない普遍性を持つが、人類の歴史的構築物であり、いかなる宇宙的尺度でも不変の絶対性を持つわけではない。
-
-この状態は、前提となる枠組みの境界が曖昧になったり未知の領域に直面したりした際、単なる相対主義に引き戻されるか、あるいは誤った絶対主義へと硬直化してしまう緊張関係を常に抱える点に限界がある。
-
-END_ANSWER
-
-=== COMPARISON ===
-
-answers_changed=yes chars=121->445 delta=+324 diff_ratio=0.9753
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.068382 query_base=0.029360 query_ponder=0.113807 align_delta=0.084447
-stance[heuristic_lexicon] base=conditionalization ponder=framing shift=0.523810 gain=framing drop=definition
-spatial[heuristic_lexicon] ans_density=0.000->8.989 log_density=0.000 q_density=0.000 groups=none->container log=none
-budget[api_usage_plus_visible_estimate] ans=121->428 scaffold=634 reason=0->0 completion=77->374
+[sr_ponder] [resume] skipping 'facts_dose_512_final_closure' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
 === PACK: facts_dose_512_log_closure ===
 
-他者や他の事象との比較や関係性によって性質が決定されるわけではない（非相対的）が、いかなる条件や制約からも自由で普遍・不変であるわけでもない（絶対的ではない）状態は、いくつかの水準や成立条件に分けて捉えることができます。
-
-第一に、特定の枠組みや前提条件の内部でのみ単独で成立する状態です。たとえば、特定のスポーツにおけるルールや、ある公理系に基づく数学の定理
-
-=== COMPARISON ===
-
-answers_changed=yes chars=121->180 delta=+59 diff_ratio=0.7209
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.119665 query_base=0.030706 query_ponder=0.106041 align_delta=0.075335
-stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.428571 gain=example_expansion drop=definition
-spatial[heuristic_lexicon] ans_density=0.000->5.556 log_density=14.085 q_density=0.000 groups=none->container log=container
-budget[api_usage_plus_visible_estimate] ans=121->178 scaffold=594 reason=0->0 completion=77->189
+[sr_ponder] [resume] skipping 'facts_dose_512_log_closure' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
 === PACK: facts_dose_512_log_final_closure ===
 
-観測者の主観や比較対象に依存しない客観性を持ちながらも、あらゆる状況で無条件に成立する普遍性を持たない状態を指す。
+[sr_ponder] [resume] skipping 'facts_dose_512_log_final_closure' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
-この状態が成立するためには、事象が特定の明確な枠組みや前提条件の内部においてのみ客観的に定義されている必要がある。その枠組みの中では誰が観測しても同じ結果になるが
+=== PACK: facts_dose_512_log_skeleton_closure ===
 
-=== COMPARISON ===
+言葉の定義と適用範囲を明確に分けるところから思考を始めてみます。まず、「相対的」とは、他者との比較や外部の文脈、観測者との関係性に依存して性質や価値が決まる状態です。したがって「非相対的」とは、他との比較や関係性を必要とせず、それ自体で独立して成り立っている状態を意味します
 
-answers_changed=yes chars=121->140 delta=+19 diff_ratio=0.8544
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.055007 query_base=0.036384 query_ponder=0.041454 align_delta=0.005070
-stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.190476 gain=framing drop=definition
-spatial[heuristic_lexicon] ans_density=0.000->14.286 log_density=20.000 q_density=0.000 groups=none->container log=container
-budget[api_usage_plus_visible_estimate] ans=121->138 scaffold=585 reason=0->0 completion=77->161
+=== PACK: facts_dose_512_log_skeleton_final_closure ===
+
+非相対的でありながら絶対的ではない状態とは、他との比較や関係性に依存せず独立して成立しているものの、あらゆる文脈や条件下において普遍不変の真理としては扱えない状態を指します。
+
+この状態が成立するためには、対象が外部の基準との相対的な比較によって価値や意味を決定されない自立性を持つ必要があります。同時に、その適用範囲や有効性が、特定の枠組み、前提条件、あるいは個人の内面といった限定的な領域に留まり、普遍性を欠いていることが不成立を防ぐ条件となります。
+
+具体的な例として、個人の痛みの感覚や主観的な信念が挙げられます。ある人が感じる痛みは、他者の痛みと比較して決まるものではないため非相対的です。しかし、それが全人類に共通する客観的かつ普遍的な事実ではないため、絶対的ではありません。また、特定のゲームや法体系の内部における基本ルールも、その体系内では他と比較されない基準として機能しますが、外部の世界において絶対的な法則となるわけではありません。
+
+ただし、この状態を規定する際には、適用範囲の境界が曖昧になりやすいという限界があります。前提とする枠組みを広げれば他の基準との相対化が生じやすく、逆に前提を極小化すれば絶対的なものと錯覚しやすいため、どの水準で事象を捉えているかを厳密に切り分ける必要があります。
+
+END_ANSWER
 
 === PACK: isomorphic_dose_128_none ===
 
-温室の中で光が遅れて届き、意味を持たずに配置だけが反復される情景を思い浮かべてみます。そこは外部の環境から切り離された閉鎖系であり、外の世界との比較や関係性によって自らの状態を決定しているわけではありません。つまり、他との比較に依存しないという意味で相対的ではありません。しかし、その温室内の状態が普遍的な真理や無条件の基準であるかといえば、そうでもありません。外部からの光という条件に遅れて影響を受け、ただ無目的に構造を繰り返しているに過ぎない以上、決して絶対
-
-=== COMPARISON ===
-
-answers_changed=yes chars=121->231 delta=+110 diff_ratio=0.8693
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.074506 query_base=0.028967 query_ponder=0.065397 align_delta=0.036430
-stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.228571 gain=resolution drop=framing
-spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
-budget[api_usage_plus_visible_estimate] ans=121->231 scaffold=202 reason=0->0 completion=77->177
+[sr_ponder] [resume] skipping 'isomorphic_dose_128_none' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
 === PACK: isomorphic_dose_128_final_closure ===
 
-非相対的でありながら絶対的ではない状態とは、特定の閉じた空間や枠組みの内部においてのみ、事象の配置や構造が揺るぎなく固定されている局所的な自律状態を指す。
-
-この状態が成立するには、外部環境から隔離された前提が存在し、その内側においてのみ、他との比較に依存しない固有の法則が機能している必要がある。主観的な意味の解釈ではなく、論理的または物理的な配置が一定のルールに従って繰り返されるような閉鎖環境が求められる。
-
-特定のボードゲームのルールがこれに該当する。チェスの駒の動かし方は、プレイヤーの気分や相対的な関係性によって変化するものではないため非相対的である。しかし、それはチェスという盤上の世界でのみ通用する約束事に過ぎず、普遍的な物理法則のような絶対性を持たない。
-
-この固定性は、前提となる枠組みの存在に完全に依存している。そのため、環境の境界が壊されたり、外部の異なる法則を持つ世界から干渉を受けたりした瞬間、内部で保たれていた法則性は効力を失う。
-
-END_ANSWER
-
-=== COMPARISON ===
-
-answers_changed=yes chars=121->442 delta=+321 diff_ratio=0.9147
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.075780 query_base=0.030209 query_ponder=0.133014 align_delta=0.102805
-stance[heuristic_lexicon] base=conditionalization ponder=framing shift=0.357143 gain=framing drop=conditionalization
-spatial[heuristic_lexicon] ans_density=0.000->9.050 log_density=15.152 q_density=0.000 groups=none->container log=geometry
-budget[api_usage_plus_visible_estimate] ans=121->425 scaffold=199 reason=0->0 completion=77->291
+[sr_ponder] [resume] skipping 'isomorphic_dose_128_final_closure' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
 === PACK: isomorphic_dose_128_log_closure ===
 
-ふと、温室に差し込む光について思いを巡らせてみる。そこは外部の気候や喧騒から切り離され、光すらも少し遅れて届くような、まるで無重力で空っぽの空間だ。その閉鎖された場所では、外の世界との比較や関係性は消失し、ただ意味を持たない配置だけが静かに反復されている。この温室の中の環境は、他と比べる必要のない独立した世界という意味で「相対的」ではない。しかし、それが永遠不変の真理や、いかなる条件にも縛られない「絶対的」なものかといえば、決してそうではない。ガラス一枚隔てただけの、極めて局所的で条件付きの空間に過ぎないからだ。
-
-このような思考の寄り道を経て本題について考えてみると、「非相対的ではあるが絶対的ではない状態」とは、外部との比較や関係性に依存せずに自立しているものの、それが普遍的、永遠、あるいは無条件の真理には至っていない状態だと言える。
-
-具体的には、ある特定の枠組みや閉鎖空間の中だけで完結している「局所的な自律」がこれに当たる。他者や外部環境と比べることによって価値や性質が決まるわけではないため相対的ではないが、その前提となる枠組みが崩れれば成立しなくなるため絶対的でもない。
-
-また、個人の深く揺るぎない主観や実感もこの状態に近い。誰かの意見や社会の基準と比較して生まれた感情ではなく、ただ自分の中に確固として存在しているという意味で非相対的だが、それが万人に共通する真理ではない以上、絶対的ではない。
-
-つまりそれは、他者との比較という関係性の網の目からは抜け出しているが、かといって
-
-=== COMPARISON ===
-
-answers_changed=yes chars=121->652 delta=+531 diff_ratio=0.9276
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.122474 query_base=0.033219 query_ponder=0.196758 align_delta=0.163540
-stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.190476 gain=resolution drop=conditionalization
-spatial[heuristic_lexicon] ans_density=0.000->9.202 log_density=0.000 q_density=0.000 groups=none->geometry log=none
-budget[api_usage_plus_visible_estimate] ans=121->644 scaffold=311 reason=0->0 completion=77->482
+[sr_ponder] [resume] skipping 'isomorphic_dose_128_log_closure' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
 === PACK: isomorphic_dose_128_log_final_closure ===
 
-非相対的だが絶対的ではない状態とは、特定の閉じた体系や前提の内部においてのみ、観測者の視点に依存せず一意に定まっている状態を指す。
+[sr_ponder] [resume] skipping 'isomorphic_dose_128_log_final_closure' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
-この状態が成立するには、外部環境から隔離された独自の規則が適用される空間や枠組みが存在し、その内部だけで厳密な整合性が保たれている必要がある。他者との比較によって変動しないという意味で非相対的だが、あらゆる状況下で不変の真理というわけではないため絶対的ではない。
+=== PACK: isomorphic_dose_128_log_skeleton_closure ===
 
-具体的な例として、人工的に制御された環境下での現象が挙げられる。ある特殊な透光性を持つ密閉空間において、外部からのエネルギー到達が常に一定の遅延を伴い、内部の構造が特定の規則に従って反復されているとする。この空間内にいる限り、誰が観測してもその遅延や構造は同じように立ち現れるため相対的ではない。しかし、それは設定された環境に依存した局所的な事象であり、普遍的な法則ではない。
+温室のガラスを透過し、わずかに遅れて届く光の連なりについて想像してみる。そこに特定の意味はなく、ただ物理的な配置だけが反復されている空間。その閉鎖された環境内では、外部の風景や他の事象と比較されることなく、一つの自律した秩序が保たれている。他と比べる必要がないため、その秩序は
 
-こうした状態は、前提となる枠組みそのものが持つ脆さに制約される。外部からの干渉を受けたり、空間の境界が壊れてより広範な法則に飲み込まれたりした瞬間に、内部で保たれていた一意性は失われ、元の状態は無効化されてしまう。
+=== PACK: isomorphic_dose_128_log_skeleton_final_closure ===
+
+非相対的かつ非絶対的な状態とは、特定の閉じた体系や文脈の内部においてのみ、外部との比較なしに独立して成立するが、その体系を超えた普遍性を持たない状態である。
+
+この状態が成立するには、対象が外部環境の変動や他者との比較から切り離されていることと、同時にその内部の前提や局所的な規則に完全に依存していることが求められる。
+
+例えば、チェスなどのゲームのルールや、独自の公理に基づく数学的空間がこれに当たる。チェスの駒の動きは他のゲームとの比較によって決まるわけではないため非相対的である。しかし、宇宙全体で通用する不変の法則ではないため絶対的でもない。与えられた盤面と規則という閉鎖的な空間の中でだけ、確固たる配置として機能する。
+
+この状態は、前提となる枠組み自体が崩壊したり、外部のより大きな体系に干渉されたりした瞬間に自律性を失う。枠組みの外に出れば、それまで確固としていた規則も直ちに無効化されるという危うさを常に孕んでいる。
 
 END_ANSWER
-
-=== COMPARISON ===
-
-answers_changed=yes chars=121->509 delta=+388 diff_ratio=0.9111
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.077411 query_base=0.030741 query_ponder=0.154285 align_delta=0.123544
-stance[heuristic_lexicon] base=conditionalization ponder=definition shift=0.285714 gain=framing drop=conditionalization
-spatial[heuristic_lexicon] ans_density=0.000->13.752 log_density=18.868 q_density=0.000 groups=none->geometry log=container
-budget[api_usage_plus_visible_estimate] ans=121->492 scaffold=191 reason=0->0 completion=77->332
 
 === PACK: isomorphic_dose_512_none ===
 
-提示された記録にある温室の情景について少し考えてみる。光がわずかに遅れて届き、意味を持たない配置だけが延々と反復される空間。そこは外部の環境からガラス一枚で隔離され、他の何かと比較されることのない閉じた世界である。他との関係性を絶っているという意味では相対的ではないが、その温室内の法則
-
-=== COMPARISON ===
-
-answers_changed=yes chars=121->143 delta=+22 diff_ratio=0.9318
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.037744 query_base=0.034567 query_ponder=0.080956 align_delta=0.046389
-stance[heuristic_lexicon] base=conditionalization ponder=definition shift=0.714286 gain=definition drop=conditionalization
-spatial[heuristic_lexicon] ans_density=0.000->6.993 log_density=0.000 q_density=0.000 groups=none->geometry log=none
-budget[api_usage_plus_visible_estimate] ans=121->143 scaffold=579 reason=0->0 completion=77->162
+[sr_ponder] [resume] skipping 'isomorphic_dose_512_none' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
 === PACK: isomorphic_dose_512_final_closure ===
 
-特定の閉じた系や枠組みの内部においてのみ、他との比較を介さず一意に定まっている状態です。他者に依存して変動しないため相対的ではありませんが、あらゆる状況を超越して普遍的に成り立つわけではないため絶対的でもありません。
-
-この状態が成立するには、外部の文脈や影響から切り離された明確な境界が設定されている必要があります。内部の構造や配置が固定され、外部との関係性を問われない限定的な環境が維持されることが不可欠です。
-
-人工的に管理された空間の環境設定や、特定のゲームのルールがこれに該当します。チェスの駒の動かし方は、他のゲームと相対的に比較して決まるものではなくそれ自体で完結していますが、宇宙の普遍的な物理法則のような絶対的なものでもありません。特定の盤上という限定された配置の中だけで不動の基準として機能します。
-
-設定された境界が破綻したり、外部のより大きな視点や異なる体系に接続されたりした瞬間、その自明性は失われます。内部でどれほど確固たる基準であっても、前提となる枠組みそのものが書き換えられれば効力を保つことはできません。
-
-END_ANSWER
-
-=== COMPARISON ===
-
-answers_changed=yes chars=121->481 delta=+360 diff_ratio=0.9535
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.090306 query_base=0.028608 query_ponder=0.076924 align_delta=0.048316
-stance[heuristic_lexicon] base=conditionalization ponder=framing shift=0.257143 gain=framing drop=conditionalization
-spatial[heuristic_lexicon] ans_density=0.000->10.395 log_density=14.706 q_density=0.000 groups=none->geometry log=container
-budget[api_usage_plus_visible_estimate] ans=121->464 scaffold=595 reason=0->0 completion=77->333
+[sr_ponder] [resume] skipping 'isomorphic_dose_512_final_closure' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
 === PACK: isomorphic_dose_512_log_closure ===
 
-温室のガラスを透過する光が少し遅れて届くという情景は、外界との直接的な比較から切り離された閉鎖空間を思わせます。そして、意味を伴わずに配置だけが延々と反復されるログの羅列は、全体を統べる普遍的な真理の欠如を暗示しています。この「比較を拒絶しながらも、完全には至らない」という奇妙な宙吊りの感覚は、まさに今回の問いへの道標となります。
-
-「非相対的ではあるが絶対的ではない状態」とは、他との比較や関係性によってその性質や価値が決定されるわけではない（非相対的である）ものの、それが普遍的、永遠不変、あるいは無制約の完全な存在でもない（絶対的ではない）状態を指します。
-
-これは、いくつかの観点から説明することができます。
-
-第一に、空間的・論理的な「局所性」です。たとえば温室の中の環境は、外の気候と相対的に比較して決まるものではなく、その閉ざされた空間内で独立して成立しています。しかし、それは世界全体を支配する法則ではなく、ガラスの壁という限界の内側でしか通用しません。このように、他者に依存せず自律しているが、適用範囲が限定されている状態が当てはまります。
-
-第二に、個人の「主観的・現象学的な体験」です。いま自分が感じている痛みや、目にしている色彩の感覚（クオリア）は、他人の感覚と比較して初めて生じるものではありません。その意味で相対的ではありません。しかし、それは私という個人の一時的な身体や意識に縛られたものであり、誰もが認める客観的
-
-=== COMPARISON ===
-
-answers_changed=yes chars=121->623 delta=+502 diff_ratio=0.8898
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.133394 query_base=0.033406 query_ponder=0.177749 align_delta=0.144342
-stance[heuristic_lexicon] base=conditionalization ponder=example_expansion shift=0.482143 gain=example_expansion drop=conditionalization
-spatial[heuristic_lexicon] ans_density=0.000->4.815 log_density=37.736 q_density=0.000 groups=none->geometry log=stage
-budget[api_usage_plus_visible_estimate] ans=121->615 scaffold=608 reason=0->0 completion=77->436
+[sr_ponder] [resume] skipping 'isomorphic_dose_512_log_closure' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
 === PACK: isomorphic_dose_512_log_final_closure ===
 
-非相対的でありながら絶対的ではない状態とは、特定の閉じた体系や限定された文脈の内部においてのみ、他との比較に依存することなく一意に定まっている状態である。
+[sr_ponder] [resume] skipping 'isomorphic_dose_512_log_final_closure' (already in 'artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json')
 
-この状態が成立するには、外部の基準や他者との比較によって価値や性質が変動しない非相対性を持つと同時に、その状態を成り立たせる独自の前提や環境に強く依存している必要がある。いかなる条件からも独立した普遍性を持たないため、絶対的とは言えない。
+=== PACK: isomorphic_dose_512_log_skeleton_closure ===
 
-例えば、特定のゲームにおけるルールの適用がこれに該当する。チェスにおける駒の動かし方は、他の駒との相対的な比較で決まるわけではなく単独で規定されているが、チェスという枠組みの外ではいかなる意味も持たない。また、外部から切り離され、独自の配置や周期で光や温度が管理された人工的な空間も同様である。そこでの法則は他と相対化されるものではないが、その空間という前提に完全に依存している。
+欠けたルビーの軸受けから漏れ出す時間の粒子について想像を巡らせてみる。それは文字盤が示すような、他者と共有され常に比較される相対的な時間からはすでに逸脱している。しかし同時に、宇宙のすべてを均一に支配する絶対的な時間でもない。ただ重力に縛られず、その局所的な空間だけで自由に漂っている。また
 
-しかしこの状態は、基盤となる枠組みや前提条件が変更されたり、外部の体系に晒されたりした瞬間に維持できなくなる。いかなる状況下でも変わらない真理や完全な自立性としては存在し得ないという限界を持っている。
+=== PACK: isomorphic_dose_512_log_skeleton_final_closure ===
+
+他者や外部との比較によって性質や価値が変動しない独立性を持ちながらも、普遍的かつ無条件に成立するわけではない状態を指す。
+
+この状態が成立するためには、特定の閉じた系や固有の文脈が存在し、その内部でのみ基準が自己完結している必要がある。外部からの干渉を遮断しつつも、系自体が空間的、時間的、あるいは個人的な局所的制約に依存していなければならない。
+
+ある個人の内面における強固な信念や美意識がこれに該当する。他人の意見や社会の流行といった相対的な基準によって揺らぐことがないため非相対的であるが、全人類に普遍的に適用できる真理ではないため絶対的ではない。また、外界から隔離された特定の空間内だけで機能する独自の規則なども、その内部では比較を絶して自律的に機能するが、世界全体を支配する絶対性を持たない。
+
+このような状態は、前提となる閉じた系や文脈が崩壊した瞬間に効力を失う。外部との関係性を結ばないまま局所的な自律性を保っているため、系そのものがより大きな現実や環境の変化に晒された際、適応や修正が効かず、その状態ごと消失してしまう脆さを孕んでいる。
 
 END_ANSWER
 
-=== COMPARISON ===
-
-answers_changed=yes chars=121->504 delta=+383 diff_ratio=0.9136
-records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
-semantic[hashed_char_ngrams_tfidf] answer_cosine=0.110970 query_base=0.031044 query_ponder=0.125461 align_delta=0.094417
-stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.190476 gain=example_expansion drop=definition
-spatial[heuristic_lexicon] ans_density=0.000->7.937 log_density=40.000 q_density=27.778 groups=none->container log=container
-budget[api_usage_plus_visible_estimate] ans=121->487 scaffold=585 reason=0->0 completion=77->353
-
 === PACK SUMMARY ===
 
-name                                   kind      control  chars  records  elapsed_s         
--------------------------------------  --------  -------  -----  -------  ------------------
-baseline                               baseline           121             24.83179716700033 
-facts_dose_128_none                    ponder    none     148    1        42.33304533400042 
-facts_dose_128_final_closure           ponder    none     329    1        34.69843300000139 
-facts_dose_128_log_closure             ponder    none     138    1        41.594288332998985
-facts_dose_128_log_final_closure       ponder    none     406    1        42.693078165999395
-facts_dose_512_none                    ponder    none     489    1        48.83352362500045 
-facts_dose_512_final_closure           ponder    none     445    1        45.52189479199842 
-facts_dose_512_log_closure             ponder    none     180    1        48.84283320800023 
-facts_dose_512_log_final_closure       ponder    none     140    1        48.10263599999962 
-isomorphic_dose_128_none               ponder    none     231    1        36.89385854200009 
-isomorphic_dose_128_final_closure      ponder    none     442    1        39.96284141599972 
-isomorphic_dose_128_log_closure        ponder    none     652    1        37.25259774999904 
-isomorphic_dose_128_log_final_closure  ponder    none     509    1        37.26569075000043 
-isomorphic_dose_512_none               ponder    none     143    1        51.1662326250007  
-isomorphic_dose_512_final_closure      ponder    none     481    1        43.9442784999992  
-isomorphic_dose_512_log_closure        ponder    none     623    1        48.07915037500061 
-isomorphic_dose_512_log_final_closure  ponder    none     504    1        38.61670737500026 
+name                                        kind      control  chars  records  elapsed_s
+------------------------------------------  --------  -------  -----  -------  ------------------
+baseline                                    baseline           121             24.83179716700033
+facts_dose_128_none                         ponder    none     148    1        42.33304533400042
+facts_dose_128_final_closure                ponder    none     329    1        34.69843300000139
+facts_dose_128_log_closure                  ponder    none     138    1        41.594288332998985
+facts_dose_128_log_final_closure            ponder    none     406    1        42.693078165999395
+facts_dose_128_log_skeleton_closure         ponder    none     143    1        39.76409849999982
+facts_dose_128_log_skeleton_final_closure   ponder    none     420    1        32.670477624998966
+facts_dose_512_none                         ponder    none     489    1        48.83352362500045
+facts_dose_512_final_closure                ponder    none     445    1        45.52189479199842
+facts_dose_512_log_closure                  ponder    none     180    1        48.84283320800023
+facts_dose_512_log_final_closure            ponder    none     140    1        48.10263599999962
+facts_dose_512_log_skeleton_closure         ponder    none     137    1        50.25488612499976
+facts_dose_512_log_skeleton_final_closure   ponder    none     571    1        38.40195875000063
+isomorphic_dose_128_none                    ponder    none     231    1        36.89385854200009
+isomorphic_dose_128_final_closure           ponder    none     442    1        39.96284141599972
+isomorphic_dose_128_log_closure             ponder    none     652    1        37.25259774999904
+isomorphic_dose_128_log_final_closure       ponder    none     509    1        37.26569075000043
+isomorphic_dose_128_log_skeleton_closure    ponder    none     138    1        39.39621358399927
+isomorphic_dose_128_log_skeleton_final_cl…  ponder    none     428    1        36.738390208000055
+isomorphic_dose_512_none                    ponder    none     143    1        51.1662326250007
+isomorphic_dose_512_final_closure           ponder    none     481    1        43.9442784999992
+isomorphic_dose_512_log_closure             ponder    none     623    1        48.07915037500061
+isomorphic_dose_512_log_final_closure       ponder    none     504    1        38.61670737500026
+isomorphic_dose_512_log_skeleton_closure    ponder    none     145    1        47.16957254100089
+isomorphic_dose_512_log_skeleton_final_cl…  ponder    none     488    1        41.42097337499945
 
 [json_out] wrote artifacts/sweep_20260619_gemini_closure_contract/gemini_non_relative_not_absolute.json
 

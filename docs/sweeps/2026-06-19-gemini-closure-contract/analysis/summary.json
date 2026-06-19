@@ -1,10 +1,10 @@
 {
   "run_count": 1,
-  "ponder_item_count": 16,
+  "ponder_item_count": 24,
   "by_provider": {
     "gemini": {
-      "ponder_items": 16,
-      "answer_chars_mean": 366.25,
+      "ponder_items": 24,
+      "answer_chars_mean": 347.0833333333333,
       "diff_ratio_mean": 0.8710762158545262,
       "query_alignment_delta_mean": 0.09529753562603763,
       "stance_shift_mean": 0.34347267316017316,
@@ -17,9 +17,9 @@
   "run_summary": {
     "gemini": {
       "runs": 1,
-      "elapsed_s_mean": 714.2611743750003,
-      "elapsed_s_min": 714.2611743750003,
-      "elapsed_s_max": 714.2611743750003
+      "elapsed_s_mean": 329.38230995899903,
+      "elapsed_s_min": 329.38230995899903,
+      "elapsed_s_max": 329.38230995899903
     }
   },
   "condition_summary": [
@@ -49,6 +49,24 @@
       "api_total_delta_mean": 1661.0,
       "stance_shift_mean": 0.24675324675324675,
       "diff_ratio_mean": 0.905123339658444
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_128_log_skeleton_closure",
+      "answer_chars_mean": 143.0,
+      "query_alignment_delta_mean": NaN,
+      "api_total_delta_mean": NaN,
+      "stance_shift_mean": NaN,
+      "diff_ratio_mean": NaN
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_128_log_skeleton_final_closure",
+      "answer_chars_mean": 420.0,
+      "query_alignment_delta_mean": NaN,
+      "api_total_delta_mean": NaN,
+      "stance_shift_mean": NaN,
+      "diff_ratio_mean": NaN
     },
     {
       "provider": "gemini",
@@ -88,6 +106,24 @@
     },
     {
       "provider": "gemini",
+      "condition": "facts_dose_512_log_skeleton_closure",
+      "answer_chars_mean": 137.0,
+      "query_alignment_delta_mean": NaN,
+      "api_total_delta_mean": NaN,
+      "stance_shift_mean": NaN,
+      "diff_ratio_mean": NaN
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_512_log_skeleton_final_closure",
+      "answer_chars_mean": 571.0,
+      "query_alignment_delta_mean": NaN,
+      "api_total_delta_mean": NaN,
+      "stance_shift_mean": NaN,
+      "diff_ratio_mean": NaN
+    },
+    {
+      "provider": "gemini",
       "condition": "facts_dose_512_none",
       "answer_chars_mean": 489.0,
       "query_alignment_delta_mean": 0.14690582177658068,
@@ -121,6 +157,24 @@
       "api_total_delta_mean": 1847.0,
       "stance_shift_mean": 0.2857142857142857,
       "diff_ratio_mean": 0.9111111111111111
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_128_log_skeleton_closure",
+      "answer_chars_mean": 138.0,
+      "query_alignment_delta_mean": NaN,
+      "api_total_delta_mean": NaN,
+      "stance_shift_mean": NaN,
+      "diff_ratio_mean": NaN
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_128_log_skeleton_final_closure",
+      "answer_chars_mean": 428.0,
+      "query_alignment_delta_mean": NaN,
+      "api_total_delta_mean": NaN,
+      "stance_shift_mean": NaN,
+      "diff_ratio_mean": NaN
     },
     {
       "provider": "gemini",
@@ -160,6 +214,24 @@
     },
     {
       "provider": "gemini",
+      "condition": "isomorphic_dose_512_log_skeleton_closure",
+      "answer_chars_mean": 145.0,
+      "query_alignment_delta_mean": NaN,
+      "api_total_delta_mean": NaN,
+      "stance_shift_mean": NaN,
+      "diff_ratio_mean": NaN
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_512_log_skeleton_final_closure",
+      "answer_chars_mean": 488.0,
+      "query_alignment_delta_mean": NaN,
+      "api_total_delta_mean": NaN,
+      "stance_shift_mean": NaN,
+      "diff_ratio_mean": NaN
+    },
+    {
+      "provider": "gemini",
       "condition": "isomorphic_dose_512_none",
       "answer_chars_mean": 143.0,
       "query_alignment_delta_mean": 0.04638870368334747,
@@ -169,7 +241,7 @@
     }
   ],
   "dose_summary": {
-    "row_count": 24,
+    "row_count": 36,
     "max_dose": 512.0,
     "conditions": [
       "facts",
@@ -201,21 +273,21 @@
       "provider": "gemini",
       "query_id": "non_relative_not_absolute",
       "model": "gemini-3.1-pro-preview",
-      "condition": "facts_dose_512_log_final_closure",
-      "scaffold_condition": "facts",
-      "scaffold_dose": 512,
-      "output_contract": "log_final_closure",
-      "answer_chars": 140.0,
-      "query_alignment_delta": 0.005070191428148123,
-      "diff_ratio": 0.8544061302681992,
-      "stance_shift": 0.19047619047619047,
-      "spatial_log_density": 20.0,
-      "api_total_delta": 3015.0,
-      "origin_drift": 0.6160427861123784,
-      "recurrence": 0.6446302523791043,
-      "query_relevance": 0.18805644455175835,
-      "scaffold_leakage": 0.519891447774267,
-      "coil_index": 0.0006146434539323504,
+      "condition": "isomorphic_dose_128_log_skeleton_closure",
+      "scaffold_condition": "isomorphic",
+      "scaffold_dose": 128,
+      "output_contract": "log_skeleton_closure",
+      "answer_chars": 138.0,
+      "query_alignment_delta": NaN,
+      "diff_ratio": NaN,
+      "stance_shift": NaN,
+      "spatial_log_density": NaN,
+      "api_total_delta": NaN,
+      "origin_drift": 0.6553853334327633,
+      "recurrence": 0.5953583587319912,
+      "query_relevance": 0.1762018102122618,
+      "scaffold_leakage": 0.5185288094843709,
+      "coil_index": NaN,
       "attractor_class": "divergence",
       "is_baseline_reference": false
     },
@@ -223,28 +295,30 @@
       {
         "scaffold_condition": "facts",
         "query_alignment_delta_mean": 0.09562227325741676,
-        "origin_drift_mean": 0.4902039321415388,
-        "recurrence_mean": 0.6306808057798757,
-        "scaffold_leakage_mean": 0.5931279934635714,
-        "coil_index_mean": 0.022622870776739926
+        "origin_drift_mean": 0.4748837385188979,
+        "recurrence_mean": 0.6538389752359762,
+        "scaffold_leakage_mean": 0.6028993710827915,
+        "coil_index_mean": 0.02265213329810923
       },
       {
         "scaffold_condition": "isomorphic",
         "query_alignment_delta_mean": 0.09497279799465848,
-        "origin_drift_mean": 0.4785619012115574,
-        "recurrence_mean": 0.7569125831358617,
-        "scaffold_leakage_mean": 0.5782458666266354,
-        "coil_index_mean": 0.025079488760103553
+        "origin_drift_mean": 0.5053752010766283,
+        "recurrence_mean": 0.7394054554301511,
+        "scaffold_leakage_mean": 0.5705712369702324,
+        "coil_index_mean": 0.025184144849733303
       }
     ]
   },
   "closure_summary": {
-    "row_count": 16,
+    "row_count": 24,
     "contracts": [
       "none",
       "final_closure",
       "log_closure",
-      "log_final_closure"
+      "log_final_closure",
+      "log_skeleton_closure",
+      "log_skeleton_final_closure"
     ],
     "by_contract": [
       {
@@ -254,6 +328,7 @@
         "final_finish_length_rate": 0.0,
         "final_marker_last_rate": 1.0,
         "log_marker_rate": 0.0,
+        "log_skeleton_complete_rate": 0.0,
         "prompt_leakage_rate": 0.0
       },
       {
@@ -263,6 +338,7 @@
         "final_finish_length_rate": 1.0,
         "final_marker_last_rate": 0.0,
         "log_marker_rate": 0.25,
+        "log_skeleton_complete_rate": 0.0,
         "prompt_leakage_rate": 0.0
       },
       {
@@ -272,6 +348,27 @@
         "final_finish_length_rate": 0.5,
         "final_marker_last_rate": 0.75,
         "log_marker_rate": 0.0,
+        "log_skeleton_complete_rate": 0.0,
+        "prompt_leakage_rate": 0.0
+      },
+      {
+        "output_contract": "log_skeleton_closure",
+        "rows": 4,
+        "answer_chars_mean": 140.75,
+        "final_finish_length_rate": 1.0,
+        "final_marker_last_rate": 0.0,
+        "log_marker_rate": 0.25,
+        "log_skeleton_complete_rate": 0.25,
+        "prompt_leakage_rate": 0.0
+      },
+      {
+        "output_contract": "log_skeleton_final_closure",
+        "rows": 4,
+        "answer_chars_mean": 476.75,
+        "final_finish_length_rate": 0.0,
+        "final_marker_last_rate": 1.0,
+        "log_marker_rate": 0.0,
+        "log_skeleton_complete_rate": 0.0,
         "prompt_leakage_rate": 0.0
       },
       {
@@ -281,16 +378,17 @@
         "final_finish_length_rate": 1.0,
         "final_marker_last_rate": 0.0,
         "log_marker_rate": 0.0,
+        "log_skeleton_complete_rate": 0.0,
         "prompt_leakage_rate": 0.0
       }
     ]
   },
   "pca": {
-    "doc_count": 17,
+    "doc_count": 25,
     "feature_dim": 768,
     "explained_variance_ratio": [
-      0.14179052661884892,
-      0.09998995115991179
+      0.11220262899429444,
+      0.08840869450059921
     ],
     "provider_centroid_distance": null,
     "csv": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/answer_pca.csv"
@@ -307,6 +405,7 @@
     "final_finish_is_length": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/closure_final_finish_length_rate.png",
     "final_marker_is_last_line": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/closure_final_marker_rate.png",
     "ponder_log_marker_rate": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/closure_log_marker_rate.png",
+    "ponder_log_skeleton_complete_rate": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/closure_log_skeleton_rate.png",
     "answer_chars": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/closure_answer_chars.png",
     "answer_pca": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/answer_pca_by_provider_condition.png"
   }

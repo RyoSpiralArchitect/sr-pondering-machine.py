@@ -42,7 +42,14 @@ COLOR_FAMILIES = {
     "pink": {"xlight": "#FCDAD6", "light": "#F5BACC", "base": "#F390CA", "mid": "#BD569B", "dark": "#8A3A6F"},
 }
 
-CONTRACT_ORDER = ["none", "final_closure", "log_closure", "log_final_closure"]
+CONTRACT_ORDER = [
+    "none",
+    "final_closure",
+    "log_closure",
+    "log_final_closure",
+    "log_skeleton_closure",
+    "log_skeleton_final_closure",
+]
 
 
 def use_chart_theme() -> None:
@@ -151,6 +158,19 @@ def marker_line_present(text: Any, marker: str) -> int:
 def marker_is_last_line(text: Any, marker: str) -> int:
     lines = _nonempty_lines(text)
     return int(bool(lines) and lines[-1] == marker)
+
+
+def log_skeleton_prefix_count(text: Any) -> int:
+    lines = _nonempty_lines(text)
+    prefixes = ("X1|", "X2|", "X3|", "X4|")
+    return sum(1 for prefix in prefixes if any(line.startswith(prefix) for line in lines))
+
+
+def log_skeleton_complete(text: Any) -> int:
+    lines = _nonempty_lines(text)
+    if len(lines) != 5 or marker_is_last_line(text, "END_LOG") != 1:
+        return 0
+    return int(all(lines[ix].startswith(f"X{ix + 1}|") for ix in range(4)))
 
 
 def prompt_leakage_flag(text: Any) -> int:
@@ -282,6 +302,8 @@ def extract_rows(sweep_dir: Path) -> tuple[List[Dict[str, Any]], List[Dict[str, 
             answer = str(item.get("answer") or "")
             record_log_values = record_logs(item)
             log_marker_count = sum(marker_line_present(log, "END_LOG") for log in record_log_values)
+            log_skeleton_prefixes = sum(log_skeleton_prefix_count(log) for log in record_log_values)
+            log_skeleton_complete_count = sum(log_skeleton_complete(log) for log in record_log_values)
             final_meta = extras.get("api_final_generation") if isinstance(extras.get("api_final_generation"), dict) else {}
             final_reason = finish_reason(final_meta)
             item_rows.append(
@@ -300,6 +322,10 @@ def extract_rows(sweep_dir: Path) -> tuple[List[Dict[str, Any]], List[Dict[str, 
                     "ponder_log_count": len(record_log_values),
                     "ponder_log_marker_count": log_marker_count,
                     "ponder_log_marker_rate": (log_marker_count / len(record_log_values)) if record_log_values else None,
+                    "ponder_log_skeleton_prefix_count": log_skeleton_prefixes,
+                    "ponder_log_skeleton_prefix_rate": (log_skeleton_prefixes / (4 * len(record_log_values))) if record_log_values else None,
+                    "ponder_log_skeleton_complete_count": log_skeleton_complete_count,
+                    "ponder_log_skeleton_complete_rate": (log_skeleton_complete_count / len(record_log_values)) if record_log_values else None,
                     "final_finish_reason": final_reason,
                     "final_finish_is_length": int(final_reason == "length") if final_reason else None,
                     "ponder_finish_length_count": count_record_finish_reason(item, "length"),
@@ -859,6 +885,8 @@ def build_closure_contract_rows(item_df: pd.DataFrame) -> List[Dict[str, Any]]:
                 "final_marker_line_present": safe_float(item.get("final_marker_line_present")),
                 "final_marker_is_last_line": safe_float(item.get("final_marker_is_last_line")),
                 "ponder_log_marker_rate": safe_float(item.get("ponder_log_marker_rate")),
+                "ponder_log_skeleton_prefix_rate": safe_float(item.get("ponder_log_skeleton_prefix_rate")),
+                "ponder_log_skeleton_complete_rate": safe_float(item.get("ponder_log_skeleton_complete_rate")),
                 "final_finish_is_length": safe_float(item.get("final_finish_is_length")),
                 "ponder_finish_length_count": safe_float(item.get("ponder_finish_length_count")),
                 "prompt_leakage_flag": safe_float(item.get("prompt_leakage_flag")),
@@ -932,6 +960,13 @@ def build_closure_charts(closure_df: pd.DataFrame, chart_dir: Path) -> Dict[str,
         "Log closure success is measured before scaffold synthesis",
         "Rows without a log contract are expected to stay near zero.",
         "closure_log_marker_rate.png",
+    )
+    bar_chart(
+        "ponder_log_skeleton_complete_rate",
+        "Ponder logs matching X1-X4 skeleton",
+        "Skeleton closure tests whether a non-semantic frame survives generation",
+        "A pass requires exactly X1| through X4| followed by END_LOG.",
+        "closure_log_skeleton_rate.png",
     )
     bar_chart(
         "answer_chars",
@@ -1018,6 +1053,7 @@ def summarize(
                     final_finish_length_rate=("final_finish_is_length", "mean"),
                     final_marker_last_rate=("final_marker_is_last_line", "mean"),
                     log_marker_rate=("ponder_log_marker_rate", "mean"),
+                    log_skeleton_complete_rate=("ponder_log_skeleton_complete_rate", "mean"),
                     prompt_leakage_rate=("prompt_leakage_flag", "mean"),
                 )
                 .to_dict(orient="records")
@@ -1432,6 +1468,11 @@ def build_report_html(
                 "ponder_log_marker_rate",
                 "Ponder log marker rate by output contract",
                 "A pass means the saved ponder log included END_LOG as a standalone line.",
+            ),
+            (
+                "ponder_log_skeleton_complete_rate",
+                "Ponder log skeleton pass rate by output contract",
+                "A pass means the saved ponder log matched X1| through X4| plus END_LOG exactly.",
             ),
             (
                 "answer_chars",

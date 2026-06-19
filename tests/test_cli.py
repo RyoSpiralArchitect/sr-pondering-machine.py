@@ -358,6 +358,15 @@ class TestReasoningCompare(unittest.TestCase):
         self.assertIn("END_LOG", log_prompt)
         self.assertIn("Only the final line", log_prompt)
 
+        skeleton_prompt = sp.build_prompt_for_pondering(
+            "q",
+            mode="assoc",
+            lang="ja",
+            output_contract="log_skeleton_closure",
+        )
+        self.assertIn("X1|", skeleton_prompt)
+        self.assertIn("非意味論ログ足場", skeleton_prompt)
+
     def test_build_token_budget_compare_tracks_scaffold_and_reasoning(self) -> None:
         hf = SimpleNamespace(tokenizer=None)
         records = [

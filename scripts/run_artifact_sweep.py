@@ -86,7 +86,14 @@ PROFILES: Dict[str, Dict[str, Any]] = {
         "matrix": "closure_contract",
         "dose_values": [128, 512],
         "dose_conditions": ["facts", "isomorphic"],
-        "output_contracts": ["none", "final_closure", "log_closure", "log_final_closure"],
+        "output_contracts": [
+            "none",
+            "final_closure",
+            "log_closure",
+            "log_final_closure",
+            "log_skeleton_closure",
+            "log_skeleton_final_closure",
+        ],
         "providers": {
             "gemini": {"model": "gemini-3.1-pro-preview", "reasoning_effort": "high"},
             "claude": {"model": "opus", "reasoning_effort": "xhigh"},
