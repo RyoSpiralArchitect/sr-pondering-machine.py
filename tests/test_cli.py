@@ -267,7 +267,7 @@ class TestSemanticCompare(unittest.TestCase):
         assert comp is not None
         self.assertEqual(comp.get("method"), "external_encoder")
         self.assertEqual(external_compare.call_args.kwargs.get("source"), "auto_local")
-        self.assertTrue(str(external_compare.call_args.kwargs.get("model_ref") or "").endswith("model/minilm"))
+        self.assertEqual(tuple(Path(str(external_compare.call_args.kwargs.get("model_ref") or "")).parts[-2:]), ("model", "minilm"))
 
     def test_maybe_prewarm_semantic_compare_embedder_schedules_background_load(self) -> None:
         with _tempdir() as td:
@@ -284,7 +284,7 @@ class TestSemanticCompare(unittest.TestCase):
                 sp.maybe_prewarm_semantic_compare_embedder(hf=None, cfg=cfg)
         pool.submit.assert_called_once()
         self.assertEqual(pool.submit.call_args.args[0], sp._load_text_embedder)
-        self.assertTrue(str(pool.submit.call_args.args[1]).endswith("model/minilm"))
+        self.assertEqual(tuple(Path(str(pool.submit.call_args.args[1])).parts[-2:]), ("model", "minilm"))
 
     def test_print_config_only_includes_compare_options(self) -> None:
         out, _err = _run_main(

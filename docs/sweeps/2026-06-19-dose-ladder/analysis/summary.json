@@ -1,0 +1,278 @@
+{
+  "run_count": 1,
+  "ponder_item_count": 16,
+  "by_provider": {
+    "gemini": {
+      "ponder_items": 16,
+      "answer_chars_mean": 265.8125,
+      "diff_ratio_mean": 0.8553559568752738,
+      "query_alignment_delta_mean": 0.0622307409967972,
+      "stance_shift_mean": 0.5620039682539683,
+      "spatial_log_density_mean": 6.428167552154312,
+      "api_total_delta_mean": 1907.875,
+      "external_scaffold_tokens_mean": 403.9375,
+      "all_api_total_tokens_mean": 6101.875
+    }
+  },
+  "run_summary": {
+    "gemini": {
+      "runs": 1,
+      "elapsed_s_mean": 670.508713792,
+      "elapsed_s_min": 670.508713792,
+      "elapsed_s_max": 670.508713792
+    }
+  },
+  "condition_summary": [
+    {
+      "provider": "gemini",
+      "condition": "assoc_dose_128",
+      "answer_chars_mean": 561.0,
+      "query_alignment_delta_mean": 0.043423782519324355,
+      "api_total_delta_mean": 1556.0,
+      "stance_shift_mean": 0.38095238095238093,
+      "diff_ratio_mean": 0.9244186046511628
+    },
+    {
+      "provider": "gemini",
+      "condition": "assoc_dose_256",
+      "answer_chars_mean": 127.0,
+      "query_alignment_delta_mean": -0.02167870627001133,
+      "api_total_delta_mean": 1651.0,
+      "stance_shift_mean": 0.16666666666666666,
+      "diff_ratio_mean": 0.7952755905511811
+    },
+    {
+      "provider": "gemini",
+      "condition": "assoc_dose_512",
+      "answer_chars_mean": 150.0,
+      "query_alignment_delta_mean": 0.00626154773358319,
+      "api_total_delta_mean": 1786.0,
+      "stance_shift_mean": 0.5,
+      "diff_ratio_mean": 0.7906137184115524
+    },
+    {
+      "provider": "gemini",
+      "condition": "assoc_dose_64",
+      "answer_chars_mean": 142.0,
+      "query_alignment_delta_mean": -0.005435677219140886,
+      "api_total_delta_mean": 1506.0,
+      "stance_shift_mean": 0.5,
+      "diff_ratio_mean": 0.7472118959107807
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_128",
+      "answer_chars_mean": 138.0,
+      "query_alignment_delta_mean": 0.020415654610310422,
+      "api_total_delta_mean": 1869.0,
+      "stance_shift_mean": 0.6666666666666666,
+      "diff_ratio_mean": 0.7283018867924529
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_256",
+      "answer_chars_mean": 136.0,
+      "query_alignment_delta_mean": -0.005302612338752611,
+      "api_total_delta_mean": 2207.0,
+      "stance_shift_mean": 0.7777777777777777,
+      "diff_ratio_mean": 0.8555133079847909
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_512",
+      "answer_chars_mean": 151.0,
+      "query_alignment_delta_mean": -0.032010045869241596,
+      "api_total_delta_mean": 2875.0,
+      "stance_shift_mean": 0.5,
+      "diff_ratio_mean": 0.8776978417266187
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_64",
+      "answer_chars_mean": 143.0,
+      "query_alignment_delta_mean": 0.21710548087523382,
+      "api_total_delta_mean": 1748.0,
+      "stance_shift_mean": 0.6666666666666666,
+      "diff_ratio_mean": 0.8222222222222222
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_128",
+      "answer_chars_mean": 323.0,
+      "query_alignment_delta_mean": 0.20101466352655156,
+      "api_total_delta_mean": 2042.0,
+      "stance_shift_mean": 0.3333333333333333,
+      "diff_ratio_mean": 0.8622222222222222
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_256",
+      "answer_chars_mean": 216.0,
+      "query_alignment_delta_mean": 0.1759337169033492,
+      "api_total_delta_mean": 2373.0,
+      "stance_shift_mean": 0.6666666666666666,
+      "diff_ratio_mean": 0.8717201166180758
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_512",
+      "answer_chars_mean": 615.0,
+      "query_alignment_delta_mean": 0.13652773818575037,
+      "api_total_delta_mean": 3219.0,
+      "stance_shift_mean": 1.0,
+      "diff_ratio_mean": 0.9083557951482479
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_64",
+      "answer_chars_mean": 126.0,
+      "query_alignment_delta_mean": -0.032805477894539484,
+      "api_total_delta_mean": 1877.0,
+      "stance_shift_mean": 0.33333333333333337,
+      "diff_ratio_mean": 0.8814229249011858
+    },
+    {
+      "provider": "gemini",
+      "condition": "random_dose_128",
+      "answer_chars_mean": 396.0,
+      "query_alignment_delta_mean": 0.12795557374297684,
+      "api_total_delta_mean": 1524.0,
+      "stance_shift_mean": 0.5,
+      "diff_ratio_mean": 0.9158699808795411
+    },
+    {
+      "provider": "gemini",
+      "condition": "random_dose_256",
+      "answer_chars_mean": 404.0,
+      "query_alignment_delta_mean": 0.04027694953547526,
+      "api_total_delta_mean": 1062.0,
+      "stance_shift_mean": 1.0,
+      "diff_ratio_mean": 0.9133709981167608
+    },
+    {
+      "provider": "gemini",
+      "condition": "random_dose_512",
+      "answer_chars_mean": 413.0,
+      "query_alignment_delta_mean": 0.1375750228814786,
+      "api_total_delta_mean": 1770.0,
+      "stance_shift_mean": 0.5,
+      "diff_ratio_mean": 0.8740740740740741
+    },
+    {
+      "provider": "gemini",
+      "condition": "random_dose_64",
+      "answer_chars_mean": 212.0,
+      "query_alignment_delta_mean": -0.013565754973592522,
+      "api_total_delta_mean": 1461.0,
+      "stance_shift_mean": 0.5,
+      "diff_ratio_mean": 0.9174041297935103
+    }
+  ],
+  "dose_summary": {
+    "row_count": 20,
+    "max_dose": 512.0,
+    "conditions": [
+      "assoc",
+      "facts",
+      "isomorphic",
+      "random"
+    ],
+    "best_alignment_row": {
+      "provider": "gemini",
+      "query_id": "non_relative_not_absolute",
+      "model": "gemini-3.1-pro-preview",
+      "condition": "facts_dose_64",
+      "scaffold_condition": "facts",
+      "scaffold_dose": 64,
+      "answer_chars": 143.0,
+      "query_alignment_delta": 0.21710548087523382,
+      "diff_ratio": 0.8222222222222222,
+      "stance_shift": 0.6666666666666666,
+      "spatial_log_density": 0.0,
+      "api_total_delta": 1748.0,
+      "origin_drift": 0.5084958923448282,
+      "recurrence": 0.6362309560571165,
+      "query_relevance": 0.4673302433943016,
+      "scaffold_leakage": 0.5469299102015138,
+      "coil_index": 0.06455196558337838,
+      "attractor_class": "divergence",
+      "is_baseline_reference": false
+    },
+    "highest_origin_drift_row": {
+      "provider": "gemini",
+      "query_id": "non_relative_not_absolute",
+      "model": "gemini-3.1-pro-preview",
+      "condition": "isomorphic_dose_64",
+      "scaffold_condition": "isomorphic",
+      "scaffold_dose": 64,
+      "answer_chars": 126.0,
+      "query_alignment_delta": -0.032805477894539484,
+      "diff_ratio": 0.8814229249011858,
+      "stance_shift": 0.33333333333333337,
+      "spatial_log_density": 0.0,
+      "api_total_delta": 1877.0,
+      "origin_drift": 0.6079136690647484,
+      "recurrence": 0.541448401548134,
+      "query_relevance": 0.1661070832720442,
+      "scaffold_leakage": 0.46915883739653397,
+      "coil_index": 0.0,
+      "attractor_class": "divergence",
+      "is_baseline_reference": false
+    },
+    "by_condition": [
+      {
+        "scaffold_condition": "assoc",
+        "query_alignment_delta_mean": 0.005642736690938832,
+        "origin_drift_mean": 0.5007050450646493,
+        "recurrence_mean": 0.5634477790570861,
+        "scaffold_leakage_mean": 0.5826946399868147,
+        "coil_index_mean": 0.00205776801447291
+      },
+      {
+        "scaffold_condition": "facts",
+        "query_alignment_delta_mean": 0.05005211931938751,
+        "origin_drift_mean": 0.5234513049558462,
+        "recurrence_mean": 0.6034371533431404,
+        "scaffold_leakage_mean": 0.5416880344128999,
+        "coil_index_mean": 0.016889058151132362
+      },
+      {
+        "scaffold_condition": "isomorphic",
+        "query_alignment_delta_mean": 0.12016766018027791,
+        "origin_drift_mean": 0.49257473902478294,
+        "recurrence_mean": 0.6872489073160338,
+        "scaffold_leakage_mean": 0.5623932359170831,
+        "coil_index_mean": 0.03611030725336748
+      },
+      {
+        "scaffold_condition": "random",
+        "query_alignment_delta_mean": 0.07306044779658455,
+        "origin_drift_mean": 0.4429142151321469,
+        "recurrence_mean": 0.7159609243210006,
+        "scaffold_leakage_mean": 0.6186738108054142,
+        "coil_index_mean": 0.02035223963688021
+      }
+    ]
+  },
+  "pca": {
+    "doc_count": 17,
+    "feature_dim": 768,
+    "explained_variance_ratio": [
+      0.10284137540097864,
+      0.08935048396484685
+    ],
+    "provider_centroid_distance": null,
+    "csv": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/artifacts/sweep_20260619_dose_ladder/analysis/answer_pca.csv"
+  },
+  "charts": {
+    "runtime": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/artifacts/sweep_20260619_dose_ladder/analysis/charts/runtime_by_provider.png",
+    "alignment": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/artifacts/sweep_20260619_dose_ladder/analysis/charts/alignment_by_condition.png",
+    "token_overhead": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/artifacts/sweep_20260619_dose_ladder/analysis/charts/token_overhead_by_condition.png",
+    "answer_length": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/artifacts/sweep_20260619_dose_ladder/analysis/charts/answer_length_by_condition.png",
+    "query_alignment_delta": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/artifacts/sweep_20260619_dose_ladder/analysis/charts/dose_query_alignment_delta.png",
+    "origin_drift": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/artifacts/sweep_20260619_dose_ladder/analysis/charts/dose_origin_drift.png",
+    "scaffold_leakage": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/artifacts/sweep_20260619_dose_ladder/analysis/charts/dose_scaffold_leakage.png",
+    "coil_index": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/artifacts/sweep_20260619_dose_ladder/analysis/charts/dose_coil_index.png",
+    "answer_pca": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/artifacts/sweep_20260619_dose_ladder/analysis/charts/answer_pca_by_provider_condition.png"
+  }
+}

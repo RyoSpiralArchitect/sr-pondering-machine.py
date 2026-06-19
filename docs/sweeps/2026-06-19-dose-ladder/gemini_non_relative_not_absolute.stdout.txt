@@ -1,0 +1,278 @@
+[sr_ponder] backend=openai_compat provider=custom model='gemini-3.1-pro-preview' base_url=https://generativelanguage.googleapis.com/v1beta/openai reasoning_effort=high seed_method=auto logprobs_top_n=0 lang=ja band_profile=single bands=profile objective=random_band diversity=off hops=1 answer_style=plain control=none pipeline=assoc memory=current_only/tail/off scaffold=assoc/source write_memory=False
+
+=== PACK: baseline ===
+
+相対的と絶対的という概念は、しばしば二項対立として捉えられます。他との比較や関係性によって性質や価値が決まる相対的なあり方と、いかなる条件や外部にも依存せず、それ自体で完結して揺るぎない絶対的なあり方。この両極の間にどのような余白が存在するのか、少し思考
+
+=== PACK: assoc_dose_64 ===
+
+ふと提示されたログの「条件が変わると、同じ語でも別の手触りを持ち始める」という言葉を反芻してみる。私たちが普段「絶対」や「相対」という言葉を使うとき、そこには無意識の前提が潜んでいる。相対的とは他との比較や関係性によって価値や性質が決まることであり、絶対的とは他の何ものにも依存せず、
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->142 delta=+15 diff_ratio=0.7472
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.135283 query_base=0.030778 query_ponder=0.025342 align_delta=-0.005436
+stance[heuristic_lexicon] base=conditionalization ponder=definition shift=0.500000 gain=definition drop=framing
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
+budget[api_usage_plus_visible_estimate] ans=127->142 scaffold=322 reason=0->0 completion=77->242
+
+=== PACK: assoc_dose_128 ===
+
+夢の中で「状態」と「相対」という言葉が合図として響くとき、世界は比較という座標系を失い始めます。条件が変わるたびに同じ事物や言葉がまったく別の手触りを持ち始め、断片と断片の距離そのものが、私たちが拠り所にしていた前提の距離にすぎなかったことに気づかされます。比較する相手や基準が揺らぐことで事物は「相対的」ではなくなりますが、かといって揺るぎない実体として固定されるわけでもなく、「絶対的」なものにもなりえません。ただ、絶え間なく変容する手触りだけがそこに残る、そのような夢の展開が想像されます。
+
+この夢の論理を現実の概念に引き寄せて熟考してみると、「相対的」と「絶対的」という二項対立の枠組みそのものが適用できない領域が浮かび上がってきます。相対的であるためには「比較対象との関係性」が必要であり、絶対的であるためには「他者に依存せず、不変の自己同一性を保つこと」が必要です。したがって、非相対的でありながら非絶対的である状態とは、他との比較や関係性を持たないと同時に、固定された実体や普遍性も持たないあり方を指します。
+
+具体的には、いくつかの切り口からこの状態を捉えることができます。
+
+ひとつは、純粋な変化や生成のプロセスそのものです。絶え間なく変化しているその瞬間は、何かの結果として他と比較できる状態に落ち着
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->561 delta=+434 diff_ratio=0.9244
+records=1 unique_keywords=2 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.115674 query_base=0.032561 query_ponder=0.075985 align_delta=0.043424
+stance[heuristic_lexicon] base=conditionalization ponder=framing shift=0.380952 gain=definition drop=conditionalization
+spatial[heuristic_lexicon] ans_density=0.000->5.348 log_density=0.000 q_density=0.000 groups=none->geometry log=none
+budget[api_usage_plus_visible_estimate] ans=127->555 scaffold=381 reason=0->0 completion=77->474
+
+=== PACK: assoc_dose_256 ===
+
+夢の中で「リンゴ」という概念を分析しようと水彩画にメスを入れた途端、果肉が文字の羅列となって崩れ落ち、あとに空虚だけが残る。もしその空虚が明晰夢の合図であり、世界のハリボテの裏側を見た証であるなら、そこに広がる景色はどのような状態なのだろうかと想像してみ
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->127 delta=+0 diff_ratio=0.7953
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.047667 query_base=0.044770 query_ponder=0.023091 align_delta=-0.021679
+stance[heuristic_lexicon] base=conditionalization ponder=framing shift=0.166667 gain=framing drop=conditionalization
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=6.289 q_density=0.000 groups=none->none log=stage
+budget[api_usage_plus_visible_estimate] ans=127->127 scaffold=430 reason=0->0 completion=77->193
+
+=== PACK: assoc_dose_512 ===
+
+夢の中に浮かぶ波括弧や、値を持たない null のイメージを思い浮かべてみる。それは他との比較を持たない空っぽの空間であり、いかなる相対的な関係性からも切り離されている。しかし同時に、それは完成された不変の真理ではなく、ただ次に来るものを受け入れるための待機状態であるため、決して絶対的なものでもない
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->150 delta=+23 diff_ratio=0.7906
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.075866 query_base=0.029245 query_ponder=0.035506 align_delta=0.006262
+stance[heuristic_lexicon] base=conditionalization ponder= shift=0.500000 gain= drop=conditionalization
+spatial[heuristic_lexicon] ans_density=0.000->6.667 log_density=5.848 q_density=0.000 groups=none->geometry log=container
+budget[api_usage_plus_visible_estimate] ans=127->145 scaffold=673 reason=0->0 completion=77->174
+
+=== PACK: random_dose_64 ===
+
+駅前の雑踏の中で、ふと落ちているレシートの端だけが妙に丁寧に折られているのを見つけたり、建物の中で雨どいだけが周囲の雑多な風景から切り離されたように規則正しい形を保っていたりする。そんな光景を想像してみます。これらは、周囲の散らかった風景と比べて「より綺麗である」といった相対的な評価によって成り立っているわけではなく、それ自体として完結した秩序を持っています。しかし当然ながら、その小さな規則性が世界全体を支配する普遍的な
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->212 delta=+85 diff_ratio=0.9174
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.061800 query_base=0.035286 query_ponder=0.021720 align_delta=-0.013566
+stance[heuristic_lexicon] base=conditionalization ponder= shift=0.500000 gain= drop=conditionalization
+spatial[heuristic_lexicon] ans_density=0.000->4.717 log_density=15.625 q_density=0.000 groups=none->path log=stage
+budget[api_usage_plus_visible_estimate] ans=127->212 scaffold=137 reason=0->0 completion=77->156
+
+=== PACK: random_dose_128 ===
+
+駅前に落ちている、端だけが妙に丁寧に折られたレシートや、美術館のロビーに置き去りにされた紙コップ。そんな情景を思い浮かべてみると、それらが周囲の風景と調和するでもなく、何かと比較されるでもなく、ただそこにあることに気づきます。他との関係性という網の目からぽつんと外れているという意味では比較の土俵を降りていますが、かといって世界を統べる普遍的な法則というわけでもありません。誰も気に留めないような局所的な場所に、ただそれ自身のあり方だけで完結している奇妙な独立性が漂っています。
+
+こうした思考の寄り道を経て問いに向き合うと、「非相対的ではあるが絶対的ではない状態」とは、外部との比較や関係性に依存しない自立性を持ちながらも、普遍的・不変的・完全な存在には至っていない「局所的な自足」や「固有性」の状態であると言えます。
+
+私たちは通常、物事を他との比較で成り立つもの（相対的）か、あるいは揺
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->396 delta=+269 diff_ratio=0.9159
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.103539 query_base=0.034576 query_ponder=0.162531 align_delta=0.127956
+stance[heuristic_lexicon] base=conditionalization ponder=definition shift=0.500000 gain=definition drop=conditionalization
+spatial[heuristic_lexicon] ans_density=0.000->5.051 log_density=14.925 q_density=0.000 groups=none->path log=geometry
+budget[api_usage_plus_visible_estimate] ans=127->392 scaffold=239 reason=0->0 completion=77->271
+
+=== PACK: random_dose_256 ===
+
+他との比較や外部の基準によって定義されるわけではなく、かといって普遍的で永遠不変の真理として存在するわけでもない状態。それは、「ただその局所においてのみ、固有のルールやリズムで自律している一回性の状態」を指します。
+
+何かの目的や他との関係性（相対性）から切り離されていながら、いつでも変化し得る偶然性や移ろいやすさを孕んでいるため、世界を支配する法則（絶対性）にもなり得ません。
+
+たとえば、誰も気にとめない場所で静かにずれていく物の配置や、意味を成さないままひっそりと増えていく小さな手順、あるいはその空間だけが持つ特有の空気の進み方などがそれに当たります。それらは他と比べる尺度を持たないために相対化されず、しかし永遠の真理ではないために絶対化もされません。
+
+つまり、非相対的かつ非絶対的な状態とは、比較も永遠も拒絶したまま「いま、ここで、ただそのように在る」という、孤立した微細な固有性のことです。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->404 delta=+277 diff_ratio=0.9134
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.092877 query_base=0.032264 query_ponder=0.072541 align_delta=0.040277
+stance[heuristic_lexicon] base=conditionalization ponder=example_expansion shift=1.000000 gain=example_expansion drop=conditionalization
+spatial[heuristic_lexicon] ans_density=0.000->4.950 log_density=4.255 q_density=0.000 groups=none->geometry log=stage
+budget[api_usage_plus_visible_estimate] ans=127->398 scaffold=479 reason=0->0 completion=77->395
+
+=== PACK: random_dose_512 ===
+
+美術館のロビーに置き去りにされた紙コップや、誰も急いでいない空間で静かに位置をずらしていく水筒のふた。それらは、他の何かと比較されたり、外部の因果関係に縛られたりしてそこにあるわけではありません。その意味で、それらの存在や変化は他者に依存する「相対的」なものではありません。しかし同時に、それが世界全体を支配する不変の法則や普遍的な真理かといえば決してそうではなく、ただその片隅で起きているだけの現象にすぎません。つまり「絶対的」でもありません。
+
+この情景が示唆するように、「非相対的ではあるが絶対的ではない状態」とは、他との比較や関係性から切り離されて独立しているものの、普遍性や全体性を持たない「局所的で固有な状態」を指します。
+
+私たちはしばしば、物事を「相対的（他と比べてどうか）」か「絶対的（いかなる条件にも縛られず普遍的か）」の二項対立で捉えがちです。しかし、世界にはそのどちらにも属さない領域が確かに存在します
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->413 delta=+286 diff_ratio=0.8741
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.112714 query_base=0.034724 query_ponder=0.172299 align_delta=0.137575
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.500000 gain=definition drop=framing
+spatial[heuristic_lexicon] ans_density=0.000->2.421 log_density=9.091 q_density=24.390 groups=none->geometry log=geometry
+budget[api_usage_plus_visible_estimate] ans=127->409 scaffold=745 reason=0->0 completion=77->390
+
+=== PACK: facts_dose_64 ===
+
+「非相対的ではあるが絶対的ではない」という一見すると矛盾を孕んだような状態について考えるとき、私たちはまず「相対的」と「絶対的」という二つの概念が、必ずしも単純な裏表の関係ではないことに気づかされます。
+
+相対的とは、他との比較や関係性において自らの位置づけや性質が決定される状態です。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->143 delta=+16 diff_ratio=0.8222
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.109213 query_base=0.032903 query_ponder=0.250008 align_delta=0.217105
+stance[heuristic_lexicon] base=conditionalization ponder=definition shift=0.666667 gain=definition drop=conditionalization
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
+budget[api_usage_plus_visible_estimate] ans=127->141 scaffold=172 reason=0->0 completion=77->132
+
+=== PACK: facts_dose_128 ===
+
+物事の性質を考える際、私たちはしばしば相対的と絶対的という二項対立に当てはめようとします。しかし、言葉の定義とそれが適用される範囲を分けて捉え、どの水準の主張かを整理すると、両者の間には別の次元が存在することに気づきます。他との比較によって決まるわけではないという意味で非相対
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->138 delta=+11 diff_ratio=0.7283
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.148826 query_base=0.030227 query_ponder=0.050642 align_delta=0.020416
+stance[heuristic_lexicon] base=conditionalization ponder=definition shift=0.666667 gain=definition drop=framing
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
+budget[api_usage_plus_visible_estimate] ans=127->138 scaffold=193 reason=0->0 completion=77->132
+
+=== PACK: facts_dose_256 ===
+
+」「回答：」のような見出しは一切入れない。ログの直接的な引用（「ログによれば〜」など）も避ける（軽く参照する程度に留める）。
+   - 文章の流れを滑らかにする。
+
+   （段落1：言葉の定義の分解）
+   「相対的」とは、他との比較や関係性、あるいは特定の枠組みによって
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->136 delta=+9 diff_ratio=0.8555
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.086260 query_base=0.031981 query_ponder=0.026678 align_delta=-0.005303
+stance[heuristic_lexicon] base=conditionalization ponder=definition shift=0.777778 gain=definition drop=conditionalization
+spatial[heuristic_lexicon] ans_density=0.000->7.353 log_density=17.857 q_density=26.316 groups=none->container log=geometry
+budget[api_usage_plus_visible_estimate] ans=127->122 scaffold=336 reason=0->0 completion=77->144
+
+=== PACK: facts_dose_512 ===
+
+の後にくる最終出力が「回答」とされる。
+もしプロンプトが「回答本文に熟考の過程を含めて出力して」という意味であれば、地の文に書く必要があるが、「寄り道して熟考（ponder）したあと、最後に質問へ答えてください。出力は回答本文のみ」とあるので、思考プロセスは `<think>` に入れ、最終出力は綺麗
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->151 delta=+24 diff_ratio=0.8777
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.029494 query_base=0.043676 query_ponder=0.011666 align_delta=-0.032010
+stance[heuristic_lexicon] base=conditionalization ponder=definition shift=0.500000 gain=definition drop=framing
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=2.907 q_density=0.000 groups=none->none log=geometry
+budget[api_usage_plus_visible_estimate] ans=127->139 scaffold=851 reason=0->0 completion=77->334
+
+=== PACK: isomorphic_dose_64 ===
+
+温室のガラス越しに差し込む光について考えてみる。そこでは光がほんの少し遅れて届き、外の世界が持つ意味や文脈は剥落し、ただ光と影の配置だけが静かに反復されている。この温室という閉鎖空間は、外の気温や風雨といった外部環境との比較から切り離された、独自の微気
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->126 delta=-1 diff_ratio=0.8814
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.034612 query_base=0.043646 query_ponder=0.010841 align_delta=-0.032805
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.333333 gain=conditionalization drop=framing
+spatial[heuristic_lexicon] ans_density=0.000->7.937 log_density=0.000 q_density=0.000 groups=none->geometry log=none
+budget[api_usage_plus_visible_estimate] ans=127->126 scaffold=117 reason=0->0 completion=77->127
+
+=== PACK: isomorphic_dose_128 ===
+
+温室という人工的な閉鎖空間について少し想像を巡らせてみる。そこでは外部の気候や季節の変化から切り離され、独自の環境が保たれている。その空間の性質は、外の世界と比べることによって決まるわけではないため、相対的ではない。しかし、光が少し遅れて届くように、究極的には外部の光源やより大きなシステムに依存して成り立っている。意味を伴わず、ただ配置だけが反復されるその光景は、他との比較を絶していながらも、決して普遍的で揺るぎないものではない。
+
+このような思考を経由して本題に向き合うと、非相対的ではあるが絶対的ではない状態とは、他との比較や関係性によって価値や性質が決まるわけではないが、かといって無条件に自立した普遍的な存在でもない「局所的な完結」や
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->323 delta=+196 diff_ratio=0.8622
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.130426 query_base=0.035998 query_ponder=0.237013 align_delta=0.201015
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.333333 gain=definition drop=framing
+spatial[heuristic_lexicon] ans_density=0.000->6.192 log_density=13.514 q_density=0.000 groups=none->geometry log=geometry
+budget[api_usage_plus_visible_estimate] ans=127->321 scaffold=225 reason=0->0 completion=77->244
+
+=== PACK: isomorphic_dose_256 ===
+
+温室のガラスを透過する光がわずかに遅れ、意味や文脈を剥奪された配置だけがただ反復される情景について思いを巡らせてみる。そこには、外部との比較や関係性によって成り立つ「相対性」は存在しない。しかし同時に、それが永遠不変の真理や揺るぎない実体として君臨しているわけでもなく、ただそのように生じているだけの現象にすぎないため「絶対性」も帯びていない。
+
+この情景が示唆するように、「非相対的ではあるが絶対的ではない状態」とは、他との比較や
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->216 delta=+89 diff_ratio=0.8717
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.117118 query_base=0.034337 query_ponder=0.210270 align_delta=0.175934
+stance[heuristic_lexicon] base=conditionalization ponder=definition shift=0.666667 gain=definition drop=framing
+spatial[heuristic_lexicon] ans_density=0.000->0.000 log_density=0.000 q_density=0.000 groups=none->none log=none
+budget[api_usage_plus_visible_estimate] ans=127->214 scaffold=328 reason=0->0 completion=77->195
+
+=== PACK: isomorphic_dose_512 ===
+
+糸がプツリと切れ、風景がキャンバスの裏側のように意味を失うとき、そこには他者との関係性から切り離された空間の抜け殻が残ります。温室のなかで光が少し遅れて届き、意味を持たない配置だけが延々と反復される光景を想像すると、それは外の世界と比べることのできない閉じた営みでありながら、決して揺るぎない普遍の真理というわけでもありません。ただ、そこに孤立して存在しているだけの現象です。
+
+この情景を手がかりにすると、「非相対的ではあるが絶対的ではない状態」とは、他との比較や関係性を絶たれているために相対化されないものの、自らを普遍的・不変的な真理として基礎づける根拠も持たない、ただ孤立してそこにあるだけの状態であると言えます。
+
+具体的には、個人の純粋な主観的感覚（クオリア）や、外部との接続を絶たれた局所的な閉鎖空間がこれに該当します。たとえば「私が今感じているこの痛み」や「私だけに見えている風景」は、他者の感覚と比較して価値や度合いが決まるものではないため、非相対的です。しかし、それが世界の客観的な真理や揺るぎない法則であるわけではないため、絶対的でもありません。
+
+他者との結びつきという相対的な意味を失い、ただ自分という温室のなかで感覚という配置だけが繰り返されているような状態。他と比べようがないほど固有であるがゆえに非相対的であり、同時にどこにも普遍的な根拠を持たないがゆえに非絶対的であるような、孤立した無根拠な固有
+
+=== COMPARISON ===
+
+answers_changed=yes chars=127->615 delta=+488 diff_ratio=0.9084
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.116820 query_base=0.035413 query_ponder=0.171941 align_delta=0.136528
+stance[heuristic_lexicon] base=conditionalization ponder=example_expansion shift=1.000000 gain=example_expansion drop=conditionalization
+spatial[heuristic_lexicon] ans_density=0.000->3.252 log_density=12.539 q_density=27.778 groups=none->geometry log=geometry
+budget[api_usage_plus_visible_estimate] ans=127->609 scaffold=835 reason=0->0 completion=77->611
+
+=== PACK SUMMARY ===
+
+name                 kind      control  chars  records  elapsed_s
+-------------------  --------  -------  -----  -------  ------------------
+baseline             baseline           127             24.691560707999997
+assoc_dose_64        ponder    none     142    1        38.48850245799986
+assoc_dose_128       ponder    none     561    1        36.83563824999965
+assoc_dose_256       ponder    none     127    1        36.59736304099988
+assoc_dose_512       ponder    none     150    1        37.04645908400016
+random_dose_64       ponder    none     212    1        36.745748000000276
+random_dose_128      ponder    none     396    1        32.29928937499972
+random_dose_256      ponder    none     404    1        31.827312207999967
+random_dose_512      ponder    none     413    1        37.87336587499976
+facts_dose_64        ponder    none     143    1        42.60970270799953
+facts_dose_128       ponder    none     138    1        40.814233375000185
+facts_dose_256       ponder    none     136    1        43.851893166999616
+facts_dose_512       ponder    none     151    1        50.746208667000246
+isomorphic_dose_64   ponder    none     126    1        41.46407654199993
+isomorphic_dose_128  ponder    none     323    1        41.37231474999953
+isomorphic_dose_256  ponder    none     216    1        44.83989416700024
+isomorphic_dose_512  ponder    none     615    1        46.520507582999926
+
+[json_out] wrote artifacts/sweep_20260619_dose_ladder/gemini_non_relative_not_absolute.json
+
+[matrix_report_out] wrote artifacts/sweep_20260619_dose_ladder/gemini_non_relative_not_absolute.matrix.html
+
+[trace_report_out] wrote artifacts/sweep_20260619_dose_ladder/gemini_non_relative_not_absolute.trace.html
