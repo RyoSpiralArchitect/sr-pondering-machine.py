@@ -339,6 +339,25 @@ class TestReasoningCompare(unittest.TestCase):
         facts_spec = dict(items[3][1])
         self.assertEqual((((facts_spec.get("cfg") or {}).get("scaffold_token_target"))), 400)
 
+    def test_output_contract_prompt_markers(self) -> None:
+        answer_prompt = sp.build_prompt_for_answer(
+            "q",
+            memory_block="ponder",
+            lang="ja",
+            output_contract="final_closure",
+        )
+        self.assertIn("END_ANSWER", answer_prompt)
+        self.assertIn("最後の行", answer_prompt)
+
+        log_prompt = sp.build_prompt_for_pondering(
+            "q",
+            mode="assoc",
+            lang="en",
+            output_contract="log_closure",
+        )
+        self.assertIn("END_LOG", log_prompt)
+        self.assertIn("Only the final line", log_prompt)
+
     def test_build_token_budget_compare_tracks_scaffold_and_reasoning(self) -> None:
         hf = SimpleNamespace(tokenizer=None)
         records = [

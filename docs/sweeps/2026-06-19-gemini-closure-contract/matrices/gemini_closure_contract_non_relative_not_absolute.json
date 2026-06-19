@@ -1,0 +1,183 @@
+{
+  "name": "gemini_closure_contract_non_relative_not_absolute",
+  "description": "Output-closure contract x scaffold condition x injected-token dose. Baseline is shared and has no output contract.",
+  "include_baseline": true,
+  "items": [
+    {
+      "name": "facts_dose_128_none",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 128,
+        "output_contract": "none"
+      }
+    },
+    {
+      "name": "facts_dose_128_final_closure",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 128,
+        "output_contract": "final_closure"
+      }
+    },
+    {
+      "name": "facts_dose_128_log_closure",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 128,
+        "output_contract": "log_closure"
+      }
+    },
+    {
+      "name": "facts_dose_128_log_final_closure",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 128,
+        "output_contract": "log_final_closure"
+      }
+    },
+    {
+      "name": "facts_dose_512_none",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 512,
+        "output_contract": "none"
+      }
+    },
+    {
+      "name": "facts_dose_512_final_closure",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 512,
+        "output_contract": "final_closure"
+      }
+    },
+    {
+      "name": "facts_dose_512_log_closure",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 512,
+        "output_contract": "log_closure"
+      }
+    },
+    {
+      "name": "facts_dose_512_log_final_closure",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 512,
+        "output_contract": "log_final_closure"
+      }
+    },
+    {
+      "name": "isomorphic_dose_128_none",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 128,
+        "output_contract": "none"
+      }
+    },
+    {
+      "name": "isomorphic_dose_128_final_closure",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 128,
+        "output_contract": "final_closure"
+      }
+    },
+    {
+      "name": "isomorphic_dose_128_log_closure",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 128,
+        "output_contract": "log_closure"
+      }
+    },
+    {
+      "name": "isomorphic_dose_128_log_final_closure",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 128,
+        "output_contract": "log_final_closure"
+      }
+    },
+    {
+      "name": "isomorphic_dose_512_none",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 512,
+        "output_contract": "none"
+      }
+    },
+    {
+      "name": "isomorphic_dose_512_final_closure",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 512,
+        "output_contract": "final_closure"
+      }
+    },
+    {
+      "name": "isomorphic_dose_512_log_closure",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 512,
+        "output_contract": "log_closure"
+      }
+    },
+    {
+      "name": "isomorphic_dose_512_log_final_closure",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 512,
+        "output_contract": "log_final_closure"
+      }
+    }
+  ]
+}

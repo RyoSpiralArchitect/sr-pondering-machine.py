@@ -1,0 +1,313 @@
+{
+  "run_count": 1,
+  "ponder_item_count": 16,
+  "by_provider": {
+    "gemini": {
+      "ponder_items": 16,
+      "answer_chars_mean": 366.25,
+      "diff_ratio_mean": 0.8710762158545262,
+      "query_alignment_delta_mean": 0.09529753562603763,
+      "stance_shift_mean": 0.34347267316017316,
+      "spatial_log_density_mean": 12.078464742262012,
+      "api_total_delta_mean": 2344.9375,
+      "external_scaffold_tokens_mean": 421.9375,
+      "all_api_total_tokens_mean": 6538.9375
+    }
+  },
+  "run_summary": {
+    "gemini": {
+      "runs": 1,
+      "elapsed_s_mean": 714.2611743750003,
+      "elapsed_s_min": 714.2611743750003,
+      "elapsed_s_max": 714.2611743750003
+    }
+  },
+  "condition_summary": [
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_128_final_closure",
+      "answer_chars_mean": 329.0,
+      "query_alignment_delta_mean": 0.00778357825787887,
+      "api_total_delta_mean": 1289.0,
+      "stance_shift_mean": 0.5,
+      "diff_ratio_mean": 0.8933333333333333
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_128_log_closure",
+      "answer_chars_mean": 138.0,
+      "query_alignment_delta_mean": 0.010255023372731348,
+      "api_total_delta_mean": 1914.0,
+      "stance_shift_mean": 0.3571428571428571,
+      "diff_ratio_mean": 0.6138996138996139
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_128_log_final_closure",
+      "answer_chars_mean": 406.0,
+      "query_alignment_delta_mean": 0.1597650070917883,
+      "api_total_delta_mean": 1661.0,
+      "stance_shift_mean": 0.24675324675324675,
+      "diff_ratio_mean": 0.905123339658444
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_128_none",
+      "answer_chars_mean": 148.0,
+      "query_alignment_delta_mean": 0.27541648795188045,
+      "api_total_delta_mean": 1868.0,
+      "stance_shift_mean": 0.38095238095238093,
+      "diff_ratio_mean": 0.7546468401486989
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_512_final_closure",
+      "answer_chars_mean": 445.0,
+      "query_alignment_delta_mean": 0.08444718273274557,
+      "api_total_delta_mean": 2656.0,
+      "stance_shift_mean": 0.5238095238095237,
+      "diff_ratio_mean": 0.9752650176678446
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_512_log_closure",
+      "answer_chars_mean": 180.0,
+      "query_alignment_delta_mean": 0.07533489344758082,
+      "api_total_delta_mean": 2924.0,
+      "stance_shift_mean": 0.42857142857142855,
+      "diff_ratio_mean": 0.7209302325581395
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_512_log_final_closure",
+      "answer_chars_mean": 140.0,
+      "query_alignment_delta_mean": 0.005070191428148123,
+      "api_total_delta_mean": 3015.0,
+      "stance_shift_mean": 0.19047619047619047,
+      "diff_ratio_mean": 0.8544061302681992
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_512_none",
+      "answer_chars_mean": 489.0,
+      "query_alignment_delta_mean": 0.14690582177658068,
+      "api_total_delta_mean": 2878.0,
+      "stance_shift_mean": 0.16190476190476188,
+      "diff_ratio_mean": 0.9081967213114754
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_128_final_closure",
+      "answer_chars_mean": 442.0,
+      "query_alignment_delta_mean": 0.1028050652409486,
+      "api_total_delta_mean": 1809.0,
+      "stance_shift_mean": 0.35714285714285715,
+      "diff_ratio_mean": 0.9147424511545293
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_128_log_closure",
+      "answer_chars_mean": 652.0,
+      "query_alignment_delta_mean": 0.16353966453411836,
+      "api_total_delta_mean": 2032.0,
+      "stance_shift_mean": 0.19047619047619044,
+      "diff_ratio_mean": 0.9275549805950841
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_128_log_final_closure",
+      "answer_chars_mean": 509.0,
+      "query_alignment_delta_mean": 0.12354366021794669,
+      "api_total_delta_mean": 1847.0,
+      "stance_shift_mean": 0.2857142857142857,
+      "diff_ratio_mean": 0.9111111111111111
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_128_none",
+      "answer_chars_mean": 231.0,
+      "query_alignment_delta_mean": 0.03642989226461289,
+      "api_total_delta_mean": 2026.0,
+      "stance_shift_mean": 0.22857142857142856,
+      "diff_ratio_mean": 0.8693181818181819
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_512_final_closure",
+      "answer_chars_mean": 481.0,
+      "query_alignment_delta_mean": 0.048316009258337386,
+      "api_total_delta_mean": 2791.0,
+      "stance_shift_mean": 0.2571428571428571,
+      "diff_ratio_mean": 0.9534883720930233
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_512_log_closure",
+      "answer_chars_mean": 623.0,
+      "query_alignment_delta_mean": 0.1443423985169226,
+      "api_total_delta_mean": 3133.0,
+      "stance_shift_mean": 0.4821428571428571,
+      "diff_ratio_mean": 0.8897849462365591
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_512_log_final_closure",
+      "answer_chars_mean": 504.0,
+      "query_alignment_delta_mean": 0.0944169902410338,
+      "api_total_delta_mean": 2623.0,
+      "stance_shift_mean": 0.19047619047619047,
+      "diff_ratio_mean": 0.9136
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_512_none",
+      "answer_chars_mean": 143.0,
+      "query_alignment_delta_mean": 0.04638870368334747,
+      "api_total_delta_mean": 3053.0,
+      "stance_shift_mean": 0.7142857142857143,
+      "diff_ratio_mean": 0.9318181818181819
+    }
+  ],
+  "dose_summary": {
+    "row_count": 24,
+    "max_dose": 512.0,
+    "conditions": [
+      "facts",
+      "isomorphic"
+    ],
+    "best_alignment_row": {
+      "provider": "gemini",
+      "query_id": "non_relative_not_absolute",
+      "model": "gemini-3.1-pro-preview",
+      "condition": "facts_dose_128_none",
+      "scaffold_condition": "facts",
+      "scaffold_dose": 128,
+      "output_contract": "none",
+      "answer_chars": 148.0,
+      "query_alignment_delta": 0.27541648795188045,
+      "diff_ratio": 0.7546468401486989,
+      "stance_shift": 0.38095238095238093,
+      "spatial_log_density": 2.785515320334262,
+      "api_total_delta": 1868.0,
+      "origin_drift": 0.4808343192762916,
+      "recurrence": 0.5191656807237084,
+      "query_relevance": 0.4807628249186219,
+      "scaffold_leakage": 0.5994263608152666,
+      "coil_index": 0.06874273234129753,
+      "attractor_class": "divergence",
+      "is_baseline_reference": false
+    },
+    "highest_origin_drift_row": {
+      "provider": "gemini",
+      "query_id": "non_relative_not_absolute",
+      "model": "gemini-3.1-pro-preview",
+      "condition": "facts_dose_512_log_final_closure",
+      "scaffold_condition": "facts",
+      "scaffold_dose": 512,
+      "output_contract": "log_final_closure",
+      "answer_chars": 140.0,
+      "query_alignment_delta": 0.005070191428148123,
+      "diff_ratio": 0.8544061302681992,
+      "stance_shift": 0.19047619047619047,
+      "spatial_log_density": 20.0,
+      "api_total_delta": 3015.0,
+      "origin_drift": 0.6160427861123784,
+      "recurrence": 0.6446302523791043,
+      "query_relevance": 0.18805644455175835,
+      "scaffold_leakage": 0.519891447774267,
+      "coil_index": 0.0006146434539323504,
+      "attractor_class": "divergence",
+      "is_baseline_reference": false
+    },
+    "by_condition": [
+      {
+        "scaffold_condition": "facts",
+        "query_alignment_delta_mean": 0.09562227325741676,
+        "origin_drift_mean": 0.4902039321415388,
+        "recurrence_mean": 0.6306808057798757,
+        "scaffold_leakage_mean": 0.5931279934635714,
+        "coil_index_mean": 0.022622870776739926
+      },
+      {
+        "scaffold_condition": "isomorphic",
+        "query_alignment_delta_mean": 0.09497279799465848,
+        "origin_drift_mean": 0.4785619012115574,
+        "recurrence_mean": 0.7569125831358617,
+        "scaffold_leakage_mean": 0.5782458666266354,
+        "coil_index_mean": 0.025079488760103553
+      }
+    ]
+  },
+  "closure_summary": {
+    "row_count": 16,
+    "contracts": [
+      "none",
+      "final_closure",
+      "log_closure",
+      "log_final_closure"
+    ],
+    "by_contract": [
+      {
+        "output_contract": "final_closure",
+        "rows": 4,
+        "answer_chars_mean": 424.25,
+        "final_finish_length_rate": 0.0,
+        "final_marker_last_rate": 1.0,
+        "log_marker_rate": 0.0,
+        "prompt_leakage_rate": 0.0
+      },
+      {
+        "output_contract": "log_closure",
+        "rows": 4,
+        "answer_chars_mean": 398.25,
+        "final_finish_length_rate": 1.0,
+        "final_marker_last_rate": 0.0,
+        "log_marker_rate": 0.25,
+        "prompt_leakage_rate": 0.0
+      },
+      {
+        "output_contract": "log_final_closure",
+        "rows": 4,
+        "answer_chars_mean": 389.75,
+        "final_finish_length_rate": 0.5,
+        "final_marker_last_rate": 0.75,
+        "log_marker_rate": 0.0,
+        "prompt_leakage_rate": 0.0
+      },
+      {
+        "output_contract": "none",
+        "rows": 4,
+        "answer_chars_mean": 252.75,
+        "final_finish_length_rate": 1.0,
+        "final_marker_last_rate": 0.0,
+        "log_marker_rate": 0.0,
+        "prompt_leakage_rate": 0.0
+      }
+    ]
+  },
+  "pca": {
+    "doc_count": 17,
+    "feature_dim": 768,
+    "explained_variance_ratio": [
+      0.14179052661884892,
+      0.09998995115991179
+    ],
+    "provider_centroid_distance": null,
+    "csv": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/answer_pca.csv"
+  },
+  "charts": {
+    "runtime": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/runtime_by_provider.png",
+    "alignment": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/alignment_by_condition.png",
+    "token_overhead": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/token_overhead_by_condition.png",
+    "answer_length": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/answer_length_by_condition.png",
+    "query_alignment_delta": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/dose_query_alignment_delta.png",
+    "origin_drift": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/dose_origin_drift.png",
+    "scaffold_leakage": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/dose_scaffold_leakage.png",
+    "coil_index": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/dose_coil_index.png",
+    "final_finish_is_length": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/closure_final_finish_length_rate.png",
+    "final_marker_is_last_line": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/closure_final_marker_rate.png",
+    "ponder_log_marker_rate": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/closure_log_marker_rate.png",
+    "answer_chars": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/closure_answer_chars.png",
+    "answer_pca": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-19-gemini-closure-contract/analysis/charts/answer_pca_by_provider_condition.png"
+  }
+}

@@ -333,6 +333,7 @@ def sanitize_cfg_dict(d: Dict[str, Any]) -> Dict[str, Any]:
 
 _CONTROL_VARIANTS = ("none", "no_inject", "random_log", "random_keywords", "lens_only")
 _SCAFFOLD_CONDITIONS = ("assoc", "random", "facts", "isomorphic")
+_OUTPUT_CONTRACTS = ("none", "final_closure", "log_closure", "log_final_closure")
 
 
 def load_pack_file(path: Path) -> Tuple[str, List[Tuple[str, Dict[str, Any]]]]:
@@ -1724,6 +1725,33 @@ def _normalize_scaffold_condition_name(condition: str) -> str:
     return c
 
 
+def _normalize_output_contract_name(contract: str) -> str:
+    c = str(contract or "none").strip().lower().replace("-", "_")
+    aliases = {
+        "": "none",
+        "off": "none",
+        "default": "none",
+        "final": "final_closure",
+        "answer": "final_closure",
+        "log": "log_closure",
+        "ponder": "log_closure",
+        "both": "log_final_closure",
+        "closure": "log_final_closure",
+    }
+    c = aliases.get(c, c)
+    if c not in _OUTPUT_CONTRACTS:
+        raise ValueError(f"Unknown output_contract: {contract!r}")
+    return c
+
+
+def _output_contract_has_final(contract: str) -> bool:
+    return _normalize_output_contract_name(contract) in ("final_closure", "log_final_closure")
+
+
+def _output_contract_has_log(contract: str) -> bool:
+    return _normalize_output_contract_name(contract) in ("log_closure", "log_final_closure")
+
+
 def _build_random_scaffold_local(*, lang: str, seed: int, n_lines: int = 12) -> str:
     rng = random.Random(int(seed) + 17017)
     out: List[str] = []
@@ -2140,11 +2168,61 @@ def _answer_style_guidance(style: str, *, lang: str) -> str:
     raise ValueError(f"Unknown answer_style: {style!r}")
 
 
-def build_prompt_for_answer(query: str, memory_block: Optional[str], *, lang: str, style: str = "plain") -> str:
+def _answer_output_contract_guidance(contract: str, *, lang: str) -> str:
+    if not _output_contract_has_final(contract):
+        return ""
+    if lang == "ja":
+        return (
+            "\n追加の出力契約:\n"
+            "- 600字以内で必ず完結させる\n"
+            "- 見出しは不要だが、内容は結論・条件・例・限界の順に短く置く\n"
+            "- 途中で終わりそうなら細部を捨てて最後の文を閉じる\n"
+            "- Ponder Logやプロンプト文を直接引用しない\n"
+            "- 最後の行に END_ANSWER とだけ書く\n"
+        )
+    return (
+        "\nAdditional output contract:\n"
+        "- Complete the answer within 220 words.\n"
+        "- Do not use headings, but cover conclusion, conditions, example, and limits in that order.\n"
+        "- If space is tight, drop detail and close the final sentence.\n"
+        "- Do not quote the Ponder Log or prompt instructions directly.\n"
+        "- The final line must contain only END_ANSWER.\n"
+    )
+
+
+def _ponder_output_contract_guidance(contract: str, *, lang: str) -> str:
+    if not _output_contract_has_log(contract):
+        return ""
+    if lang == "ja":
+        return (
+            "\n追加のログ契約:\n"
+            "- 4〜6行だけ\n"
+            "- 各行は40字以内\n"
+            "- 文を途中で切らない\n"
+            "- 最後の行だけは - を付けず END_LOG とだけ書く\n"
+        )
+    return (
+        "\nAdditional log contract:\n"
+        "- Use only 4 to 6 lines.\n"
+        "- Keep each line under 12 words.\n"
+        "- Do not cut off mid-sentence.\n"
+        "- Only the final line omits the bullet and contains END_LOG.\n"
+    )
+
+
+def build_prompt_for_answer(
+    query: str,
+    memory_block: Optional[str],
+    *,
+    lang: str,
+    style: str = "plain",
+    output_contract: str = "none",
+) -> str:
     style_note = _answer_style_guidance(style, lang=lang).strip()
     prefix = f"{default_system_text(lang)}\n\n"
     if style_note:
         prefix += style_note + "\n\n"
+    contract_note = _answer_output_contract_guidance(output_contract, lang=lang)
     if memory_block:
         if lang == "ja":
             return (
@@ -2157,6 +2235,7 @@ def build_prompt_for_answer(query: str, memory_block: Optional[str], *, lang: st
                 + "本題の質問:\n"
                 + f"{query}\n\n"
                 + "出力は回答本文のみ（見出しや引用は不要）。\n"
+                + contract_note
             )
         return (
             prefix
@@ -2168,6 +2247,7 @@ def build_prompt_for_answer(query: str, memory_block: Optional[str], *, lang: st
             + "Actual Question:\n"
             + f"{query}\n\n"
             + "Write only the answer in your output (headings and quotes are not needed).\n"
+            + contract_note
         )
     if lang == "ja":
         return (
@@ -2175,12 +2255,14 @@ def build_prompt_for_answer(query: str, memory_block: Optional[str], *, lang: st
             + "本題の質問:\n"
             + f"{query}\n\n"
             + "出力は回答本文のみ（見出しや引用は不要）。\n"
+            + contract_note
         )
     return (
         prefix
         + "Actual Question:\n"
         + f"{query}\n\n"
         + "Write only the answer in your output (headings and quotes are not needed).\n"
+        + contract_note
     )
 
 
@@ -2250,8 +2332,21 @@ def build_prompt_for_quality_judge(query: str, answer_a: str, answer_b: str, *, 
     )
 
 
-def build_prompt_for_visible_answer_rescue(query: str, memory_block: Optional[str], *, lang: str, style: str = "plain") -> str:
-    base = build_prompt_for_answer(query, memory_block, lang=lang, style=style).rstrip()
+def build_prompt_for_visible_answer_rescue(
+    query: str,
+    memory_block: Optional[str],
+    *,
+    lang: str,
+    style: str = "plain",
+    output_contract: str = "none",
+) -> str:
+    base = build_prompt_for_answer(
+        query,
+        memory_block,
+        lang=lang,
+        style=style,
+        output_contract=output_contract,
+    ).rstrip()
     if lang == "ja":
         return (
             base
@@ -2271,7 +2366,14 @@ def build_prompt_for_visible_answer_rescue(query: str, memory_block: Optional[st
     )
 
 
-def build_prompt_for_pondering(ponder_q: str, *, mode: str, lang: str, context: Optional[str] = None) -> str:
+def build_prompt_for_pondering(
+    ponder_q: str,
+    *,
+    mode: str,
+    lang: str,
+    context: Optional[str] = None,
+    output_contract: str = "none",
+) -> str:
     context = (context or "").strip()
     if lang == "ja":
         if mode == "assoc":
@@ -2314,6 +2416,7 @@ def build_prompt_for_pondering(ponder_q: str, *, mode: str, lang: str, context: 
             )
         else:
             raise ValueError(f"Unknown ponder_mode: {mode!r}")
+        body += _ponder_output_contract_guidance(output_contract, lang=lang)
         if context:
             return (
                 "参考（直前のログ。結論ではない）：\n"
@@ -2369,6 +2472,7 @@ def build_prompt_for_pondering(ponder_q: str, *, mode: str, lang: str, context: 
     else:
         raise ValueError(f"Unknown ponder_mode: {mode!r}")
 
+    body += _ponder_output_contract_guidance(output_contract, lang=lang)
     if context:
         return (
             "Context from the previous stage (not a conclusion):\n"
@@ -5769,6 +5873,7 @@ class RunConfig:
     compare_embed_model: str = ""
     scaffold_condition: str = "assoc"  # assoc|random|facts|isomorphic
     scaffold_token_target: int = 0
+    output_contract: str = "none"  # none|final_closure|log_closure|log_final_closure
     print_probe: bool = False
     interactive: bool = False
     interactive_candidates: int = 48
@@ -6284,6 +6389,7 @@ def _maybe_rescue_empty_api_final_answer(
             memory_block=rescue_block or None,
             lang=str(getattr(cfg, "prompt_lang", "en") or "en"),
             style=str(getattr(cfg, "answer_style", "plain") or "plain"),
+            output_contract=str(getattr(cfg, "output_contract", "none") or "none"),
         ),
         system_text=None,
     )
@@ -6361,7 +6467,13 @@ def run_baseline(
 ) -> str:
     t0 = time.perf_counter()
     prompt = hf._apply_chat(
-        build_prompt_for_answer(query, memory_block=None, lang=cfg.prompt_lang, style=cfg.answer_style),
+        build_prompt_for_answer(
+            query,
+            memory_block=None,
+            lang=cfg.prompt_lang,
+            style=cfg.answer_style,
+            output_contract=cfg.output_contract,
+        ),
         system_text=None,
     )
     if _is_api_generation_model(hf):
@@ -6822,7 +6934,13 @@ def run_ponder(
 
     t_probe0 = time.perf_counter()
     base_prompt = hf._apply_chat(
-        build_prompt_for_answer(query, memory_block=None, lang=lang, style=cfg.answer_style),
+        build_prompt_for_answer(
+            query,
+            memory_block=None,
+            lang=lang,
+            style=cfg.answer_style,
+            output_contract=cfg.output_contract,
+        ),
         system_text=None,
     )
     logits = hf.next_token_logits(base_prompt)
@@ -6922,7 +7040,13 @@ def run_ponder(
         )
         for jq in jitter_queries:
             jp = hf._apply_chat(
-                build_prompt_for_answer(jq, memory_block=None, lang=lang, style=cfg.answer_style),
+                build_prompt_for_answer(
+                    jq,
+                    memory_block=None,
+                    lang=lang,
+                    style=cfg.answer_style,
+                    output_contract=cfg.output_contract,
+                ),
                 system_text=None,
             )
             jitter_logits.append(hf.next_token_logits(jp))
@@ -7149,7 +7273,13 @@ def run_ponder(
                         ctx_text = ctx_text[-int(cfg.pipeline_context_max_chars) :]
 
                     ponder_prompt = hf._apply_chat(
-                        build_prompt_for_pondering(ponder_q, mode=stage_mode, lang=lang, context=ctx_text),
+                        build_prompt_for_pondering(
+                            ponder_q,
+                            mode=stage_mode,
+                            lang=lang,
+                            context=ctx_text,
+                            output_contract=cfg.output_contract,
+                        ),
                         system_text=None,
                     )
                     t_gen0 = time.perf_counter()
@@ -7176,6 +7306,7 @@ def run_ponder(
                             hop_ix=int(hop_ix),
                             stage_ix=int(stage_ix),
                             mode=stage_mode,
+                            output_contract=cfg.output_contract,
                             elapsed_s=gen_s,
                             text_chars=len(ponder_log or ""),
                             text_preview=trace.preview(ponder_log),
@@ -7205,6 +7336,7 @@ def run_ponder(
                         "pipeline": pipeline,
                         "pipeline_stage_ix": stage_ix,
                         "pipeline_context": pipeline_ctx,
+                        "output_contract": cfg.output_contract,
                         "ponder_ix": log_ix,
                         "ponder_mode": stage_mode,
                         "keywords_source": hop_keywords_source,
@@ -7230,7 +7362,13 @@ def run_ponder(
                         compare_top_n = max(1, int(cfg.probe_compare_top_n))
                         stage_memory_block = build_memory_block(records, max_chars_per_log=700) if records else None
                         stage_prompt = hf._apply_chat(
-                            build_prompt_for_answer(query, memory_block=stage_memory_block, lang=lang, style=cfg.answer_style),
+                            build_prompt_for_answer(
+                                query,
+                                memory_block=stage_memory_block,
+                                lang=lang,
+                                style=cfg.answer_style,
+                                output_contract=cfg.output_contract,
+                            ),
                             system_text=None,
                         )
                         stage_logits = hf.next_token_logits(stage_prompt)
@@ -7369,7 +7507,10 @@ def run_ponder(
         rand_kw = decode_keyword_tokens(hf.tokenizer, rand_ids)
         q_rng = random.Random(int(cfg.seed) + 424243)
         rand_q = make_unrelated_question(rand_kw, lang=lang, rng=q_rng)
-        rp = hf._apply_chat(build_prompt_for_pondering(rand_q, mode="assoc", lang=lang), system_text=None)
+        rp = hf._apply_chat(
+            build_prompt_for_pondering(rand_q, mode="assoc", lang=lang, output_contract=cfg.output_contract),
+            system_text=None,
+        )
         random_log_text = hf.generate_text(
             rp,
             max_new_tokens=int(cfg.ponder_max_new_tokens),
@@ -7402,7 +7543,13 @@ def run_ponder(
                 seed=int(cfg.seed) + 9000 + stable_hash_mod(bl, 1000),
             )
             fp = hf._apply_chat(
-                build_prompt_for_answer(query, memory_block=band_mem, lang=lang, style=cfg.answer_style),
+                build_prompt_for_answer(
+                    query,
+                    memory_block=band_mem,
+                    lang=lang,
+                    style=cfg.answer_style,
+                    output_contract=cfg.output_contract,
+                ),
                 system_text=None,
             )
             band_ans = hf.generate_text(
@@ -7466,7 +7613,13 @@ def run_ponder(
                 text_preview=trace.preview(final_answer_block),
             )
     final_prompt = hf._apply_chat(
-        build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang, style=cfg.answer_style),
+        build_prompt_for_answer(
+            query,
+            memory_block=final_answer_block,
+            lang=lang,
+            style=cfg.answer_style,
+            output_contract=cfg.output_contract,
+        ),
         system_text=None,
     )
 
@@ -7518,6 +7671,7 @@ def run_ponder(
             "answer_done",
             run_id=run_id,
             pack_item=pack_item,
+            output_contract=cfg.output_contract,
             elapsed_s=float(answer_s),
             answer_chars=len(answer or ""),
             answer_preview=trace.preview(answer),
@@ -7532,6 +7686,7 @@ def run_ponder(
         "control": control,
         "pipeline": pipeline,
         "answer_style": cfg.answer_style,
+        "output_contract": cfg.output_contract,
         "memory_policy": cfg.memory_policy,
         "memory_retrieve": cfg.memory_retrieve,
         "memory_remix": cfg.memory_remix,
@@ -7605,7 +7760,13 @@ def run_ponder_api(
     # Seed probe (optional): OpenAI-compatible top-logprobs for the *next* token.
     t_probe0 = time.perf_counter()
     base_prompt = hf._apply_chat(
-        build_prompt_for_answer(query, memory_block=None, lang=lang, style=cfg.answer_style),
+        build_prompt_for_answer(
+            query,
+            memory_block=None,
+            lang=lang,
+            style=cfg.answer_style,
+            output_contract=cfg.output_contract,
+        ),
         system_text=None,
     )
 
@@ -7673,7 +7834,13 @@ def run_ponder_api(
         probe_n = max(32, top_n)
         for jq in jitter_queries:
             jp = hf._apply_chat(
-                build_prompt_for_answer(jq, memory_block=None, lang=lang, style=cfg.answer_style),
+                build_prompt_for_answer(
+                    jq,
+                    memory_block=None,
+                    lang=lang,
+                    style=cfg.answer_style,
+                    output_contract=cfg.output_contract,
+                ),
                 system_text=None,
             )
             try:
@@ -8006,7 +8173,13 @@ def run_ponder_api(
                         ctx_text = ctx_text[-int(cfg.pipeline_context_max_chars) :]
 
                     ponder_prompt = hf._apply_chat(
-                        build_prompt_for_pondering(ponder_q, mode=stage_mode, lang=lang, context=ctx_text),
+                        build_prompt_for_pondering(
+                            ponder_q,
+                            mode=stage_mode,
+                            lang=lang,
+                            context=ctx_text,
+                            output_contract=cfg.output_contract,
+                        ),
                         system_text=None,
                     )
                     t_gen0 = time.perf_counter()
@@ -8036,6 +8209,7 @@ def run_ponder_api(
                             hop_ix=int(hop_ix),
                             stage_ix=int(stage_ix),
                             mode=stage_mode,
+                            output_contract=cfg.output_contract,
                             elapsed_s=gen_s,
                             text_chars=len(ponder_log or ""),
                             text_preview=trace.preview(ponder_log),
@@ -8066,6 +8240,7 @@ def run_ponder_api(
                         "pipeline": pipeline,
                         "pipeline_stage_ix": stage_ix,
                         "pipeline_context": pipeline_ctx,
+                        "output_contract": cfg.output_contract,
                         "ponder_ix": log_ix,
                         "ponder_mode": stage_mode,
                         "keywords_source": hop_keywords_source,
@@ -8110,7 +8285,13 @@ def run_ponder_api(
                     if stage_probe_active:
                         stage_memory_block = build_memory_block(records, max_chars_per_log=700) if records else None
                         stage_prompt = hf._apply_chat(
-                            build_prompt_for_answer(query, memory_block=stage_memory_block, lang=lang, style=cfg.answer_style),
+                            build_prompt_for_answer(
+                                query,
+                                memory_block=stage_memory_block,
+                                lang=lang,
+                                style=cfg.answer_style,
+                                output_contract=cfg.output_contract,
+                            ),
                             system_text=None,
                         )
                         stage_items: List[Dict[str, Any]] = []
@@ -8290,7 +8471,10 @@ def run_ponder_api(
         _record_api_budget("random_log")
         q_rng = random.Random(int(cfg.seed) + 424243)
         rand_q = make_unrelated_question(rand_kw, lang=lang, rng=q_rng)
-        rp = hf._apply_chat(build_prompt_for_pondering(rand_q, mode="assoc", lang=lang), system_text=None)
+        rp = hf._apply_chat(
+            build_prompt_for_pondering(rand_q, mode="assoc", lang=lang, output_contract=cfg.output_contract),
+            system_text=None,
+        )
         random_log_text, _random_meta = _generate_api_text_with_reasoning_retry(
             hf,
             provider=cfg.provider,
@@ -8330,7 +8514,13 @@ def run_ponder_api(
             if str(cfg.memory_remix).strip() == "dream" and band_mem:
                 _record_api_budget("band_answers")
             fp = hf._apply_chat(
-                build_prompt_for_answer(query, memory_block=band_mem, lang=lang, style=cfg.answer_style),
+                build_prompt_for_answer(
+                    query,
+                    memory_block=band_mem,
+                    lang=lang,
+                    style=cfg.answer_style,
+                    output_contract=cfg.output_contract,
+                ),
                 system_text=None,
             )
             band_ans, _band_meta = _generate_api_text_with_reasoning_retry(
@@ -8408,7 +8598,13 @@ def run_ponder_api(
                 api_meta=(scaffold_meta or {}).get("api_generation") if isinstance(scaffold_meta, dict) else None,
             )
     final_prompt = hf._apply_chat(
-        build_prompt_for_answer(query, memory_block=final_answer_block, lang=lang, style=cfg.answer_style),
+        build_prompt_for_answer(
+            query,
+            memory_block=final_answer_block,
+            lang=lang,
+            style=cfg.answer_style,
+            output_contract=cfg.output_contract,
+        ),
         system_text=None,
     )
 
@@ -8523,6 +8719,7 @@ def run_ponder_api(
             "answer_done",
             run_id=run_id,
             pack_item=pack_item,
+            output_contract=cfg.output_contract,
             elapsed_s=float(answer_s),
             answer_chars=len(answer or ""),
             answer_preview=trace.preview(answer),
@@ -8538,6 +8735,7 @@ def run_ponder_api(
         "control": control,
         "pipeline": pipeline,
         "answer_style": cfg.answer_style,
+        "output_contract": cfg.output_contract,
         "memory_policy": cfg.memory_policy,
         "memory_retrieve": cfg.memory_retrieve,
         "memory_remix": cfg.memory_remix,
@@ -8783,6 +8981,12 @@ def main() -> None:
         choices=["plain", "surreal", "metaphor", "meta"],
         default="plain",
         help="Prompt-only answer style guidance",
+    )
+    g_answer.add_argument(
+        "--output_contract",
+        choices=list(_OUTPUT_CONTRACTS),
+        default="none",
+        help="Prompt-only closure contract for ponder logs and/or final answers",
     )
     g_answer.add_argument("--answer_max_new_tokens", type=int, default=256)
     g_answer.add_argument("--answer_per_band", action="store_true", help="Generate per-band answers (sensitivity)")
@@ -9150,6 +9354,7 @@ def main() -> None:
         compare_embed_model=str(args.compare_embed_model or ""),
         scaffold_condition=_normalize_scaffold_condition_name(str(args.scaffold_condition)),
         scaffold_token_target=max(0, int(args.scaffold_token_target)),
+        output_contract=_normalize_output_contract_name(str(args.output_contract)),
         print_probe=args.print_probe,
         interactive=bool(args.interactive),
         interactive_candidates=args.interactive_candidates,
