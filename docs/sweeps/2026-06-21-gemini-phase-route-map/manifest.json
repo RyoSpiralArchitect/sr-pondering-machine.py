@@ -1,0 +1,223 @@
+{
+  "ts": "2026-06-20T23:59:22.249806+00:00",
+  "repo": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py",
+  "out_dir": "artifacts/sweep_20260621_gemini_phase_route_map",
+  "providers": [
+    "gemini"
+  ],
+  "queries": [
+    {
+      "id": "non_relative_not_absolute",
+      "text": "非相対的ではあるが絶対的ではない状態とは？"
+    }
+  ],
+  "profile": "gemini_phase_route_map",
+  "profile_config": {
+    "answer_max_new_tokens": "2048",
+    "ponder_max_new_tokens": "1024",
+    "scaffold_token_target": "0",
+    "api_timeout": "1200",
+    "claude_budget_usd": "0.45",
+    "matrix": "log_phase_routes",
+    "dose_values": [
+      128,
+      512
+    ],
+    "dose_conditions": [
+      "facts",
+      "isomorphic"
+    ],
+    "output_contracts": [
+      "log_skeleton_closure"
+    ],
+    "log_phase_routes": [
+      {
+        "name": "high_log1024_final2048",
+        "cfg": {}
+      },
+      {
+        "name": "low_log1024_final2048",
+        "cfg": {
+          "log_phase_reasoning_effort": "low"
+        }
+      },
+      {
+        "name": "low_log1024_final_low2048",
+        "cfg": {
+          "log_phase_reasoning_effort": "low",
+          "final_phase_reasoning_effort": "low",
+          "final_phase_max_new_tokens": 2048
+        }
+      },
+      {
+        "name": "low_log1024_final_low4096",
+        "cfg": {
+          "log_phase_reasoning_effort": "low",
+          "final_phase_reasoning_effort": "low",
+          "final_phase_max_new_tokens": 4096
+        }
+      },
+      {
+        "name": "low_log2048_rescue_final_low4096",
+        "cfg": {
+          "log_phase_reasoning_effort": "low",
+          "log_phase_max_new_tokens": 2048,
+          "log_phase_rescue": true,
+          "log_phase_rescue_max_new_tokens": 384,
+          "final_phase_reasoning_effort": "low",
+          "final_phase_max_new_tokens": 4096
+        }
+      },
+      {
+        "name": "medium_log1024_final_medium4096",
+        "cfg": {
+          "log_phase_reasoning_effort": "medium",
+          "final_phase_reasoning_effort": "medium",
+          "final_phase_max_new_tokens": 4096
+        }
+      }
+    ],
+    "providers": {
+      "gemini": {
+        "model": "gemini-3.1-pro-preview",
+        "reasoning_effort": "high"
+      },
+      "claude": {
+        "model": "opus",
+        "reasoning_effort": "xhigh"
+      }
+    }
+  },
+  "dose_values": [
+    128,
+    512
+  ],
+  "dose_conditions": [
+    "facts",
+    "isomorphic"
+  ],
+  "output_contracts": [
+    "log_skeleton_closure"
+  ],
+  "log_phase_routes": [
+    {
+      "name": "high_log1024_final2048",
+      "cfg": {}
+    },
+    {
+      "name": "low_log1024_final2048",
+      "cfg": {
+        "log_phase_reasoning_effort": "low"
+      }
+    },
+    {
+      "name": "low_log1024_final_low2048",
+      "cfg": {
+        "log_phase_reasoning_effort": "low",
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 2048
+      }
+    },
+    {
+      "name": "low_log1024_final_low4096",
+      "cfg": {
+        "log_phase_reasoning_effort": "low",
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 4096
+      }
+    },
+    {
+      "name": "low_log2048_rescue_final_low4096",
+      "cfg": {
+        "log_phase_reasoning_effort": "low",
+        "log_phase_max_new_tokens": 2048,
+        "log_phase_rescue": true,
+        "log_phase_rescue_max_new_tokens": 384,
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 4096
+      }
+    },
+    {
+      "name": "medium_log1024_final_medium4096",
+      "cfg": {
+        "log_phase_reasoning_effort": "medium",
+        "final_phase_reasoning_effort": "medium",
+        "final_phase_max_new_tokens": 4096
+      }
+    }
+  ],
+  "runs": [
+    {
+      "provider": "gemini",
+      "query_id": "non_relative_not_absolute",
+      "query": "非相対的ではあるが絶対的ではない状態とは？",
+      "cmd": [
+        "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+        "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/sr_pondering_machine.py",
+        "--backend",
+        "openai_compat",
+        "--provider",
+        "custom",
+        "--api_base_url",
+        "https://generativelanguage.googleapis.com/v1beta/openai",
+        "--api_key_env",
+        "GEMINI_API_KEY",
+        "--model",
+        "gemini-3.1-pro-preview",
+        "--api_reasoning_effort",
+        "high",
+        "--query",
+        "非相対的ではあるが絶対的ではない状態とは？",
+        "--lab_matrix",
+        "artifacts/sweep_20260621_gemini_phase_route_map/matrices/gemini_log_phase_routes_non_relative_not_absolute.json",
+        "--memory_policy",
+        "current_only",
+        "--no_write_memory",
+        "--answer_max_new_tokens",
+        "2048",
+        "--ponder_max_new_tokens",
+        "1024",
+        "--scaffold_token_target",
+        "0",
+        "--compare_semantic",
+        "hash",
+        "--compare_judge",
+        "off",
+        "--compare_stance",
+        "auto",
+        "--compare_spatial_metaphor",
+        "auto",
+        "--compare_token_budget",
+        "auto",
+        "--print_compare",
+        "none",
+        "--print_ponder",
+        "none",
+        "--api_timeout",
+        "1200",
+        "--api_max_retries",
+        "1",
+        "--pack_resume",
+        "--json_out",
+        "artifacts/sweep_20260621_gemini_phase_route_map/gemini_non_relative_not_absolute.json",
+        "--trace_out",
+        "artifacts/sweep_20260621_gemini_phase_route_map/gemini_non_relative_not_absolute.trace.jsonl",
+        "--trace_report_out",
+        "artifacts/sweep_20260621_gemini_phase_route_map/gemini_non_relative_not_absolute.trace.html",
+        "--matrix_report_out",
+        "artifacts/sweep_20260621_gemini_phase_route_map/gemini_non_relative_not_absolute.matrix.html"
+      ],
+      "json_out": "artifacts/sweep_20260621_gemini_phase_route_map/gemini_non_relative_not_absolute.json",
+      "trace_out": "artifacts/sweep_20260621_gemini_phase_route_map/gemini_non_relative_not_absolute.trace.jsonl",
+      "trace_report_out": "artifacts/sweep_20260621_gemini_phase_route_map/gemini_non_relative_not_absolute.trace.html",
+      "matrix_report_out": "artifacts/sweep_20260621_gemini_phase_route_map/gemini_non_relative_not_absolute.matrix.html",
+      "stdout": "artifacts/sweep_20260621_gemini_phase_route_map/gemini_non_relative_not_absolute.stdout.txt",
+      "stderr": "artifacts/sweep_20260621_gemini_phase_route_map/gemini_non_relative_not_absolute.stderr.txt",
+      "lab_matrix_arg": "artifacts/sweep_20260621_gemini_phase_route_map/matrices/gemini_log_phase_routes_non_relative_not_absolute.json",
+      "profile": "gemini_phase_route_map",
+      "returncode": 0,
+      "elapsed_s": 791.5009051249999,
+      "ok": true
+    }
+  ]
+}

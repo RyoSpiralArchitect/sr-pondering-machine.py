@@ -83,7 +83,16 @@ class TestDoseLadderSweepReport(unittest.TestCase):
                 output_contracts=["log_skeleton_closure"],
                 log_phase_routes=[
                     {"name": "inherit_1024_no_rescue", "cfg": {}},
-                    {"name": "low_2048_rescue", "cfg": {"log_phase_reasoning_effort": "low", "log_phase_max_new_tokens": 2048, "log_phase_rescue": True}},
+                    {
+                        "name": "low_2048_rescue_final_low4096",
+                        "cfg": {
+                            "log_phase_reasoning_effort": "low",
+                            "log_phase_max_new_tokens": 2048,
+                            "log_phase_rescue": True,
+                            "final_phase_reasoning_effort": "low",
+                            "final_phase_max_new_tokens": 4096,
+                        },
+                    },
                 ],
             )
             data = json.loads(matrix_path.read_text(encoding="utf-8"))
@@ -93,12 +102,14 @@ class TestDoseLadderSweepReport(unittest.TestCase):
                 names,
                 [
                     "facts_dose_512_log_skeleton_closure_inherit_1024_no_rescue",
-                    "facts_dose_512_log_skeleton_closure_low_2048_rescue",
+                    "facts_dose_512_log_skeleton_closure_low_2048_rescue_final_low4096",
                 ],
             )
             self.assertEqual(data["items"][1]["cfg"]["log_phase_reasoning_effort"], "low")
             self.assertEqual(data["items"][1]["cfg"]["log_phase_max_new_tokens"], 2048)
             self.assertEqual(data["items"][1]["cfg"]["log_phase_rescue"], True)
+            self.assertEqual(data["items"][1]["cfg"]["final_phase_reasoning_effort"], "low")
+            self.assertEqual(data["items"][1]["cfg"]["final_phase_max_new_tokens"], 4096)
 
     def test_extracts_dose_and_attractor_metrics_from_pack_json(self) -> None:
         if report is None or pd is None:
@@ -131,6 +142,8 @@ class TestDoseLadderSweepReport(unittest.TestCase):
                             "log_phase_reasoning_effort": "low",
                             "log_phase_max_new_tokens": 2048,
                             "log_phase_rescue": True,
+                            "final_phase_reasoning_effort": "low",
+                            "final_phase_max_new_tokens": 4096,
                         },
                         "metrics": {"answer_chars": 66, "records": 1, "elapsed_s": 2.0},
                         "records": [
@@ -195,6 +208,8 @@ class TestDoseLadderSweepReport(unittest.TestCase):
             self.assertEqual(item_rows[0]["log_phase_max_new_tokens"], 2048)
             self.assertEqual(item_rows[0]["log_phase_rescue_enabled"], 1)
             self.assertEqual(item_rows[0]["log_phase_rescue_used_count"], 1)
+            self.assertEqual(item_rows[0]["final_phase_reasoning_effort"], "low")
+            self.assertEqual(item_rows[0]["final_phase_max_new_tokens"], 4096)
             self.assertEqual(item_rows[0]["final_marker_is_last_line"], 1)
             self.assertEqual(item_rows[0]["ponder_log_marker_count"], 1)
             self.assertEqual(item_rows[0]["ponder_log_skeleton_complete_count"], 1)
@@ -217,6 +232,8 @@ class TestDoseLadderSweepReport(unittest.TestCase):
             self.assertEqual(closure_rows[0]["log_phase_max_new_tokens"], 2048)
             self.assertEqual(closure_rows[0]["log_phase_rescue_enabled"], 1.0)
             self.assertEqual(closure_rows[0]["log_phase_rescue_used_rate"], 1.0)
+            self.assertEqual(closure_rows[0]["final_phase_reasoning_effort"], "low")
+            self.assertEqual(closure_rows[0]["final_phase_max_new_tokens"], 4096)
             self.assertEqual(closure_rows[0]["final_marker_is_last_line"], 1.0)
             self.assertEqual(closure_rows[0]["ponder_log_skeleton_complete_rate"], 1.0)
 

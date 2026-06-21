@@ -128,6 +128,65 @@ PROFILES: Dict[str, Dict[str, Any]] = {
             "claude": {"model": "opus", "reasoning_effort": "xhigh"},
         },
     },
+    "gemini_phase_route_map": {
+        "answer_max_new_tokens": "2048",
+        "ponder_max_new_tokens": "1024",
+        "scaffold_token_target": "0",
+        "api_timeout": "1200",
+        "claude_budget_usd": "0.45",
+        "matrix": "log_phase_routes",
+        "dose_values": [128, 512],
+        "dose_conditions": ["facts", "isomorphic"],
+        "output_contracts": ["log_skeleton_closure"],
+        "log_phase_routes": [
+            {"name": "high_log1024_final2048", "cfg": {}},
+            {
+                "name": "low_log1024_final2048",
+                "cfg": {
+                    "log_phase_reasoning_effort": "low",
+                },
+            },
+            {
+                "name": "low_log1024_final_low2048",
+                "cfg": {
+                    "log_phase_reasoning_effort": "low",
+                    "final_phase_reasoning_effort": "low",
+                    "final_phase_max_new_tokens": 2048,
+                },
+            },
+            {
+                "name": "low_log1024_final_low4096",
+                "cfg": {
+                    "log_phase_reasoning_effort": "low",
+                    "final_phase_reasoning_effort": "low",
+                    "final_phase_max_new_tokens": 4096,
+                },
+            },
+            {
+                "name": "low_log2048_rescue_final_low4096",
+                "cfg": {
+                    "log_phase_reasoning_effort": "low",
+                    "log_phase_max_new_tokens": 2048,
+                    "log_phase_rescue": True,
+                    "log_phase_rescue_max_new_tokens": 384,
+                    "final_phase_reasoning_effort": "low",
+                    "final_phase_max_new_tokens": 4096,
+                },
+            },
+            {
+                "name": "medium_log1024_final_medium4096",
+                "cfg": {
+                    "log_phase_reasoning_effort": "medium",
+                    "final_phase_reasoning_effort": "medium",
+                    "final_phase_max_new_tokens": 4096,
+                },
+            },
+        ],
+        "providers": {
+            "gemini": {"model": "gemini-3.1-pro-preview", "reasoning_effort": "high"},
+            "claude": {"model": "opus", "reasoning_effort": "xhigh"},
+        },
+    },
 }
 
 

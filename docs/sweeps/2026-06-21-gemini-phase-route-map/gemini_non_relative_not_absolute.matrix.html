@@ -1,0 +1,3357 @@
+<!doctype html>
+<html><head><meta charset='utf-8'/>
+<title>sr_ponder matrix report</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:24px;color:#111;background:#fafafa;}h1,h2,h3{margin:0 0 12px 0;} .muted{color:#666;} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0;}.card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:14px;box-shadow:0 1px 2px rgba(0,0,0,0.04);}.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0 14px 0;padding:10px 12px;background:#fff;border:1px solid #ddd;border-radius:10px;}.toolbar label{font-size:13px;color:#333;display:flex;gap:6px;align-items:center;}.toolbar select,.toolbar button{font:inherit;padding:6px 10px;border:1px solid #ccc;border-radius:8px;background:#fff;color:#111;}.toolbar button{cursor:pointer;}.heatmap-wrap{margin:12px 0 20px 0;}.heatmap-cell{min-width:74px;text-align:center;font-variant-numeric:tabular-nums;}.heat-win{background:#e8f7ee;color:#0a5a2e;}.heat-loss{background:#fdecec;color:#8b1d1d;}.heat-tie,.heat-diag{background:#f3f3f3;color:#666;}.heat-missing{background:#fff8e6;color:#8a6d1f;}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #ddd;} th,td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:top;text-align:left;font-size:13px;}th{background:#f3f3f3;position:sticky;top:0;} code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}pre{white-space:pre-wrap;background:#fbfbfb;border:1px solid #eee;padding:12px;border-radius:8px;}.pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef4ff;color:#245; margin-right:6px;font-size:12px;}details{margin:12px 0;} .num{text-align:right;} .ok{color:#0a6;} .warn{color:#a60;}</style>
+</head><body>
+<h1>sr_ponder matrix report</h1>
+<div class='muted'>gemini_log_phase_routes_non_relative_not_absolute · custom / gemini-3.1-pro-preview</div>
+<p><strong>Query:</strong> 非相対的ではあるが絶対的ではない状態とは？</p>
+<div class='grid'>
+<div class='card'><div class='muted'>Items</div><div><strong>25</strong></div></div>
+<div class='card'><div class='muted'>Ponder items</div><div><strong>24</strong></div></div>
+<div class='card'><div class='muted'>Warnings</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Baseline</div><div><strong>baseline</strong></div></div>
+<div class='card'><div class='muted'>Max reasoning Δ</div><div><strong>0</strong></div></div>
+<div class='card'><div class='muted'>Max stance shift</div><div><strong>0.6667</strong></div></div>
+<div class='card'><div class='muted'>Best align Δ</div><div><strong>0.1453</strong></div></div>
+</div>
+<h2>Pairwise heatmap</h2>
+<div class='toolbar'><strong>A/B/C/D win-loss heatmap</strong><label>Metric<select id='heatmap-metric-key'>
+<option value='query_alignment_delta' selected>Query align Δ</option>
+<option value='stance_shift'>Stance shift</option>
+<option value='budget_reasoning_delta'>Reasoning token Δ</option>
+<option value='budget_total_delta'>Total token Δ</option>
+</select></label><span class='muted'>Green means the row beats the column on the selected metric. Cost metrics use lower-is-better.</span></div>
+<div class='heatmap-wrap' data-heatmap-key='query_alignment_delta'><div class='muted'>Query align Δ · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>facts_dose_128_log_skeleton_closure_high_log1024_final2048</th>
+<th>facts_dose_128_log_skeleton_closure_low_log1024_final2048</th>
+<th>facts_dose_128_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>facts_dose_128_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>facts_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>facts_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</th>
+<th>facts_dose_512_log_skeleton_closure_high_log1024_final2048</th>
+<th>facts_dose_512_log_skeleton_closure_low_log1024_final2048</th>
+<th>facts_dose_512_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>facts_dose_512_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>facts_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>facts_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</th>
+<th>isomorphic_dose_128_log_skeleton_closure_high_log1024_final2048</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log1024_final2048</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>isomorphic_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</th>
+<th>isomorphic_dose_512_log_skeleton_closure_high_log1024_final2048</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log1024_final2048</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>isomorphic_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>-0.0725 · 2W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0117</td>
+<td class='heatmap-cell heat-loss'>-0.1612</td>
+<td class='heatmap-cell heat-loss'>-0.1245</td>
+<td class='heatmap-cell heat-loss'>-0.1205</td>
+<td class='heatmap-cell heat-loss'>-0.1101</td>
+<td class='heatmap-cell heat-loss'>-0.2178</td>
+<td class='heatmap-cell heat-loss'>-0.0012</td>
+<td class='heatmap-cell heat-loss'>-0.1148</td>
+<td class='heatmap-cell heat-loss'>-0.1157</td>
+<td class='heatmap-cell heat-loss'>-0.1480</td>
+<td class='heatmap-cell heat-loss'>-0.1016</td>
+<td class='heatmap-cell heat-win'>0.0249</td>
+<td class='heatmap-cell heat-win'>0.0246</td>
+<td class='heatmap-cell heat-loss'>-0.0291</td>
+<td class='heatmap-cell heat-loss'>-0.1443</td>
+<td class='heatmap-cell heat-loss'>-0.0908</td>
+<td class='heatmap-cell heat-loss'>-0.1227</td>
+<td class='heatmap-cell heat-loss'>-0.0039</td>
+<td class='heatmap-cell heat-loss'>-0.1367</td>
+<td class='heatmap-cell heat-loss'>-0.1526</td>
+<td class='heatmap-cell heat-loss'>-0.1224</td>
+<td class='heatmap-cell heat-loss'>-0.1371</td>
+<td class='heatmap-cell heat-loss'>-0.1268</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>-0.0608 · 5W</span></td>
+<td class='heatmap-cell heat-win'>0.0117</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1495</td>
+<td class='heatmap-cell heat-loss'>-0.1128</td>
+<td class='heatmap-cell heat-loss'>-0.1088</td>
+<td class='heatmap-cell heat-loss'>-0.0984</td>
+<td class='heatmap-cell heat-loss'>-0.2061</td>
+<td class='heatmap-cell heat-win'>0.0105</td>
+<td class='heatmap-cell heat-loss'>-0.1030</td>
+<td class='heatmap-cell heat-loss'>-0.1040</td>
+<td class='heatmap-cell heat-loss'>-0.1363</td>
+<td class='heatmap-cell heat-loss'>-0.0899</td>
+<td class='heatmap-cell heat-win'>0.0366</td>
+<td class='heatmap-cell heat-win'>0.0363</td>
+<td class='heatmap-cell heat-loss'>-0.0174</td>
+<td class='heatmap-cell heat-loss'>-0.1326</td>
+<td class='heatmap-cell heat-loss'>-0.0790</td>
+<td class='heatmap-cell heat-loss'>-0.1110</td>
+<td class='heatmap-cell heat-win'>0.0078</td>
+<td class='heatmap-cell heat-loss'>-0.1250</td>
+<td class='heatmap-cell heat-loss'>-0.1409</td>
+<td class='heatmap-cell heat-loss'>-0.1107</td>
+<td class='heatmap-cell heat-loss'>-0.1254</td>
+<td class='heatmap-cell heat-loss'>-0.1151</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>0.0888 · 22W</span></td>
+<td class='heatmap-cell heat-win'>0.1612</td>
+<td class='heatmap-cell heat-win'>0.1495</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0367</td>
+<td class='heatmap-cell heat-win'>0.0407</td>
+<td class='heatmap-cell heat-win'>0.0511</td>
+<td class='heatmap-cell heat-loss'>-0.0565</td>
+<td class='heatmap-cell heat-win'>0.1600</td>
+<td class='heatmap-cell heat-win'>0.0465</td>
+<td class='heatmap-cell heat-win'>0.0455</td>
+<td class='heatmap-cell heat-win'>0.0132</td>
+<td class='heatmap-cell heat-win'>0.0597</td>
+<td class='heatmap-cell heat-win'>0.1862</td>
+<td class='heatmap-cell heat-win'>0.1858</td>
+<td class='heatmap-cell heat-win'>0.1321</td>
+<td class='heatmap-cell heat-win'>0.0169</td>
+<td class='heatmap-cell heat-win'>0.0705</td>
+<td class='heatmap-cell heat-win'>0.0385</td>
+<td class='heatmap-cell heat-win'>0.1573</td>
+<td class='heatmap-cell heat-win'>0.0245</td>
+<td class='heatmap-cell heat-win'>0.0086</td>
+<td class='heatmap-cell heat-win'>0.0388</td>
+<td class='heatmap-cell heat-win'>0.0241</td>
+<td class='heatmap-cell heat-win'>0.0344</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>0.0520 · 15W</span></td>
+<td class='heatmap-cell heat-win'>0.1245</td>
+<td class='heatmap-cell heat-win'>0.1128</td>
+<td class='heatmap-cell heat-loss'>-0.0367</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0040</td>
+<td class='heatmap-cell heat-win'>0.0144</td>
+<td class='heatmap-cell heat-loss'>-0.0933</td>
+<td class='heatmap-cell heat-win'>0.1233</td>
+<td class='heatmap-cell heat-win'>0.0097</td>
+<td class='heatmap-cell heat-win'>0.0088</td>
+<td class='heatmap-cell heat-loss'>-0.0235</td>
+<td class='heatmap-cell heat-win'>0.0229</td>
+<td class='heatmap-cell heat-win'>0.1494</td>
+<td class='heatmap-cell heat-win'>0.1491</td>
+<td class='heatmap-cell heat-win'>0.0954</td>
+<td class='heatmap-cell heat-loss'>-0.0198</td>
+<td class='heatmap-cell heat-win'>0.0337</td>
+<td class='heatmap-cell heat-win'>0.0018</td>
+<td class='heatmap-cell heat-win'>0.1206</td>
+<td class='heatmap-cell heat-loss'>-0.0122</td>
+<td class='heatmap-cell heat-loss'>-0.0282</td>
+<td class='heatmap-cell heat-win'>0.0021</td>
+<td class='heatmap-cell heat-loss'>-0.0126</td>
+<td class='heatmap-cell heat-loss'>-0.0023</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>0.0480 · 12W</span></td>
+<td class='heatmap-cell heat-win'>0.1205</td>
+<td class='heatmap-cell heat-win'>0.1088</td>
+<td class='heatmap-cell heat-loss'>-0.0407</td>
+<td class='heatmap-cell heat-loss'>-0.0040</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0104</td>
+<td class='heatmap-cell heat-loss'>-0.0972</td>
+<td class='heatmap-cell heat-win'>0.1193</td>
+<td class='heatmap-cell heat-win'>0.0058</td>
+<td class='heatmap-cell heat-win'>0.0048</td>
+<td class='heatmap-cell heat-loss'>-0.0275</td>
+<td class='heatmap-cell heat-win'>0.0189</td>
+<td class='heatmap-cell heat-win'>0.1455</td>
+<td class='heatmap-cell heat-win'>0.1451</td>
+<td class='heatmap-cell heat-win'>0.0914</td>
+<td class='heatmap-cell heat-loss'>-0.0238</td>
+<td class='heatmap-cell heat-win'>0.0298</td>
+<td class='heatmap-cell heat-loss'>-0.0022</td>
+<td class='heatmap-cell heat-win'>0.1166</td>
+<td class='heatmap-cell heat-loss'>-0.0162</td>
+<td class='heatmap-cell heat-loss'>-0.0321</td>
+<td class='heatmap-cell heat-loss'>-0.0019</td>
+<td class='heatmap-cell heat-loss'>-0.0166</td>
+<td class='heatmap-cell heat-loss'>-0.0063</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>0.0376 · 9W</span></td>
+<td class='heatmap-cell heat-win'>0.1101</td>
+<td class='heatmap-cell heat-win'>0.0984</td>
+<td class='heatmap-cell heat-loss'>-0.0511</td>
+<td class='heatmap-cell heat-loss'>-0.0144</td>
+<td class='heatmap-cell heat-loss'>-0.0104</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1077</td>
+<td class='heatmap-cell heat-win'>0.1089</td>
+<td class='heatmap-cell heat-loss'>-0.0047</td>
+<td class='heatmap-cell heat-loss'>-0.0056</td>
+<td class='heatmap-cell heat-loss'>-0.0379</td>
+<td class='heatmap-cell heat-win'>0.0085</td>
+<td class='heatmap-cell heat-win'>0.1350</td>
+<td class='heatmap-cell heat-win'>0.1347</td>
+<td class='heatmap-cell heat-win'>0.0810</td>
+<td class='heatmap-cell heat-loss'>-0.0342</td>
+<td class='heatmap-cell heat-win'>0.0194</td>
+<td class='heatmap-cell heat-loss'>-0.0126</td>
+<td class='heatmap-cell heat-win'>0.1062</td>
+<td class='heatmap-cell heat-loss'>-0.0266</td>
+<td class='heatmap-cell heat-loss'>-0.0425</td>
+<td class='heatmap-cell heat-loss'>-0.0123</td>
+<td class='heatmap-cell heat-loss'>-0.0270</td>
+<td class='heatmap-cell heat-loss'>-0.0167</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>0.1453 · 23W</span></td>
+<td class='heatmap-cell heat-win'>0.2178</td>
+<td class='heatmap-cell heat-win'>0.2061</td>
+<td class='heatmap-cell heat-win'>0.0565</td>
+<td class='heatmap-cell heat-win'>0.0933</td>
+<td class='heatmap-cell heat-win'>0.0972</td>
+<td class='heatmap-cell heat-win'>0.1077</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.2166</td>
+<td class='heatmap-cell heat-win'>0.1030</td>
+<td class='heatmap-cell heat-win'>0.1021</td>
+<td class='heatmap-cell heat-win'>0.0697</td>
+<td class='heatmap-cell heat-win'>0.1162</td>
+<td class='heatmap-cell heat-win'>0.2427</td>
+<td class='heatmap-cell heat-win'>0.2424</td>
+<td class='heatmap-cell heat-win'>0.1886</td>
+<td class='heatmap-cell heat-win'>0.0734</td>
+<td class='heatmap-cell heat-win'>0.1270</td>
+<td class='heatmap-cell heat-win'>0.0951</td>
+<td class='heatmap-cell heat-win'>0.2139</td>
+<td class='heatmap-cell heat-win'>0.0810</td>
+<td class='heatmap-cell heat-win'>0.0651</td>
+<td class='heatmap-cell heat-win'>0.0954</td>
+<td class='heatmap-cell heat-win'>0.0806</td>
+<td class='heatmap-cell heat-win'>0.0910</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>-0.0713 · 3W</span></td>
+<td class='heatmap-cell heat-win'>0.0012</td>
+<td class='heatmap-cell heat-loss'>-0.0105</td>
+<td class='heatmap-cell heat-loss'>-0.1600</td>
+<td class='heatmap-cell heat-loss'>-0.1233</td>
+<td class='heatmap-cell heat-loss'>-0.1193</td>
+<td class='heatmap-cell heat-loss'>-0.1089</td>
+<td class='heatmap-cell heat-loss'>-0.2166</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1136</td>
+<td class='heatmap-cell heat-loss'>-0.1145</td>
+<td class='heatmap-cell heat-loss'>-0.1468</td>
+<td class='heatmap-cell heat-loss'>-0.1004</td>
+<td class='heatmap-cell heat-win'>0.0261</td>
+<td class='heatmap-cell heat-win'>0.0258</td>
+<td class='heatmap-cell heat-loss'>-0.0279</td>
+<td class='heatmap-cell heat-loss'>-0.1431</td>
+<td class='heatmap-cell heat-loss'>-0.0896</td>
+<td class='heatmap-cell heat-loss'>-0.1215</td>
+<td class='heatmap-cell heat-loss'>-0.0027</td>
+<td class='heatmap-cell heat-loss'>-0.1355</td>
+<td class='heatmap-cell heat-loss'>-0.1515</td>
+<td class='heatmap-cell heat-loss'>-0.1212</td>
+<td class='heatmap-cell heat-loss'>-0.1359</td>
+<td class='heatmap-cell heat-loss'>-0.1256</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>0.0423 · 10W</span></td>
+<td class='heatmap-cell heat-win'>0.1148</td>
+<td class='heatmap-cell heat-win'>0.1030</td>
+<td class='heatmap-cell heat-loss'>-0.0465</td>
+<td class='heatmap-cell heat-loss'>-0.0097</td>
+<td class='heatmap-cell heat-loss'>-0.0058</td>
+<td class='heatmap-cell heat-win'>0.0047</td>
+<td class='heatmap-cell heat-loss'>-0.1030</td>
+<td class='heatmap-cell heat-win'>0.1136</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0010</td>
+<td class='heatmap-cell heat-loss'>-0.0333</td>
+<td class='heatmap-cell heat-win'>0.0132</td>
+<td class='heatmap-cell heat-win'>0.1397</td>
+<td class='heatmap-cell heat-win'>0.1393</td>
+<td class='heatmap-cell heat-win'>0.0856</td>
+<td class='heatmap-cell heat-loss'>-0.0296</td>
+<td class='heatmap-cell heat-win'>0.0240</td>
+<td class='heatmap-cell heat-loss'>-0.0080</td>
+<td class='heatmap-cell heat-win'>0.1109</td>
+<td class='heatmap-cell heat-loss'>-0.0220</td>
+<td class='heatmap-cell heat-loss'>-0.0379</td>
+<td class='heatmap-cell heat-loss'>-0.0077</td>
+<td class='heatmap-cell heat-loss'>-0.0224</td>
+<td class='heatmap-cell heat-loss'>-0.0121</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>0.0432 · 11W</span></td>
+<td class='heatmap-cell heat-win'>0.1157</td>
+<td class='heatmap-cell heat-win'>0.1040</td>
+<td class='heatmap-cell heat-loss'>-0.0455</td>
+<td class='heatmap-cell heat-loss'>-0.0088</td>
+<td class='heatmap-cell heat-loss'>-0.0048</td>
+<td class='heatmap-cell heat-win'>0.0056</td>
+<td class='heatmap-cell heat-loss'>-0.1021</td>
+<td class='heatmap-cell heat-win'>0.1145</td>
+<td class='heatmap-cell heat-win'>0.0010</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0323</td>
+<td class='heatmap-cell heat-win'>0.0141</td>
+<td class='heatmap-cell heat-win'>0.1406</td>
+<td class='heatmap-cell heat-win'>0.1403</td>
+<td class='heatmap-cell heat-win'>0.0866</td>
+<td class='heatmap-cell heat-loss'>-0.0286</td>
+<td class='heatmap-cell heat-win'>0.0250</td>
+<td class='heatmap-cell heat-loss'>-0.0070</td>
+<td class='heatmap-cell heat-win'>0.1118</td>
+<td class='heatmap-cell heat-loss'>-0.0210</td>
+<td class='heatmap-cell heat-loss'>-0.0369</td>
+<td class='heatmap-cell heat-loss'>-0.0067</td>
+<td class='heatmap-cell heat-loss'>-0.0214</td>
+<td class='heatmap-cell heat-loss'>-0.0111</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>0.0755 · 20W</span></td>
+<td class='heatmap-cell heat-win'>0.1480</td>
+<td class='heatmap-cell heat-win'>0.1363</td>
+<td class='heatmap-cell heat-loss'>-0.0132</td>
+<td class='heatmap-cell heat-win'>0.0235</td>
+<td class='heatmap-cell heat-win'>0.0275</td>
+<td class='heatmap-cell heat-win'>0.0379</td>
+<td class='heatmap-cell heat-loss'>-0.0697</td>
+<td class='heatmap-cell heat-win'>0.1468</td>
+<td class='heatmap-cell heat-win'>0.0333</td>
+<td class='heatmap-cell heat-win'>0.0323</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0465</td>
+<td class='heatmap-cell heat-win'>0.1730</td>
+<td class='heatmap-cell heat-win'>0.1726</td>
+<td class='heatmap-cell heat-win'>0.1189</td>
+<td class='heatmap-cell heat-win'>0.0037</td>
+<td class='heatmap-cell heat-win'>0.0573</td>
+<td class='heatmap-cell heat-win'>0.0253</td>
+<td class='heatmap-cell heat-win'>0.1441</td>
+<td class='heatmap-cell heat-win'>0.0113</td>
+<td class='heatmap-cell heat-loss'>-0.0046</td>
+<td class='heatmap-cell heat-win'>0.0256</td>
+<td class='heatmap-cell heat-win'>0.0109</td>
+<td class='heatmap-cell heat-win'>0.0212</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>0.0291 · 8W</span></td>
+<td class='heatmap-cell heat-win'>0.1016</td>
+<td class='heatmap-cell heat-win'>0.0899</td>
+<td class='heatmap-cell heat-loss'>-0.0597</td>
+<td class='heatmap-cell heat-loss'>-0.0229</td>
+<td class='heatmap-cell heat-loss'>-0.0189</td>
+<td class='heatmap-cell heat-loss'>-0.0085</td>
+<td class='heatmap-cell heat-loss'>-0.1162</td>
+<td class='heatmap-cell heat-win'>0.1004</td>
+<td class='heatmap-cell heat-loss'>-0.0132</td>
+<td class='heatmap-cell heat-loss'>-0.0141</td>
+<td class='heatmap-cell heat-loss'>-0.0465</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.1265</td>
+<td class='heatmap-cell heat-win'>0.1262</td>
+<td class='heatmap-cell heat-win'>0.0724</td>
+<td class='heatmap-cell heat-loss'>-0.0428</td>
+<td class='heatmap-cell heat-win'>0.0108</td>
+<td class='heatmap-cell heat-loss'>-0.0211</td>
+<td class='heatmap-cell heat-win'>0.0977</td>
+<td class='heatmap-cell heat-loss'>-0.0351</td>
+<td class='heatmap-cell heat-loss'>-0.0511</td>
+<td class='heatmap-cell heat-loss'>-0.0208</td>
+<td class='heatmap-cell heat-loss'>-0.0356</td>
+<td class='heatmap-cell heat-loss'>-0.0252</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>-0.0974 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0249</td>
+<td class='heatmap-cell heat-loss'>-0.0366</td>
+<td class='heatmap-cell heat-loss'>-0.1862</td>
+<td class='heatmap-cell heat-loss'>-0.1494</td>
+<td class='heatmap-cell heat-loss'>-0.1455</td>
+<td class='heatmap-cell heat-loss'>-0.1350</td>
+<td class='heatmap-cell heat-loss'>-0.2427</td>
+<td class='heatmap-cell heat-loss'>-0.0261</td>
+<td class='heatmap-cell heat-loss'>-0.1397</td>
+<td class='heatmap-cell heat-loss'>-0.1406</td>
+<td class='heatmap-cell heat-loss'>-0.1730</td>
+<td class='heatmap-cell heat-loss'>-0.1265</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0003</td>
+<td class='heatmap-cell heat-loss'>-0.0541</td>
+<td class='heatmap-cell heat-loss'>-0.1693</td>
+<td class='heatmap-cell heat-loss'>-0.1157</td>
+<td class='heatmap-cell heat-loss'>-0.1476</td>
+<td class='heatmap-cell heat-loss'>-0.0288</td>
+<td class='heatmap-cell heat-loss'>-0.1617</td>
+<td class='heatmap-cell heat-loss'>-0.1776</td>
+<td class='heatmap-cell heat-loss'>-0.1473</td>
+<td class='heatmap-cell heat-loss'>-0.1621</td>
+<td class='heatmap-cell heat-loss'>-0.1517</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>-0.0971 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0246</td>
+<td class='heatmap-cell heat-loss'>-0.0363</td>
+<td class='heatmap-cell heat-loss'>-0.1858</td>
+<td class='heatmap-cell heat-loss'>-0.1491</td>
+<td class='heatmap-cell heat-loss'>-0.1451</td>
+<td class='heatmap-cell heat-loss'>-0.1347</td>
+<td class='heatmap-cell heat-loss'>-0.2424</td>
+<td class='heatmap-cell heat-loss'>-0.0258</td>
+<td class='heatmap-cell heat-loss'>-0.1393</td>
+<td class='heatmap-cell heat-loss'>-0.1403</td>
+<td class='heatmap-cell heat-loss'>-0.1726</td>
+<td class='heatmap-cell heat-loss'>-0.1262</td>
+<td class='heatmap-cell heat-win'>0.0003</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0537</td>
+<td class='heatmap-cell heat-loss'>-0.1689</td>
+<td class='heatmap-cell heat-loss'>-0.1153</td>
+<td class='heatmap-cell heat-loss'>-0.1473</td>
+<td class='heatmap-cell heat-loss'>-0.0285</td>
+<td class='heatmap-cell heat-loss'>-0.1613</td>
+<td class='heatmap-cell heat-loss'>-0.1772</td>
+<td class='heatmap-cell heat-loss'>-0.1470</td>
+<td class='heatmap-cell heat-loss'>-0.1617</td>
+<td class='heatmap-cell heat-loss'>-0.1514</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>-0.0433 · 6W</span></td>
+<td class='heatmap-cell heat-win'>0.0291</td>
+<td class='heatmap-cell heat-win'>0.0174</td>
+<td class='heatmap-cell heat-loss'>-0.1321</td>
+<td class='heatmap-cell heat-loss'>-0.0954</td>
+<td class='heatmap-cell heat-loss'>-0.0914</td>
+<td class='heatmap-cell heat-loss'>-0.0810</td>
+<td class='heatmap-cell heat-loss'>-0.1886</td>
+<td class='heatmap-cell heat-win'>0.0279</td>
+<td class='heatmap-cell heat-loss'>-0.0856</td>
+<td class='heatmap-cell heat-loss'>-0.0866</td>
+<td class='heatmap-cell heat-loss'>-0.1189</td>
+<td class='heatmap-cell heat-loss'>-0.0724</td>
+<td class='heatmap-cell heat-win'>0.0541</td>
+<td class='heatmap-cell heat-win'>0.0537</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1152</td>
+<td class='heatmap-cell heat-loss'>-0.0616</td>
+<td class='heatmap-cell heat-loss'>-0.0936</td>
+<td class='heatmap-cell heat-win'>0.0253</td>
+<td class='heatmap-cell heat-loss'>-0.1076</td>
+<td class='heatmap-cell heat-loss'>-0.1235</td>
+<td class='heatmap-cell heat-loss'>-0.0933</td>
+<td class='heatmap-cell heat-loss'>-0.1080</td>
+<td class='heatmap-cell heat-loss'>-0.0977</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>0.0719 · 19W</span></td>
+<td class='heatmap-cell heat-win'>0.1443</td>
+<td class='heatmap-cell heat-win'>0.1326</td>
+<td class='heatmap-cell heat-loss'>-0.0169</td>
+<td class='heatmap-cell heat-win'>0.0198</td>
+<td class='heatmap-cell heat-win'>0.0238</td>
+<td class='heatmap-cell heat-win'>0.0342</td>
+<td class='heatmap-cell heat-loss'>-0.0734</td>
+<td class='heatmap-cell heat-win'>0.1431</td>
+<td class='heatmap-cell heat-win'>0.0296</td>
+<td class='heatmap-cell heat-win'>0.0286</td>
+<td class='heatmap-cell heat-loss'>-0.0037</td>
+<td class='heatmap-cell heat-win'>0.0428</td>
+<td class='heatmap-cell heat-win'>0.1693</td>
+<td class='heatmap-cell heat-win'>0.1689</td>
+<td class='heatmap-cell heat-win'>0.1152</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0536</td>
+<td class='heatmap-cell heat-win'>0.0216</td>
+<td class='heatmap-cell heat-win'>0.1404</td>
+<td class='heatmap-cell heat-win'>0.0076</td>
+<td class='heatmap-cell heat-loss'>-0.0083</td>
+<td class='heatmap-cell heat-win'>0.0219</td>
+<td class='heatmap-cell heat-win'>0.0072</td>
+<td class='heatmap-cell heat-win'>0.0175</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>0.0183 · 7W</span></td>
+<td class='heatmap-cell heat-win'>0.0908</td>
+<td class='heatmap-cell heat-win'>0.0790</td>
+<td class='heatmap-cell heat-loss'>-0.0705</td>
+<td class='heatmap-cell heat-loss'>-0.0337</td>
+<td class='heatmap-cell heat-loss'>-0.0298</td>
+<td class='heatmap-cell heat-loss'>-0.0194</td>
+<td class='heatmap-cell heat-loss'>-0.1270</td>
+<td class='heatmap-cell heat-win'>0.0896</td>
+<td class='heatmap-cell heat-loss'>-0.0240</td>
+<td class='heatmap-cell heat-loss'>-0.0250</td>
+<td class='heatmap-cell heat-loss'>-0.0573</td>
+<td class='heatmap-cell heat-loss'>-0.0108</td>
+<td class='heatmap-cell heat-win'>0.1157</td>
+<td class='heatmap-cell heat-win'>0.1153</td>
+<td class='heatmap-cell heat-win'>0.0616</td>
+<td class='heatmap-cell heat-loss'>-0.0536</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0320</td>
+<td class='heatmap-cell heat-win'>0.0869</td>
+<td class='heatmap-cell heat-loss'>-0.0460</td>
+<td class='heatmap-cell heat-loss'>-0.0619</td>
+<td class='heatmap-cell heat-loss'>-0.0317</td>
+<td class='heatmap-cell heat-loss'>-0.0464</td>
+<td class='heatmap-cell heat-loss'>-0.0361</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>0.0502 · 14W</span></td>
+<td class='heatmap-cell heat-win'>0.1227</td>
+<td class='heatmap-cell heat-win'>0.1110</td>
+<td class='heatmap-cell heat-loss'>-0.0385</td>
+<td class='heatmap-cell heat-loss'>-0.0018</td>
+<td class='heatmap-cell heat-win'>0.0022</td>
+<td class='heatmap-cell heat-win'>0.0126</td>
+<td class='heatmap-cell heat-loss'>-0.0951</td>
+<td class='heatmap-cell heat-win'>0.1215</td>
+<td class='heatmap-cell heat-win'>0.0080</td>
+<td class='heatmap-cell heat-win'>0.0070</td>
+<td class='heatmap-cell heat-loss'>-0.0253</td>
+<td class='heatmap-cell heat-win'>0.0211</td>
+<td class='heatmap-cell heat-win'>0.1476</td>
+<td class='heatmap-cell heat-win'>0.1473</td>
+<td class='heatmap-cell heat-win'>0.0936</td>
+<td class='heatmap-cell heat-loss'>-0.0216</td>
+<td class='heatmap-cell heat-win'>0.0320</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.1188</td>
+<td class='heatmap-cell heat-loss'>-0.0140</td>
+<td class='heatmap-cell heat-loss'>-0.0299</td>
+<td class='heatmap-cell heat-win'>0.0003</td>
+<td class='heatmap-cell heat-loss'>-0.0144</td>
+<td class='heatmap-cell heat-loss'>-0.0041</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>-0.0686 · 4W</span></td>
+<td class='heatmap-cell heat-win'>0.0039</td>
+<td class='heatmap-cell heat-loss'>-0.0078</td>
+<td class='heatmap-cell heat-loss'>-0.1573</td>
+<td class='heatmap-cell heat-loss'>-0.1206</td>
+<td class='heatmap-cell heat-loss'>-0.1166</td>
+<td class='heatmap-cell heat-loss'>-0.1062</td>
+<td class='heatmap-cell heat-loss'>-0.2139</td>
+<td class='heatmap-cell heat-win'>0.0027</td>
+<td class='heatmap-cell heat-loss'>-0.1109</td>
+<td class='heatmap-cell heat-loss'>-0.1118</td>
+<td class='heatmap-cell heat-loss'>-0.1441</td>
+<td class='heatmap-cell heat-loss'>-0.0977</td>
+<td class='heatmap-cell heat-win'>0.0288</td>
+<td class='heatmap-cell heat-win'>0.0285</td>
+<td class='heatmap-cell heat-loss'>-0.0253</td>
+<td class='heatmap-cell heat-loss'>-0.1404</td>
+<td class='heatmap-cell heat-loss'>-0.0869</td>
+<td class='heatmap-cell heat-loss'>-0.1188</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1328</td>
+<td class='heatmap-cell heat-loss'>-0.1488</td>
+<td class='heatmap-cell heat-loss'>-0.1185</td>
+<td class='heatmap-cell heat-loss'>-0.1333</td>
+<td class='heatmap-cell heat-loss'>-0.1229</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>0.0642 · 17W</span></td>
+<td class='heatmap-cell heat-win'>0.1367</td>
+<td class='heatmap-cell heat-win'>0.1250</td>
+<td class='heatmap-cell heat-loss'>-0.0245</td>
+<td class='heatmap-cell heat-win'>0.0122</td>
+<td class='heatmap-cell heat-win'>0.0162</td>
+<td class='heatmap-cell heat-win'>0.0266</td>
+<td class='heatmap-cell heat-loss'>-0.0810</td>
+<td class='heatmap-cell heat-win'>0.1355</td>
+<td class='heatmap-cell heat-win'>0.0220</td>
+<td class='heatmap-cell heat-win'>0.0210</td>
+<td class='heatmap-cell heat-loss'>-0.0113</td>
+<td class='heatmap-cell heat-win'>0.0351</td>
+<td class='heatmap-cell heat-win'>0.1617</td>
+<td class='heatmap-cell heat-win'>0.1613</td>
+<td class='heatmap-cell heat-win'>0.1076</td>
+<td class='heatmap-cell heat-loss'>-0.0076</td>
+<td class='heatmap-cell heat-win'>0.0460</td>
+<td class='heatmap-cell heat-win'>0.0140</td>
+<td class='heatmap-cell heat-win'>0.1328</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0159</td>
+<td class='heatmap-cell heat-win'>0.0143</td>
+<td class='heatmap-cell heat-loss'>-0.0004</td>
+<td class='heatmap-cell heat-win'>0.0099</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>0.0802 · 21W</span></td>
+<td class='heatmap-cell heat-win'>0.1526</td>
+<td class='heatmap-cell heat-win'>0.1409</td>
+<td class='heatmap-cell heat-loss'>-0.0086</td>
+<td class='heatmap-cell heat-win'>0.0282</td>
+<td class='heatmap-cell heat-win'>0.0321</td>
+<td class='heatmap-cell heat-win'>0.0425</td>
+<td class='heatmap-cell heat-loss'>-0.0651</td>
+<td class='heatmap-cell heat-win'>0.1515</td>
+<td class='heatmap-cell heat-win'>0.0379</td>
+<td class='heatmap-cell heat-win'>0.0369</td>
+<td class='heatmap-cell heat-win'>0.0046</td>
+<td class='heatmap-cell heat-win'>0.0511</td>
+<td class='heatmap-cell heat-win'>0.1776</td>
+<td class='heatmap-cell heat-win'>0.1772</td>
+<td class='heatmap-cell heat-win'>0.1235</td>
+<td class='heatmap-cell heat-win'>0.0083</td>
+<td class='heatmap-cell heat-win'>0.0619</td>
+<td class='heatmap-cell heat-win'>0.0299</td>
+<td class='heatmap-cell heat-win'>0.1488</td>
+<td class='heatmap-cell heat-win'>0.0159</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0302</td>
+<td class='heatmap-cell heat-win'>0.0155</td>
+<td class='heatmap-cell heat-win'>0.0258</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>0.0499 · 13W</span></td>
+<td class='heatmap-cell heat-win'>0.1224</td>
+<td class='heatmap-cell heat-win'>0.1107</td>
+<td class='heatmap-cell heat-loss'>-0.0388</td>
+<td class='heatmap-cell heat-loss'>-0.0021</td>
+<td class='heatmap-cell heat-win'>0.0019</td>
+<td class='heatmap-cell heat-win'>0.0123</td>
+<td class='heatmap-cell heat-loss'>-0.0954</td>
+<td class='heatmap-cell heat-win'>0.1212</td>
+<td class='heatmap-cell heat-win'>0.0077</td>
+<td class='heatmap-cell heat-win'>0.0067</td>
+<td class='heatmap-cell heat-loss'>-0.0256</td>
+<td class='heatmap-cell heat-win'>0.0208</td>
+<td class='heatmap-cell heat-win'>0.1473</td>
+<td class='heatmap-cell heat-win'>0.1470</td>
+<td class='heatmap-cell heat-win'>0.0933</td>
+<td class='heatmap-cell heat-loss'>-0.0219</td>
+<td class='heatmap-cell heat-win'>0.0317</td>
+<td class='heatmap-cell heat-loss'>-0.0003</td>
+<td class='heatmap-cell heat-win'>0.1185</td>
+<td class='heatmap-cell heat-loss'>-0.0143</td>
+<td class='heatmap-cell heat-loss'>-0.0302</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0147</td>
+<td class='heatmap-cell heat-loss'>-0.0044</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>0.0647 · 18W</span></td>
+<td class='heatmap-cell heat-win'>0.1371</td>
+<td class='heatmap-cell heat-win'>0.1254</td>
+<td class='heatmap-cell heat-loss'>-0.0241</td>
+<td class='heatmap-cell heat-win'>0.0126</td>
+<td class='heatmap-cell heat-win'>0.0166</td>
+<td class='heatmap-cell heat-win'>0.0270</td>
+<td class='heatmap-cell heat-loss'>-0.0806</td>
+<td class='heatmap-cell heat-win'>0.1359</td>
+<td class='heatmap-cell heat-win'>0.0224</td>
+<td class='heatmap-cell heat-win'>0.0214</td>
+<td class='heatmap-cell heat-loss'>-0.0109</td>
+<td class='heatmap-cell heat-win'>0.0356</td>
+<td class='heatmap-cell heat-win'>0.1621</td>
+<td class='heatmap-cell heat-win'>0.1617</td>
+<td class='heatmap-cell heat-win'>0.1080</td>
+<td class='heatmap-cell heat-loss'>-0.0072</td>
+<td class='heatmap-cell heat-win'>0.0464</td>
+<td class='heatmap-cell heat-win'>0.0144</td>
+<td class='heatmap-cell heat-win'>0.1333</td>
+<td class='heatmap-cell heat-win'>0.0004</td>
+<td class='heatmap-cell heat-loss'>-0.0155</td>
+<td class='heatmap-cell heat-win'>0.0147</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0103</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>0.0543 · 16W</span></td>
+<td class='heatmap-cell heat-win'>0.1268</td>
+<td class='heatmap-cell heat-win'>0.1151</td>
+<td class='heatmap-cell heat-loss'>-0.0344</td>
+<td class='heatmap-cell heat-win'>0.0023</td>
+<td class='heatmap-cell heat-win'>0.0063</td>
+<td class='heatmap-cell heat-win'>0.0167</td>
+<td class='heatmap-cell heat-loss'>-0.0910</td>
+<td class='heatmap-cell heat-win'>0.1256</td>
+<td class='heatmap-cell heat-win'>0.0121</td>
+<td class='heatmap-cell heat-win'>0.0111</td>
+<td class='heatmap-cell heat-loss'>-0.0212</td>
+<td class='heatmap-cell heat-win'>0.0252</td>
+<td class='heatmap-cell heat-win'>0.1517</td>
+<td class='heatmap-cell heat-win'>0.1514</td>
+<td class='heatmap-cell heat-win'>0.0977</td>
+<td class='heatmap-cell heat-loss'>-0.0175</td>
+<td class='heatmap-cell heat-win'>0.0361</td>
+<td class='heatmap-cell heat-win'>0.0041</td>
+<td class='heatmap-cell heat-win'>0.1229</td>
+<td class='heatmap-cell heat-loss'>-0.0099</td>
+<td class='heatmap-cell heat-loss'>-0.0258</td>
+<td class='heatmap-cell heat-win'>0.0044</td>
+<td class='heatmap-cell heat-loss'>-0.0103</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='stance_shift' style='display:none'><div class='muted'>Stance shift · higher wins</div>
+<table><thead><tr><th>Item</th>
+<th>facts_dose_128_log_skeleton_closure_high_log1024_final2048</th>
+<th>facts_dose_128_log_skeleton_closure_low_log1024_final2048</th>
+<th>facts_dose_128_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>facts_dose_128_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>facts_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>facts_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</th>
+<th>facts_dose_512_log_skeleton_closure_high_log1024_final2048</th>
+<th>facts_dose_512_log_skeleton_closure_low_log1024_final2048</th>
+<th>facts_dose_512_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>facts_dose_512_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>facts_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>facts_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</th>
+<th>isomorphic_dose_128_log_skeleton_closure_high_log1024_final2048</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log1024_final2048</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>isomorphic_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</th>
+<th>isomorphic_dose_512_log_skeleton_closure_high_log1024_final2048</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log1024_final2048</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>isomorphic_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>0.1667 · 3W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1889</td>
+<td class='heatmap-cell heat-loss'>-0.0769</td>
+<td class='heatmap-cell heat-loss'>-0.0625</td>
+<td class='heatmap-cell heat-loss'>-0.0139</td>
+<td class='heatmap-cell heat-loss'>-0.1806</td>
+<td class='heatmap-cell heat-loss'>-0.1389</td>
+<td class='heatmap-cell heat-loss'>-0.1667</td>
+<td class='heatmap-cell heat-win'>0.0342</td>
+<td class='heatmap-cell heat-loss'>-0.1250</td>
+<td class='heatmap-cell heat-win'>0.0098</td>
+<td class='heatmap-cell heat-loss'>-0.0600</td>
+<td class='heatmap-cell heat-loss'>-0.3333</td>
+<td class='heatmap-cell heat-loss'>-0.5000</td>
+<td class='heatmap-cell heat-loss'>-0.1032</td>
+<td class='heatmap-cell heat-loss'>-0.0556</td>
+<td class='heatmap-cell heat-loss'>-0.2361</td>
+<td class='heatmap-cell heat-loss'>-0.1111</td>
+<td class='heatmap-cell heat-loss'>-0.2111</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-loss'>-0.0417</td>
+<td class='heatmap-cell heat-loss'>-0.0556</td>
+<td class='heatmap-cell heat-win'>0.0111</td>
+<td class='heatmap-cell heat-loss'>-0.1528</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>0.3556 · 19W</span></td>
+<td class='heatmap-cell heat-win'>0.1889</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.1120</td>
+<td class='heatmap-cell heat-win'>0.1264</td>
+<td class='heatmap-cell heat-win'>0.1750</td>
+<td class='heatmap-cell heat-win'>0.0083</td>
+<td class='heatmap-cell heat-win'>0.0500</td>
+<td class='heatmap-cell heat-win'>0.0222</td>
+<td class='heatmap-cell heat-win'>0.2231</td>
+<td class='heatmap-cell heat-win'>0.0639</td>
+<td class='heatmap-cell heat-win'>0.1987</td>
+<td class='heatmap-cell heat-win'>0.1289</td>
+<td class='heatmap-cell heat-loss'>-0.1444</td>
+<td class='heatmap-cell heat-loss'>-0.3111</td>
+<td class='heatmap-cell heat-win'>0.0857</td>
+<td class='heatmap-cell heat-win'>0.1333</td>
+<td class='heatmap-cell heat-loss'>-0.0472</td>
+<td class='heatmap-cell heat-win'>0.0778</td>
+<td class='heatmap-cell heat-loss'>-0.0222</td>
+<td class='heatmap-cell heat-win'>0.1889</td>
+<td class='heatmap-cell heat-win'>0.1472</td>
+<td class='heatmap-cell heat-win'>0.1333</td>
+<td class='heatmap-cell heat-win'>0.2000</td>
+<td class='heatmap-cell heat-win'>0.0361</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>0.2436 · 11W</span></td>
+<td class='heatmap-cell heat-win'>0.0769</td>
+<td class='heatmap-cell heat-loss'>-0.1120</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0144</td>
+<td class='heatmap-cell heat-win'>0.0630</td>
+<td class='heatmap-cell heat-loss'>-0.1036</td>
+<td class='heatmap-cell heat-loss'>-0.0620</td>
+<td class='heatmap-cell heat-loss'>-0.0897</td>
+<td class='heatmap-cell heat-win'>0.1111</td>
+<td class='heatmap-cell heat-loss'>-0.0481</td>
+<td class='heatmap-cell heat-win'>0.0867</td>
+<td class='heatmap-cell heat-win'>0.0169</td>
+<td class='heatmap-cell heat-loss'>-0.2564</td>
+<td class='heatmap-cell heat-loss'>-0.4231</td>
+<td class='heatmap-cell heat-loss'>-0.0263</td>
+<td class='heatmap-cell heat-win'>0.0214</td>
+<td class='heatmap-cell heat-loss'>-0.1592</td>
+<td class='heatmap-cell heat-loss'>-0.0342</td>
+<td class='heatmap-cell heat-loss'>-0.1342</td>
+<td class='heatmap-cell heat-win'>0.0769</td>
+<td class='heatmap-cell heat-win'>0.0353</td>
+<td class='heatmap-cell heat-win'>0.0214</td>
+<td class='heatmap-cell heat-win'>0.0880</td>
+<td class='heatmap-cell heat-loss'>-0.0759</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>0.2292 · 10W</span></td>
+<td class='heatmap-cell heat-win'>0.0625</td>
+<td class='heatmap-cell heat-loss'>-0.1264</td>
+<td class='heatmap-cell heat-loss'>-0.0144</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0486</td>
+<td class='heatmap-cell heat-loss'>-0.1181</td>
+<td class='heatmap-cell heat-loss'>-0.0764</td>
+<td class='heatmap-cell heat-loss'>-0.1042</td>
+<td class='heatmap-cell heat-win'>0.0967</td>
+<td class='heatmap-cell heat-loss'>-0.0625</td>
+<td class='heatmap-cell heat-win'>0.0723</td>
+<td class='heatmap-cell heat-win'>0.0025</td>
+<td class='heatmap-cell heat-loss'>-0.2708</td>
+<td class='heatmap-cell heat-loss'>-0.4375</td>
+<td class='heatmap-cell heat-loss'>-0.0407</td>
+<td class='heatmap-cell heat-win'>0.0069</td>
+<td class='heatmap-cell heat-loss'>-0.1736</td>
+<td class='heatmap-cell heat-loss'>-0.0486</td>
+<td class='heatmap-cell heat-loss'>-0.1486</td>
+<td class='heatmap-cell heat-win'>0.0625</td>
+<td class='heatmap-cell heat-win'>0.0208</td>
+<td class='heatmap-cell heat-win'>0.0069</td>
+<td class='heatmap-cell heat-win'>0.0736</td>
+<td class='heatmap-cell heat-loss'>-0.0903</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>0.1806 · 5W</span></td>
+<td class='heatmap-cell heat-win'>0.0139</td>
+<td class='heatmap-cell heat-loss'>-0.1750</td>
+<td class='heatmap-cell heat-loss'>-0.0630</td>
+<td class='heatmap-cell heat-loss'>-0.0486</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1667</td>
+<td class='heatmap-cell heat-loss'>-0.1250</td>
+<td class='heatmap-cell heat-loss'>-0.1528</td>
+<td class='heatmap-cell heat-win'>0.0481</td>
+<td class='heatmap-cell heat-loss'>-0.1111</td>
+<td class='heatmap-cell heat-win'>0.0237</td>
+<td class='heatmap-cell heat-loss'>-0.0461</td>
+<td class='heatmap-cell heat-loss'>-0.3194</td>
+<td class='heatmap-cell heat-loss'>-0.4861</td>
+<td class='heatmap-cell heat-loss'>-0.0893</td>
+<td class='heatmap-cell heat-loss'>-0.0417</td>
+<td class='heatmap-cell heat-loss'>-0.2222</td>
+<td class='heatmap-cell heat-loss'>-0.0972</td>
+<td class='heatmap-cell heat-loss'>-0.1972</td>
+<td class='heatmap-cell heat-win'>0.0139</td>
+<td class='heatmap-cell heat-loss'>-0.0278</td>
+<td class='heatmap-cell heat-loss'>-0.0417</td>
+<td class='heatmap-cell heat-win'>0.0250</td>
+<td class='heatmap-cell heat-loss'>-0.1389</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>0.3472 · 18W</span></td>
+<td class='heatmap-cell heat-win'>0.1806</td>
+<td class='heatmap-cell heat-loss'>-0.0083</td>
+<td class='heatmap-cell heat-win'>0.1036</td>
+<td class='heatmap-cell heat-win'>0.1181</td>
+<td class='heatmap-cell heat-win'>0.1667</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0417</td>
+<td class='heatmap-cell heat-win'>0.0139</td>
+<td class='heatmap-cell heat-win'>0.2147</td>
+<td class='heatmap-cell heat-win'>0.0556</td>
+<td class='heatmap-cell heat-win'>0.1904</td>
+<td class='heatmap-cell heat-win'>0.1206</td>
+<td class='heatmap-cell heat-loss'>-0.1528</td>
+<td class='heatmap-cell heat-loss'>-0.3194</td>
+<td class='heatmap-cell heat-win'>0.0774</td>
+<td class='heatmap-cell heat-win'>0.1250</td>
+<td class='heatmap-cell heat-loss'>-0.0556</td>
+<td class='heatmap-cell heat-win'>0.0694</td>
+<td class='heatmap-cell heat-loss'>-0.0306</td>
+<td class='heatmap-cell heat-win'>0.1806</td>
+<td class='heatmap-cell heat-win'>0.1389</td>
+<td class='heatmap-cell heat-win'>0.1250</td>
+<td class='heatmap-cell heat-win'>0.1917</td>
+<td class='heatmap-cell heat-win'>0.0278</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>0.3056 · 15W</span></td>
+<td class='heatmap-cell heat-win'>0.1389</td>
+<td class='heatmap-cell heat-loss'>-0.0500</td>
+<td class='heatmap-cell heat-win'>0.0620</td>
+<td class='heatmap-cell heat-win'>0.0764</td>
+<td class='heatmap-cell heat-win'>0.1250</td>
+<td class='heatmap-cell heat-loss'>-0.0417</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0278</td>
+<td class='heatmap-cell heat-win'>0.1731</td>
+<td class='heatmap-cell heat-win'>0.0139</td>
+<td class='heatmap-cell heat-win'>0.1487</td>
+<td class='heatmap-cell heat-win'>0.0789</td>
+<td class='heatmap-cell heat-loss'>-0.1944</td>
+<td class='heatmap-cell heat-loss'>-0.3611</td>
+<td class='heatmap-cell heat-win'>0.0357</td>
+<td class='heatmap-cell heat-win'>0.0833</td>
+<td class='heatmap-cell heat-loss'>-0.0972</td>
+<td class='heatmap-cell heat-win'>0.0278</td>
+<td class='heatmap-cell heat-loss'>-0.0722</td>
+<td class='heatmap-cell heat-win'>0.1389</td>
+<td class='heatmap-cell heat-win'>0.0972</td>
+<td class='heatmap-cell heat-win'>0.0833</td>
+<td class='heatmap-cell heat-win'>0.1500</td>
+<td class='heatmap-cell heat-loss'>-0.0139</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>0.3333 · 17W</span></td>
+<td class='heatmap-cell heat-win'>0.1667</td>
+<td class='heatmap-cell heat-loss'>-0.0222</td>
+<td class='heatmap-cell heat-win'>0.0897</td>
+<td class='heatmap-cell heat-win'>0.1042</td>
+<td class='heatmap-cell heat-win'>0.1528</td>
+<td class='heatmap-cell heat-loss'>-0.0139</td>
+<td class='heatmap-cell heat-win'>0.0278</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.2009</td>
+<td class='heatmap-cell heat-win'>0.0417</td>
+<td class='heatmap-cell heat-win'>0.1765</td>
+<td class='heatmap-cell heat-win'>0.1067</td>
+<td class='heatmap-cell heat-loss'>-0.1667</td>
+<td class='heatmap-cell heat-loss'>-0.3333</td>
+<td class='heatmap-cell heat-win'>0.0635</td>
+<td class='heatmap-cell heat-win'>0.1111</td>
+<td class='heatmap-cell heat-loss'>-0.0694</td>
+<td class='heatmap-cell heat-win'>0.0556</td>
+<td class='heatmap-cell heat-loss'>-0.0444</td>
+<td class='heatmap-cell heat-win'>0.1667</td>
+<td class='heatmap-cell heat-win'>0.1250</td>
+<td class='heatmap-cell heat-win'>0.1111</td>
+<td class='heatmap-cell heat-win'>0.1778</td>
+<td class='heatmap-cell heat-win'>0.0139</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>0.1325 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0342</td>
+<td class='heatmap-cell heat-loss'>-0.2231</td>
+<td class='heatmap-cell heat-loss'>-0.1111</td>
+<td class='heatmap-cell heat-loss'>-0.0967</td>
+<td class='heatmap-cell heat-loss'>-0.0481</td>
+<td class='heatmap-cell heat-loss'>-0.2147</td>
+<td class='heatmap-cell heat-loss'>-0.1731</td>
+<td class='heatmap-cell heat-loss'>-0.2009</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1592</td>
+<td class='heatmap-cell heat-loss'>-0.0244</td>
+<td class='heatmap-cell heat-loss'>-0.0942</td>
+<td class='heatmap-cell heat-loss'>-0.3675</td>
+<td class='heatmap-cell heat-loss'>-0.5342</td>
+<td class='heatmap-cell heat-loss'>-0.1374</td>
+<td class='heatmap-cell heat-loss'>-0.0897</td>
+<td class='heatmap-cell heat-loss'>-0.2703</td>
+<td class='heatmap-cell heat-loss'>-0.1453</td>
+<td class='heatmap-cell heat-loss'>-0.2453</td>
+<td class='heatmap-cell heat-loss'>-0.0342</td>
+<td class='heatmap-cell heat-loss'>-0.0759</td>
+<td class='heatmap-cell heat-loss'>-0.0897</td>
+<td class='heatmap-cell heat-loss'>-0.0231</td>
+<td class='heatmap-cell heat-loss'>-0.1870</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>0.2917 · 14W</span></td>
+<td class='heatmap-cell heat-win'>0.1250</td>
+<td class='heatmap-cell heat-loss'>-0.0639</td>
+<td class='heatmap-cell heat-win'>0.0481</td>
+<td class='heatmap-cell heat-win'>0.0625</td>
+<td class='heatmap-cell heat-win'>0.1111</td>
+<td class='heatmap-cell heat-loss'>-0.0556</td>
+<td class='heatmap-cell heat-loss'>-0.0139</td>
+<td class='heatmap-cell heat-loss'>-0.0417</td>
+<td class='heatmap-cell heat-win'>0.1592</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.1348</td>
+<td class='heatmap-cell heat-win'>0.0650</td>
+<td class='heatmap-cell heat-loss'>-0.2083</td>
+<td class='heatmap-cell heat-loss'>-0.3750</td>
+<td class='heatmap-cell heat-win'>0.0218</td>
+<td class='heatmap-cell heat-win'>0.0694</td>
+<td class='heatmap-cell heat-loss'>-0.1111</td>
+<td class='heatmap-cell heat-win'>0.0139</td>
+<td class='heatmap-cell heat-loss'>-0.0861</td>
+<td class='heatmap-cell heat-win'>0.1250</td>
+<td class='heatmap-cell heat-win'>0.0833</td>
+<td class='heatmap-cell heat-win'>0.0694</td>
+<td class='heatmap-cell heat-win'>0.1361</td>
+<td class='heatmap-cell heat-loss'>-0.0278</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>0.1569 · 2W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0098</td>
+<td class='heatmap-cell heat-loss'>-0.1987</td>
+<td class='heatmap-cell heat-loss'>-0.0867</td>
+<td class='heatmap-cell heat-loss'>-0.0723</td>
+<td class='heatmap-cell heat-loss'>-0.0237</td>
+<td class='heatmap-cell heat-loss'>-0.1904</td>
+<td class='heatmap-cell heat-loss'>-0.1487</td>
+<td class='heatmap-cell heat-loss'>-0.1765</td>
+<td class='heatmap-cell heat-win'>0.0244</td>
+<td class='heatmap-cell heat-loss'>-0.1348</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0698</td>
+<td class='heatmap-cell heat-loss'>-0.3431</td>
+<td class='heatmap-cell heat-loss'>-0.5098</td>
+<td class='heatmap-cell heat-loss'>-0.1130</td>
+<td class='heatmap-cell heat-loss'>-0.0654</td>
+<td class='heatmap-cell heat-loss'>-0.2459</td>
+<td class='heatmap-cell heat-loss'>-0.1209</td>
+<td class='heatmap-cell heat-loss'>-0.2209</td>
+<td class='heatmap-cell heat-loss'>-0.0098</td>
+<td class='heatmap-cell heat-loss'>-0.0515</td>
+<td class='heatmap-cell heat-loss'>-0.0654</td>
+<td class='heatmap-cell heat-win'>0.0013</td>
+<td class='heatmap-cell heat-loss'>-0.1626</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>0.2267 · 9W</span></td>
+<td class='heatmap-cell heat-win'>0.0600</td>
+<td class='heatmap-cell heat-loss'>-0.1289</td>
+<td class='heatmap-cell heat-loss'>-0.0169</td>
+<td class='heatmap-cell heat-loss'>-0.0025</td>
+<td class='heatmap-cell heat-win'>0.0461</td>
+<td class='heatmap-cell heat-loss'>-0.1206</td>
+<td class='heatmap-cell heat-loss'>-0.0789</td>
+<td class='heatmap-cell heat-loss'>-0.1067</td>
+<td class='heatmap-cell heat-win'>0.0942</td>
+<td class='heatmap-cell heat-loss'>-0.0650</td>
+<td class='heatmap-cell heat-win'>0.0698</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.2733</td>
+<td class='heatmap-cell heat-loss'>-0.4400</td>
+<td class='heatmap-cell heat-loss'>-0.0432</td>
+<td class='heatmap-cell heat-win'>0.0044</td>
+<td class='heatmap-cell heat-loss'>-0.1761</td>
+<td class='heatmap-cell heat-loss'>-0.0511</td>
+<td class='heatmap-cell heat-loss'>-0.1511</td>
+<td class='heatmap-cell heat-win'>0.0600</td>
+<td class='heatmap-cell heat-win'>0.0183</td>
+<td class='heatmap-cell heat-win'>0.0044</td>
+<td class='heatmap-cell heat-win'>0.0711</td>
+<td class='heatmap-cell heat-loss'>-0.0928</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>0.5000 · 22W</span></td>
+<td class='heatmap-cell heat-win'>0.3333</td>
+<td class='heatmap-cell heat-win'>0.1444</td>
+<td class='heatmap-cell heat-win'>0.2564</td>
+<td class='heatmap-cell heat-win'>0.2708</td>
+<td class='heatmap-cell heat-win'>0.3194</td>
+<td class='heatmap-cell heat-win'>0.1528</td>
+<td class='heatmap-cell heat-win'>0.1944</td>
+<td class='heatmap-cell heat-win'>0.1667</td>
+<td class='heatmap-cell heat-win'>0.3675</td>
+<td class='heatmap-cell heat-win'>0.2083</td>
+<td class='heatmap-cell heat-win'>0.3431</td>
+<td class='heatmap-cell heat-win'>0.2733</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1667</td>
+<td class='heatmap-cell heat-win'>0.2302</td>
+<td class='heatmap-cell heat-win'>0.2778</td>
+<td class='heatmap-cell heat-win'>0.0972</td>
+<td class='heatmap-cell heat-win'>0.2222</td>
+<td class='heatmap-cell heat-win'>0.1222</td>
+<td class='heatmap-cell heat-win'>0.3333</td>
+<td class='heatmap-cell heat-win'>0.2917</td>
+<td class='heatmap-cell heat-win'>0.2778</td>
+<td class='heatmap-cell heat-win'>0.3444</td>
+<td class='heatmap-cell heat-win'>0.1806</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>0.6667 · 23W</span></td>
+<td class='heatmap-cell heat-win'>0.5000</td>
+<td class='heatmap-cell heat-win'>0.3111</td>
+<td class='heatmap-cell heat-win'>0.4231</td>
+<td class='heatmap-cell heat-win'>0.4375</td>
+<td class='heatmap-cell heat-win'>0.4861</td>
+<td class='heatmap-cell heat-win'>0.3194</td>
+<td class='heatmap-cell heat-win'>0.3611</td>
+<td class='heatmap-cell heat-win'>0.3333</td>
+<td class='heatmap-cell heat-win'>0.5342</td>
+<td class='heatmap-cell heat-win'>0.3750</td>
+<td class='heatmap-cell heat-win'>0.5098</td>
+<td class='heatmap-cell heat-win'>0.4400</td>
+<td class='heatmap-cell heat-win'>0.1667</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.3968</td>
+<td class='heatmap-cell heat-win'>0.4444</td>
+<td class='heatmap-cell heat-win'>0.2639</td>
+<td class='heatmap-cell heat-win'>0.3889</td>
+<td class='heatmap-cell heat-win'>0.2889</td>
+<td class='heatmap-cell heat-win'>0.5000</td>
+<td class='heatmap-cell heat-win'>0.4583</td>
+<td class='heatmap-cell heat-win'>0.4444</td>
+<td class='heatmap-cell heat-win'>0.5111</td>
+<td class='heatmap-cell heat-win'>0.3472</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>0.2698 · 12W</span></td>
+<td class='heatmap-cell heat-win'>0.1032</td>
+<td class='heatmap-cell heat-loss'>-0.0857</td>
+<td class='heatmap-cell heat-win'>0.0263</td>
+<td class='heatmap-cell heat-win'>0.0407</td>
+<td class='heatmap-cell heat-win'>0.0893</td>
+<td class='heatmap-cell heat-loss'>-0.0774</td>
+<td class='heatmap-cell heat-loss'>-0.0357</td>
+<td class='heatmap-cell heat-loss'>-0.0635</td>
+<td class='heatmap-cell heat-win'>0.1374</td>
+<td class='heatmap-cell heat-loss'>-0.0218</td>
+<td class='heatmap-cell heat-win'>0.1130</td>
+<td class='heatmap-cell heat-win'>0.0432</td>
+<td class='heatmap-cell heat-loss'>-0.2302</td>
+<td class='heatmap-cell heat-loss'>-0.3968</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0476</td>
+<td class='heatmap-cell heat-loss'>-0.1329</td>
+<td class='heatmap-cell heat-loss'>-0.0079</td>
+<td class='heatmap-cell heat-loss'>-0.1079</td>
+<td class='heatmap-cell heat-win'>0.1032</td>
+<td class='heatmap-cell heat-win'>0.0615</td>
+<td class='heatmap-cell heat-win'>0.0476</td>
+<td class='heatmap-cell heat-win'>0.1143</td>
+<td class='heatmap-cell heat-loss'>-0.0496</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>0.2222 · 7W</span></td>
+<td class='heatmap-cell heat-win'>0.0556</td>
+<td class='heatmap-cell heat-loss'>-0.1333</td>
+<td class='heatmap-cell heat-loss'>-0.0214</td>
+<td class='heatmap-cell heat-loss'>-0.0069</td>
+<td class='heatmap-cell heat-win'>0.0417</td>
+<td class='heatmap-cell heat-loss'>-0.1250</td>
+<td class='heatmap-cell heat-loss'>-0.0833</td>
+<td class='heatmap-cell heat-loss'>-0.1111</td>
+<td class='heatmap-cell heat-win'>0.0897</td>
+<td class='heatmap-cell heat-loss'>-0.0694</td>
+<td class='heatmap-cell heat-win'>0.0654</td>
+<td class='heatmap-cell heat-loss'>-0.0044</td>
+<td class='heatmap-cell heat-loss'>-0.2778</td>
+<td class='heatmap-cell heat-loss'>-0.4444</td>
+<td class='heatmap-cell heat-loss'>-0.0476</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1806</td>
+<td class='heatmap-cell heat-loss'>-0.0556</td>
+<td class='heatmap-cell heat-loss'>-0.1556</td>
+<td class='heatmap-cell heat-win'>0.0556</td>
+<td class='heatmap-cell heat-win'>0.0139</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-win'>0.0667</td>
+<td class='heatmap-cell heat-loss'>-0.0972</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>0.4028 · 21W</span></td>
+<td class='heatmap-cell heat-win'>0.2361</td>
+<td class='heatmap-cell heat-win'>0.0472</td>
+<td class='heatmap-cell heat-win'>0.1592</td>
+<td class='heatmap-cell heat-win'>0.1736</td>
+<td class='heatmap-cell heat-win'>0.2222</td>
+<td class='heatmap-cell heat-win'>0.0556</td>
+<td class='heatmap-cell heat-win'>0.0972</td>
+<td class='heatmap-cell heat-win'>0.0694</td>
+<td class='heatmap-cell heat-win'>0.2703</td>
+<td class='heatmap-cell heat-win'>0.1111</td>
+<td class='heatmap-cell heat-win'>0.2459</td>
+<td class='heatmap-cell heat-win'>0.1761</td>
+<td class='heatmap-cell heat-loss'>-0.0972</td>
+<td class='heatmap-cell heat-loss'>-0.2639</td>
+<td class='heatmap-cell heat-win'>0.1329</td>
+<td class='heatmap-cell heat-win'>0.1806</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.1250</td>
+<td class='heatmap-cell heat-win'>0.0250</td>
+<td class='heatmap-cell heat-win'>0.2361</td>
+<td class='heatmap-cell heat-win'>0.1944</td>
+<td class='heatmap-cell heat-win'>0.1806</td>
+<td class='heatmap-cell heat-win'>0.2472</td>
+<td class='heatmap-cell heat-win'>0.0833</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>0.2778 · 13W</span></td>
+<td class='heatmap-cell heat-win'>0.1111</td>
+<td class='heatmap-cell heat-loss'>-0.0778</td>
+<td class='heatmap-cell heat-win'>0.0342</td>
+<td class='heatmap-cell heat-win'>0.0486</td>
+<td class='heatmap-cell heat-win'>0.0972</td>
+<td class='heatmap-cell heat-loss'>-0.0694</td>
+<td class='heatmap-cell heat-loss'>-0.0278</td>
+<td class='heatmap-cell heat-loss'>-0.0556</td>
+<td class='heatmap-cell heat-win'>0.1453</td>
+<td class='heatmap-cell heat-loss'>-0.0139</td>
+<td class='heatmap-cell heat-win'>0.1209</td>
+<td class='heatmap-cell heat-win'>0.0511</td>
+<td class='heatmap-cell heat-loss'>-0.2222</td>
+<td class='heatmap-cell heat-loss'>-0.3889</td>
+<td class='heatmap-cell heat-win'>0.0079</td>
+<td class='heatmap-cell heat-win'>0.0556</td>
+<td class='heatmap-cell heat-loss'>-0.1250</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1000</td>
+<td class='heatmap-cell heat-win'>0.1111</td>
+<td class='heatmap-cell heat-win'>0.0694</td>
+<td class='heatmap-cell heat-win'>0.0556</td>
+<td class='heatmap-cell heat-win'>0.1222</td>
+<td class='heatmap-cell heat-loss'>-0.0417</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>0.3778 · 20W</span></td>
+<td class='heatmap-cell heat-win'>0.2111</td>
+<td class='heatmap-cell heat-win'>0.0222</td>
+<td class='heatmap-cell heat-win'>0.1342</td>
+<td class='heatmap-cell heat-win'>0.1486</td>
+<td class='heatmap-cell heat-win'>0.1972</td>
+<td class='heatmap-cell heat-win'>0.0306</td>
+<td class='heatmap-cell heat-win'>0.0722</td>
+<td class='heatmap-cell heat-win'>0.0444</td>
+<td class='heatmap-cell heat-win'>0.2453</td>
+<td class='heatmap-cell heat-win'>0.0861</td>
+<td class='heatmap-cell heat-win'>0.2209</td>
+<td class='heatmap-cell heat-win'>0.1511</td>
+<td class='heatmap-cell heat-loss'>-0.1222</td>
+<td class='heatmap-cell heat-loss'>-0.2889</td>
+<td class='heatmap-cell heat-win'>0.1079</td>
+<td class='heatmap-cell heat-win'>0.1556</td>
+<td class='heatmap-cell heat-loss'>-0.0250</td>
+<td class='heatmap-cell heat-win'>0.1000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.2111</td>
+<td class='heatmap-cell heat-win'>0.1694</td>
+<td class='heatmap-cell heat-win'>0.1556</td>
+<td class='heatmap-cell heat-win'>0.2222</td>
+<td class='heatmap-cell heat-win'>0.0583</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>0.1667 · 3W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-loss'>-0.1889</td>
+<td class='heatmap-cell heat-loss'>-0.0769</td>
+<td class='heatmap-cell heat-loss'>-0.0625</td>
+<td class='heatmap-cell heat-loss'>-0.0139</td>
+<td class='heatmap-cell heat-loss'>-0.1806</td>
+<td class='heatmap-cell heat-loss'>-0.1389</td>
+<td class='heatmap-cell heat-loss'>-0.1667</td>
+<td class='heatmap-cell heat-win'>0.0342</td>
+<td class='heatmap-cell heat-loss'>-0.1250</td>
+<td class='heatmap-cell heat-win'>0.0098</td>
+<td class='heatmap-cell heat-loss'>-0.0600</td>
+<td class='heatmap-cell heat-loss'>-0.3333</td>
+<td class='heatmap-cell heat-loss'>-0.5000</td>
+<td class='heatmap-cell heat-loss'>-0.1032</td>
+<td class='heatmap-cell heat-loss'>-0.0556</td>
+<td class='heatmap-cell heat-loss'>-0.2361</td>
+<td class='heatmap-cell heat-loss'>-0.1111</td>
+<td class='heatmap-cell heat-loss'>-0.2111</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0417</td>
+<td class='heatmap-cell heat-loss'>-0.0556</td>
+<td class='heatmap-cell heat-win'>0.0111</td>
+<td class='heatmap-cell heat-loss'>-0.1528</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>0.2083 · 6W</span></td>
+<td class='heatmap-cell heat-win'>0.0417</td>
+<td class='heatmap-cell heat-loss'>-0.1472</td>
+<td class='heatmap-cell heat-loss'>-0.0353</td>
+<td class='heatmap-cell heat-loss'>-0.0208</td>
+<td class='heatmap-cell heat-win'>0.0278</td>
+<td class='heatmap-cell heat-loss'>-0.1389</td>
+<td class='heatmap-cell heat-loss'>-0.0972</td>
+<td class='heatmap-cell heat-loss'>-0.1250</td>
+<td class='heatmap-cell heat-win'>0.0759</td>
+<td class='heatmap-cell heat-loss'>-0.0833</td>
+<td class='heatmap-cell heat-win'>0.0515</td>
+<td class='heatmap-cell heat-loss'>-0.0183</td>
+<td class='heatmap-cell heat-loss'>-0.2917</td>
+<td class='heatmap-cell heat-loss'>-0.4583</td>
+<td class='heatmap-cell heat-loss'>-0.0615</td>
+<td class='heatmap-cell heat-loss'>-0.0139</td>
+<td class='heatmap-cell heat-loss'>-0.1944</td>
+<td class='heatmap-cell heat-loss'>-0.0694</td>
+<td class='heatmap-cell heat-loss'>-0.1694</td>
+<td class='heatmap-cell heat-win'>0.0417</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.0139</td>
+<td class='heatmap-cell heat-win'>0.0528</td>
+<td class='heatmap-cell heat-loss'>-0.1111</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>0.2222 · 7W</span></td>
+<td class='heatmap-cell heat-win'>0.0556</td>
+<td class='heatmap-cell heat-loss'>-0.1333</td>
+<td class='heatmap-cell heat-loss'>-0.0214</td>
+<td class='heatmap-cell heat-loss'>-0.0069</td>
+<td class='heatmap-cell heat-win'>0.0417</td>
+<td class='heatmap-cell heat-loss'>-0.1250</td>
+<td class='heatmap-cell heat-loss'>-0.0833</td>
+<td class='heatmap-cell heat-loss'>-0.1111</td>
+<td class='heatmap-cell heat-win'>0.0897</td>
+<td class='heatmap-cell heat-loss'>-0.0694</td>
+<td class='heatmap-cell heat-win'>0.0654</td>
+<td class='heatmap-cell heat-loss'>-0.0044</td>
+<td class='heatmap-cell heat-loss'>-0.2778</td>
+<td class='heatmap-cell heat-loss'>-0.4444</td>
+<td class='heatmap-cell heat-loss'>-0.0476</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-loss'>-0.1806</td>
+<td class='heatmap-cell heat-loss'>-0.0556</td>
+<td class='heatmap-cell heat-loss'>-0.1556</td>
+<td class='heatmap-cell heat-win'>0.0556</td>
+<td class='heatmap-cell heat-win'>0.0139</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>0.0667</td>
+<td class='heatmap-cell heat-loss'>-0.0972</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>0.1556 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-0.0111</td>
+<td class='heatmap-cell heat-loss'>-0.2000</td>
+<td class='heatmap-cell heat-loss'>-0.0880</td>
+<td class='heatmap-cell heat-loss'>-0.0736</td>
+<td class='heatmap-cell heat-loss'>-0.0250</td>
+<td class='heatmap-cell heat-loss'>-0.1917</td>
+<td class='heatmap-cell heat-loss'>-0.1500</td>
+<td class='heatmap-cell heat-loss'>-0.1778</td>
+<td class='heatmap-cell heat-win'>0.0231</td>
+<td class='heatmap-cell heat-loss'>-0.1361</td>
+<td class='heatmap-cell heat-loss'>-0.0013</td>
+<td class='heatmap-cell heat-loss'>-0.0711</td>
+<td class='heatmap-cell heat-loss'>-0.3444</td>
+<td class='heatmap-cell heat-loss'>-0.5111</td>
+<td class='heatmap-cell heat-loss'>-0.1143</td>
+<td class='heatmap-cell heat-loss'>-0.0667</td>
+<td class='heatmap-cell heat-loss'>-0.2472</td>
+<td class='heatmap-cell heat-loss'>-0.1222</td>
+<td class='heatmap-cell heat-loss'>-0.2222</td>
+<td class='heatmap-cell heat-loss'>-0.0111</td>
+<td class='heatmap-cell heat-loss'>-0.0528</td>
+<td class='heatmap-cell heat-loss'>-0.0667</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-0.1639</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>0.3194 · 16W</span></td>
+<td class='heatmap-cell heat-win'>0.1528</td>
+<td class='heatmap-cell heat-loss'>-0.0361</td>
+<td class='heatmap-cell heat-win'>0.0759</td>
+<td class='heatmap-cell heat-win'>0.0903</td>
+<td class='heatmap-cell heat-win'>0.1389</td>
+<td class='heatmap-cell heat-loss'>-0.0278</td>
+<td class='heatmap-cell heat-win'>0.0139</td>
+<td class='heatmap-cell heat-loss'>-0.0139</td>
+<td class='heatmap-cell heat-win'>0.1870</td>
+<td class='heatmap-cell heat-win'>0.0278</td>
+<td class='heatmap-cell heat-win'>0.1626</td>
+<td class='heatmap-cell heat-win'>0.0928</td>
+<td class='heatmap-cell heat-loss'>-0.1806</td>
+<td class='heatmap-cell heat-loss'>-0.3472</td>
+<td class='heatmap-cell heat-win'>0.0496</td>
+<td class='heatmap-cell heat-win'>0.0972</td>
+<td class='heatmap-cell heat-loss'>-0.0833</td>
+<td class='heatmap-cell heat-win'>0.0417</td>
+<td class='heatmap-cell heat-loss'>-0.0583</td>
+<td class='heatmap-cell heat-win'>0.1528</td>
+<td class='heatmap-cell heat-win'>0.1111</td>
+<td class='heatmap-cell heat-win'>0.0972</td>
+<td class='heatmap-cell heat-win'>0.1639</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_reasoning_delta' style='display:none'><div class='muted'>Reasoning token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>facts_dose_128_log_skeleton_closure_high_log1024_final2048</th>
+<th>facts_dose_128_log_skeleton_closure_low_log1024_final2048</th>
+<th>facts_dose_128_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>facts_dose_128_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>facts_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>facts_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</th>
+<th>facts_dose_512_log_skeleton_closure_high_log1024_final2048</th>
+<th>facts_dose_512_log_skeleton_closure_low_log1024_final2048</th>
+<th>facts_dose_512_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>facts_dose_512_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>facts_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>facts_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</th>
+<th>isomorphic_dose_128_log_skeleton_closure_high_log1024_final2048</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log1024_final2048</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>isomorphic_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</th>
+<th>isomorphic_dose_512_log_skeleton_closure_high_log1024_final2048</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log1024_final2048</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>isomorphic_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>0.0000 · 0W</span></td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-tie'>0.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<div class='heatmap-wrap' data-heatmap-key='budget_total_delta' style='display:none'><div class='muted'>Total token Δ · lower wins</div>
+<table><thead><tr><th>Item</th>
+<th>facts_dose_128_log_skeleton_closure_high_log1024_final2048</th>
+<th>facts_dose_128_log_skeleton_closure_low_log1024_final2048</th>
+<th>facts_dose_128_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>facts_dose_128_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>facts_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>facts_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</th>
+<th>facts_dose_512_log_skeleton_closure_high_log1024_final2048</th>
+<th>facts_dose_512_log_skeleton_closure_low_log1024_final2048</th>
+<th>facts_dose_512_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>facts_dose_512_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>facts_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>facts_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</th>
+<th>isomorphic_dose_128_log_skeleton_closure_high_log1024_final2048</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log1024_final2048</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>isomorphic_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>isomorphic_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</th>
+<th>isomorphic_dose_512_log_skeleton_closure_high_log1024_final2048</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log1024_final2048</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low2048</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low4096</th>
+<th>isomorphic_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</th>
+<th>isomorphic_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>1972.0000 · 9W</span></td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-373.0000</td>
+<td class='heatmap-cell heat-loss'>-1505.0000</td>
+<td class='heatmap-cell heat-loss'>-1163.0000</td>
+<td class='heatmap-cell heat-loss'>-1305.0000</td>
+<td class='heatmap-cell heat-loss'>-732.0000</td>
+<td class='heatmap-cell heat-win'>1014.0000</td>
+<td class='heatmap-cell heat-win'>992.0000</td>
+<td class='heatmap-cell heat-win'>234.0000</td>
+<td class='heatmap-cell heat-loss'>-29.0000</td>
+<td class='heatmap-cell heat-loss'>-368.0000</td>
+<td class='heatmap-cell heat-win'>558.0000</td>
+<td class='heatmap-cell heat-win'>158.0000</td>
+<td class='heatmap-cell heat-win'>170.0000</td>
+<td class='heatmap-cell heat-loss'>-1394.0000</td>
+<td class='heatmap-cell heat-loss'>-1290.0000</td>
+<td class='heatmap-cell heat-loss'>-1270.0000</td>
+<td class='heatmap-cell heat-loss'>-824.0000</td>
+<td class='heatmap-cell heat-win'>1193.0000</td>
+<td class='heatmap-cell heat-win'>1105.0000</td>
+<td class='heatmap-cell heat-loss'>-414.0000</td>
+<td class='heatmap-cell heat-loss'>-213.0000</td>
+<td class='heatmap-cell heat-loss'>-415.0000</td>
+<td class='heatmap-cell heat-win'>580.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>1599.0000 · 13W</span></td>
+<td class='heatmap-cell heat-win'>373.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-1132.0000</td>
+<td class='heatmap-cell heat-loss'>-790.0000</td>
+<td class='heatmap-cell heat-loss'>-932.0000</td>
+<td class='heatmap-cell heat-loss'>-359.0000</td>
+<td class='heatmap-cell heat-win'>1387.0000</td>
+<td class='heatmap-cell heat-win'>1365.0000</td>
+<td class='heatmap-cell heat-win'>607.0000</td>
+<td class='heatmap-cell heat-win'>344.0000</td>
+<td class='heatmap-cell heat-win'>5.0000</td>
+<td class='heatmap-cell heat-win'>931.0000</td>
+<td class='heatmap-cell heat-win'>531.0000</td>
+<td class='heatmap-cell heat-win'>543.0000</td>
+<td class='heatmap-cell heat-loss'>-1021.0000</td>
+<td class='heatmap-cell heat-loss'>-917.0000</td>
+<td class='heatmap-cell heat-loss'>-897.0000</td>
+<td class='heatmap-cell heat-loss'>-451.0000</td>
+<td class='heatmap-cell heat-win'>1566.0000</td>
+<td class='heatmap-cell heat-win'>1478.0000</td>
+<td class='heatmap-cell heat-loss'>-41.0000</td>
+<td class='heatmap-cell heat-win'>160.0000</td>
+<td class='heatmap-cell heat-loss'>-42.0000</td>
+<td class='heatmap-cell heat-win'>953.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>467.0000 · 23W</span></td>
+<td class='heatmap-cell heat-win'>1505.0000</td>
+<td class='heatmap-cell heat-win'>1132.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>342.0000</td>
+<td class='heatmap-cell heat-win'>200.0000</td>
+<td class='heatmap-cell heat-win'>773.0000</td>
+<td class='heatmap-cell heat-win'>2519.0000</td>
+<td class='heatmap-cell heat-win'>2497.0000</td>
+<td class='heatmap-cell heat-win'>1739.0000</td>
+<td class='heatmap-cell heat-win'>1476.0000</td>
+<td class='heatmap-cell heat-win'>1137.0000</td>
+<td class='heatmap-cell heat-win'>2063.0000</td>
+<td class='heatmap-cell heat-win'>1663.0000</td>
+<td class='heatmap-cell heat-win'>1675.0000</td>
+<td class='heatmap-cell heat-win'>111.0000</td>
+<td class='heatmap-cell heat-win'>215.0000</td>
+<td class='heatmap-cell heat-win'>235.0000</td>
+<td class='heatmap-cell heat-win'>681.0000</td>
+<td class='heatmap-cell heat-win'>2698.0000</td>
+<td class='heatmap-cell heat-win'>2610.0000</td>
+<td class='heatmap-cell heat-win'>1091.0000</td>
+<td class='heatmap-cell heat-win'>1292.0000</td>
+<td class='heatmap-cell heat-win'>1090.0000</td>
+<td class='heatmap-cell heat-win'>2085.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>809.0000 · 18W</span></td>
+<td class='heatmap-cell heat-win'>1163.0000</td>
+<td class='heatmap-cell heat-win'>790.0000</td>
+<td class='heatmap-cell heat-loss'>-342.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-142.0000</td>
+<td class='heatmap-cell heat-win'>431.0000</td>
+<td class='heatmap-cell heat-win'>2177.0000</td>
+<td class='heatmap-cell heat-win'>2155.0000</td>
+<td class='heatmap-cell heat-win'>1397.0000</td>
+<td class='heatmap-cell heat-win'>1134.0000</td>
+<td class='heatmap-cell heat-win'>795.0000</td>
+<td class='heatmap-cell heat-win'>1721.0000</td>
+<td class='heatmap-cell heat-win'>1321.0000</td>
+<td class='heatmap-cell heat-win'>1333.0000</td>
+<td class='heatmap-cell heat-loss'>-231.0000</td>
+<td class='heatmap-cell heat-loss'>-127.0000</td>
+<td class='heatmap-cell heat-loss'>-107.0000</td>
+<td class='heatmap-cell heat-win'>339.0000</td>
+<td class='heatmap-cell heat-win'>2356.0000</td>
+<td class='heatmap-cell heat-win'>2268.0000</td>
+<td class='heatmap-cell heat-win'>749.0000</td>
+<td class='heatmap-cell heat-win'>950.0000</td>
+<td class='heatmap-cell heat-win'>748.0000</td>
+<td class='heatmap-cell heat-win'>1743.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>667.0000 · 21W</span></td>
+<td class='heatmap-cell heat-win'>1305.0000</td>
+<td class='heatmap-cell heat-win'>932.0000</td>
+<td class='heatmap-cell heat-loss'>-200.0000</td>
+<td class='heatmap-cell heat-win'>142.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>573.0000</td>
+<td class='heatmap-cell heat-win'>2319.0000</td>
+<td class='heatmap-cell heat-win'>2297.0000</td>
+<td class='heatmap-cell heat-win'>1539.0000</td>
+<td class='heatmap-cell heat-win'>1276.0000</td>
+<td class='heatmap-cell heat-win'>937.0000</td>
+<td class='heatmap-cell heat-win'>1863.0000</td>
+<td class='heatmap-cell heat-win'>1463.0000</td>
+<td class='heatmap-cell heat-win'>1475.0000</td>
+<td class='heatmap-cell heat-loss'>-89.0000</td>
+<td class='heatmap-cell heat-win'>15.0000</td>
+<td class='heatmap-cell heat-win'>35.0000</td>
+<td class='heatmap-cell heat-win'>481.0000</td>
+<td class='heatmap-cell heat-win'>2498.0000</td>
+<td class='heatmap-cell heat-win'>2410.0000</td>
+<td class='heatmap-cell heat-win'>891.0000</td>
+<td class='heatmap-cell heat-win'>1092.0000</td>
+<td class='heatmap-cell heat-win'>890.0000</td>
+<td class='heatmap-cell heat-win'>1885.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>1240.0000 · 16W</span></td>
+<td class='heatmap-cell heat-win'>732.0000</td>
+<td class='heatmap-cell heat-win'>359.0000</td>
+<td class='heatmap-cell heat-loss'>-773.0000</td>
+<td class='heatmap-cell heat-loss'>-431.0000</td>
+<td class='heatmap-cell heat-loss'>-573.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>1746.0000</td>
+<td class='heatmap-cell heat-win'>1724.0000</td>
+<td class='heatmap-cell heat-win'>966.0000</td>
+<td class='heatmap-cell heat-win'>703.0000</td>
+<td class='heatmap-cell heat-win'>364.0000</td>
+<td class='heatmap-cell heat-win'>1290.0000</td>
+<td class='heatmap-cell heat-win'>890.0000</td>
+<td class='heatmap-cell heat-win'>902.0000</td>
+<td class='heatmap-cell heat-loss'>-662.0000</td>
+<td class='heatmap-cell heat-loss'>-558.0000</td>
+<td class='heatmap-cell heat-loss'>-538.0000</td>
+<td class='heatmap-cell heat-loss'>-92.0000</td>
+<td class='heatmap-cell heat-win'>1925.0000</td>
+<td class='heatmap-cell heat-win'>1837.0000</td>
+<td class='heatmap-cell heat-win'>318.0000</td>
+<td class='heatmap-cell heat-win'>519.0000</td>
+<td class='heatmap-cell heat-win'>317.0000</td>
+<td class='heatmap-cell heat-win'>1312.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>2986.0000 · 2W</span></td>
+<td class='heatmap-cell heat-loss'>-1014.0000</td>
+<td class='heatmap-cell heat-loss'>-1387.0000</td>
+<td class='heatmap-cell heat-loss'>-2519.0000</td>
+<td class='heatmap-cell heat-loss'>-2177.0000</td>
+<td class='heatmap-cell heat-loss'>-2319.0000</td>
+<td class='heatmap-cell heat-loss'>-1746.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-22.0000</td>
+<td class='heatmap-cell heat-loss'>-780.0000</td>
+<td class='heatmap-cell heat-loss'>-1043.0000</td>
+<td class='heatmap-cell heat-loss'>-1382.0000</td>
+<td class='heatmap-cell heat-loss'>-456.0000</td>
+<td class='heatmap-cell heat-loss'>-856.0000</td>
+<td class='heatmap-cell heat-loss'>-844.0000</td>
+<td class='heatmap-cell heat-loss'>-2408.0000</td>
+<td class='heatmap-cell heat-loss'>-2304.0000</td>
+<td class='heatmap-cell heat-loss'>-2284.0000</td>
+<td class='heatmap-cell heat-loss'>-1838.0000</td>
+<td class='heatmap-cell heat-win'>179.0000</td>
+<td class='heatmap-cell heat-win'>91.0000</td>
+<td class='heatmap-cell heat-loss'>-1428.0000</td>
+<td class='heatmap-cell heat-loss'>-1227.0000</td>
+<td class='heatmap-cell heat-loss'>-1429.0000</td>
+<td class='heatmap-cell heat-loss'>-434.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>2964.0000 · 3W</span></td>
+<td class='heatmap-cell heat-loss'>-992.0000</td>
+<td class='heatmap-cell heat-loss'>-1365.0000</td>
+<td class='heatmap-cell heat-loss'>-2497.0000</td>
+<td class='heatmap-cell heat-loss'>-2155.0000</td>
+<td class='heatmap-cell heat-loss'>-2297.0000</td>
+<td class='heatmap-cell heat-loss'>-1724.0000</td>
+<td class='heatmap-cell heat-win'>22.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-758.0000</td>
+<td class='heatmap-cell heat-loss'>-1021.0000</td>
+<td class='heatmap-cell heat-loss'>-1360.0000</td>
+<td class='heatmap-cell heat-loss'>-434.0000</td>
+<td class='heatmap-cell heat-loss'>-834.0000</td>
+<td class='heatmap-cell heat-loss'>-822.0000</td>
+<td class='heatmap-cell heat-loss'>-2386.0000</td>
+<td class='heatmap-cell heat-loss'>-2282.0000</td>
+<td class='heatmap-cell heat-loss'>-2262.0000</td>
+<td class='heatmap-cell heat-loss'>-1816.0000</td>
+<td class='heatmap-cell heat-win'>201.0000</td>
+<td class='heatmap-cell heat-win'>113.0000</td>
+<td class='heatmap-cell heat-loss'>-1406.0000</td>
+<td class='heatmap-cell heat-loss'>-1205.0000</td>
+<td class='heatmap-cell heat-loss'>-1407.0000</td>
+<td class='heatmap-cell heat-loss'>-412.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>2206.0000 · 6W</span></td>
+<td class='heatmap-cell heat-loss'>-234.0000</td>
+<td class='heatmap-cell heat-loss'>-607.0000</td>
+<td class='heatmap-cell heat-loss'>-1739.0000</td>
+<td class='heatmap-cell heat-loss'>-1397.0000</td>
+<td class='heatmap-cell heat-loss'>-1539.0000</td>
+<td class='heatmap-cell heat-loss'>-966.0000</td>
+<td class='heatmap-cell heat-win'>780.0000</td>
+<td class='heatmap-cell heat-win'>758.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-263.0000</td>
+<td class='heatmap-cell heat-loss'>-602.0000</td>
+<td class='heatmap-cell heat-win'>324.0000</td>
+<td class='heatmap-cell heat-loss'>-76.0000</td>
+<td class='heatmap-cell heat-loss'>-64.0000</td>
+<td class='heatmap-cell heat-loss'>-1628.0000</td>
+<td class='heatmap-cell heat-loss'>-1524.0000</td>
+<td class='heatmap-cell heat-loss'>-1504.0000</td>
+<td class='heatmap-cell heat-loss'>-1058.0000</td>
+<td class='heatmap-cell heat-win'>959.0000</td>
+<td class='heatmap-cell heat-win'>871.0000</td>
+<td class='heatmap-cell heat-loss'>-648.0000</td>
+<td class='heatmap-cell heat-loss'>-447.0000</td>
+<td class='heatmap-cell heat-loss'>-649.0000</td>
+<td class='heatmap-cell heat-win'>346.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>1943.0000 · 10W</span></td>
+<td class='heatmap-cell heat-win'>29.0000</td>
+<td class='heatmap-cell heat-loss'>-344.0000</td>
+<td class='heatmap-cell heat-loss'>-1476.0000</td>
+<td class='heatmap-cell heat-loss'>-1134.0000</td>
+<td class='heatmap-cell heat-loss'>-1276.0000</td>
+<td class='heatmap-cell heat-loss'>-703.0000</td>
+<td class='heatmap-cell heat-win'>1043.0000</td>
+<td class='heatmap-cell heat-win'>1021.0000</td>
+<td class='heatmap-cell heat-win'>263.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-339.0000</td>
+<td class='heatmap-cell heat-win'>587.0000</td>
+<td class='heatmap-cell heat-win'>187.0000</td>
+<td class='heatmap-cell heat-win'>199.0000</td>
+<td class='heatmap-cell heat-loss'>-1365.0000</td>
+<td class='heatmap-cell heat-loss'>-1261.0000</td>
+<td class='heatmap-cell heat-loss'>-1241.0000</td>
+<td class='heatmap-cell heat-loss'>-795.0000</td>
+<td class='heatmap-cell heat-win'>1222.0000</td>
+<td class='heatmap-cell heat-win'>1134.0000</td>
+<td class='heatmap-cell heat-loss'>-385.0000</td>
+<td class='heatmap-cell heat-loss'>-184.0000</td>
+<td class='heatmap-cell heat-loss'>-386.0000</td>
+<td class='heatmap-cell heat-win'>609.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>1604.0000 · 12W</span></td>
+<td class='heatmap-cell heat-win'>368.0000</td>
+<td class='heatmap-cell heat-loss'>-5.0000</td>
+<td class='heatmap-cell heat-loss'>-1137.0000</td>
+<td class='heatmap-cell heat-loss'>-795.0000</td>
+<td class='heatmap-cell heat-loss'>-937.0000</td>
+<td class='heatmap-cell heat-loss'>-364.0000</td>
+<td class='heatmap-cell heat-win'>1382.0000</td>
+<td class='heatmap-cell heat-win'>1360.0000</td>
+<td class='heatmap-cell heat-win'>602.0000</td>
+<td class='heatmap-cell heat-win'>339.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>926.0000</td>
+<td class='heatmap-cell heat-win'>526.0000</td>
+<td class='heatmap-cell heat-win'>538.0000</td>
+<td class='heatmap-cell heat-loss'>-1026.0000</td>
+<td class='heatmap-cell heat-loss'>-922.0000</td>
+<td class='heatmap-cell heat-loss'>-902.0000</td>
+<td class='heatmap-cell heat-loss'>-456.0000</td>
+<td class='heatmap-cell heat-win'>1561.0000</td>
+<td class='heatmap-cell heat-win'>1473.0000</td>
+<td class='heatmap-cell heat-loss'>-46.0000</td>
+<td class='heatmap-cell heat-win'>155.0000</td>
+<td class='heatmap-cell heat-loss'>-47.0000</td>
+<td class='heatmap-cell heat-win'>948.0000</td>
+</tr>
+<tr>
+<td><strong>facts_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>2530.0000 · 5W</span></td>
+<td class='heatmap-cell heat-loss'>-558.0000</td>
+<td class='heatmap-cell heat-loss'>-931.0000</td>
+<td class='heatmap-cell heat-loss'>-2063.0000</td>
+<td class='heatmap-cell heat-loss'>-1721.0000</td>
+<td class='heatmap-cell heat-loss'>-1863.0000</td>
+<td class='heatmap-cell heat-loss'>-1290.0000</td>
+<td class='heatmap-cell heat-win'>456.0000</td>
+<td class='heatmap-cell heat-win'>434.0000</td>
+<td class='heatmap-cell heat-loss'>-324.0000</td>
+<td class='heatmap-cell heat-loss'>-587.0000</td>
+<td class='heatmap-cell heat-loss'>-926.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-400.0000</td>
+<td class='heatmap-cell heat-loss'>-388.0000</td>
+<td class='heatmap-cell heat-loss'>-1952.0000</td>
+<td class='heatmap-cell heat-loss'>-1848.0000</td>
+<td class='heatmap-cell heat-loss'>-1828.0000</td>
+<td class='heatmap-cell heat-loss'>-1382.0000</td>
+<td class='heatmap-cell heat-win'>635.0000</td>
+<td class='heatmap-cell heat-win'>547.0000</td>
+<td class='heatmap-cell heat-loss'>-972.0000</td>
+<td class='heatmap-cell heat-loss'>-771.0000</td>
+<td class='heatmap-cell heat-loss'>-973.0000</td>
+<td class='heatmap-cell heat-win'>22.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>2130.0000 · 8W</span></td>
+<td class='heatmap-cell heat-loss'>-158.0000</td>
+<td class='heatmap-cell heat-loss'>-531.0000</td>
+<td class='heatmap-cell heat-loss'>-1663.0000</td>
+<td class='heatmap-cell heat-loss'>-1321.0000</td>
+<td class='heatmap-cell heat-loss'>-1463.0000</td>
+<td class='heatmap-cell heat-loss'>-890.0000</td>
+<td class='heatmap-cell heat-win'>856.0000</td>
+<td class='heatmap-cell heat-win'>834.0000</td>
+<td class='heatmap-cell heat-win'>76.0000</td>
+<td class='heatmap-cell heat-loss'>-187.0000</td>
+<td class='heatmap-cell heat-loss'>-526.0000</td>
+<td class='heatmap-cell heat-win'>400.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>12.0000</td>
+<td class='heatmap-cell heat-loss'>-1552.0000</td>
+<td class='heatmap-cell heat-loss'>-1448.0000</td>
+<td class='heatmap-cell heat-loss'>-1428.0000</td>
+<td class='heatmap-cell heat-loss'>-982.0000</td>
+<td class='heatmap-cell heat-win'>1035.0000</td>
+<td class='heatmap-cell heat-win'>947.0000</td>
+<td class='heatmap-cell heat-loss'>-572.0000</td>
+<td class='heatmap-cell heat-loss'>-371.0000</td>
+<td class='heatmap-cell heat-loss'>-573.0000</td>
+<td class='heatmap-cell heat-win'>422.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>2142.0000 · 7W</span></td>
+<td class='heatmap-cell heat-loss'>-170.0000</td>
+<td class='heatmap-cell heat-loss'>-543.0000</td>
+<td class='heatmap-cell heat-loss'>-1675.0000</td>
+<td class='heatmap-cell heat-loss'>-1333.0000</td>
+<td class='heatmap-cell heat-loss'>-1475.0000</td>
+<td class='heatmap-cell heat-loss'>-902.0000</td>
+<td class='heatmap-cell heat-win'>844.0000</td>
+<td class='heatmap-cell heat-win'>822.0000</td>
+<td class='heatmap-cell heat-win'>64.0000</td>
+<td class='heatmap-cell heat-loss'>-199.0000</td>
+<td class='heatmap-cell heat-loss'>-538.0000</td>
+<td class='heatmap-cell heat-win'>388.0000</td>
+<td class='heatmap-cell heat-loss'>-12.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-1564.0000</td>
+<td class='heatmap-cell heat-loss'>-1460.0000</td>
+<td class='heatmap-cell heat-loss'>-1440.0000</td>
+<td class='heatmap-cell heat-loss'>-994.0000</td>
+<td class='heatmap-cell heat-win'>1023.0000</td>
+<td class='heatmap-cell heat-win'>935.0000</td>
+<td class='heatmap-cell heat-loss'>-584.0000</td>
+<td class='heatmap-cell heat-loss'>-383.0000</td>
+<td class='heatmap-cell heat-loss'>-585.0000</td>
+<td class='heatmap-cell heat-win'>410.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>578.0000 · 22W</span></td>
+<td class='heatmap-cell heat-win'>1394.0000</td>
+<td class='heatmap-cell heat-win'>1021.0000</td>
+<td class='heatmap-cell heat-loss'>-111.0000</td>
+<td class='heatmap-cell heat-win'>231.0000</td>
+<td class='heatmap-cell heat-win'>89.0000</td>
+<td class='heatmap-cell heat-win'>662.0000</td>
+<td class='heatmap-cell heat-win'>2408.0000</td>
+<td class='heatmap-cell heat-win'>2386.0000</td>
+<td class='heatmap-cell heat-win'>1628.0000</td>
+<td class='heatmap-cell heat-win'>1365.0000</td>
+<td class='heatmap-cell heat-win'>1026.0000</td>
+<td class='heatmap-cell heat-win'>1952.0000</td>
+<td class='heatmap-cell heat-win'>1552.0000</td>
+<td class='heatmap-cell heat-win'>1564.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>104.0000</td>
+<td class='heatmap-cell heat-win'>124.0000</td>
+<td class='heatmap-cell heat-win'>570.0000</td>
+<td class='heatmap-cell heat-win'>2587.0000</td>
+<td class='heatmap-cell heat-win'>2499.0000</td>
+<td class='heatmap-cell heat-win'>980.0000</td>
+<td class='heatmap-cell heat-win'>1181.0000</td>
+<td class='heatmap-cell heat-win'>979.0000</td>
+<td class='heatmap-cell heat-win'>1974.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>682.0000 · 20W</span></td>
+<td class='heatmap-cell heat-win'>1290.0000</td>
+<td class='heatmap-cell heat-win'>917.0000</td>
+<td class='heatmap-cell heat-loss'>-215.0000</td>
+<td class='heatmap-cell heat-win'>127.0000</td>
+<td class='heatmap-cell heat-loss'>-15.0000</td>
+<td class='heatmap-cell heat-win'>558.0000</td>
+<td class='heatmap-cell heat-win'>2304.0000</td>
+<td class='heatmap-cell heat-win'>2282.0000</td>
+<td class='heatmap-cell heat-win'>1524.0000</td>
+<td class='heatmap-cell heat-win'>1261.0000</td>
+<td class='heatmap-cell heat-win'>922.0000</td>
+<td class='heatmap-cell heat-win'>1848.0000</td>
+<td class='heatmap-cell heat-win'>1448.0000</td>
+<td class='heatmap-cell heat-win'>1460.0000</td>
+<td class='heatmap-cell heat-loss'>-104.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>20.0000</td>
+<td class='heatmap-cell heat-win'>466.0000</td>
+<td class='heatmap-cell heat-win'>2483.0000</td>
+<td class='heatmap-cell heat-win'>2395.0000</td>
+<td class='heatmap-cell heat-win'>876.0000</td>
+<td class='heatmap-cell heat-win'>1077.0000</td>
+<td class='heatmap-cell heat-win'>875.0000</td>
+<td class='heatmap-cell heat-win'>1870.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>702.0000 · 19W</span></td>
+<td class='heatmap-cell heat-win'>1270.0000</td>
+<td class='heatmap-cell heat-win'>897.0000</td>
+<td class='heatmap-cell heat-loss'>-235.0000</td>
+<td class='heatmap-cell heat-win'>107.0000</td>
+<td class='heatmap-cell heat-loss'>-35.0000</td>
+<td class='heatmap-cell heat-win'>538.0000</td>
+<td class='heatmap-cell heat-win'>2284.0000</td>
+<td class='heatmap-cell heat-win'>2262.0000</td>
+<td class='heatmap-cell heat-win'>1504.0000</td>
+<td class='heatmap-cell heat-win'>1241.0000</td>
+<td class='heatmap-cell heat-win'>902.0000</td>
+<td class='heatmap-cell heat-win'>1828.0000</td>
+<td class='heatmap-cell heat-win'>1428.0000</td>
+<td class='heatmap-cell heat-win'>1440.0000</td>
+<td class='heatmap-cell heat-loss'>-124.0000</td>
+<td class='heatmap-cell heat-loss'>-20.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>446.0000</td>
+<td class='heatmap-cell heat-win'>2463.0000</td>
+<td class='heatmap-cell heat-win'>2375.0000</td>
+<td class='heatmap-cell heat-win'>856.0000</td>
+<td class='heatmap-cell heat-win'>1057.0000</td>
+<td class='heatmap-cell heat-win'>855.0000</td>
+<td class='heatmap-cell heat-win'>1850.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>1148.0000 · 17W</span></td>
+<td class='heatmap-cell heat-win'>824.0000</td>
+<td class='heatmap-cell heat-win'>451.0000</td>
+<td class='heatmap-cell heat-loss'>-681.0000</td>
+<td class='heatmap-cell heat-loss'>-339.0000</td>
+<td class='heatmap-cell heat-loss'>-481.0000</td>
+<td class='heatmap-cell heat-win'>92.0000</td>
+<td class='heatmap-cell heat-win'>1838.0000</td>
+<td class='heatmap-cell heat-win'>1816.0000</td>
+<td class='heatmap-cell heat-win'>1058.0000</td>
+<td class='heatmap-cell heat-win'>795.0000</td>
+<td class='heatmap-cell heat-win'>456.0000</td>
+<td class='heatmap-cell heat-win'>1382.0000</td>
+<td class='heatmap-cell heat-win'>982.0000</td>
+<td class='heatmap-cell heat-win'>994.0000</td>
+<td class='heatmap-cell heat-loss'>-570.0000</td>
+<td class='heatmap-cell heat-loss'>-466.0000</td>
+<td class='heatmap-cell heat-loss'>-446.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>2017.0000</td>
+<td class='heatmap-cell heat-win'>1929.0000</td>
+<td class='heatmap-cell heat-win'>410.0000</td>
+<td class='heatmap-cell heat-win'>611.0000</td>
+<td class='heatmap-cell heat-win'>409.0000</td>
+<td class='heatmap-cell heat-win'>1404.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>3165.0000 · 0W</span></td>
+<td class='heatmap-cell heat-loss'>-1193.0000</td>
+<td class='heatmap-cell heat-loss'>-1566.0000</td>
+<td class='heatmap-cell heat-loss'>-2698.0000</td>
+<td class='heatmap-cell heat-loss'>-2356.0000</td>
+<td class='heatmap-cell heat-loss'>-2498.0000</td>
+<td class='heatmap-cell heat-loss'>-1925.0000</td>
+<td class='heatmap-cell heat-loss'>-179.0000</td>
+<td class='heatmap-cell heat-loss'>-201.0000</td>
+<td class='heatmap-cell heat-loss'>-959.0000</td>
+<td class='heatmap-cell heat-loss'>-1222.0000</td>
+<td class='heatmap-cell heat-loss'>-1561.0000</td>
+<td class='heatmap-cell heat-loss'>-635.0000</td>
+<td class='heatmap-cell heat-loss'>-1035.0000</td>
+<td class='heatmap-cell heat-loss'>-1023.0000</td>
+<td class='heatmap-cell heat-loss'>-2587.0000</td>
+<td class='heatmap-cell heat-loss'>-2483.0000</td>
+<td class='heatmap-cell heat-loss'>-2463.0000</td>
+<td class='heatmap-cell heat-loss'>-2017.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-88.0000</td>
+<td class='heatmap-cell heat-loss'>-1607.0000</td>
+<td class='heatmap-cell heat-loss'>-1406.0000</td>
+<td class='heatmap-cell heat-loss'>-1608.0000</td>
+<td class='heatmap-cell heat-loss'>-613.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>3077.0000 · 1W</span></td>
+<td class='heatmap-cell heat-loss'>-1105.0000</td>
+<td class='heatmap-cell heat-loss'>-1478.0000</td>
+<td class='heatmap-cell heat-loss'>-2610.0000</td>
+<td class='heatmap-cell heat-loss'>-2268.0000</td>
+<td class='heatmap-cell heat-loss'>-2410.0000</td>
+<td class='heatmap-cell heat-loss'>-1837.0000</td>
+<td class='heatmap-cell heat-loss'>-91.0000</td>
+<td class='heatmap-cell heat-loss'>-113.0000</td>
+<td class='heatmap-cell heat-loss'>-871.0000</td>
+<td class='heatmap-cell heat-loss'>-1134.0000</td>
+<td class='heatmap-cell heat-loss'>-1473.0000</td>
+<td class='heatmap-cell heat-loss'>-547.0000</td>
+<td class='heatmap-cell heat-loss'>-947.0000</td>
+<td class='heatmap-cell heat-loss'>-935.0000</td>
+<td class='heatmap-cell heat-loss'>-2499.0000</td>
+<td class='heatmap-cell heat-loss'>-2395.0000</td>
+<td class='heatmap-cell heat-loss'>-2375.0000</td>
+<td class='heatmap-cell heat-loss'>-1929.0000</td>
+<td class='heatmap-cell heat-win'>88.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-1519.0000</td>
+<td class='heatmap-cell heat-loss'>-1318.0000</td>
+<td class='heatmap-cell heat-loss'>-1520.0000</td>
+<td class='heatmap-cell heat-loss'>-525.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>1558.0000 · 14W</span></td>
+<td class='heatmap-cell heat-win'>414.0000</td>
+<td class='heatmap-cell heat-win'>41.0000</td>
+<td class='heatmap-cell heat-loss'>-1091.0000</td>
+<td class='heatmap-cell heat-loss'>-749.0000</td>
+<td class='heatmap-cell heat-loss'>-891.0000</td>
+<td class='heatmap-cell heat-loss'>-318.0000</td>
+<td class='heatmap-cell heat-win'>1428.0000</td>
+<td class='heatmap-cell heat-win'>1406.0000</td>
+<td class='heatmap-cell heat-win'>648.0000</td>
+<td class='heatmap-cell heat-win'>385.0000</td>
+<td class='heatmap-cell heat-win'>46.0000</td>
+<td class='heatmap-cell heat-win'>972.0000</td>
+<td class='heatmap-cell heat-win'>572.0000</td>
+<td class='heatmap-cell heat-win'>584.0000</td>
+<td class='heatmap-cell heat-loss'>-980.0000</td>
+<td class='heatmap-cell heat-loss'>-876.0000</td>
+<td class='heatmap-cell heat-loss'>-856.0000</td>
+<td class='heatmap-cell heat-loss'>-410.0000</td>
+<td class='heatmap-cell heat-win'>1607.0000</td>
+<td class='heatmap-cell heat-win'>1519.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>201.0000</td>
+<td class='heatmap-cell heat-loss'>-1.0000</td>
+<td class='heatmap-cell heat-win'>994.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>1759.0000 · 11W</span></td>
+<td class='heatmap-cell heat-win'>213.0000</td>
+<td class='heatmap-cell heat-loss'>-160.0000</td>
+<td class='heatmap-cell heat-loss'>-1292.0000</td>
+<td class='heatmap-cell heat-loss'>-950.0000</td>
+<td class='heatmap-cell heat-loss'>-1092.0000</td>
+<td class='heatmap-cell heat-loss'>-519.0000</td>
+<td class='heatmap-cell heat-win'>1227.0000</td>
+<td class='heatmap-cell heat-win'>1205.0000</td>
+<td class='heatmap-cell heat-win'>447.0000</td>
+<td class='heatmap-cell heat-win'>184.0000</td>
+<td class='heatmap-cell heat-loss'>-155.0000</td>
+<td class='heatmap-cell heat-win'>771.0000</td>
+<td class='heatmap-cell heat-win'>371.0000</td>
+<td class='heatmap-cell heat-win'>383.0000</td>
+<td class='heatmap-cell heat-loss'>-1181.0000</td>
+<td class='heatmap-cell heat-loss'>-1077.0000</td>
+<td class='heatmap-cell heat-loss'>-1057.0000</td>
+<td class='heatmap-cell heat-loss'>-611.0000</td>
+<td class='heatmap-cell heat-win'>1406.0000</td>
+<td class='heatmap-cell heat-win'>1318.0000</td>
+<td class='heatmap-cell heat-loss'>-201.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-loss'>-202.0000</td>
+<td class='heatmap-cell heat-win'>793.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>1557.0000 · 15W</span></td>
+<td class='heatmap-cell heat-win'>415.0000</td>
+<td class='heatmap-cell heat-win'>42.0000</td>
+<td class='heatmap-cell heat-loss'>-1090.0000</td>
+<td class='heatmap-cell heat-loss'>-748.0000</td>
+<td class='heatmap-cell heat-loss'>-890.0000</td>
+<td class='heatmap-cell heat-loss'>-317.0000</td>
+<td class='heatmap-cell heat-win'>1429.0000</td>
+<td class='heatmap-cell heat-win'>1407.0000</td>
+<td class='heatmap-cell heat-win'>649.0000</td>
+<td class='heatmap-cell heat-win'>386.0000</td>
+<td class='heatmap-cell heat-win'>47.0000</td>
+<td class='heatmap-cell heat-win'>973.0000</td>
+<td class='heatmap-cell heat-win'>573.0000</td>
+<td class='heatmap-cell heat-win'>585.0000</td>
+<td class='heatmap-cell heat-loss'>-979.0000</td>
+<td class='heatmap-cell heat-loss'>-875.0000</td>
+<td class='heatmap-cell heat-loss'>-855.0000</td>
+<td class='heatmap-cell heat-loss'>-409.0000</td>
+<td class='heatmap-cell heat-win'>1608.0000</td>
+<td class='heatmap-cell heat-win'>1520.0000</td>
+<td class='heatmap-cell heat-win'>1.0000</td>
+<td class='heatmap-cell heat-win'>202.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+<td class='heatmap-cell heat-win'>995.0000</td>
+</tr>
+<tr>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>2552.0000 · 4W</span></td>
+<td class='heatmap-cell heat-loss'>-580.0000</td>
+<td class='heatmap-cell heat-loss'>-953.0000</td>
+<td class='heatmap-cell heat-loss'>-2085.0000</td>
+<td class='heatmap-cell heat-loss'>-1743.0000</td>
+<td class='heatmap-cell heat-loss'>-1885.0000</td>
+<td class='heatmap-cell heat-loss'>-1312.0000</td>
+<td class='heatmap-cell heat-win'>434.0000</td>
+<td class='heatmap-cell heat-win'>412.0000</td>
+<td class='heatmap-cell heat-loss'>-346.0000</td>
+<td class='heatmap-cell heat-loss'>-609.0000</td>
+<td class='heatmap-cell heat-loss'>-948.0000</td>
+<td class='heatmap-cell heat-loss'>-22.0000</td>
+<td class='heatmap-cell heat-loss'>-422.0000</td>
+<td class='heatmap-cell heat-loss'>-410.0000</td>
+<td class='heatmap-cell heat-loss'>-1974.0000</td>
+<td class='heatmap-cell heat-loss'>-1870.0000</td>
+<td class='heatmap-cell heat-loss'>-1850.0000</td>
+<td class='heatmap-cell heat-loss'>-1404.0000</td>
+<td class='heatmap-cell heat-win'>613.0000</td>
+<td class='heatmap-cell heat-win'>525.0000</td>
+<td class='heatmap-cell heat-loss'>-994.0000</td>
+<td class='heatmap-cell heat-loss'>-793.0000</td>
+<td class='heatmap-cell heat-loss'>-995.0000</td>
+<td class='heatmap-cell heat-diag'>—</td>
+</tr>
+</tbody></table></div>
+<h2>Comparison table</h2>
+<div class='toolbar'><strong>Sort by baseline-relative metric</strong><label>Metric<select id='matrix-sort-key'><option value='judge_score_delta'>Judge score Δ</option><option value='judge_resolution_delta'>Judge resolution Δ</option><option value='query_alignment_delta'>Query align Δ</option><option value='stance_shift'>Stance shift</option><option value='budget_reasoning_delta'>Reasoning token Δ</option><option value='budget_completion_delta'>Completion token Δ</option><option value='budget_total_delta'>Total token Δ</option><option value='answer_cosine'>Answer cosine</option><option value='diff_ratio'>Diff ratio</option><option value='answer_chars'>Answer chars</option><option value='elapsed_s'>Elapsed seconds</option><option value='name'>Name</option></select></label><label>Direction<select id='matrix-sort-dir'><option value='desc'>Descending</option><option value='asc'>Ascending</option></select></label><button type='button' id='matrix-sort-apply'>Apply</button><span class='muted'>Baseline rows stay pinned to the top.</span></div>
+<table><thead><tr>
+<th>Item</th>
+<th>Kind</th>
+<th>Scaffold</th>
+<th>Chars</th>
+<th>Elapsed</th>
+<th>Semantic</th>
+<th>Judge</th>
+<th>Stance</th>
+<th>Budget</th>
+<th>Warnings</th>
+</tr></thead><tbody id='matrix-report-body'>
+<tr data-name='baseline' data-kind='baseline' data-answer-chars='232' data-elapsed-s='21.862893584000062' data-diff-ratio='' data-answer-cosine='' data-query-alignment-delta='' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='' data-budget-scaffold-tokens='' data-budget-reasoning-delta='' data-budget-completion-delta='' data-budget-total-delta=''>
+<td><strong>baseline</strong><br/><span class='muted'></span></td>
+<td>baseline</td>
+<td>—</td>
+<td class='num'>232</td>
+<td class='num'>21.86</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_128_log_skeleton_closure_high_log1024_final2048' data-kind='ponder' data-answer-chars='152' data-elapsed-s='36.04498529199998' data-diff-ratio='0.6666666666666667' data-answer-cosine='0.16570823301097204' data-query-alignment-delta='-0.07248459965284507' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.16666666666666666' data-budget-scaffold-tokens='193' data-budget-reasoning-delta='0' data-budget-completion-delta='1' data-budget-total-delta='1972'>
+<td><strong>facts_dose_128_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/128</td>
+<td class='num'>152</td>
+<td class='num'>36.04</td>
+<td>cos=0.1657 | Δalign=-0.0725</td>
+<td>—</td>
+<td>definition→definition | shift=0.1667</td>
+<td>scaf=193 | reasonΔ=0 | compΔ=1</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_128_log_skeleton_closure_low_log1024_final2048' data-kind='ponder' data-answer-chars='140' data-elapsed-s='36.04307400000005' data-diff-ratio='0.9086021505376344' data-answer-cosine='0.12127158741630543' data-query-alignment-delta='-0.060762998222682975' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.35555555555555557' data-budget-scaffold-tokens='209' data-budget-reasoning-delta='0' data-budget-completion-delta='16' data-budget-total-delta='1599'>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/128</td>
+<td class='num'>140</td>
+<td class='num'>36.04</td>
+<td>cos=0.1213 | Δalign=-0.0608</td>
+<td>—</td>
+<td>definition→definition | shift=0.3556</td>
+<td>scaf=209 | reasonΔ=0 | compΔ=16</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_128_log_skeleton_closure_low_log1024_final_low2048' data-kind='ponder' data-answer-chars='649' data-elapsed-s='22.077383499999996' data-diff-ratio='0.8569807037457435' data-answer-cosine='0.23361040445461329' data-query-alignment-delta='0.08875107197937712' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.24358974358974358' data-budget-scaffold-tokens='198' data-budget-reasoning-delta='0' data-budget-completion-delta='283' data-budget-total-delta='467'>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/128</td>
+<td class='num'>649</td>
+<td class='num'>22.08</td>
+<td>cos=0.2336 | Δalign=0.0888</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.2436</td>
+<td>scaf=198 | reasonΔ=0 | compΔ=283</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_128_log_skeleton_closure_low_log1024_final_low4096' data-kind='ponder' data-answer-chars='614' data-elapsed-s='26.156021500000065' data-diff-ratio='0.8770685579196218' data-answer-cosine='0.18299492030324094' data-query-alignment-delta='0.052011792746814514' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.22916666666666666' data-budget-scaffold-tokens='193' data-budget-reasoning-delta='0' data-budget-completion-delta='272' data-budget-total-delta='809'>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/128</td>
+<td class='num'>614</td>
+<td class='num'>26.16</td>
+<td>cos=0.1830 | Δalign=0.0520</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.2292</td>
+<td>scaf=193 | reasonΔ=0 | compΔ=272</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096' data-kind='ponder' data-answer-chars='714' data-elapsed-s='23.511988209000037' data-diff-ratio='0.9090909090909091' data-answer-cosine='0.20340923178199755' data-query-alignment-delta='0.048042997119960684' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.18055555555555552' data-budget-scaffold-tokens='195' data-budget-reasoning-delta='0' data-budget-completion-delta='326' data-budget-total-delta='667'>
+<td><strong>facts_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/128</td>
+<td class='num'>714</td>
+<td class='num'>23.51</td>
+<td>cos=0.2034 | Δalign=0.0480</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.1806</td>
+<td>scaf=195 | reasonΔ=0 | compΔ=326</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_128_log_skeleton_closure_medium_log1024_final_medium4096' data-kind='ponder' data-answer-chars='847' data-elapsed-s='27.6598700830001' data-diff-ratio='0.8776645041705282' data-answer-cosine='0.2220737545288709' data-query-alignment-delta='0.03762565271720576' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.3472222222222222' data-budget-scaffold-tokens='179' data-budget-reasoning-delta='0' data-budget-completion-delta='401' data-budget-total-delta='1240'>
+<td><strong>facts_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/128</td>
+<td class='num'>847</td>
+<td class='num'>27.66</td>
+<td>cos=0.2221 | Δalign=0.0376</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.3472</td>
+<td>scaf=179 | reasonΔ=0 | compΔ=401</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_512_log_skeleton_closure_high_log1024_final2048' data-kind='ponder' data-answer-chars='141' data-elapsed-s='43.58863520800003' data-diff-ratio='0.5871313672922251' data-answer-cosine='0.2605408157199634' data-query-alignment-delta='0.14528918369510335' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.3055555555555556' data-budget-scaffold-tokens='576' data-budget-reasoning-delta='0' data-budget-completion-delta='30' data-budget-total-delta='2986'>
+<td><strong>facts_dose_512_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/512</td>
+<td class='num'>141</td>
+<td class='num'>43.59</td>
+<td>cos=0.2605 | Δalign=0.1453</td>
+<td>—</td>
+<td>definition→definition | shift=0.3056</td>
+<td>scaf=576 | reasonΔ=0 | compΔ=30</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_512_log_skeleton_closure_low_log1024_final2048' data-kind='ponder' data-answer-chars='129' data-elapsed-s='43.210082625000155' data-diff-ratio='0.778393351800554' data-answer-cosine='0.10222212183274039' data-query-alignment-delta='-0.07128996090660618' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.33333333333333337' data-budget-scaffold-tokens='578' data-budget-reasoning-delta='0' data-budget-completion-delta='48' data-budget-total-delta='2964'>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/512</td>
+<td class='num'>129</td>
+<td class='num'>43.21</td>
+<td>cos=0.1022 | Δalign=-0.0713</td>
+<td>—</td>
+<td>definition→definition | shift=0.3333</td>
+<td>scaf=578 | reasonΔ=0 | compΔ=48</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_512_log_skeleton_closure_low_log1024_final_low2048' data-kind='ponder' data-answer-chars='871' data-elapsed-s='32.41298133300006' data-diff-ratio='0.9038984587488668' data-answer-cosine='0.1919840736839788' data-query-alignment-delta='0.04227625004729264' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.1324786324786325' data-budget-scaffold-tokens='583' data-budget-reasoning-delta='0' data-budget-completion-delta='437' data-budget-total-delta='2206'>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/512</td>
+<td class='num'>871</td>
+<td class='num'>32.41</td>
+<td>cos=0.1920 | Δalign=0.0423</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.1325</td>
+<td>scaf=583 | reasonΔ=0 | compΔ=437</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_512_log_skeleton_closure_low_log1024_final_low4096' data-kind='ponder' data-answer-chars='737' data-elapsed-s='32.69621245799999' data-diff-ratio='0.8637770897832817' data-answer-cosine='0.1984687577325818' data-query-alignment-delta='0.043237006005045556' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.2916666666666667' data-budget-scaffold-tokens='583' data-budget-reasoning-delta='0' data-budget-completion-delta='363' data-budget-total-delta='1943'>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/512</td>
+<td class='num'>737</td>
+<td class='num'>32.70</td>
+<td>cos=0.1985 | Δalign=0.0432</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.2917</td>
+<td>scaf=583 | reasonΔ=0 | compΔ=363</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096' data-kind='ponder' data-answer-chars='898' data-elapsed-s='32.8622788749999' data-diff-ratio='0.8938053097345133' data-answer-cosine='0.19387140439943346' data-query-alignment-delta='0.0755497630932028' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.15686274509803924' data-budget-scaffold-tokens='601' data-budget-reasoning-delta='0' data-budget-completion-delta='456' data-budget-total-delta='1604'>
+<td><strong>facts_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/512</td>
+<td class='num'>898</td>
+<td class='num'>32.86</td>
+<td>cos=0.1939 | Δalign=0.0755</td>
+<td>—</td>
+<td>definition→definition | shift=0.1569</td>
+<td>scaf=601 | reasonΔ=0 | compΔ=456</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='facts_dose_512_log_skeleton_closure_medium_log1024_final_medium4096' data-kind='ponder' data-answer-chars='863' data-elapsed-s='43.50873824999985' data-diff-ratio='0.908675799086758' data-answer-cosine='0.18402197824990424' data-query-alignment-delta='0.02909890875184816' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.22666666666666666' data-budget-scaffold-tokens='565' data-budget-reasoning-delta='0' data-budget-completion-delta='412' data-budget-total-delta='2530'>
+<td><strong>facts_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>facts/512</td>
+<td class='num'>863</td>
+<td class='num'>43.51</td>
+<td>cos=0.1840 | Δalign=0.0291</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.2267</td>
+<td>scaf=565 | reasonΔ=0 | compΔ=412</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_128_log_skeleton_closure_high_log1024_final2048' data-kind='ponder' data-answer-chars='139' data-elapsed-s='36.44380404200001' data-diff-ratio='0.8921832884097035' data-answer-cosine='0.0804578988132432' data-query-alignment-delta='-0.09741071499713819' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.5' data-budget-scaffold-tokens='183' data-budget-reasoning-delta='0' data-budget-completion-delta='-1' data-budget-total-delta='2130'>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/128</td>
+<td class='num'>139</td>
+<td class='num'>36.44</td>
+<td>cos=0.0805 | Δalign=-0.0974</td>
+<td>—</td>
+<td>definition→— | shift=0.5000</td>
+<td>scaf=183 | reasonΔ=0 | compΔ=-1</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_128_log_skeleton_closure_low_log1024_final2048' data-kind='ponder' data-answer-chars='131' data-elapsed-s='35.35092366599997' data-diff-ratio='0.8292011019283747' data-answer-cosine='0.06744120089450381' data-query-alignment-delta='-0.09707301611325332' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.6666666666666667' data-budget-scaffold-tokens='200' data-budget-reasoning-delta='0' data-budget-completion-delta='-3' data-budget-total-delta='2142'>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/128</td>
+<td class='num'>131</td>
+<td class='num'>35.35</td>
+<td>cos=0.0674 | Δalign=-0.0971</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.6667</td>
+<td>scaf=200 | reasonΔ=0 | compΔ=-3</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low2048' data-kind='ponder' data-answer-chars='446' data-elapsed-s='22.14823212500005' data-diff-ratio='0.8908554572271387' data-answer-cosine='0.12146979846545626' data-query-alignment-delta='-0.043344758767528066' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.2698412698412698' data-budget-scaffold-tokens='187' data-budget-reasoning-delta='0' data-budget-completion-delta='170' data-budget-total-delta='578'>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/128</td>
+<td class='num'>446</td>
+<td class='num'>22.15</td>
+<td>cos=0.1215 | Δalign=-0.0433</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.2698</td>
+<td>scaf=187 | reasonΔ=0 | compΔ=170</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low4096' data-kind='ponder' data-answer-chars='398' data-elapsed-s='21.588260582999965' data-diff-ratio='0.9555555555555556' data-answer-cosine='0.12086337346673384' data-query-alignment-delta='0.07185172967846355' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.2222222222222222' data-budget-scaffold-tokens='201' data-budget-reasoning-delta='0' data-budget-completion-delta='153' data-budget-total-delta='682'>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/128</td>
+<td class='num'>398</td>
+<td class='num'>21.59</td>
+<td>cos=0.1209 | Δalign=0.0719</td>
+<td>—</td>
+<td>definition→definition | shift=0.2222</td>
+<td>scaf=201 | reasonΔ=0 | compΔ=153</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096' data-kind='ponder' data-answer-chars='452' data-elapsed-s='22.667606666999973' data-diff-ratio='0.956140350877193' data-answer-cosine='0.13293286524162456' data-query-alignment-delta='0.01827251047286145' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.4027777777777778' data-budget-scaffold-tokens='206' data-budget-reasoning-delta='0' data-budget-completion-delta='176' data-budget-total-delta='702'>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/128</td>
+<td class='num'>452</td>
+<td class='num'>22.67</td>
+<td>cos=0.1329 | Δalign=0.0183</td>
+<td>—</td>
+<td>definition→example_expansion | shift=0.4028</td>
+<td>scaf=206 | reasonΔ=0 | compΔ=176</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_128_log_skeleton_closure_medium_log1024_final_medium4096' data-kind='ponder' data-answer-chars='617' data-elapsed-s='26.306038124999986' data-diff-ratio='0.9222614840989399' data-answer-cosine='0.1669403657441097' data-query-alignment-delta='0.05023556144401185' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.2777777777777778' data-budget-scaffold-tokens='197' data-budget-reasoning-delta='0' data-budget-completion-delta='281' data-budget-total-delta='1148'>
+<td><strong>isomorphic_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/128</td>
+<td class='num'>617</td>
+<td class='num'>26.31</td>
+<td>cos=0.1669 | Δalign=0.0502</td>
+<td>—</td>
+<td>definition→definition | shift=0.2778</td>
+<td>scaf=197 | reasonΔ=0 | compΔ=281</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_512_log_skeleton_closure_high_log1024_final2048' data-kind='ponder' data-answer-chars='465' data-elapsed-s='40.43941787500012' data-diff-ratio='0.9081779053084649' data-answer-cosine='0.10820192588491871' data-query-alignment-delta='-0.06859777260731915' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.37777777777777777' data-budget-scaffold-tokens='573' data-budget-reasoning-delta='0' data-budget-completion-delta='220' data-budget-total-delta='3165'>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_high_log1024_final2048</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/512</td>
+<td class='num'>465</td>
+<td class='num'>40.44</td>
+<td>cos=0.1082 | Δalign=-0.0686</td>
+<td>—</td>
+<td>definition→example_expansion | shift=0.3778</td>
+<td>scaf=573 | reasonΔ=0 | compΔ=220</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_512_log_skeleton_closure_low_log1024_final2048' data-kind='ponder' data-answer-chars='772' data-elapsed-s='38.999316375000035' data-diff-ratio='0.8745019920318725' data-answer-cosine='0.18141068612423605' data-query-alignment-delta='0.06423952334439884' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.16666666666666666' data-budget-scaffold-tokens='601' data-budget-reasoning-delta='0' data-budget-completion-delta='393' data-budget-total-delta='3077'>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final2048</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/512</td>
+<td class='num'>772</td>
+<td class='num'>39.00</td>
+<td>cos=0.1814 | Δalign=0.0642</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.1667</td>
+<td>scaf=601 | reasonΔ=0 | compΔ=393</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low2048' data-kind='ponder' data-answer-chars='451' data-elapsed-s='27.65032962500004' data-diff-ratio='0.9238653001464129' data-answer-cosine='0.13078305499915585' data-query-alignment-delta='0.08016324567653399' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.20833333333333334' data-budget-scaffold-tokens='609' data-budget-reasoning-delta='0' data-budget-completion-delta='207' data-budget-total-delta='1558'>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low2048</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/512</td>
+<td class='num'>451</td>
+<td class='num'>27.65</td>
+<td>cos=0.1308 | Δalign=0.0802</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.2083</td>
+<td>scaf=609 | reasonΔ=0 | compΔ=207</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low4096' data-kind='ponder' data-answer-chars='701' data-elapsed-s='29.14181091699993' data-diff-ratio='0.9035369774919614' data-answer-cosine='0.16043125891470014' data-query-alignment-delta='0.04993163240287546' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.2222222222222222' data-budget-scaffold-tokens='568' data-budget-reasoning-delta='0' data-budget-completion-delta='363' data-budget-total-delta='1759'>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low4096</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/512</td>
+<td class='num'>701</td>
+<td class='num'>29.14</td>
+<td>cos=0.1604 | Δalign=0.0499</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.2222</td>
+<td>scaf=568 | reasonΔ=0 | compΔ=363</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096' data-kind='ponder' data-answer-chars='487' data-elapsed-s='28.794416875000024' data-diff-ratio='0.847009735744089' data-answer-cosine='0.15875587972474775' data-query-alignment-delta='0.06465270614968864' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.15555555555555556' data-budget-scaffold-tokens='587' data-budget-reasoning-delta='0' data-budget-completion-delta='226' data-budget-total-delta='1557'>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/512</td>
+<td class='num'>487</td>
+<td class='num'>28.79</td>
+<td>cos=0.1588 | Δalign=0.0647</td>
+<td>—</td>
+<td>definition→conditionalization | shift=0.1556</td>
+<td>scaf=587 | reasonΔ=0 | compΔ=226</td>
+<td class='ok'>0</td>
+</tr>
+<tr data-name='isomorphic_dose_512_log_skeleton_closure_medium_log1024_final_medium4096' data-kind='ponder' data-answer-chars='497' data-elapsed-s='37.93322516600006' data-diff-ratio='0.8491083676268861' data-answer-cosine='0.17100956521429783' data-query-alignment-delta='0.05433070068339725' data-judge-score-delta='' data-judge-resolution-delta='' data-judge-confidence='' data-stance-shift='0.3194444444444444' data-budget-scaffold-tokens='565' data-budget-reasoning-delta='0' data-budget-completion-delta='223' data-budget-total-delta='2552'>
+<td><strong>isomorphic_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</strong><br/><span class='muted'>none</span></td>
+<td>ponder</td>
+<td>isomorphic/512</td>
+<td class='num'>497</td>
+<td class='num'>37.93</td>
+<td>cos=0.1710 | Δalign=0.0543</td>
+<td>—</td>
+<td>definition→example_expansion | shift=0.3194</td>
+<td>scaf=565 | reasonΔ=0 | compΔ=223</td>
+<td class='ok'>0</td>
+</tr>
+</tbody></table>
+<h2>Item details</h2>
+<details>
+<summary><strong>baseline</strong> · baseline</summary>
+<div class='card'>
+<h3>answer</h3>
+<pre>非相対的でありながら絶対的ではないという状態について考えるとき、私たちはまず、普段いかに物事を「相対か絶対か」という単純な二項対立で捉えがちであるかに気づかされます。相対的とは、他との比較や関係性のなかで意味や価値が決まる状態です。一方、絶対的とは、いかなる条件や他者にも依存せず、普遍的で揺るぎない状態を指します。この両極端の隙間に存在する概念とは一体どのようなものなのか、少し思考を巡らせてみます。
+
+たとえば、私たちが日常で経験する「痛み」や「味覚」といった</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_128_log_skeleton_closure_high_log1024_final2048</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.6667 | changed=True</div>
+<h3>answer</h3>
+<pre>相対と絶対という概念について考えるとき、私たちはしばしばこの二つを単純なコインの裏表のように捉えがちである。しかし、少し立ち止まって言葉の定義と適用範囲を整理してみると、必ずしもそうではないことに気づく。「非相対的」という言葉は、単に「他者や他の事物との比較によって意味や価値が決まるわけではない」という</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_128_log_skeleton_closure_low_log1024_final2048</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9086 | changed=True</div>
+<h3>answer</h3>
+<pre>「非相対的」と「絶対的」という言葉は、日常的にしばしば同義として扱われがちですが、厳密には異なる次元の概念を指しています。この問いに向き合うためには、まず性質の定義と、その性質が及ぶ適用範囲を混同せずに切り分けて考える必要があります。
+
+非相対的であるとは、他者との比較や外部との</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_128_log_skeleton_closure_low_log1024_final_low2048</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8570 | changed=True</div>
+<h3>answer</h3>
+<pre>物事の性質や状態を考えるとき、「相対的」「非相対的」「絶対的」という言葉の定義とその適用範囲を整理してみる必要があります。
+
+まず「相対的」とは、他との比較や関係性のなかで初めて価値や状態が定まることを指します。したがって「非相対的」とは、他との比較に依存せず、それ自体で独立した基準や価値を持っている状態を意味します。
+
+一方で「絶対的」とは、いかなる条件や例外、文脈にも左右されず、普遍的かつ無条件に成り立つことを指します。
+
+ここから考えると、「非相対的ではあるが絶対的ではない状態」とはどのようなものかが見えてきます。それは、「他との比較によって決まるわけではない（独立した基準を持っている）が、あらゆる状況や全宇宙で無条件に成り立つわけではない（適用される枠組みや条件が限定されている）」という状態です。
+
+たとえば、特定のスポーツのルールや、ある国の法律、あるいは個人の内面的な強い信念などがこれに該当します。チェスのルールは「将棋と比べてどうか」という相対的なものではなく、チェスという体系のなかで独立して確立された非相対的な基準です。しかし、それはチェスの対局という特定の枠組みのなかでしか有効ではなく、現実社会のあらゆる場面で無条件に適用される絶対的な真理ではありません。
+
+つまり、非相対的ではあるが絶対的ではない状態とは、基準そのものは外部との比較に依存せず自立しているものの、その基準が有効となる適用範囲が特定の文脈、条件、あるいは体系の内部に限定されている状態を指します。</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_128_log_skeleton_closure_low_log1024_final_low4096</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8771 | changed=True</div>
+<h3>answer</h3>
+<pre>「非相対的」と「絶対的」という言葉は、しばしば単純な二項対立として捉えられがちです。しかし、他者や他の事象との比較によって価値や性質が決まるわけではない（非相対的）からといって、それが直ちに、いかなる条件や制約からも独立した普遍的で完全なもの（絶対的）になるわけではありません。ここで少し視点を広げて考えてみると、物事の定義とそれが適用される範囲の間に生じるズレに気づきます。他と比べない独立性を持ちながらも、何らかの局所的な制約を受けている状態が世の中には数多く存在します。個人の内面的な実感や、特定の文脈・枠組みの中だけで完結しているルールなどがこれに該当します。これらは「他と比べてどうか」という相対的な次元を離れていますが、同時に「いつでもどこでも誰にでも当てはまる」という絶対的な水準にも達していません。
+
+したがって、非相対的ではあるが絶対的ではない状態とは、「他との比較や関係性には依存せずに独立して成立しているが、普遍的・無条件ではなく、特定の前提、文脈、あるいは個人の主観という限定された範囲内でのみ成り立っている状態」を指します。たとえば、「自分はこれが好きだ」という純粋な個人の嗜好や、特定のゲームのルール、ある公理系の中だけで真とされる命題などがこれに当たります。これらは他者と比べる必要がないという意味で非相対的ですが、全宇宙や全人類に無条件で適用できるわけではないという意味で、絶対的ではないのです。</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9091 | changed=True</div>
+<h3>answer</h3>
+<pre>物事の性質を捉える際、「非相対的」という言葉は、他との比較や関係性によって価値や意味が変動しないことを指します。一方で「絶対的」という言葉は、いかなる条件や例外、文脈の制約も受けずに普遍的に成り立つことを意味します。ここで定義と適用範囲を混同しないことが重要です。他と比べないからといって、それがそのまま無条件にすべてに当てはまるとは限らないからです。この隙間に存在する状態について思考を巡らせると、ある特定の枠組みの中では独立して揺るぎないものの、その枠組みの外に出ると効力を失うような事象が浮かび上がってきます。
+
+非相対的ではあるが絶対的ではない状態とは、他との比較や関係性によって価値や性質が決まるわけではない（非相対的）ものの、いかなる条件や制約からも自由で普遍的に成り立つわけではない（非絶対的）という、特定の枠組みや前提に依存して自立している状態を指します。
+
+たとえば、特定のゲームやスポーツにおけるルールがこれに該当します。チェスの駒の動きは他のゲームのルールと比較して相対的に決まるわけではなく、その体系内で独立して定まっています（非相対的）。しかし、それはあくまでチェスという枠内でのみ有効であり、物理法則のようにどこでも無条件に通用するわけではありません（非絶対的）。
+
+また、個人の強い信念や主観的な確信も同様です。他人の意見と比べて形成されたものではなく、その人の中で完結して揺るぎないもの（非相対的）であっても、それが全人類に共通する客観的な真理（絶対的）であるとは限りません。このように、比較には依存しないものの、適用される範囲や条件には限界がある状態が、非相対的かつ非絶対的な状態だと言えます。</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8777 | changed=True</div>
+<h3>answer</h3>
+<pre>この問いについて考えるにあたり、まずは言葉の定義とそれが適用される範囲の水準を分けて整理してみます。私たちはしばしば「相対的」と「絶対的」を単純な対義語として扱いますが、厳密には次元の異なる概念です。「相対的」か「非相対的」かという軸は、物事の性質が「他との比較や関係性によって定まるか、それとも単独で定まるか」という関係性の有無を問うものです。一方、「絶対的」か否かという軸は、その性質が「いかなる条件や例外も許さず、普遍的かつ無条件に成立するか」という適用範囲の広さを問うものです。このように水準を分けて記述すると、他との比較に依存せずに性質が定まっているからといって、それが直ちに宇宙のどこでも無条件に通用する真理になるわけではないことに気づきます。
+
+こうした熟考を踏まえると、非相対的ではあるが絶対的ではない状態とは、「他との比較や関係性によって決まるわけではないが、無条件・普遍的に成立するわけでもなく、特定の条件や前提の範囲内でのみ自立して成立している状態」を指します。
+
+たとえば、1気圧の環境下で水が100度で沸騰するという現象は、他の液体と比較して決まるわけではなく、水自身の固有の性質として定まっています（非相対的）。しかし、気圧が変われば沸点は変わるため、いかなる環境でも無条件に成り立つわけではありません（絶対的ではない）。
+
+また、人間の内面においてもこの状態は存在します。誰かと比較して優越感や劣等感を抱くのではなく、自分自身の内なる基準だけで「これが好きだ」「これが大切だ」と感じる信念や価値観は非相対的です。しかし、それはあくまでその個人の人生や経験という文脈に依存して成立しているものであり、他者や全人類に無条件に適用できる普遍的な真理ではありません。
+
+つまり、他者や外部との比較からは自由（非相対的）でありながらも、特定の環境、文脈、あるいは個人の枠組みの中でのみ成立している（絶対的ではない）という、限定的でありながらも自立した状態がこれに該当します。</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_512_log_skeleton_closure_high_log1024_final2048</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.5871 | changed=True</div>
+<h3>answer</h3>
+<pre>「非相対的ではあるが絶対的ではない状態」という問いに向き合うとき、私たちはまず相対と絶対という強力な二項対立の引力から抜け出し、思考を巡らせる必要があります。相対的とは、対象の性質や価値が他者や外部環境との比較、あるいは関係性のなかでのみ決定される状態を指します。一方、絶対的とは、</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_512_log_skeleton_closure_low_log1024_final2048</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.7784 | changed=True</div>
+<h3>answer</h3>
+<pre>「非相対的」と「絶対的」という言葉は日常的に混同されがちですが、それぞれの定義と適用範囲を分けることで、この状態の輪郭が明確になります。
+
+「非相対的」とは、対象の性質や状態が、観測者の主観や他との比較（基準系の選択など）に依存せず、その対象自体に内在して客</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_512_log_skeleton_closure_low_log1024_final_low2048</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9039 | changed=True</div>
+<h3>answer</h3>
+<pre>まず、「非相対的」と「絶対的」という言葉の定義について考えを巡らせてみます。通常、「相対的」とは他との比較や外部との関係性によって価値や性質が決まることを指します。したがって「非相対的」とは、他と比べることなく、その対象そのものに内在する基準で成り立っている状態を意味します。一方で「絶対的」とは、いかなる条件や例外、文脈にも縛られず、普遍的かつ無条件に成り立つことを指します。
+
+ここで、「定義と適用範囲を混同しない」という視点が非常に役立ちます。つまり、「他との比較に依存しない（非相対的）」というのは基準の「性質」の話であり、「普遍的に成り立つか（絶対的か）」というのはその基準の「適用範囲」の話だと整理できます。この二つを分けると、両立する領域が見えてきます。
+
+例えば、ある特定のゲームのルールや、特定の文化圏における法律を考えてみます。チェスの「ビショップは斜めに動く」というルールは、将棋や他のゲームと比較して決まるわけではなく、チェスという体系の中に内在する基準です（非相対的）。しかし、それが宇宙の真理のように、いかなる状況や他のゲームでも無条件に適用されるわけではありません（絶対的ではない）。また、個人の強い信念も同様です。「私はこれを大切にする」という価値観は、他人と比べた結果ではなく自分の中で完結していますが、それが万人に当てはまる普遍的な真理というわけではありません。
+
+このように寄り道して考えていくと、この問いは「基準の出どころ」と「基準の及ぶ範囲」のズレを指摘していることがわかります。
+
+非相対的ではあるが絶対的ではない状態とは、「他者や外部との比較によって価値や性質が決まるわけではなく、対象そのものや特定の体系内に独自の基準を持っているが、その基準が普遍的・無条件にすべての状況や他者に対して適用されるわけではない状態」を指します。特定のコミュニティの厳格なルールや個人の確固たる信念など、その枠組みの中では独立して完結しているものの、枠組みの外に出れば効力を失うような、限定的な独立状態と言えます。</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_512_log_skeleton_closure_low_log1024_final_low4096</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8638 | changed=True</div>
+<h3>answer</h3>
+<pre>思考を巡らせてみると、物事の性質や価値を測る際、私たちはしばしば相対的と絶対的という二項対立に陥りがちです。しかし、この二つの枠に収まらない状態を考えることは、概念の解像度を上げるうえで非常に有意義です。相対的ではないということは、他者との比較や外部環境との関係性によってその価値や状態が変動しないことを意味します。一方で、絶対的ではないということは、それが普遍的、永続的、あるいは無条件に成立するわけではないことを示しています。ここで重要になるのは、対象の定義とそれが適用される範囲の水準を分けて考えることです。成立条件と不成立条件を整理すると、ある事象が外部に依存せずに自立しているものの、その自立性が及ぶ範囲が限定的であるという構造が浮かび上がってきます。
+
+非相対的ではあるが絶対的ではない状態とは、他者や外部との比較によって価値や性質が決定されるわけではないが、同時に普遍的・無条件・永続的に成立するわけでもない、限定的な自律状態を指します。
+
+これは、評価の基準が外部との関係性には依存していないものの、その基準自体が適用される範囲や条件が限られているために生じます。例えば、個人の内発的な信念や美学、特定のコミュニティ内でのみ自明とされる独自のルール、あるいは特定の文脈や期間においてのみ完結しているシステムなどが該当します。これらは「他と比べてどうであるか」という相対的な評価軸からは独立していますが、いかなる状況や時代、すべての他者に対しても強制力を持つような絶対的な真理や法則ではありません。
+
+つまり、自己完結的で外部の比較を必要としない独立性を持ちながらも、その有効性や適用範囲が局所的であり、特定の条件が崩れれば成立しなくなるような状態と言えます。</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8938 | changed=True</div>
+<h3>answer</h3>
+<pre>「非相対的」と「絶対的」という言葉の間にどのような空間が広がっているのかを考えるにあたり、まずはそれぞれの言葉が持つ前提を解きほぐす必要があります。「相対的」とは、他者との比較や外部環境との関係性によってその価値や性質が変動する状態です。したがって「非相対的」とは、他との比較に依存せず、それ自体で自立している、あるいは内的な基準によって定まっている状態を指します。一方で「絶対的」とは、いかなる条件、例外、時間の経過にも左右されず、普遍的かつ無条件に成り立つ究極の状態を意味します。ここから導かれる「非相対的ではあるが絶対的ではない状態」とは、他との比較によらず独立して成立しているものの、普遍性や永遠不変性を持ち合わせてはいない状態だと言えます。
+
+この状態を具体的に表す概念として、いくつかの切り口が考えられます。
+
+第一に、個人の「主観的」な感覚や信念です。たとえば「私が今、痛みを感じている」という事実は、他人の痛みと比較して決まるものではないため非相対的ですが、全人類に共通する普遍的な真理でも永遠に続くものでもないため、絶対的ではありません。
+
+第二に、「局所的」あるいは「特定の体系内」で完結しているルールや公理です。あるゲームのルールや特定の社会コミュニティにおける規範は、外部のルールと比較して価値が決まるわけではなく、その内部では疑いようのない前提（非相対的）として機能します。しかし、それが宇宙のどこでも通用する不変の法則ではないという点で、絶対的ではありません。
+
+第三に、「一時的・暫定的」な確定状態です。ある瞬間の物理的な状態や、現時点での最善の科学的結論は、他と比べて相対的に決まるものではなく、その時点において確固たる事実として存在します。しかし、未来の発見や時間の経過によって変化し得るため、絶対的なものではありません。
+
+つまり、非相対的ではあるが絶対的ではない状態とは、外部との比較を必要とせずに自立・確定していながらも、あくまで特定の主観、限られた範囲、あるいは一時的な条件の下でのみ成立している「局所的・暫定的な事実」や「固有の経験」を指すと言えます。</pre>
+</div>
+</details>
+<details>
+<summary><strong>facts_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9087 | changed=True</div>
+<h3>answer</h3>
+<pre>言葉の定義から思考を巡らせてみると、「非相対的」とは、対象の性質や価値、あるいは真偽が、他者との比較や観測者の視点、外部との関係性に依存せず、対象そのものに内在していることを指します。一方で「絶対的」とは、いかなる条件や状況下でも例外なく成り立つ普遍性、完全性、あるいは無条件の永遠性を意味することが多い言葉です。このように用語が持つ意味の水準や射程を分けて考えると、両者は必ずしも同義ではないことに気づきます。
+
+ここから少し寄り道をして、具体例を考えてみます。たとえば、一個人が今まさに感じている「痛み」や「悲しみ」といった主観的な体験はどうでしょうか。私が感じている痛みは、他人の痛みと比較して初めて生じるものではなく、私の中で独立して存在している非相対的な事実です。しかし、それは全人類に当てはまる普遍的な真理でもなければ、永遠に続く状態でもないため、決して絶対的ではありません。
+
+また、特定のゲームや数学的体系における「公理」や「初期設定」も似た構造を持っています。それらはその体系内において他の要素に依存せず、自立した基準として機能します（非相対的）。しかし、別のルールの下や異なる宇宙の法則においては全く成り立たないため、無条件にどこでも通用するわけではありません（非絶対的）。つまり、成立条件と不成立条件を分けて考えると、定義としては外部に依存せず独立していても、その適用範囲は局所的であったり、一時的であったりすることが見えてきます。
+
+これらの熟考を踏まえて本題の質問に答えると、非相対的ではあるが絶対的ではない状態とは、対象の性質や事実が他との比較や外部との関係性に依存せず、それ単体で自立して成立しているものの、それが普遍性、永遠性、あるいは無条件の完全性を備えているわけではなく、特定の文脈、時間、空間、あるいは個別の枠組みの中でのみ有効であるような状態を指します。端的に言えば、「他と比べてそうなるわけではないが、あらゆる状況で常に成り立つわけでもない、内在的かつ限定的な状態」であると言えます。</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_128_log_skeleton_closure_high_log1024_final2048</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8922 | changed=True</div>
+<h3>answer</h3>
+<pre>ガラスに隔てられた温室のなかを漂う光について想像を巡らせてみる。そこは外部の広大な気候や環境から切り離されており、外の世界と比べてどうであるかといった他との比較、すなわち相対的な関係性から脱却している。しかし、そこに満ちている光は自ら発した永遠の輝きではなく、外部の光源から少し</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final2048</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8292 | changed=True</div>
+<h3>answer</h3>
+<pre>空と砂の間に建つ温室を想像してみます。そこでは外部の光がガラスを透過する際にわずかな遅れを生じ、外の世界の文脈や意味からは切り離されたまま、ただ内部の配置だけが静かに反復されています。この温室の中の空間は、外の風景と比べて優劣や違いを測るようなものではないため「</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low2048</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8909 | changed=True</div>
+<h3>answer</h3>
+<pre>温室の中の光について少し考えてみる。外部の太陽の動きや他の場所と直接比較されるわけではなく、ガラスという境界によって他者との相対的な関係から切り離されている空間。しかし、そこで起きる光の遅れや配置の反復は、宇宙全体を貫く揺るぎない絶対的な法則というわけでもない。ただその閉じた環境の中だけで成立し、意味を持たずに配置だけが繰り返される孤立した現象である。
+
+このように、他との比較によって価値や性質が決まる「相対的」なものではないが、あらゆる条件を超越して普遍的に成り立つ「絶対的」なものでもない状態とは、特定の境界や文脈の内部においてのみ自立している「局所的・自律的な状態」であると言える。
+
+それは、個人の内面における主観的な確信や、ある限定されたシステムの中だけで完結している独自のルールのようなものである。他と比べる必要はない（非相対的）が、世界全体を支配する普遍的な真理でもない（非絶対的）。ただその限られた枠組みの中で、他者に依存することなく独立して存在している状態を指している。</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_128_log_skeleton_closure_low_log1024_final_low4096</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9556 | changed=True</div>
+<h3>answer</h3>
+<pre>温室のガラスを透過する光が少し遅れて届くように、外部との直接的な比較から切り離された空間を想像してみます。そこでは意味の優劣や他者との相対的な関係性は失われ、ただ「配置」だけが反復されています。この閉ざされた系において、ある事象は他と比べる必要がないため「非相対的」ですが、それが外の世界すべてに通用する普遍性を持っているわけではないため「絶対的」でもありません。
+
+非相対的ではあるが絶対的ではない状態とは、特定の限定された枠組みや文脈の中だけで独立して成立している「局所的な自律状態」のことです。他との比較によって価値や意味が決まるわけではなく、かといってあらゆる状況で普遍的に通用するわけでもありません。それは、外部から遮断された温室の中で、他と比べることなくただそこにあるものとして存在しながらも、温室の外の世界には及ばない、固有のルールや主観的確信の中でだけ完結している状態と言えます。</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_128_log_skeleton_closure_low_log2048_rescue_final_low4096</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9561 | changed=True</div>
+<h3>answer</h3>
+<pre>温室の中で少し遅れて届く光のように、他との関係性や意味を持たず、ただそこにある配置だけが反復される光景を想像してみてください。それは何かと比較されることで成り立つ「相対的」なものではありませんが、永遠不変の真理として君臨する「絶対的」なものでもありません。
+
+非相対的でありながら絶対的ではない状態とは、他者や外部環境との比較・依存関係から切り離されて独立しているものの、それが普遍的で不変の法則として存在するわけではない、「単なる局所的な事実」や「一時的な孤立状態」を指します。
+
+例えば、あなただけが感じている特定の瞬間の感覚（クオリア）や、偶然出来上がった砂山の形、あるいは文脈を失ってただそこに置かれただけの石などがこれに当たります。それらは他と比べる基準を持たないため相対的ではありませんが、いつかは消えゆくものであり、宇宙のどこにでも通用する絶対的なものでもありません。
+
+つまりそれは、意味や比較の網の目から抜け落ちた、「ただそのように配置されているだけ」の固有で無根拠な状態だと言えます。</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_128_log_skeleton_closure_medium_log1024_final_medium4096</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9223 | changed=True</div>
+<h3>answer</h3>
+<pre>温室という閉鎖空間に少し遅れて届く光や、意味を持たずにただ配置だけが反復される光景について思いを巡らせてみます。温室は外部環境から切り離されており、外界との直接的な比較や関係性を一時的に断ち切る空間です。そこにあるのは外部の基準に左右されない独立した世界ですが、それが世界のすべてを統べる普遍的な存在というわけでもなく、ただ局所的に切り取られただけの脆い環境にすぎません。意味の不在と配置の反復は、究極的な真理が存在しないことの暗示でもあります。
+
+この情景は、「非相対的ではあるが絶対的ではない状態」を考える上で一つの補助線となります。他との比較や関係性によって定義されるわけではない（非相対的）ものの、かといって普遍的、永遠不変、あるいは無条件に完全な存在でもない（非絶対的）状態とはどのようなものか。
+
+それは「局所的な独立」や「孤立した固有性」と呼べる状態です。たとえば、個人の内面における強烈な主観的体験や個人的な信念は、他者の経験と比べる性質のものではないため非相対的ですが、全宇宙に通用する客観的な真理ではないため絶対的ではありません。また、独自のルールだけで完結する特定のゲームや、外部から遮断された温室のような閉鎖環境もこれに当てはまります。
+
+つまりそれは、周囲との関係性のネットワークからは外れて自律・孤立しているものの、それ自体が究極の基盤や普遍性にはなり得ない、有限で限定的な独立状態を指していると言えます。</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_512_log_skeleton_closure_high_log1024_final2048</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9082 | changed=True</div>
+<h3>answer</h3>
+<pre>他との関係や比較によって価値や意味が決まる「相対的」な世界から切り離されているものの、だからといって普遍的で完全な真理である「絶対的」な存在にも至っていない状態。それは、外部との繋がりを絶たれた「局所的な孤立」や「固有の事実」として表現できます。
+
+たとえば、長い時間をかけて樹液が硬化し、その内部に過去の空間を閉じ込めた琥珀を想像してみてください。琥珀の中の時間は外部の絶え間ない変化から切り離されており、他の何かと比較される文脈を失っているため「非相対的」です。しかし、それが宇宙全体を貫く究極の法則や永遠の真理というわけではなく、ある特定の瞬間が偶然保存されたにすぎないため「絶対的」でもありません。
+
+また、外部の気候から隔絶された温室の中で、光が少し遅れて届くような閉鎖的な空間も同様です。そこでは、他との比較や外部との関係性によって生じる「意味」は剥落し、ただ内部の「配置」だけが独自のルールで反復され、維持されています。
+
+人間の内面で言えば、他人の体験とは決して比較したり共有したりできない「私だけの純粋な感覚（ク</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final2048</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8745 | changed=True</div>
+<h3>answer</h3>
+<pre>温室のガラスを透過する光がわずかに遅れるように、外部の世界から切り離され、内部の配置だけが静かに反復される空間を想像してみます。そこでは外の天候と比べる必要がなく、ただその閉鎖環境のルールだけが機能しています。この「温室」のようなあり方は、外部との関係を断ち切った独立性を持ちながらも、世界全体を覆うような無条件の普遍性を持っていません。この寄り道から見えてくるのは、外部との比較を免れながらも全体を支配するわけではない、閉じた境界の存在です。
+
+この情景を踏まえて「非相対的ではあるが絶対的ではない状態」について答えます。
+
+相対的であるとは、他者との比較や関係性によって自身の状態や価値が定まることを指します。一方、絶対的であるとは、いかなる条件にも縛られず、普遍的かつ無条件に全体を支配して成り立つことを意味します。したがって「非相対的ではあるが絶対的ではない状態」とは、他との比較に依存しない自己完結性を持ちながらも、すべてを超越する普遍性を持たない「局所的な独立状態」を指します。
+
+たとえば、個人の内面における純粋な主観的体験（クオリア）がこれに該当します。「私が今感じている痛みや色彩」は、他人の感覚と比較して相対的に決まるものではないため非相対的ですが、宇宙全体に共通する真理ではないため絶対的ではありません。
+
+また、特定のゲームのルールや、独自の公理系で構築された数学的空間も同様です。チェスの盤上や特定の幾何学の中では、そのルールが比較を許さない前提として機能しますが（非相対的）、一歩その枠組みの外に出れば適用されない限定的なものです（非絶対的）。
+
+つまりそれは、外部の文脈から切り離されて相対的な意味づけを免れ、ただその内部の法則や配置だけが独立して反復されている、温室のように限定的で自己完結した状態だと言えます。</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low2048</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9239 | changed=True</div>
+<h3>answer</h3>
+<pre>温室の中で光が遅れて届き、意味を持たずに配置だけが反復される光景を想像してみます。それは外部の絶対的な太陽光そのものではなく、ガラスというフィルターを通した内部だけの規則性です。他の温室と比べるような相対的なものではない一方で、宇宙全体に通用する絶対的な真理でもありません。ただ「その閉じた環境の中でのみ不変のルール」として静かに存在している状態と言えます。この反復は、私たちに「枠組みの内部だけで成り立つ確固たるもの」の存在を気づかせてくれます。
+
+非相対的ではあるが絶対的ではない状態とは、特定の文脈や枠組み、あるいは閉じた系の中だけで固定されている「局所的な不変性」や「間主観的な合意」を指します。他との比較によって価値や基準が変動するわけではないため相対的ではありませんが、あらゆる状況や普遍的な次元で無条件に成り立つわけではないため絶対的でもありません。例えば、特定のゲームの中だけで適用される厳格なルールや、ある共同体内でのみ疑いようのない前提として機能している規範などがこれに該当します。</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_512_log_skeleton_closure_low_log1024_final_low4096</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.9035 | changed=True</div>
+<h3>answer</h3>
+<pre>温室のガラスを透過する光がわずかに遅れて届くとき、そこには外の世界との比較を絶した、内部だけの静かな時間が流れています。意味を問うことなく、ただ配置だけが反復されるその空間は、他と比べることのできない独自の法則で満たされています。この「他との関係性に依存しないが、宇宙全体の不変の真理というわけでもない」というあり方は、まさに私たちが直面するある種の状態を暗示しているように思えます。
+
+非相対的ではあるが絶対的ではない状態とは、他との比較や関係性によって価値や意味が変動するわけではない（非相対的）ものの、いかなる条件にも縛られない普遍的で究極的な真理でもない（非絶対的）状態を指します。つまり、特定の枠組みや文脈の中においてのみ、完全に独立して成立している「局所的な自律性」を持つ状態です。
+
+たとえば、特定の公理系に基づく数学や論理の世界がこれに該当します。ユークリッド幾何学の定理は、その公理系の中では他と比べる必要のない確固たる真理（非相対的）ですが、非ユークリッド幾何学という別の枠組みを導入すれば成り立たなくなるため、宇宙のあらゆる場所で通用する究極の真理（絶対的）ではありません。
+
+また、個人の深く主観的な体験や信念も同様です。「私がいま痛みを感じている」という感覚は、他人の感覚と比較して決まるものではないため非相対的ですが、全人類に共通する客観的で絶対的な事実でもありません。あるいは、独自のルールで完全に完結しているゲームの世界や、特定のコミュニティ内だけで絶対視されるローカルな規範も、外の世界との相対的比較を拒絶しながらも、決して普遍的・絶対的ではない状態の典型と言えます。</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_512_log_skeleton_closure_low_log2048_rescue_final_low4096</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8470 | changed=True</div>
+<h3>answer</h3>
+<pre>温室のガラスを透過する光が少し遅れて届くように、意味ではなく配置だけが反復される空間を想像してみます。そこにあるのは、外の世界と比較して決まる相対的な価値ではなく、ただ「そのように配置されている」という事実です。しかし、それは宇宙のどこでも通用する絶対的な真理というわけでもなく、温室という限られた環境の中だけで成立する現象にすぎません。
+
+このイメージが示唆するように、「非相対的ではあるが絶対的ではない状態」とは、他との比較や外部との関係性によって性質が決まるわけではない（非相対的）ものの、いかなる条件や環境下でも不変で普遍的であるわけでもない（非絶対的）状態を指します。
+
+具体的には、特定のシステムや文脈の中でのみ自立して機能する「局所的な基準」や、個人の内面においてのみ揺るぎない「主観的な確信」などがこれに該当します。他者や他の事象と比べて価値が変動するわけではないため相対的ではありませんが、時代や場所を超越してすべてに適用できる真理ではないため絶対的でもありません。それは、ある特定の枠組みや環境の内部においてのみ、他を介さずに自足している状態と言えます。</pre>
+</div>
+</details>
+<details>
+<summary><strong>isomorphic_dose_512_log_skeleton_closure_medium_log1024_final_medium4096</strong> · ponder</summary>
+<div class='card'>
+<div class='muted'>diff=0.8491 | changed=True</div>
+<h3>answer</h3>
+<pre>「非相対的ではあるが絶対的ではない状態」とは、外部や他者との比較によって自身の性質や価値が決定されるわけではない（非相対的）ものの、それが無条件で普遍的な唯一の真理や法則として君臨しているわけでもない（非絶対的）状態を指します。
+
+たとえば、外界から切り離された温室の中を想像してみてください。そこでは光が少し遅れて届き、天井には水滴が結露し、意味を持たない配置だけが反復されるような独自の時間が流れています。この温室内の環境は、外の天気と比べてどうかという「相対的」な評価を離れ、それ自体として自己完結し、ただそのように存在しています。しかし同時に、そのルールはガラスという境界の内部でのみ成立する局所的なものであり、世界のどこにでも通用する「絶対的」な法則ではありません。
+
+このように、特定の文脈、個人の内面的な経験、あるいは閉じたシステムの中で「ただそうである」として独立して成立しながらも、その適用範囲や存在の基盤が限定的である状態こそが、非相対的でありながら絶対的でもない状態だと言えます。それは、他と比べる必要はないが、全体を支配するわけでもない、孤立した固有性のようなものです。</pre>
+</div>
+</details>
+<script>(function(){const body=document.getElementById('matrix-report-body');const heatSel=document.getElementById('heatmap-metric-key');const keySel=document.getElementById('matrix-sort-key');const dirSel=document.getElementById('matrix-sort-dir');const applyBtn=document.getElementById('matrix-sort-apply');const heatmaps=Array.from(document.querySelectorAll('[data-heatmap-key]'));if(heatSel&&heatmaps.length){function syncHeatmap(){const wanted=heatSel.value||'';for(const node of heatmaps){node.style.display=(node.getAttribute('data-heatmap-key')===wanted)?'':'none';}}heatSel.addEventListener('change',syncHeatmap);syncHeatmap();}if(!body||!keySel||!dirSel||!applyBtn){return;}function metricValue(row,key){const attr='data-'+String(key||'').replace(/_/g,'-');const raw=row.getAttribute(attr)||'';if(key==='name'){return raw.toLowerCase();}const num=Number(raw);return Number.isFinite(num)?num:null;}function compareRows(a,b,key,dir){const av=metricValue(a,key);const bv=metricValue(b,key);if(typeof av==='string'||typeof bv==='string'){const as=String(av||'');const bs=String(bv||'');return dir==='asc'?as.localeCompare(bs):bs.localeCompare(as);}if(av===null&&bv===null){return 0;}if(av===null){return 1;}if(bv===null){return -1;}return dir==='asc'?(av-bv):(bv-av);}function sortRows(){const key=keySel.value||'query_alignment_delta';const dir=dirSel.value||'desc';const rows=Array.from(body.querySelectorAll('tr'));const pinned=rows.filter((row)=>row.getAttribute('data-kind')==='baseline');const sortable=rows.filter((row)=>row.getAttribute('data-kind')!=='baseline');sortable.sort((a,b)=>{const main=compareRows(a,b,key,dir);if(main!==0){return main;}return compareRows(a,b,'name','asc');});for(const row of pinned.concat(sortable)){body.appendChild(row);}}applyBtn.addEventListener('click',sortRows);keySel.addEventListener('change',sortRows);dirSel.addEventListener('change',sortRows);sortRows();})();</script>
+</body></html>
