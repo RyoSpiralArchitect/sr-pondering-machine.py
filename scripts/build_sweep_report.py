@@ -165,9 +165,16 @@ def infer_log_phase_route(item: Dict[str, Any]) -> str:
     budget = safe_int(cfg.get("log_phase_max_new_tokens"))
     budget_label = str(budget) if budget and budget > 0 else "inherit"
     rescue = bool(cfg.get("log_phase_rescue"))
-    if effort == "inherit" and budget_label == "inherit" and not rescue:
+    final_effort = str(cfg.get("final_phase_reasoning_effort") or "inherit").strip() or "inherit"
+    final_budget = safe_int(cfg.get("final_phase_max_new_tokens"))
+    final_budget_label = str(final_budget) if final_budget and final_budget > 0 else "inherit"
+    final_is_default = final_effort == "inherit" and final_budget_label == "inherit"
+    if effort == "inherit" and budget_label == "inherit" and not rescue and final_is_default:
         return ""
-    return f"{effort}_{budget_label}_{'rescue' if rescue else 'no_rescue'}"
+    log_part = f"{effort}_{budget_label}_{'rescue' if rescue else 'no_rescue'}"
+    if final_is_default:
+        return log_part
+    return f"{log_part}__final_{final_effort}_{final_budget_label}"
 
 
 def _nonempty_lines(text: Any) -> List[str]:
@@ -342,6 +349,8 @@ def extract_rows(sweep_dir: Path) -> tuple[List[Dict[str, Any]], List[Dict[str, 
             log_phase_max_new_tokens = safe_int(cfg_overrides.get("log_phase_max_new_tokens")) or 0
             log_phase_rescue_enabled = int(bool(cfg_overrides.get("log_phase_rescue")))
             log_phase_rescue_used_count = count_record_log_phase_flag(item, "rescue_used")
+            final_phase_reasoning_effort = str(cfg_overrides.get("final_phase_reasoning_effort") or "inherit").strip() or "inherit"
+            final_phase_max_new_tokens = safe_int(cfg_overrides.get("final_phase_max_new_tokens")) or 0
             answer = str(item.get("answer") or "")
             record_log_values = record_logs(item)
             log_marker_count = sum(marker_line_present(log, "END_LOG") for log in record_log_values)
@@ -364,6 +373,8 @@ def extract_rows(sweep_dir: Path) -> tuple[List[Dict[str, Any]], List[Dict[str, 
                     "log_phase_rescue_enabled": log_phase_rescue_enabled,
                     "log_phase_rescue_used_count": log_phase_rescue_used_count,
                     "log_phase_rescue_used_rate": (log_phase_rescue_used_count / len(record_log_values)) if record_log_values else None,
+                    "final_phase_reasoning_effort": final_phase_reasoning_effort,
+                    "final_phase_max_new_tokens": final_phase_max_new_tokens,
                     "answer_chars": safe_float(metrics.get("answer_chars")),
                     "final_marker_line_present": marker_line_present(answer, "END_ANSWER"),
                     "final_marker_is_last_line": marker_is_last_line(answer, "END_ANSWER"),
@@ -935,6 +946,8 @@ def build_closure_contract_rows(item_df: pd.DataFrame) -> List[Dict[str, Any]]:
                 "log_phase_max_new_tokens": safe_int(item.get("log_phase_max_new_tokens")) or 0,
                 "log_phase_rescue_enabled": safe_float(item.get("log_phase_rescue_enabled")),
                 "log_phase_rescue_used_rate": safe_float(item.get("log_phase_rescue_used_rate")),
+                "final_phase_reasoning_effort": str(item.get("final_phase_reasoning_effort") or "inherit"),
+                "final_phase_max_new_tokens": safe_int(item.get("final_phase_max_new_tokens")) or 0,
                 "answer_chars": safe_float(item.get("answer_chars")),
                 "final_marker_line_present": safe_float(item.get("final_marker_line_present")),
                 "final_marker_is_last_line": safe_float(item.get("final_marker_is_last_line")),
@@ -1205,6 +1218,7 @@ def summarize(
                     log_marker_rate=("ponder_log_marker_rate", "mean"),
                     log_skeleton_complete_rate=("ponder_log_skeleton_complete_rate", "mean"),
                     ponder_finish_length_mean=("ponder_finish_length_count", "mean"),
+                    final_finish_length_rate=("final_finish_is_length", "mean"),
                     rescue_used_rate=("log_phase_rescue_used_rate", "mean"),
                     answer_chars_mean=("answer_chars", "mean"),
                 )
@@ -1523,12 +1537,16 @@ def build_report_html(
     if log_phase_rows:
         def _route_budget(row: Dict[str, Any]) -> int:
             route = str(row.get("log_phase_route") or "")
-            match = re.search(r"_(\d+)_", route)
-            return int(match.group(1)) if match else 999999
+            match = re.search(r"_(\d+)_(?:rescue|no_rescue)", route)
+            if match:
+                return int(match.group(1))
+            if "_inherit_" in route:
+                return 1024
+            return 999999
 
         def _route_rescue_penalty(row: Dict[str, Any]) -> int:
             route = str(row.get("log_phase_route") or "")
-            return int(route.endswith("_rescue") and not route.endswith("_no_rescue"))
+            return int("_rescue" in route and "_no_rescue" not in route)
 
         best_route_rows = sorted(
             log_phase_rows,
@@ -1536,6 +1554,7 @@ def build_report_html(
                 -(safe_float(row.get("log_skeleton_complete_rate")) or 0.0),
                 -(safe_float(row.get("log_marker_rate")) or 0.0),
                 safe_float(row.get("ponder_finish_length_mean")) or 0.0,
+                safe_float(row.get("final_finish_length_rate")) or 0.0,
                 _route_budget(row),
                 _route_rescue_penalty(row),
             ),
@@ -1544,8 +1563,9 @@ def build_report_html(
         log_phase_bullet = (
             f"<li><strong>Log-phase routing is now isolated from final-answer routing.</strong> "
             f"Best skeleton-complete route was <code>{html.escape(str(best_route.get('log_phase_route') or 'n/a'))}</code> "
-            f"at {fmt_num((safe_float(best_route.get('log_skeleton_complete_rate')) or 0.0) * 100, 0)}%; "
-            "compare it with rescue-used rate and raw ponder logs.</li>"
+            f"at {fmt_num((safe_float(best_route.get('log_skeleton_complete_rate')) or 0.0) * 100, 0)}%, "
+            f"with final length rate {fmt_num((safe_float(best_route.get('final_finish_length_rate')) or 0.0) * 100, 0)}%; "
+            "compare it with rescue-used rate, final finish rate, and raw ponder logs.</li>"
         )
 
     metric_cards = [
@@ -1708,9 +1728,9 @@ def build_report_html(
         log_phase_section = f"""
     <section data-contract-section="key-findings">
       <h2>Log-Phase Dedicated Routes</h2>
-      <p><strong>This isolates the ponder-log call from the final-answer call.</strong> The route axis varies only log-stage reasoning effort, log-stage visible-token budget, and whether a short log-only rescue call is allowed after a contract miss.</p>
+      <p><strong>This isolates the ponder-log call from the final-answer call.</strong> The route axis can vary log-stage reasoning effort, log-stage visible-token budget, log rescue, and final-answer routing knobs when the matrix includes them.</p>
       {''.join(route_figures)}
-      <p>Use <a href="closure_contract_metrics.csv">closure_contract_metrics.csv</a> to compare route-level marker pass rates, length finishes, and rescue-used rates.</p>
+      <p>Use <a href="closure_contract_metrics.csv">closure_contract_metrics.csv</a> to compare route-level marker pass rates, log/final length finishes, and rescue-used rates.</p>
     </section>
 """
 

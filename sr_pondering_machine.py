@@ -5964,6 +5964,8 @@ class RunConfig:
 
     answer_style: str = "plain"  # plain|surreal|metaphor|meta
     answer_max_new_tokens: int = 1550
+    final_phase_max_new_tokens: int = 0  # 0 inherits answer_max_new_tokens
+    final_phase_reasoning_effort: str = "inherit"  # inherit|auto|none|minimal|low|medium|high|xhigh
     ponder_max_new_tokens: int = 1020
     log_phase_max_new_tokens: int = 0  # 0 inherits ponder_max_new_tokens
     log_phase_reasoning_effort: str = "inherit"  # inherit|auto|none|minimal|low|medium|high|xhigh
@@ -6144,6 +6146,18 @@ def _log_phase_max_new_tokens(cfg: "RunConfig") -> int:
     if override > 0:
         return override
     return int(getattr(cfg, "ponder_max_new_tokens", 0) or 0)
+
+
+def _final_phase_reasoning_effort_override(cfg: "RunConfig") -> str:
+    effort = _normalize_log_phase_reasoning_effort(getattr(cfg, "final_phase_reasoning_effort", "inherit"))
+    return "" if effort == "inherit" else effort
+
+
+def _final_phase_max_new_tokens(cfg: "RunConfig") -> int:
+    override = int(getattr(cfg, "final_phase_max_new_tokens", 0) or 0)
+    if override > 0:
+        return override
+    return int(getattr(cfg, "answer_max_new_tokens", 0) or 0)
 
 
 @contextlib.contextmanager
@@ -6685,7 +6699,8 @@ def _maybe_rescue_empty_api_final_answer(
         ),
         system_text=None,
     )
-    rescue_max_new_tokens = max(1024, int(getattr(cfg, "answer_max_new_tokens", 256) or 256) * 2)
+    final_phase_tokens = _final_phase_max_new_tokens(cfg)
+    rescue_max_new_tokens = max(1024, int(final_phase_tokens or 256) * 2)
     msg = (
         f"API final answer stayed empty after the normal retry; attempting visible-answer rescue "
         f"(max_tokens={rescue_max_new_tokens}, scaffold_target={rescue_target})."
@@ -6707,6 +6722,7 @@ def _maybe_rescue_empty_api_final_answer(
         no_repeat_ngram_size=0,
         seed=None if getattr(cfg, "seed", None) is None else int(cfg.seed) + 2,
         api_warnings=api_warnings,
+        reasoning_effort=_final_phase_reasoning_effort_override(cfg) or "inherit",
     )
     merged = _merge_api_token_buckets([final_answer_meta, rescue_meta])
     out_meta = dict(rescue_meta)
@@ -6718,6 +6734,8 @@ def _maybe_rescue_empty_api_final_answer(
         "scaffold_target_tokens": int(rescue_target),
         "scaffold_source_tokens_est": int((rescue_meta_info or {}).get("source_tokens_est") or 0),
         "scaffold_final_tokens_est": int((rescue_meta_info or {}).get("final_tokens_est") or 0),
+        "max_new_tokens": int(rescue_max_new_tokens),
+        "reasoning_effort": _final_phase_reasoning_effort_override(cfg) or "inherit",
     }
     hf.last_response_meta = dict(out_meta)
     return answer, out_meta
@@ -9034,6 +9052,8 @@ def run_ponder_api(
 
     answer_s = 0.0
     final_answer_meta: Dict[str, Any] = {}
+    final_phase_tokens = _final_phase_max_new_tokens(cfg)
+    final_phase_effort = _final_phase_reasoning_effort_override(cfg)
     if cfg.answer_ensemble and ensemble_final:
         answer = ensemble_final.strip()
     else:
@@ -9043,7 +9063,7 @@ def run_ponder_api(
             provider=cfg.provider,
             phase="final_answer",
             prompt=final_prompt,
-            max_new_tokens=cfg.answer_max_new_tokens,
+            max_new_tokens=final_phase_tokens,
             temperature=cfg.temperature,
             top_p=cfg.top_p,
             top_k=0,
@@ -9051,7 +9071,14 @@ def run_ponder_api(
             no_repeat_ngram_size=0,
             seed=cfg.seed,
             api_warnings=api_warnings,
+            reasoning_effort=final_phase_effort or "inherit",
         )
+        if final_answer_meta:
+            final_answer_meta = dict(final_answer_meta)
+            final_answer_meta["final_phase"] = {
+                "max_new_tokens": int(final_phase_tokens),
+                "reasoning_effort": final_phase_effort or "inherit",
+            }
         answer_s = float(time.perf_counter() - t_answer0)
         if not (answer or "").strip():
             rescue_t0 = time.perf_counter()
@@ -9089,6 +9116,8 @@ def run_ponder_api(
             run_id=run_id,
             pack_item=pack_item,
             output_contract=cfg.output_contract,
+            final_phase_max_new_tokens=int(final_phase_tokens),
+            final_phase_reasoning_effort=final_phase_effort or "inherit",
             elapsed_s=float(answer_s),
             answer_chars=len(answer or ""),
             answer_preview=trace.preview(answer),
@@ -9358,6 +9387,18 @@ def main() -> None:
         help="Prompt-only closure contract for ponder logs and/or final answers",
     )
     g_answer.add_argument("--answer_max_new_tokens", type=int, default=256)
+    g_answer.add_argument(
+        "--final_phase_max_new_tokens",
+        type=int,
+        default=0,
+        help="Max tokens for final-answer generation only (0 inherits --answer_max_new_tokens)",
+    )
+    g_answer.add_argument(
+        "--final_phase_reasoning_effort",
+        choices=["inherit", "auto", "none", "minimal", "low", "medium", "high", "xhigh"],
+        default="inherit",
+        help="Reasoning effort for final-answer API calls only (inherit keeps --api_reasoning_effort)",
+    )
     g_answer.add_argument("--answer_per_band", action="store_true", help="Generate per-band answers (sensitivity)")
     g_answer.add_argument("--answer_ensemble", action="store_true", help="Merge per-band answers into a final answer")
     g_answer.add_argument("--answer_ensemble_max_new_tokens", type=int, default=512)
@@ -9704,6 +9745,8 @@ def main() -> None:
         bands=bands,
         answer_style=args.answer_style,
         answer_max_new_tokens=args.answer_max_new_tokens,
+        final_phase_max_new_tokens=max(0, int(args.final_phase_max_new_tokens)),
+        final_phase_reasoning_effort=_normalize_log_phase_reasoning_effort(str(args.final_phase_reasoning_effort)),
         ponder_max_new_tokens=args.ponder_max_new_tokens,
         log_phase_max_new_tokens=max(0, int(args.log_phase_max_new_tokens)),
         log_phase_reasoning_effort=_normalize_log_phase_reasoning_effort(str(args.log_phase_reasoning_effort)),

@@ -678,6 +678,10 @@ class TestOpenAICompat(unittest.TestCase):
                 "dummy",
                 "--query",
                 "q",
+                "--final_phase_max_new_tokens",
+                "4096",
+                "--final_phase_reasoning_effort",
+                "low",
                 "--log_phase_max_new_tokens",
                 "2048",
                 "--log_phase_reasoning_effort",
@@ -690,6 +694,8 @@ class TestOpenAICompat(unittest.TestCase):
         )
         obj = json.loads(out)
         cfg = obj.get("cfg") or {}
+        self.assertEqual(cfg.get("final_phase_max_new_tokens"), 4096)
+        self.assertEqual(cfg.get("final_phase_reasoning_effort"), "low")
         self.assertEqual(cfg.get("log_phase_max_new_tokens"), 2048)
         self.assertEqual(cfg.get("log_phase_reasoning_effort"), "low")
         self.assertEqual(cfg.get("log_phase_rescue"), True)
