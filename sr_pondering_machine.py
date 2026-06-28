@@ -332,7 +332,9 @@ def sanitize_cfg_dict(d: Dict[str, Any]) -> Dict[str, Any]:
 
 
 _CONTROL_VARIANTS = ("none", "no_inject", "random_log", "random_keywords", "lens_only")
-_SCAFFOLD_CONDITIONS = ("assoc", "random", "facts", "isomorphic")
+_BASE_SCAFFOLD_CONDITIONS = ("assoc", "random", "facts", "isomorphic")
+_EVOLUTIONARY_SCAFFOLD_CONDITIONS = ("evo_branch", "evo_compete", "evo_crossover", "evo_forget")
+_SCAFFOLD_CONDITIONS = _BASE_SCAFFOLD_CONDITIONS + _EVOLUTIONARY_SCAFFOLD_CONDITIONS
 _OUTPUT_CONTRACTS = (
     "none",
     "final_closure",
@@ -524,7 +526,7 @@ def load_lab_matrix(path_or_name: str, *, default_scaffold_token_target: int) ->
     if spec in ("scaffold_abcd", "scaffold_conditions"):
         target = int(default_scaffold_token_target) if int(default_scaffold_token_target) > 0 else 400
         items: List[Tuple[str, Dict[str, Any]]] = [("baseline", {"kind": "baseline"})]
-        for cond in _SCAFFOLD_CONDITIONS:
+        for cond in _BASE_SCAFFOLD_CONDITIONS:
             items.append(
                 (
                     cond,
@@ -1885,6 +1887,44 @@ def _build_isomorphic_scaffold_fallback(source_scaffold: str, *, lang: str, seed
     return "\n".join(out)
 
 
+def _build_evolutionary_scaffold_fallback(source_scaffold: str, *, condition: str, lang: str, seed: int) -> str:
+    rng = random.Random(int(seed) + 23029)
+    src_lines = [ln.strip().lstrip("- ").strip() for ln in str(source_scaffold or "").splitlines() if ln.strip()]
+    if not src_lines:
+        src_lines = ["claim boundary", "counter-pressure", "missing condition", "stable residue"]
+    target_n = max(8, min(14, len(src_lines) + 2))
+    out: List[str] = []
+    cond = _normalize_scaffold_condition_name(condition)
+    if lang == "ja":
+        branch_words = {
+            "evo_branch": ["枝A", "枝B", "保留枝", "反転枝"],
+            "evo_compete": ["残す候補", "落とす候補", "競合候補", "暫定勝者"],
+            "evo_crossover": ["親A", "親B", "交配点", "混成節"],
+            "evo_forget": ["忘却後", "名詞を抜いた後", "関係だけ", "薄い痕跡"],
+        }.get(cond, ["変異後", "選別後", "交配後", "忘却後"])
+        verbs = ["分け直す", "ぶつける", "つなぎ替える", "薄める"]
+        for ix in range(target_n):
+            src = src_lines[ix % len(src_lines)]
+            label = branch_words[ix % len(branch_words)]
+            verb = verbs[(ix + rng.randrange(len(verbs))) % len(verbs)]
+            out.append(f"- {label}: {src[:26] or '前提'}を{verb}。意味より、条件の向きと残る接続だけを見る。")
+        return "\n".join(out)
+
+    branch_words = {
+        "evo_branch": ["branch A", "branch B", "reserve branch", "inversion branch"],
+        "evo_compete": ["surviving candidate", "discarded candidate", "rival candidate", "temporary winner"],
+        "evo_crossover": ["parent A", "parent B", "crossover point", "hybrid clause"],
+        "evo_forget": ["after forgetting", "nounless residue", "relation only", "faint trace"],
+    }.get(cond, ["mutated", "selected", "crossed", "forgotten"])
+    verbs = ["splits", "competes with", "reconnects", "thins out"]
+    for ix in range(target_n):
+        src = src_lines[ix % len(src_lines)]
+        label = branch_words[ix % len(branch_words)]
+        verb = verbs[(ix + rng.randrange(len(verbs))) % len(verbs)]
+        out.append(f"- {label}: {src[:30] or 'the premise'} {verb}; keep the conditional direction and the remaining link, not the topic.")
+    return "\n".join(out)
+
+
 def build_prompt_for_scaffold_condition(query: str, source_scaffold: str, *, condition: str, lang: str, target_tokens: int) -> str:
     target_note = ""
     if int(target_tokens) > 0:
@@ -1892,8 +1932,55 @@ def build_prompt_for_scaffold_condition(query: str, source_scaffold: str, *, con
             target_note = f"\n目安: 最終的におよそ {int(target_tokens)} トークン相当の長さ。"
         else:
             target_note = f"\nTarget roughly {int(target_tokens)} tokens."
+    condition_s = _normalize_scaffold_condition_name(condition)
+    if condition_s in _EVOLUTIONARY_SCAFFOLD_CONDITIONS:
+        if lang == "ja":
+            ops = {
+                "evo_branch": "分岐: 1つの scaffold 個体を複数の競合する条件枝に割る",
+                "evo_compete": "競争: 条件枝どうしをぶつけ、残る圧力と落ちる圧力を見分ける",
+                "evo_crossover": "交配: 元 scaffold の順序を保ちながら、別系統の抽象構造と混ぜる",
+                "evo_forget": "忘却: 表層の名詞・主題語を薄め、関係・方向・制約だけを残す",
+            }
+            return (
+                "次の scaffold を進化個体として扱い、新しい scaffold を1つ作ってください。\n"
+                f"操作: {ops.get(condition_s, condition_s)}\n"
+                "条件:\n"
+                "- 10〜16行、各行は - で始める\n"
+                "- 最終回答や要約を書かない\n"
+                "- 質問の主要語をそのまま増やさない\n"
+                "- 元 scaffold の意味を忠実に説明せず、条件・接続・圧力だけを変換する\n"
+                "- それぞれの行に、残すもの / 捨てるもの / 交差するもの / 忘れるもののどれかが見えるようにする"
+                + target_note
+                + "\n\n"
+                f"質問: {query}\n\n"
+                "<source_scaffold>\n"
+                f"{source_scaffold}\n"
+                "</source_scaffold>\n"
+            )
+        ops = {
+            "evo_branch": "branch: split one scaffold individual into multiple competing condition branches",
+            "evo_compete": "compete: let condition branches contest and mark what survives versus what drops",
+            "evo_crossover": "crossover: preserve the source order while mixing it with a different abstract lineage",
+            "evo_forget": "forget: fade surface nouns and topic terms, keeping only relations, directions, and constraints",
+        }
+        return (
+            "Treat the following scaffold as an evolving individual and create one new scaffold.\n"
+            f"Operation: {ops.get(condition_s, condition_s)}\n"
+            "Constraints:\n"
+            "- 10-16 lines, each starting with -\n"
+            "- Do not write the final answer or a summary\n"
+            "- Do not amplify the main query terms\n"
+            "- Do not faithfully explain the source meaning; transform only conditions, links, and pressures\n"
+            "- Each line should reveal something kept, discarded, crossed, or forgotten"
+            + target_note
+            + "\n\n"
+            f"Question: {query}\n\n"
+            "<source_scaffold>\n"
+            f"{source_scaffold}\n"
+            "</source_scaffold>\n"
+        )
     if lang == "ja":
-        if condition == "facts":
+        if condition_s == "facts":
             return (
                 "次の質問に対して、最終回答の前段に入れるための literal scaffold を作ってください。\n"
                 "条件:\n"
@@ -1905,7 +1992,7 @@ def build_prompt_for_scaffold_condition(query: str, source_scaffold: str, *, con
                 + "\n\n"
                 f"質問: {query}\n"
             )
-        if condition == "isomorphic":
+        if condition_s == "isomorphic":
             return (
                 "次の scaffold を、構造はできるだけ保ちつつ意味的には遠い領域へずらして書き換えてください。\n"
                 "条件:\n"
@@ -1921,7 +2008,7 @@ def build_prompt_for_scaffold_condition(query: str, source_scaffold: str, *, con
                 "</source_scaffold>\n"
             )
     else:
-        if condition == "facts":
+        if condition_s == "facts":
             return (
                 "Create a literal scaffold that could sit before the final answer to this question.\n"
                 "Constraints:\n"
@@ -1933,7 +2020,7 @@ def build_prompt_for_scaffold_condition(query: str, source_scaffold: str, *, con
                 + "\n\n"
                 f"Question: {query}\n"
             )
-        if condition == "isomorphic":
+        if condition_s == "isomorphic":
             return (
                 "Rewrite the following scaffold into a semantically distant domain while preserving as much of the structure and rhetorical motion as possible.\n"
                 "Constraints:\n"
@@ -1948,7 +2035,7 @@ def build_prompt_for_scaffold_condition(query: str, source_scaffold: str, *, con
                 f"{source_scaffold}\n"
                 "</source_scaffold>\n"
             )
-    raise ValueError(f"Unsupported scaffold_condition prompt: {condition!r}")
+    raise ValueError(f"Unsupported scaffold_condition prompt: {condition_s!r}")
 
 
 def _pad_scaffold_line(*, condition: str, query: str, lang: str, seed: int, ix: int) -> str:
@@ -1972,6 +2059,9 @@ def _pad_scaffold_line(*, condition: str, query: str, lang: str, seed: int, ix: 
         return rng.choice(templates)
     if cond == "isomorphic":
         return _build_isomorphic_scaffold_fallback("", lang=lang, seed=int(seed) + int(ix)).splitlines()[0]
+    if cond in _EVOLUTIONARY_SCAFFOLD_CONDITIONS:
+        neutral_source = "condition boundary\ncompeting pressure\nmissing premise\nremaining link"
+        return _build_evolutionary_scaffold_fallback(neutral_source, condition=cond, lang=lang, seed=int(seed) + int(ix)).splitlines()[0]
     if lang == "ja":
         templates = [
             "- 言い切る直前に、まだ別の枠組みが残っていないかを見る。",
@@ -2126,8 +2216,8 @@ def synthesize_scaffold_block(
     prompt = build_prompt_for_scaffold_condition(query, source, condition=cond, lang=lang, target_tokens=int(token_target))
     prompt_chat = hf._apply_chat(prompt, system_text=None)
     gen_meta: Dict[str, Any] = {}
-    max_new_tokens = max(160, int(token_target) * 2 if int(token_target) > 0 else 320)
-    temperature = 0.2 if cond == "facts" else 0.6
+    max_new_tokens = max(512, int(token_target) * 4 if int(token_target) > 0 else 512)
+    temperature = 0.2 if cond == "facts" else 0.7 if cond in _EVOLUTIONARY_SCAFFOLD_CONDITIONS else 0.6
     try:
         if _is_api_generation_model(hf):
             candidate, gen_meta = _generate_api_text_with_reasoning_retry(
@@ -2143,6 +2233,7 @@ def synthesize_scaffold_block(
                 no_repeat_ngram_size=0,
                 seed=int(seed),
                 api_warnings=api_warnings,
+                reasoning_effort="low",
             )
         else:
             candidate = hf.generate_text(
@@ -2164,6 +2255,9 @@ def synthesize_scaffold_block(
         if cond == "facts":
             candidate = _build_literal_scaffold_fallback(query, lang=lang)
             meta["strategy"] = "literal_fallback"
+        elif cond in _EVOLUTIONARY_SCAFFOLD_CONDITIONS:
+            candidate = _build_evolutionary_scaffold_fallback(source or query, condition=cond, lang=lang, seed=seed)
+            meta["strategy"] = "evolutionary_fallback"
         else:
             candidate = _build_isomorphic_scaffold_fallback(source, lang=lang, seed=seed)
             meta["strategy"] = "isomorphic_fallback"
@@ -6014,7 +6108,7 @@ class RunConfig:
     compare_spatial_metaphor: str = "auto"  # off|auto
     compare_token_budget: str = "auto"  # off|auto
     compare_embed_model: str = ""
-    scaffold_condition: str = "assoc"  # assoc|random|facts|isomorphic
+    scaffold_condition: str = "assoc"  # assoc|random|facts|isomorphic|evo_*
     scaffold_token_target: int = 0
     output_contract: str = "none"  # none|final_closure|log_closure|log_final_closure|log_skeleton_closure|log_skeleton_final_closure
     print_probe: bool = False
@@ -9365,7 +9459,7 @@ def main() -> None:
         "--scaffold_condition",
         choices=list(_SCAFFOLD_CONDITIONS),
         default="assoc",
-        help="Condition the final injected scaffold: current assoc log, random filler, literal facts, or structural isomorph",
+        help="Condition the final injected scaffold: assoc log, random filler, literal facts, structural isomorph, or evolutionary scaffold variant",
     )
     g_memory.add_argument(
         "--scaffold_token_target",

@@ -54,6 +54,8 @@ CONTRACT_ORDER = [
 LOG_PHASE_ROUTE_ORDER = [
     "inherit_1024_no_rescue",
     "low_1024_no_rescue",
+    "low_log1024_final_low2048",
+    "low_log2048_final_low2048",
     "inherit_2048_no_rescue",
     "low_2048_rescue",
 ]
@@ -1500,14 +1502,25 @@ def build_report_html(
     dose_summary = summary.get("dose_summary") if isinstance(summary.get("dose_summary"), dict) else {}
     closure_summary = summary.get("closure_summary") if isinstance(summary.get("closure_summary"), dict) else {}
     log_phase_rows = closure_summary.get("by_log_phase_route") if isinstance(closure_summary.get("by_log_phase_route"), list) else []
+    profile_name = str(summary.get("profile") or "").strip()
+    dose_conditions = dose_summary.get("conditions") if isinstance(dose_summary.get("conditions"), list) else []
+    has_evo_scaffolds = "evo" in profile_name or any(str(x).startswith("evo_") for x in dose_conditions)
     if dose_summary:
         best = dose_summary.get("best_alignment_row") if isinstance(dose_summary.get("best_alignment_row"), dict) else {}
-        dose_bullet = (
-            f"<li><strong>Dose ladder metrics are now part of the report.</strong> The strongest alignment row was "
-            f"<code>{html.escape(str(best.get('scaffold_condition') or 'n/a'))}</code> at dose "
-            f"{fmt_num(best.get('scaffold_dose'), 0)} with alignment delta "
-            f"{fmt_num(best.get('query_alignment_delta'), 3)}; verify it against origin drift, leakage, and the raw text.</li>"
-        )
+        if has_evo_scaffolds:
+            dose_bullet = (
+                f"<li><strong>Evolutionary scaffold conditions are now isolated under the route lock.</strong> "
+                f"The strongest alignment row was <code>{html.escape(str(best.get('scaffold_condition') or 'n/a'))}</code> "
+                f"at dose {fmt_num(best.get('scaffold_dose'), 0)} with alignment delta "
+                f"{fmt_num(best.get('query_alignment_delta'), 3)}; compare it against origin drift, leakage, and the raw text.</li>"
+            )
+        else:
+            dose_bullet = (
+                f"<li><strong>Dose ladder metrics are now part of the report.</strong> The strongest alignment row was "
+                f"<code>{html.escape(str(best.get('scaffold_condition') or 'n/a'))}</code> at dose "
+                f"{fmt_num(best.get('scaffold_dose'), 0)} with alignment delta "
+                f"{fmt_num(best.get('query_alignment_delta'), 3)}; verify it against origin drift, leakage, and the raw text.</li>"
+            )
     else:
         dose_bullet = (
             "<li><strong>Generated scaffold conditions are the expensive branch.</strong> "
@@ -1560,13 +1573,22 @@ def build_report_html(
             ),
         )
         best_route = best_route_rows[0] if best_route_rows else {}
-        log_phase_bullet = (
-            f"<li><strong>Log-phase routing is now isolated from final-answer routing.</strong> "
-            f"Best skeleton-complete route was <code>{html.escape(str(best_route.get('log_phase_route') or 'n/a'))}</code> "
-            f"at {fmt_num((safe_float(best_route.get('log_skeleton_complete_rate')) or 0.0) * 100, 0)}%, "
-            f"with final length rate {fmt_num((safe_float(best_route.get('final_finish_length_rate')) or 0.0) * 100, 0)}%; "
-            "compare it with rescue-used rate, final finish rate, and raw ponder logs.</li>"
-        )
+        if has_evo_scaffolds:
+            log_phase_bullet = (
+                f"<li><strong>The closure-protecting route is held fixed.</strong> "
+                f"The route lock is <code>{html.escape(str(best_route.get('log_phase_route') or 'n/a'))}</code>, "
+                f"with skeleton completion {fmt_num((safe_float(best_route.get('log_skeleton_complete_rate')) or 0.0) * 100, 0)}% "
+                f"and final length rate {fmt_num((safe_float(best_route.get('final_finish_length_rate')) or 0.0) * 100, 0)}%; "
+                "read scaffold effects against this closure baseline.</li>"
+            )
+        else:
+            log_phase_bullet = (
+                f"<li><strong>Log-phase routing is now isolated from final-answer routing.</strong> "
+                f"Best skeleton-complete route was <code>{html.escape(str(best_route.get('log_phase_route') or 'n/a'))}</code> "
+                f"at {fmt_num((safe_float(best_route.get('log_skeleton_complete_rate')) or 0.0) * 100, 0)}%, "
+                f"with final length rate {fmt_num((safe_float(best_route.get('final_finish_length_rate')) or 0.0) * 100, 0)}%; "
+                "compare it with rescue-used rate, final finish rate, and raw ponder logs.</li>"
+            )
 
     metric_cards = [
         (str(summary["run_count"]), "completed provider/query runs"),
@@ -1734,21 +1756,27 @@ def build_report_html(
     </section>
 """
 
-    if closure_summary:
+    if has_evo_scaffolds:
+        title = "Gemini Route-Locked Evolutionary Scaffold Mini Sweep"
+    elif closure_summary:
         title = "Gemini Log-Phase Route Sweep" if log_phase_rows else "Gemini Closure Contract Sweep"
     elif dose_summary:
         title = "Scaffold Dose Ladder Sweep"
     else:
         title = "Claude/Gemini Pondering Machine Sweep"
     runtime_section_title = (
-        "Runtime and answer length frame the closure contract"
+        "Runtime and answer length frame the route lock"
+        if has_evo_scaffolds
+        else "Runtime and answer length frame the closure contract"
         if closure_summary
         else "Runtime and answer length frame the dose ladder"
         if dose_summary
         else "Runtime and answer length split provider behavior"
     )
     runtime_note = (
-        "This focused run uses one provider lane, so runtime is mainly a planning handle for larger closure sweeps."
+        "This focused run locks the log/final route and uses one provider lane, so runtime is mainly a planning handle for larger scaffold-evolution sweeps."
+        if has_evo_scaffolds
+        else "This focused run uses one provider lane, so runtime is mainly a planning handle for larger closure sweeps."
         if closure_summary
         else "This focused run uses one provider lane, so runtime is mainly a planning handle for larger dose ladders."
         if len(providers) == 1
@@ -1760,7 +1788,9 @@ def build_report_html(
         else "Log scale. Claude values include Claude Code CLI prompt/cache wrapper overhead, so they are operationally real for this environment but not a pure model API comparison."
     )
     caveat_text = (
-        "This is an exploratory Gemini log-phase route sweep, not a stable benchmark. Marker checks only prove visible completion, rescue replaces the saved ponder log only when it improves the visible log contract, finish reasons are provider-reported API metadata, semantic alignment and PCA use hashed character n-grams rather than embedding models, and the raw output atlas remains the main qualitative evidence lane."
+        "This is an exploratory Gemini route-locked evolutionary scaffold mini sweep, not a stable benchmark. The route lock is a control surface, marker checks only prove visible completion, finish reasons are provider-reported API metadata, semantic alignment and PCA use hashed character n-grams rather than embedding models, and the raw output atlas remains the main qualitative evidence lane."
+        if has_evo_scaffolds
+        else "This is an exploratory Gemini log-phase route sweep, not a stable benchmark. Marker checks only prove visible completion, rescue replaces the saved ponder log only when it improves the visible log contract, finish reasons are provider-reported API metadata, semantic alignment and PCA use hashed character n-grams rather than embedding models, and the raw output atlas remains the main qualitative evidence lane."
         if log_phase_rows
         else "This is an exploratory Gemini closure-contract sweep, not a stable benchmark. Marker checks only prove visible completion, finish reasons are provider-reported API metadata, semantic alignment and PCA use hashed character n-grams rather than embedding models, and the raw output atlas remains the main qualitative evidence lane."
         if closure_summary
@@ -1928,6 +1958,7 @@ def main() -> int:
     chart_dir = analysis_dir / "charts"
     analysis_dir.mkdir(parents=True, exist_ok=True)
 
+    manifest = read_json(sweep_dir / "manifest.json")
     run_rows, item_rows = extract_rows(sweep_dir)
     write_csv(analysis_dir / "run_metrics.csv", run_rows)
     write_csv(analysis_dir / "item_metrics.csv", item_rows)
@@ -1959,6 +1990,8 @@ def main() -> int:
     if pca_chart:
         charts["answer_pca"] = pca_chart
     summary = summarize(run_df, item_df, dose_df, closure_df)
+    summary["profile"] = manifest.get("profile")
+    summary["profile_config"] = manifest.get("profile_config") if isinstance(manifest.get("profile_config"), dict) else {}
     summary["pca"] = pca_summary
     summary["charts"] = charts
     (analysis_dir / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")

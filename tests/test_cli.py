@@ -339,6 +339,21 @@ class TestReasoningCompare(unittest.TestCase):
         facts_spec = dict(items[3][1])
         self.assertEqual((((facts_spec.get("cfg") or {}).get("scaffold_token_target"))), 400)
 
+    def test_evolutionary_scaffold_prompt_conditions_are_supported(self) -> None:
+        prompt = sp.build_prompt_for_scaffold_condition(
+            "What is reality?",
+            "- relation only\n- boundary case",
+            condition="evo_crossover",
+            lang="en",
+            target_tokens=128,
+        )
+        self.assertIn("crossover", prompt)
+        self.assertIn("evolving individual", prompt)
+        self.assertEqual(sp._normalize_scaffold_condition_name("evo_forget"), "evo_forget")
+        name, _base_cfg, items = sp.load_lab_matrix("scaffold_abcd", default_scaffold_token_target=400)
+        self.assertEqual(name, "scaffold_abcd")
+        self.assertNotIn("evo_crossover", [item_name for item_name, _spec in items])
+
     def test_output_contract_prompt_markers(self) -> None:
         answer_prompt = sp.build_prompt_for_answer(
             "q",
