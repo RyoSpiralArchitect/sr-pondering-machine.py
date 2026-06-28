@@ -111,6 +111,29 @@ class TestDoseLadderSweepReport(unittest.TestCase):
             self.assertEqual(data["items"][1]["cfg"]["final_phase_reasoning_effort"], "low")
             self.assertEqual(data["items"][1]["cfg"]["final_phase_max_new_tokens"], 4096)
 
+    def test_route_locked_evo_scaffold_profile_uses_single_clean_route(self) -> None:
+        profile = sweep.PROFILES["gemini_route_locked_evo_scaffold_mini"]
+        with _tempdir() as td:
+            matrix_path = sweep.write_log_phase_route_matrix(
+                td,
+                {"id": "reality", "text": "What is reality?"},
+                dose_values=profile["dose_values"],
+                dose_conditions=profile["dose_conditions"],
+                output_contracts=profile["output_contracts"],
+                log_phase_routes=profile["log_phase_routes"],
+            )
+            data = json.loads(matrix_path.read_text(encoding="utf-8"))
+            names = [item["name"] for item in data["items"]]
+            self.assertIn("evo_branch_dose_128_log_skeleton_closure_low_log2048_final_low2048", names)
+            self.assertIn("evo_forget_dose_512_log_skeleton_closure_low_log2048_final_low2048", names)
+            self.assertEqual(len(data["items"]), 12)
+            cfg = data["items"][0]["cfg"]
+            self.assertEqual(cfg["output_contract"], "log_skeleton_closure")
+            self.assertEqual(cfg["log_phase_reasoning_effort"], "low")
+            self.assertEqual(cfg["log_phase_max_new_tokens"], 2048)
+            self.assertEqual(cfg["final_phase_reasoning_effort"], "low")
+            self.assertEqual(cfg["final_phase_max_new_tokens"], 2048)
+
     def test_extracts_dose_and_attractor_metrics_from_pack_json(self) -> None:
         if report is None or pd is None:
             self.skipTest("optional report-analysis dependencies are not installed")

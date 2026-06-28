@@ -1,0 +1,1 @@
+[sr_ponder] NOTE: openai_compat does not currently forward --seed, --repetition_penalty (provider-compatibility fallback).

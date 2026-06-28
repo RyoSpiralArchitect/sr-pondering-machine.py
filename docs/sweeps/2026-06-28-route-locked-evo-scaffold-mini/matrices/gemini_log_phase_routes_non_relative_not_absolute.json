@@ -1,0 +1,187 @@
+{
+  "name": "gemini_log_phase_routes_non_relative_not_absolute",
+  "description": "Log-phase route sweep: inherited vs log-only reasoning effort, larger log budget, and optional log-contract rescue.",
+  "include_baseline": true,
+  "items": [
+    {
+      "name": "facts_dose_128_log_skeleton_closure_low_log2048_final_low2048",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 128,
+        "output_contract": "log_skeleton_closure",
+        "log_phase_reasoning_effort": "low",
+        "log_phase_max_new_tokens": 2048,
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 2048
+      }
+    },
+    {
+      "name": "facts_dose_512_log_skeleton_closure_low_log2048_final_low2048",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "facts",
+        "scaffold_token_target": 512,
+        "output_contract": "log_skeleton_closure",
+        "log_phase_reasoning_effort": "low",
+        "log_phase_max_new_tokens": 2048,
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 2048
+      }
+    },
+    {
+      "name": "isomorphic_dose_128_log_skeleton_closure_low_log2048_final_low2048",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 128,
+        "output_contract": "log_skeleton_closure",
+        "log_phase_reasoning_effort": "low",
+        "log_phase_max_new_tokens": 2048,
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 2048
+      }
+    },
+    {
+      "name": "isomorphic_dose_512_log_skeleton_closure_low_log2048_final_low2048",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "isomorphic",
+        "scaffold_token_target": 512,
+        "output_contract": "log_skeleton_closure",
+        "log_phase_reasoning_effort": "low",
+        "log_phase_max_new_tokens": 2048,
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 2048
+      }
+    },
+    {
+      "name": "evo_branch_dose_128_log_skeleton_closure_low_log2048_final_low2048",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "evo_branch",
+        "scaffold_token_target": 128,
+        "output_contract": "log_skeleton_closure",
+        "log_phase_reasoning_effort": "low",
+        "log_phase_max_new_tokens": 2048,
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 2048
+      }
+    },
+    {
+      "name": "evo_branch_dose_512_log_skeleton_closure_low_log2048_final_low2048",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "evo_branch",
+        "scaffold_token_target": 512,
+        "output_contract": "log_skeleton_closure",
+        "log_phase_reasoning_effort": "low",
+        "log_phase_max_new_tokens": 2048,
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 2048
+      }
+    },
+    {
+      "name": "evo_compete_dose_128_log_skeleton_closure_low_log2048_final_low2048",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "evo_compete",
+        "scaffold_token_target": 128,
+        "output_contract": "log_skeleton_closure",
+        "log_phase_reasoning_effort": "low",
+        "log_phase_max_new_tokens": 2048,
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 2048
+      }
+    },
+    {
+      "name": "evo_compete_dose_512_log_skeleton_closure_low_log2048_final_low2048",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "evo_compete",
+        "scaffold_token_target": 512,
+        "output_contract": "log_skeleton_closure",
+        "log_phase_reasoning_effort": "low",
+        "log_phase_max_new_tokens": 2048,
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 2048
+      }
+    },
+    {
+      "name": "evo_crossover_dose_128_log_skeleton_closure_low_log2048_final_low2048",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "evo_crossover",
+        "scaffold_token_target": 128,
+        "output_contract": "log_skeleton_closure",
+        "log_phase_reasoning_effort": "low",
+        "log_phase_max_new_tokens": 2048,
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 2048
+      }
+    },
+    {
+      "name": "evo_crossover_dose_512_log_skeleton_closure_low_log2048_final_low2048",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "evo_crossover",
+        "scaffold_token_target": 512,
+        "output_contract": "log_skeleton_closure",
+        "log_phase_reasoning_effort": "low",
+        "log_phase_max_new_tokens": 2048,
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 2048
+      }
+    },
+    {
+      "name": "evo_forget_dose_128_log_skeleton_closure_low_log2048_final_low2048",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "evo_forget",
+        "scaffold_token_target": 128,
+        "output_contract": "log_skeleton_closure",
+        "log_phase_reasoning_effort": "low",
+        "log_phase_max_new_tokens": 2048,
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 2048
+      }
+    },
+    {
+      "name": "evo_forget_dose_512_log_skeleton_closure_low_log2048_final_low2048",
+      "kind": "ponder",
+      "control": "none",
+      "cfg": {
+        "memory_policy": "current_only",
+        "scaffold_condition": "evo_forget",
+        "scaffold_token_target": 512,
+        "output_contract": "log_skeleton_closure",
+        "log_phase_reasoning_effort": "low",
+        "log_phase_max_new_tokens": 2048,
+        "final_phase_reasoning_effort": "low",
+        "final_phase_max_new_tokens": 2048
+      }
+    }
+  ]
+}

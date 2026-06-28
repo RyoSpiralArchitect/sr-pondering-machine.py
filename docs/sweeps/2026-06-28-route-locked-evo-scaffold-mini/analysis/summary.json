@@ -1,0 +1,345 @@
+{
+  "run_count": 1,
+  "ponder_item_count": 12,
+  "by_provider": {
+    "gemini": {
+      "ponder_items": 12,
+      "answer_chars_mean": 549.0,
+      "diff_ratio_mean": 0.906003488318463,
+      "query_alignment_delta_mean": 0.005387865640447953,
+      "stance_shift_mean": 0.23693382235048902,
+      "spatial_log_density_mean": 5.671104641692877,
+      "api_total_delta_mean": 1954.8333333333333,
+      "external_scaffold_tokens_mean": 398.4166666666667,
+      "all_api_total_tokens_mean": 6148.833333333333
+    }
+  },
+  "run_summary": {
+    "gemini": {
+      "runs": 1,
+      "elapsed_s_mean": 427.1056189160008,
+      "elapsed_s_min": 427.1056189160008,
+      "elapsed_s_max": 427.1056189160008
+    }
+  },
+  "condition_summary": [
+    {
+      "provider": "gemini",
+      "condition": "evo_branch_dose_128_log_skeleton_closure_low_log2048_final_low2048",
+      "answer_chars_mean": 604.0,
+      "query_alignment_delta_mean": 0.027670391740115846,
+      "api_total_delta_mean": 985.0,
+      "stance_shift_mean": 0.16666666666666666,
+      "diff_ratio_mean": 0.9020217729393468
+    },
+    {
+      "provider": "gemini",
+      "condition": "evo_branch_dose_512_log_skeleton_closure_low_log2048_final_low2048",
+      "answer_chars_mean": 436.0,
+      "query_alignment_delta_mean": 0.03554123283356769,
+      "api_total_delta_mean": 2068.0,
+      "stance_shift_mean": 0.3625,
+      "diff_ratio_mean": 0.8998211091234347
+    },
+    {
+      "provider": "gemini",
+      "condition": "evo_compete_dose_128_log_skeleton_closure_low_log2048_final_low2048",
+      "answer_chars_mean": 547.0,
+      "query_alignment_delta_mean": 0.010944538184938873,
+      "api_total_delta_mean": 1561.0,
+      "stance_shift_mean": 0.25,
+      "diff_ratio_mean": 0.9446704637917006
+    },
+    {
+      "provider": "gemini",
+      "condition": "evo_compete_dose_512_log_skeleton_closure_low_log2048_final_low2048",
+      "answer_chars_mean": 247.0,
+      "query_alignment_delta_mean": -0.10478093703572083,
+      "api_total_delta_mean": 2861.0,
+      "stance_shift_mean": 0.25,
+      "diff_ratio_mean": 0.9095801937567276
+    },
+    {
+      "provider": "gemini",
+      "condition": "evo_crossover_dose_128_log_skeleton_closure_low_log2048_final_low2048",
+      "answer_chars_mean": 752.0,
+      "query_alignment_delta_mean": 0.04827664214248406,
+      "api_total_delta_mean": 1546.0,
+      "stance_shift_mean": 0.07870370370370369,
+      "diff_ratio_mean": 0.9274755927475593
+    },
+    {
+      "provider": "gemini",
+      "condition": "evo_crossover_dose_512_log_skeleton_closure_low_log2048_final_low2048",
+      "answer_chars_mean": 581.0,
+      "query_alignment_delta_mean": -0.008400455014458658,
+      "api_total_delta_mean": 2688.0,
+      "stance_shift_mean": 0.21428571428571427,
+      "diff_ratio_mean": 0.9350752177355502
+    },
+    {
+      "provider": "gemini",
+      "condition": "evo_forget_dose_128_log_skeleton_closure_low_log2048_final_low2048",
+      "answer_chars_mean": 559.0,
+      "query_alignment_delta_mean": 0.023385831211627156,
+      "api_total_delta_mean": 1840.0,
+      "stance_shift_mean": 0.1875,
+      "diff_ratio_mean": 0.8533440773569702
+    },
+    {
+      "provider": "gemini",
+      "condition": "evo_forget_dose_512_log_skeleton_closure_low_log2048_final_low2048",
+      "answer_chars_mean": 565.0,
+      "query_alignment_delta_mean": 0.005089010725223303,
+      "api_total_delta_mean": 2252.0,
+      "stance_shift_mean": 0.2916666666666667,
+      "diff_ratio_mean": 0.9133921411387329
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_128_log_skeleton_closure_low_log2048_final_low2048",
+      "answer_chars_mean": 654.0,
+      "query_alignment_delta_mean": 0.04743506684681398,
+      "api_total_delta_mean": 822.0,
+      "stance_shift_mean": 0.07142857142857142,
+      "diff_ratio_mean": 0.8353293413173652
+    },
+    {
+      "provider": "gemini",
+      "condition": "facts_dose_512_log_skeleton_closure_low_log2048_final_low2048",
+      "answer_chars_mean": 663.0,
+      "query_alignment_delta_mean": -0.008946674870937033,
+      "api_total_delta_mean": 3063.0,
+      "stance_shift_mean": 0.4125,
+      "diff_ratio_mean": 0.8929368029739777
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_128_log_skeleton_closure_low_log2048_final_low2048",
+      "answer_chars_mean": 480.0,
+      "query_alignment_delta_mean": -0.02011608508004556,
+      "api_total_delta_mean": 1180.0,
+      "stance_shift_mean": 0.23295454545454544,
+      "diff_ratio_mean": 0.9311531841652324
+    },
+    {
+      "provider": "gemini",
+      "condition": "isomorphic_dose_512_log_skeleton_closure_low_log2048_final_low2048",
+      "answer_chars_mean": 500.0,
+      "query_alignment_delta_mean": 0.008555826001766603,
+      "api_total_delta_mean": 2592.0,
+      "stance_shift_mean": 0.32499999999999996,
+      "diff_ratio_mean": 0.9272419627749577
+    }
+  ],
+  "dose_summary": {
+    "row_count": 18,
+    "max_dose": 512.0,
+    "conditions": [
+      "evo_branch",
+      "evo_compete",
+      "evo_crossover",
+      "evo_forget",
+      "facts",
+      "isomorphic"
+    ],
+    "best_alignment_row": {
+      "provider": "gemini",
+      "query_id": "non_relative_not_absolute",
+      "model": "gemini-3.1-pro-preview",
+      "condition": "evo_crossover_dose_128_log_skeleton_closure_low_log2048_final_low2048",
+      "scaffold_condition": "evo_crossover",
+      "scaffold_dose": 128,
+      "output_contract": "log_skeleton_closure",
+      "answer_chars": 752.0,
+      "query_alignment_delta": 0.04827664214248406,
+      "diff_ratio": 0.9274755927475593,
+      "stance_shift": 0.07870370370370369,
+      "spatial_log_density": 0.0,
+      "api_total_delta": 1546.0,
+      "origin_drift": 0.16687706137839098,
+      "recurrence": 0.8431245544006252,
+      "query_relevance": 0.40419408583628835,
+      "scaffold_leakage": 0.5914156380368993,
+      "coil_index": 0.016452001766271523,
+      "attractor_class": "mixed",
+      "is_baseline_reference": false
+    },
+    "highest_origin_drift_row": {
+      "provider": "gemini",
+      "query_id": "non_relative_not_absolute",
+      "model": "gemini-3.1-pro-preview",
+      "condition": "evo_compete_dose_512_log_skeleton_closure_low_log2048_final_low2048",
+      "scaffold_condition": "evo_compete",
+      "scaffold_dose": 512,
+      "output_contract": "log_skeleton_closure",
+      "answer_chars": 247.0,
+      "query_alignment_delta": -0.10478093703572083,
+      "diff_ratio": 0.9095801937567276,
+      "stance_shift": 0.25,
+      "spatial_log_density": 0.0,
+      "api_total_delta": 2861.0,
+      "origin_drift": 0.2863738229334519,
+      "recurrence": 0.751033184443361,
+      "query_relevance": 0.25855822092373487,
+      "scaffold_leakage": 0.582804617542834,
+      "coil_index": 0.0,
+      "attractor_class": "mixed",
+      "is_baseline_reference": false
+    },
+    "by_condition": [
+      {
+        "scaffold_condition": "evo_branch",
+        "query_alignment_delta_mean": 0.03160581228684177,
+        "origin_drift_mean": 0.2151297065737916,
+        "recurrence_mean": 0.7973905629725815,
+        "scaffold_leakage_mean": 0.5942454785291358,
+        "coil_index_mean": 0.009650843563895287
+      },
+      {
+        "scaffold_condition": "evo_compete",
+        "query_alignment_delta_mean": -0.04691819942539098,
+        "origin_drift_mean": 0.2609751990522727,
+        "recurrence_mean": 0.7729770754765688,
+        "scaffold_leakage_mean": 0.6202196789316252,
+        "coil_index_mean": 0.0015063327957867021
+      },
+      {
+        "scaffold_condition": "evo_crossover",
+        "query_alignment_delta_mean": 0.0199380935640127,
+        "origin_drift_mean": 0.18547384958276192,
+        "recurrence_mean": 0.8238882278952896,
+        "scaffold_leakage_mean": 0.6363340423440389,
+        "coil_index_mean": 0.008226000883135761
+      },
+      {
+        "scaffold_condition": "evo_forget",
+        "query_alignment_delta_mean": 0.01423742096842523,
+        "origin_drift_mean": 0.21790558312251562,
+        "recurrence_mean": 0.7963463143713345,
+        "scaffold_leakage_mean": 0.6106070888522237,
+        "coil_index_mean": 0.0041883614211955566
+      },
+      {
+        "scaffold_condition": "facts",
+        "query_alignment_delta_mean": 0.019244195987938473,
+        "origin_drift_mean": 0.17383418329667327,
+        "recurrence_mean": 0.8261658167033268,
+        "scaffold_leakage_mean": 0.6655704404070257,
+        "coil_index_mean": 0.007856996659932657
+      },
+      {
+        "scaffold_condition": "isomorphic",
+        "query_alignment_delta_mean": -0.005780129539139478,
+        "origin_drift_mean": 0.21034749736274772,
+        "recurrence_mean": 0.7900800476089767,
+        "scaffold_leakage_mean": 0.6159898050734918,
+        "coil_index_mean": 0.0012934895080569954
+      }
+    ]
+  },
+  "closure_summary": {
+    "row_count": 12,
+    "contracts": [
+      "log_skeleton_closure"
+    ],
+    "by_contract": [
+      {
+        "output_contract": "log_skeleton_closure",
+        "rows": 12,
+        "answer_chars_mean": 549.0,
+        "final_finish_length_rate": 0.0,
+        "final_marker_last_rate": 0.0,
+        "log_marker_rate": 1.0,
+        "log_skeleton_complete_rate": 1.0,
+        "prompt_leakage_rate": 0.0
+      }
+    ],
+    "log_phase_routes": [
+      "low_log2048_final_low2048"
+    ],
+    "by_log_phase_route": [
+      {
+        "log_phase_route": "low_log2048_final_low2048",
+        "rows": 12,
+        "log_marker_rate": 1.0,
+        "log_skeleton_complete_rate": 1.0,
+        "ponder_finish_length_mean": 0.0,
+        "final_finish_length_rate": 0.0,
+        "rescue_used_rate": 0.0,
+        "answer_chars_mean": 549.0
+      }
+    ]
+  },
+  "profile": "gemini_route_locked_evo_scaffold_mini",
+  "profile_config": {
+    "answer_max_new_tokens": "2048",
+    "ponder_max_new_tokens": "1024",
+    "scaffold_token_target": "0",
+    "api_timeout": "1200",
+    "claude_budget_usd": "0.45",
+    "matrix": "log_phase_routes",
+    "dose_values": [
+      128,
+      512
+    ],
+    "dose_conditions": [
+      "facts",
+      "isomorphic",
+      "evo_branch",
+      "evo_compete",
+      "evo_crossover",
+      "evo_forget"
+    ],
+    "output_contracts": [
+      "log_skeleton_closure"
+    ],
+    "log_phase_routes": [
+      {
+        "name": "low_log2048_final_low2048",
+        "cfg": {
+          "log_phase_reasoning_effort": "low",
+          "log_phase_max_new_tokens": 2048,
+          "final_phase_reasoning_effort": "low",
+          "final_phase_max_new_tokens": 2048
+        }
+      }
+    ],
+    "providers": {
+      "gemini": {
+        "model": "gemini-3.1-pro-preview",
+        "reasoning_effort": "high"
+      },
+      "claude": {
+        "model": "opus",
+        "reasoning_effort": "xhigh"
+      }
+    }
+  },
+  "pca": {
+    "doc_count": 13,
+    "feature_dim": 768,
+    "explained_variance_ratio": [
+      0.15046575926853922,
+      0.1122353784791657
+    ],
+    "provider_centroid_distance": null,
+    "csv": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/answer_pca.csv"
+  },
+  "charts": {
+    "runtime": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/charts/runtime_by_provider.png",
+    "alignment": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/charts/alignment_by_condition.png",
+    "token_overhead": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/charts/token_overhead_by_condition.png",
+    "answer_length": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/charts/answer_length_by_condition.png",
+    "query_alignment_delta": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/charts/dose_query_alignment_delta.png",
+    "origin_drift": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/charts/dose_origin_drift.png",
+    "scaffold_leakage": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/charts/dose_scaffold_leakage.png",
+    "coil_index": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/charts/dose_coil_index.png",
+    "final_finish_is_length": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/charts/closure_final_finish_length_rate.png",
+    "final_marker_is_last_line": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/charts/closure_final_marker_rate.png",
+    "ponder_log_marker_rate": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/charts/closure_log_marker_rate.png",
+    "ponder_log_skeleton_complete_rate": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/charts/closure_log_skeleton_rate.png",
+    "answer_chars": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/charts/closure_answer_chars.png",
+    "answer_pca": "/Users/ryohiga/Documents/New project/sr-pondering-machine.py/docs/sweeps/2026-06-28-route-locked-evo-scaffold-mini/analysis/charts/answer_pca_by_provider_condition.png"
+  }
+}

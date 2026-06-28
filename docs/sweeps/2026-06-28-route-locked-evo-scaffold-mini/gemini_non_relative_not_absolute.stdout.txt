@@ -1,0 +1,247 @@
+[sr_ponder] backend=openai_compat provider=custom model='gemini-3.1-pro-preview' base_url=https://generativelanguage.googleapis.com/v1beta/openai reasoning_effort=high seed_method=auto logprobs_top_n=0 lang=ja band_profile=single bands=profile objective=random_band diversity=off hops=1 answer_style=plain control=none pipeline=assoc memory=current_only/tail/off scaffold=assoc/source write_memory=False
+
+=== PACK: baseline ===
+
+相対的と絶対的という言葉は、しばしば対義語として扱われます。そのため「非相対的」であれば自動的に「絶対的」になるのではないか、と私たちは無意識のうちに思いがちです。しかし、少し立ち止まってこの二つの概念の隙間を覗き込んでみると、その単純な二項対立の枠組みからこぼれ落ちる不思議な領域があることに気づきます。
+
+相対的とは、他との比較や関係性によってその価値や性質が決まる状態を指します。大きかったり、速かったり、美しかったりすることは、比べる対象があって初めて成り立ちます。一方、絶対的とは、他と比較されることなく、いかなる条件や文脈においても普遍的かつ不変に成り立つ状態を指します。つまり「非相対的ではあるが絶対的ではない」とは、「他との関係や比較に依存してはいないが、かといって普遍的・無条件的・不変でもない状態」を意味することになります。
+
+この一見すると矛盾するような状態は、どこに存在するのでしょうか。たとえば、私がいま感じている「歯の激しい痛み」や、夕焼けを見て感じる「赤という色覚（クオリア）」について考えてみましょう。この生々しい感覚は、他人の痛みや別の色と比較して初めて生じるものではありません。私という存在の中で完全に独立して完結しているため、非相対的です。しかし、それが全宇宙の誰にとっても共通する普遍的な真理かといえば、決してそうではありません。私という極めて限定された個体の、ある特定の瞬間にしか成立しないため、絶対的ではないのです。
+
+また、歴史の中でただ一度だけ起きた「一回限りの出来事」もこれに当てはまるかもしれません。比較する対象
+
+=== PACK: facts_dose_128_log_skeleton_closure_low_log2048_final_low2048 ===
+
+相対的という言葉は他者との比較や関係性において価値が決まることを意味し、絶対的という言葉は比較を絶してそれ自体で完全かつ普遍的であることを意味します。ここで「非相対的」という言葉を「他との比較を必要としない」という意味で捉えると、必ずしもそれが「絶対的（無条件かつ普遍的）」であるとは限らないことに気づきます。例えば、私が特定の音楽を聴いて美しいと感じる主観的な感情は、他人と比較して決まるものではないため相対的ではありません。しかし、それが全人類に共通する普遍的な真理でもないため、絶対的でもありません。このように、定義としての「比較を必要としない性質」と、適用範囲としての「普遍性や無条件性」を分けて考えると、両者の中間に位置する状態が明確に浮かび上がってきます。
+
+非相対的ではあるが絶対的ではない状態とは、「他との比較や関係性によって価値や性質が決まるわけではない（自立している）が、あらゆる条件を超越した普遍的・完全なものでもない状態」を指します。
+
+具体的には、個人の主観的な感覚や信念、あるいは特定のルールや文脈の内部でのみ成り立つ基準などがこれに該当します。例えば「個人的な身体の痛み」や「自分にとっての譲れない価値観」は、他人との比較で生じるものではないため非相対的ですが、全宇宙に適用される普遍的な真理や無条件の法則ではないため絶対的ではありません。つまり、性質としては他者に依存せず独立しているものの、その適用範囲や影響力が特定の個人や限定された枠組みの中に留まっている状態と言えます。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=682->654 delta=-28 diff_ratio=0.8353
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.320115 query_base=0.149053 query_ponder=0.196488 align_delta=0.047435
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.071429 gain=example_expansion drop=framing
+spatial[heuristic_lexicon] ans_density=1.466->1.529 log_density=13.514 q_density=0.000 groups=container->container log=geometry
+budget[api_usage_plus_visible_estimate] ans=676->650 scaffold=211 reason=0->0 completion=374->433
+
+=== PACK: facts_dose_512_log_skeleton_closure_low_log2048_final_low2048 ===
+
+「非相対的ではあるが絶対的ではない状態」とは、外部の基準や他者との比較によって価値や性質が決定されるわけではない（非相対的）ものの、同時にそれが永遠不変の普遍性や無条件の真理として存在するわけでもない（非絶対的）状態を指します。
+
+具体的には、以下のような状態や領域がこれに該当します。
+
+第一に、個人の純粋な主観的体験や感覚（クオリア）です。例えば「今、私が感じている痛み」や「ある風景を見て美しいと感じる心の動き」は、他人の感覚や過去の経験と比較しなくても、その瞬間にただ「ある」ものとして自己完結しています。しかし、それは時間とともに消え去る個人的・可変的な現象であり、万人に共通する永遠の真理（絶対）ではありません。
+
+第二に、「今、ここ」における一回限りの出来事や現象です。ある瞬間に吹いた風や、目の前で偶然起きた事象は、他の何かと比べるまでもなく独自の事実として成立していますが、次の瞬間には変化してしまうため、絶対的な不変性を持ちません。
+
+第三に、他者の評価や世間の尺度から離れた「実存」としての自己のあり方です。誰かと比較して優劣をつける相対的な世界から降り、「ただ私として生きる」という状態は非相対的です。しかし、人間は有限であり常に変化し続ける存在であるため、決して絶対的な存在にはなり得ません。
+
+つまり、この状態は「他と比べてどうか」という関係性のネットワークから切り離されていながら、「永遠不変の法則や神のような完全性」にも至らない、生々しい一回性や固有の経験が成り立っている領域であると言えます。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=682->663 delta=-19 diff_ratio=0.8929
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.266063 query_base=0.142755 query_ponder=0.133809 align_delta=-0.008947
+stance[heuristic_lexicon] base=conditionalization ponder=example_expansion shift=0.412500 gain=example_expansion drop=conditionalization
+spatial[heuristic_lexicon] ans_density=1.466->0.000 log_density=12.987 q_density=0.000 groups=container->none log=container
+budget[api_usage_plus_visible_estimate] ans=676->653 scaffold=578 reason=0->0 completion=374->1124
+
+=== PACK: isomorphic_dose_128_log_skeleton_closure_low_log2048_final_low2048 ===
+
+他者や外部との比較によって価値や性質が決まるわけではないため「非相対的」でありながら、あらゆる制約を超えて普遍的に成り立つわけではないため「絶対的」でもない状態とは、特定の限定された枠組みや条件の内部においてのみ、それ自体として完結し自立している状態を指します。
+
+それはたとえば、外界から区切られた温室の中で、遅れて届く光が独自の配置だけで反復されているような空間に似ています。外部の太陽光のような無条件の「絶対性」はありませんが、その閉ざされた系の中では、他の環境と比較されることなく固有の秩序が保たれています。
+
+哲学や論理学の観点から言えば、特定の公理系の中だけで真とされる命題や、個人の内面においてのみ疑いようのない主観的確信などがこれに該当します。それらは他との比較（相対評価）を必要とせず、その場において独立して存在していますが、枠組みが崩れたり外部の視点が導入されたりすれば成立しなくなるため、絶対的な真理や普遍性を持ち得ないのです。つまり、「条件付きの自律性」や「局所的な独立状態」こそが、非相対的でありながら絶対的ではない状態だと言えます。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=682->480 delta=-202 diff_ratio=0.9312
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.236954 query_base=0.151867 query_ponder=0.131751 align_delta=-0.020116
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.232955 gain=framing drop=definition
+spatial[heuristic_lexicon] ans_density=1.466->6.250 log_density=0.000 q_density=0.000 groups=container->container log=none
+budget[api_usage_plus_visible_estimate] ans=676->476 scaffold=223 reason=0->0 completion=374->356
+
+=== PACK: isomorphic_dose_512_log_skeleton_closure_low_log2048_final_low2048 ===
+
+樽の中で静かに呼吸する液体の変貌を見つめるとき、そこにあるのは他の何かと比較されることで価値が決まる相対的な状態ではありません。しかし同時に、いかなる環境の変化にも揺るがない不変の絶対的な状態でもありません。温度の勾配や微生物の微小な活動という内部の条件と、樽の導管を通じた外部との曖昧な境界のなかで、その液体はただ「それ自体として進行している」状態にあります。
+
+このような「非相対的ではあるが絶対的ではない状態」とは、他者との比較や外部の基準に依存して定まるわけではない（非相対的）一方で、いかなる条件にも縛られない普遍的で不変の存在でもない（非絶対的）状態を指します。
+
+具体的には、特定のシステムや文脈の内部においてのみ自己完結的に成立している「条件付きの自律状態」や、個人の内面においてのみ真実として機能する「主観的確信」、あるいは完成へ至る途上の「動的なプロセスそのもの」が該当します。それは外部と競うことはないものの、内部の揺らぎや微細な環境との相互作用によって常に変容の可能性を孕んでおり、まさに発酵や生命活動のように、絶対的な静止を持たない独立した進行形としての在り方だと言えます。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=682->500 delta=-182 diff_ratio=0.9272
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.217542 query_base=0.140151 query_ponder=0.148707 align_delta=0.008556
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.325000 gain=conditionalization drop=framing
+spatial[heuristic_lexicon] ans_density=1.466->2.000 log_density=0.000 q_density=0.000 groups=container->geometry log=none
+budget[api_usage_plus_visible_estimate] ans=676->496 scaffold=568 reason=0->0 completion=374->875
+
+=== PACK: evo_branch_dose_128_log_skeleton_closure_low_log2048_final_low2048 ===
+
+空間が拡張を続け、かつての基準点が忘れ去られていくような状況を想像してみます。そこでは、物事の境界線や条件の向きが薄れ、つなぎ替えられ、比較の前提となる枠組みそのものが変容していきます。私たちが何かを「高い・低い」「大きい・小さい」と測るための相対的なネットワークが機能しなくなり、同時に「不動の中心」としての絶対的な基準も消失していくような世界です。このような思考の寄り道を経ると、相対的でも絶対的でもない状態の輪郭が少し見えてきます。
+
+非相対的ではあるが絶対的ではない状態とは、他との比較や関係性によって定義されるわけではなく、かといって普遍的で不変の真理として独立しているわけでもない、「純粋な主観性」や「絶え間ない変化のプロセス（生成）」のような状態を指します。
+
+たとえば、個人の内面における「痛み」や「感動」は、他人の感覚と比較して決まるものではないため非相対的です。しかし、それは時間や体調、文脈によって移ろいゆくものであり、普遍的・客観的な実体を持たないため絶対的でもありません。また、ある特定の閉じた文脈や局所的な条件の中だけで完全に成立しているルールも、その系の中では比較を絶している（非相対的）ものの、外の世界から見れば普遍性を持たない（非絶対的）と言えます。すなわちそれは、外部の基準に頼らず「ただそれ自体としてそこにある」が、常に揺らぎや変化の可能性を内包している状態のことです。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=682->604 delta=-78 diff_ratio=0.9020
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.244874 query_base=0.146798 query_ponder=0.174468 align_delta=0.027670
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.166667 gain=example_expansion drop=definition
+spatial[heuristic_lexicon] ans_density=1.466->6.623 log_density=14.706 q_density=0.000 groups=container->geometry log=container
+budget[api_usage_plus_visible_estimate] ans=676->600 scaffold=209 reason=0->0 completion=374->421
+
+=== PACK: evo_branch_dose_512_log_skeleton_closure_low_log2048_final_low2048 ===
+
+他者や外部との比較によって自らの輪郭を定義する「相対性」を放棄しつつも、永遠不変の「絶対性」として硬直することも避ける状態とはどのようなものか。かつてそこにあったはずの流体の記憶を忘れ、外部へ拡散しようとするベクトルと内へ収束しようとする圧力が衝突する境界を思い浮かべてみる。そこでは、他との関係性という外部の物差しは存在しないため非相対的であるが、同時に輪郭を溶かす作用と再結晶化させる作用が絶えず交差しているため、決して固定された絶対的なものでもない。
+
+非相対的ではあるが絶対的ではない状態とは、外部との比較に依存せず自己完結していながら、内部において絶えず変化や更新が繰り返されている「動的な自律状態」のことです。それは他者との関係によって価値が決まるわけではない個人の内面的な確信や、独自のルールのみで進行しつつも常に揺らぎを孕む自己生成的なシステムのように、他と比較されない独立性を持ちながらも、決して不変や唯一の真理として固定化されていないあり方を指します。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=682->436 delta=-246 diff_ratio=0.8998
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.183526 query_base=0.143137 query_ponder=0.178679 align_delta=0.035541
+stance[heuristic_lexicon] base=conditionalization ponder=definition shift=0.362500 gain=definition drop=conditionalization
+spatial[heuristic_lexicon] ans_density=1.466->2.294 log_density=0.000 q_density=0.000 groups=container->geometry log=none
+budget[api_usage_plus_visible_estimate] ans=676->434 scaffold=594 reason=0->0 completion=374->822
+
+=== PACK: evo_compete_dose_128_log_skeleton_closure_low_log2048_final_low2048 ===
+
+他者との比較を断ち切ることで相対性から抜け出しつつも、そこに不変の基盤が用意されているわけではない。その状態は、まさに「底の抜けた浮力」のように、どこにも着地しないまま漂うようなものだろう。条件の境界（condition boundary）をぶつけ、つなぎ替えていく。そこでは固定された意味よりも、今この瞬間にどの条件がどちらを向いて接続されているかという、動的なベクトルだけが残る。比較という他律的な座標系を捨てながら、自立した不動の座標系も持たない。そのような状態とは何か。
+
+非相対的ではあるが絶対的ではない状態とは、他者や外部の尺度との比較によってその性質が決まるわけではない（非相対的）ものの、それ自体が不変・完全・無条件の基盤を持っているわけでもない（非絶対的）状態を指します。
+
+具体的には、「今ここでの一回限りの主観的体験」や「絶えず変化し続ける自律的なプロセス」がこれに該当します。外部との比較を断ち切っているため固有のものとして存在しますが、内部の条件や関係性は常に更新され続けているため、確固たる普遍の真理や固定された実体（絶対性）には至りません。
+
+それは、外部の座標軸を持たずにただ浮遊し、その時々の条件のつながりや向きだけで成立している「流転する固有性」と言えます。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=682->547 delta=-135 diff_ratio=0.9447
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.211171 query_base=0.145162 query_ponder=0.156107 align_delta=0.010945
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.250000 gain=conditionalization drop=framing
+spatial[heuristic_lexicon] ans_density=1.466->3.656 log_density=0.000 q_density=0.000 groups=container->geometry log=none
+budget[api_usage_plus_visible_estimate] ans=676->525 scaffold=200 reason=0->0 completion=374->396
+
+=== PACK: evo_compete_dose_512_log_skeleton_closure_low_log2048_final_low2048 ===
+
+他者や外部との比較・関係性によって定義されるわけではないが、あらゆる状況や時間を超えて普遍的に成り立つわけでもない、特定の枠組みや条件の内部でのみ自己完結している状態です。
+
+例えば、個人の揺るぎない信念や主観的な真実、特定の公理系の中だけで真となる命題、あるいはその場限りのローカルなルールなどがこれに該当します。これらは外部の基準と相対化されることなく独立して存在（非相対的）していますが、前提となる枠組みや条件が崩れれば成り立たなくなるため、普遍的・無条件（絶対的）なものでもありません。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=682->247 delta=-435 diff_ratio=0.9096
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.172773 query_base=0.154951 query_ponder=0.050170 align_delta=-0.104781
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.250000 gain=framing drop=definition
+spatial[heuristic_lexicon] ans_density=1.466->8.097 log_density=0.000 q_density=0.000 groups=container->container log=none
+budget[api_usage_plus_visible_estimate] ans=676->245 scaffold=601 reason=0->0 completion=374->691
+
+=== PACK: evo_crossover_dose_128_log_skeleton_closure_low_log2048_final_low2048 ===
+
+「非相対的」と「絶対的」の境界について少し考えてみます。相対的とは他者との比較や関係性において定義されることであり、非相対的とはそうした外部との比較を必要としないことを意味します。一方、絶対的とは、いかなる条件や制約、文脈からも完全に独立して無条件に成立することを指します。では、外部との比較を必要としないにもかかわらず、無条件に成立するわけではない状態とは何でしょうか。先ほどの「条件の境界（condition boundary）」や「空洞の輪郭」という言葉を手がかりにすると、ある特定の枠組みや前提の内部においてのみ自立している状態が浮かび上がります。外部とは比較されないため相対的ではありませんが、その枠組み自体が崩れれば成り立たなくなるため絶対的でもありません。
+
+非相対的ではあるが絶対的ではない状態とは、「特定の前提や条件の枠組みの内部においてのみ、他と比較されることなく自立して成り立っている状態」を指します。
+
+これは、他者や外部との比較・関係性によって価値や意味が決まるわけではない（非相対的）ものの、いかなる制約からも独立した普遍的なものではなく、特定の文脈やルールに依存している（絶対的ではない）状態です。
+
+たとえば、特定の数学の公理系やゲームのルールがこれに該当します。チェスのルールは、他のボードゲームと比較して成り立つものではなく、そのゲーム内において疑いようのない前提として機能します（非相対的）。しかし、それはチェスという枠組みの中でのみ有効であり、宇宙の普遍的な真理のようにあらゆる状況で無条件に成り立つわけではありません（絶対的ではない）。このように、外部との比較を絶ちつつも、見えない「条件の境界」に守られることで初めてその輪郭を保つことができる状態だと言えます。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=682->752 delta=+70 diff_ratio=0.9275
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.306098 query_base=0.149230 query_ponder=0.197507 align_delta=0.048277
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.078704 gain=conditionalization drop=resolution
+spatial[heuristic_lexicon] ans_density=1.466->10.638 log_density=0.000 q_density=0.000 groups=container->container log=none
+budget[api_usage_plus_visible_estimate] ans=676->730 scaffold=213 reason=0->0 completion=374->474
+
+=== PACK: evo_crossover_dose_512_log_skeleton_closure_low_log2048_final_low2048 ===
+
+比較対象が存在することで初めて成り立つ相対の尺度を記憶から消し去ったとき、そこに残るのは他者に依存しない単一の振動です。しかし、その振動を過去の確定した座標系に固定しようとする古い設計図をも破棄するならば、それは決して不変の「絶対」には到達しません。最終的にどちらかの極に帰結しなければならないという二元的な終着点の概念を忘却し、未定義の空間に浮かび上がる輪郭線の微妙な熱量と圧力を保ちながら漂い続ける軌道を想像してみてください。そこにあるのは、他との関係性によって測られることのない独立性（非相対的）を持ちながら、いかなる永遠や完全性にも縛られず揺らぎ続ける（非絶対的）特異な地点です。
+
+この思考の果てに見えてくる「非相対的ではあるが絶対的ではない状態」とは、外部との比較によって価値や性質が定まるわけではないが、かといってそれ自体が不変で普遍的な真理として固定されているわけでもない、「流動的な固有性」あるいは「純粋な変化（生成）のプロセスそのもの」を指します。
+
+それは他者と比べる必要のない唯一無二のあり方を保ちながらも、常に内的なリズムで自己更新を続け、決して一つの完成された実体として立ち止まることのない状態です。外部への依存（相対）を断ち切りつつ、内部の固定化（絶対）も拒絶する、孤立した波のような絶え間ない変転の過程こそが、その答えと言えます。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=682->581 delta=-101 diff_ratio=0.9351
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.219185 query_base=0.142571 query_ponder=0.134170 align_delta=-0.008400
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.214286 gain=conditionalization drop=example_expansion
+spatial[heuristic_lexicon] ans_density=1.466->1.721 log_density=13.333 q_density=0.000 groups=container->geometry log=container
+budget[api_usage_plus_visible_estimate] ans=676->577 scaffold=596 reason=0->0 completion=374->1107
+
+=== PACK: evo_forget_dose_128_log_skeleton_closure_low_log2048_final_low2048 ===
+
+「非相対的」と「絶対的」という概念の間に何が存在するのかを考えるとき、まずは両極の性質を捉え直す必要があります。相対的であるとは、他者との比較や関係性の網の目の中に意味が依存している状態です。一方、絶対的であるとは、いかなる条件や他者からも独立し、それ自体で完全に完結し不動である状態を指します。
+
+ここで、他との比較（相対性）を切り捨てたものの、完全な自己完結（絶対性）には至っていない状態を想像してみます。関係性の網から切り離されたことで「非相対的」にはなりましたが、それ自体で不動の真理として成立しているわけではないため「絶対的」でもありません。
+
+これは、両極の概念が入れ替わる瞬間の「傾き」や、条件の境界（バウンダリ）そのものに似ています。意味や関係性への依存を捨て去り、ただ「どちらへ向かっているか」という方向性や、次に何と接続しうるかという潜在的なベクトルだけが残された状態です。
+
+したがって、非相対的ではあるが絶対的ではない状態とは、他者との比較を離脱して自律しているものの、それ自体で完全に完結・固定化されているわけではなく、何らかの条件の境界線上を漂っている「過渡的な動的状態」や「局所的な自律状態」であると言えます。それは、関係性を絶った直後の、ただ向きだけを持つ純粋な変化の瞬間そのものです。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=682->559 delta=-123 diff_ratio=0.8533
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.237790 query_base=0.145598 query_ponder=0.168984 align_delta=0.023386
+stance[heuristic_lexicon] base=conditionalization ponder=conditionalization shift=0.187500 gain=conditionalization drop=example_expansion
+spatial[heuristic_lexicon] ans_density=1.466->3.578 log_density=13.514 q_density=0.000 groups=container->geometry log=geometry
+budget[api_usage_plus_visible_estimate] ans=676->553 scaffold=195 reason=0->0 completion=374->419
+
+=== PACK: evo_forget_dose_512_log_skeleton_closure_low_log2048_final_low2048 ===
+
+他との関係性によって自身の価値や位置が決まる相対的な状態を抜け出すと、通常は唯一無二の不変な絶対的状態に辿り着くと思われがちです。しかし、比較の枠組みを捨て去った後に残るものが、必ずしも固定された絶対的な座標であるとは限りません。他なるものへの依存を忘れることで自立した状態になりつつも、それが永遠に不変であるという期待を持たない空間を想像してみます。そこでは、絶対的な基準という束縛がなく、ただ方向性や揺らぎだけが存在し、終着点を持たないベクトルが交差しています。
+
+非相対的ではあるが絶対的ではない状態とは、他との比較や関係性に依存せず独立して存在しながらも、それ自体が固定された不変の基準や絶対的な真理として凝り固まっていない「自律的かつ流動的な状態」を指します。
+
+他者や外部環境によって自己を定義する相対性から脱却しているため、外部の基準に振り回されることはありません。しかし同時に、どこかに確固たる唯一の正解や絶対的な座標を設ける絶対性の束縛も捨て去っています。これは、比較されることのない独立した存在でありながら、常に変化や揺らぎを受け入れ、未定義の境界線を持ち続ける状態です。満たされるべき決まった器を持たず、ただそこにあるという事実と、絶えず変化していく方向性だけを内包する、しなやかで自立した在り方と言えます。
+
+=== COMPARISON ===
+
+answers_changed=yes chars=682->565 delta=-117 diff_ratio=0.9134
+records=1 unique_keywords=1 max_hop_ix=0 memory_selected=1
+semantic[hashed_char_ngrams_tfidf] answer_cosine=0.224198 query_base=0.145542 query_ponder=0.150631 align_delta=0.005089
+stance[heuristic_lexicon] base=conditionalization ponder=definition shift=0.291667 gain=definition drop=conditionalization
+spatial[heuristic_lexicon] ans_density=1.466->7.080 log_density=0.000 q_density=0.000 groups=container->container log=none
+budget[api_usage_plus_visible_estimate] ans=676->561 scaffold=593 reason=0->0 completion=374->750
+
+=== PACK SUMMARY ===
+
+name                                        kind      control  chars  records  elapsed_s         
+------------------------------------------  --------  -------  -----  -------  ------------------
+baseline                                    baseline           682             21.87323474999721 
+facts_dose_128_log_skeleton_closure_low_l…  ponder    none     654    1        25.40756720799982 
+facts_dose_512_log_skeleton_closure_low_l…  ponder    none     663    1        46.358651333001035
+isomorphic_dose_128_log_skeleton_closure_…  ponder    none     480    1        27.725010624999413
+isomorphic_dose_512_log_skeleton_closure_…  ponder    none     500    1        38.709131084000546
+evo_branch_dose_128_log_skeleton_closure_…  ponder    none     604    1        26.683811999999307
+evo_branch_dose_512_log_skeleton_closure_…  ponder    none     436    1        33.29582245799975 
+evo_compete_dose_128_log_skeleton_closure…  ponder    none     547    1        30.26934700000129 
+evo_compete_dose_512_log_skeleton_closure…  ponder    none     247    1        38.47655350000059 
+evo_crossover_dose_128_log_skeleton_closu…  ponder    none     752    1        29.602352958001575
+evo_crossover_dose_512_log_skeleton_closu…  ponder    none     581    1        40.52923750000264 
+evo_forget_dose_128_log_skeleton_closure_…  ponder    none     559    1        32.21734129199831 
+evo_forget_dose_512_log_skeleton_closure_…  ponder    none     565    1        33.31891554200047 
+
+[json_out] wrote artifacts/sweep_20260628_route_locked_evo_scaffold_mini_v2/gemini_non_relative_not_absolute.json
+
+[matrix_report_out] wrote artifacts/sweep_20260628_route_locked_evo_scaffold_mini_v2/gemini_non_relative_not_absolute.matrix.html
+
+[trace_report_out] wrote artifacts/sweep_20260628_route_locked_evo_scaffold_mini_v2/gemini_non_relative_not_absolute.trace.html
